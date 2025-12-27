@@ -3,40 +3,100 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Vida - Profissional & Pessoal</title>
+    <title>MyLife OS - Final</title>
     <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
 </head>
-<body class="theme-personal"> <nav class="navbar">
-        <div class="logo">MyLife OS</div>
-        <div class="profile-switcher">
-            <button id="btn-toggle" onclick="toggleProfile()">Alternar para Profissional</button>
-        </div>
-    </nav>
+<body class="mode-pessoal">
 
-    <main class="container">
-        <header>
-            <h1 id="main-title">Meu Diário Pessoal</h1>
-            <p id="description">Espaço para reflexões e notas íntimas.</p>
-        </header>
-
-        <section class="module editor-section">
-            <div class="toolbar">
-                <span id="save-status">Salvo localmente</span>
+    <div id="auth-screen">
+        <div class="auth-card glass-effect fade-in">
+            <div class="logo-area">
+                <span class="rocket-icon">🚀</span>
+                <h1>MyLife OS</h1>
+                <p>Sua central de comando</p>
             </div>
-            <textarea id="main-editor" placeholder="Comece a escrever aqui..."></textarea>
-        </section>
 
-        <section class="module drawing-section">
-    <div class="toolbar">
-        <h3>Quadro de Desenho</h3>
-        <button onclick="clearCanvas()">Limpar Quadro</button>
+            <div class="auth-tabs">
+                <button onclick="toggleAuth('login')" id="tab-login" class="active">Entrar</button>
+                <button onclick="toggleAuth('register')" id="tab-register">Criar Conta</button>
+            </div>
+            
+            <div class="input-group">
+                <input type="text" id="username" placeholder="Usuário" autocomplete="off">
+            </div>
+            
+            <div class="input-group password-group">
+                <input type="password" id="password" placeholder="Senha">
+                <span class="eye-icon" onclick="togglePassword()">👁️</span>
+            </div>
+
+            <button onclick="handleAuth()" id="auth-main-btn" class="btn-primary">Acessar Sistema</button>
+        </div>
     </div>
-    <canvas id="main-canvas"></canvas>
-</section>
 
+    <div id="main-content" style="display: none;">
+        <header class="top-nav glass-blur">
+            <div class="user-info">
+                <div class="avatar" id="user-initials">US</div>
+                <div>
+                    <small>Bem-vindo,</small>
+                    <h2 id="welcome-msg">Usuário</h2>
+                </div>
+            </div>
+
+            <div class="pomodoro-nav glass-effect">
+                <span id="pomo-timer">25:00</span>
+                <button onclick="togglePomodoro()" id="btn-pomo">▶</button>
+            </div>
+
+            <div class="nav-actions">
+                <button onclick="switchMode()" id="mode-toggle" class="btn-glass-small">Perfil: Pessoal</button>
+                <button onclick="logout()" class="btn-logout">Sair</button>
+            </div>
+        </header>
+        
+        <main class="dashboard-grid fade-in" id="dashboard-main">
+            
+            <section class="card-glass full-span">
+                <div class="card-header">
+                    <h3>🏆 Hábitos</h3>
+                    <div class="progress-bg"><div class="progress-fill" id="habit-progress"></div></div>
+                </div>
+                <div class="habit-list" id="habit-list"></div>
+            </section>
+
+            <section class="card-glass">
+                <div class="card-header">
+                    <h3>✅ Tarefas</h3>
+                    <span class="badge" id="task-mode-label">PESSOAL</span>
+                </div>
+                <div class="input-row">
+                    <input type="text" id="todo-input" placeholder="Nova tarefa...">
+                    <button onclick="addTodo()" class="btn-add">+</button>
+                </div>
+                <ul id="todo-list" class="styled-list"></ul>
+            </section>
+
+            <section class="card-glass">
+                <div class="card-header"><h3>💰 Fluxo Financeiro</h3></div>
+                <div class="input-row">
+                    <input type="text" id="fin-desc" placeholder="Ex: Salário ou -Mercado">
+                    <input type="number" id="fin-val" placeholder="Valor (use - para gastos)">
+                    <button onclick="addFinance()" class="btn-add">OK</button>
+                </div>
+                <ul id="fin-list" class="finance-list"></ul>
+                <div class="card-footer">Saldo: <span id="fin-total">R$ 0,00</span></div>
+            </section>
+
+            <section class="card-glass full-span">
+                <h3>📝 Notas Rápidas</h3>
+                <textarea id="diary-input" placeholder="Digite aqui..." rows="4"></textarea>
+                <button onclick="saveDiary()" class="btn-save">Salvar</button>
+            </section>
         </main>
+    </div>
 
     <script src="script.js"></script>
 </body>
-
 </html>
