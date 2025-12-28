@@ -3,18 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MyLife OS - Final</title>
+    <link rel="icon" type="image/png" href="IMAGENS/fivecon_1.1.png.png">
+    <title>AXIS | Integration</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
 </head>
 <body class="mode-pessoal">
 
     <div id="auth-screen">
-        <div class="auth-card glass-effect fade-in">
+        <div class="auth-card fade-in">
             <div class="logo-area">
-                <span class="rocket-icon">🚀</span>
-                <h1>MyLife OS</h1>
-                <p>Sua central de comando</p>
+                <img src="IMAGENS/logo_sem_fundo_1.1.png.png" alt="AXIS System" class="main-auth-logo">
             </div>
 
             <div class="auth-tabs">
@@ -22,25 +21,34 @@
                 <button onclick="toggleAuth('register')" id="tab-register">Criar Conta</button>
             </div>
             
+            <div id="register-only-fields" style="display: none;">
+                <div class="input-group">
+                    <input type="text" id="reg-fullname" placeholder="Nome Completo" autocomplete="off">
+                </div>
+                <div class="input-group">
+                    <input type="email" id="reg-email" placeholder="E-mail" autocomplete="off">
+                </div>
+            </div>
+
             <div class="input-group">
                 <input type="text" id="username" placeholder="Usuário" autocomplete="off">
             </div>
             
-            <div class="input-group password-group">
+            <div class="input-group password-container">
                 <input type="password" id="password" placeholder="Senha">
                 <span class="eye-icon" onclick="togglePassword()">👁️</span>
             </div>
 
-            <button onclick="handleAuth()" id="auth-main-btn" class="btn-primary">Acessar Sistema</button>
+            <button onclick="handleAuth()" id="auth-main-btn" class="btn-primary">Acessar AXIS</button>
         </div>
     </div>
 
     <div id="main-content" style="display: none;">
         <header class="top-nav glass-blur">
             <div class="user-info">
-                <div class="avatar" id="user-initials">US</div>
+                <img src="IMAGENS/fivecon_1.1.png.png" alt="AXIS" class="nav-icon">
                 <div>
-                    <small>Bem-vindo,</small>
+                    <small>Bem-vindo ao AXIS,</small>
                     <h2 id="welcome-msg">Usuário</h2>
                 </div>
             </div>
@@ -57,10 +65,9 @@
         </header>
         
         <main class="dashboard-grid fade-in" id="dashboard-main">
-            
             <section class="card-glass full-span">
                 <div class="card-header">
-                    <h3>🏆 Hábitos</h3>
+                    <h3>🏆 Hábitos Diários</h3>
                     <div class="progress-bg"><div class="progress-fill" id="habit-progress"></div></div>
                 </div>
                 <div class="habit-list" id="habit-list"></div>
@@ -69,7 +76,7 @@
             <section class="card-glass">
                 <div class="card-header">
                     <h3>✅ Tarefas</h3>
-                    <span class="badge" id="task-mode-label">PESSOAL</span>
+                    <span class="badge" id="task-mode-label">ATIVO</span>
                 </div>
                 <div class="input-row">
                     <input type="text" id="todo-input" placeholder="Nova tarefa...">
@@ -79,20 +86,20 @@
             </section>
 
             <section class="card-glass">
-                <div class="card-header"><h3>💰 Fluxo Financeiro</h3></div>
+                <div class="card-header"><h3>💰 Fluxo de Caixa</h3></div>
                 <div class="input-row">
-                    <input type="text" id="fin-desc" placeholder="Ex: Salário ou -Mercado">
-                    <input type="number" id="fin-val" placeholder="Valor (use - para gastos)">
+                    <input type="text" id="fin-desc" placeholder="Descrição">
+                    <input type="number" id="fin-val" placeholder="Valor">
                     <button onclick="addFinance()" class="btn-add">OK</button>
                 </div>
                 <ul id="fin-list" class="finance-list"></ul>
-                <div class="card-footer">Saldo: <span id="fin-total">R$ 0,00</span></div>
+                <div class="card-footer">Total: <span id="fin-total">R$ 0,00</span></div>
             </section>
 
             <section class="card-glass full-span">
-                <h3>📝 Notas Rápidas</h3>
-                <textarea id="diary-input" placeholder="Digite aqui..." rows="4"></textarea>
-                <button onclick="saveDiary()" class="btn-save">Salvar</button>
+                <h3>📝 Notas do Sistema</h3>
+                <textarea id="diary-input" placeholder="Anotações rápidas..." rows="4"></textarea>
+                <button onclick="saveDiary()" class="btn-save">Salvar Notas</button>
             </section>
         </main>
     </div>
