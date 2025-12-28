@@ -1,247 +1,116 @@
-/* ============================================================
-   MYLIFE OS - CSS DEFINITIVO (GOLD EDITION) - CORRIGIDO
-   ============================================================ */
-
 :root {
     --primary: #007AFF;
     --success: #34C759;
     --danger: #FF453A;
     --glass: rgba(255, 255, 255, 0.08);
     --border: rgba(255, 255, 255, 0.1);
-    --bg-pessoal: radial-gradient(circle at top right, #1e293b, #020617);
-    --bg-prof: radial-gradient(circle at top right, #391028, #020617);
+    --bg-dark: radial-gradient(circle at top right, #0f172a, #020617);
 }
 
-/* Reset de Segurança */
-* { 
-    box-sizing: border-box; 
-    margin: 0; 
-    padding: 0; 
-    font-family: 'Inter', sans-serif; 
-}
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
 
-body {
+body { 
     color: white; 
     min-height: 100vh; 
+    background: var(--bg-dark); 
     overflow-x: hidden;
-    transition: background 0.8s ease;
 }
 
-.mode-pessoal { background: var(--bg-pessoal); }
-.mode-profissional { background: var(--bg-prof); }
-
-/* --- TELA DE LOGIN --- */
+/* TELA DE LOGIN */
 #auth-screen {
-    position: fixed; 
-    top: 0; 
-    left: 0;
-    width: 100vw; 
-    height: 100vh; 
-    z-index: 2000;
-    display: flex; 
-    justify-content: center; 
-    align-items: center;
-    padding: 20px;
+    position: fixed; width: 100%; height: 100%; display: flex; 
+    justify-content: center; align-items: center; z-index: 1000;
 }
 
 .auth-card {
-    width: 100%; 
-    max-width: 360px; 
-    padding: 35px;
-    border-radius: 28px; 
-    text-align: center;
-    background: rgba(20, 30, 50, 0.7); 
-    backdrop-filter: blur(25px);
-    -webkit-backdrop-filter: blur(25px);
-    border: 1px solid var(--border);
-    box-shadow: 0 25px 60px rgba(0,0,0,0.6);
+    width: 90%; max-width: 400px; padding: 40px; border-radius: 28px;
+    background: rgba(10, 15, 25, 0.9); backdrop-filter: blur(20px);
+    border: 1px solid var(--border); text-align: center;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
 }
 
-.logo-area h1 { font-size: 1.6rem; margin: 10px 0 5px; letter-spacing: -1px; }
-.logo-area p { color: #888; font-size: 0.9rem; margin-bottom: 25px; }
-.rocket-icon { font-size: 2.5rem; display: block; margin-bottom: 5px; }
-
-.auth-tabs { 
-    display: flex; 
-    background: rgba(0,0,0,0.3); 
-    padding: 4px; 
-    border-radius: 12px; 
-    margin-bottom: 20px; 
-}
-.auth-tabs button { 
-    flex: 1; 
-    border: none; 
-    background: transparent; 
-    color: #777; 
-    padding: 10px; 
-    font-weight: 600; 
-    cursor: pointer; 
-    border-radius: 9px; 
-    transition: 0.3s; 
-}
-.auth-tabs button.active { 
-    background: #444; 
-    color: white; 
-    box-shadow: 0 2px 8px rgba(0,0,0,0.3); 
+.main-auth-logo {
+    width: 100%; max-width: 300px; height: auto; margin-bottom: 30px;
 }
 
-.input-group { width: 100%; margin-bottom: 12px; }
-.input-group input { 
-    width: 100%; 
-    padding: 14px 16px; 
-    border-radius: 12px; 
-    border: 1px solid var(--border); 
-    background: rgba(255,255,255,0.05); 
-    color: white; 
-    font-size: 1rem; 
-    outline: none; 
+/* HEADER */
+.top-nav {
+    position: fixed; top: 0; width: 100%; height: 75px;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0 30px; background: rgba(5, 7, 10, 0.8);
+    backdrop-filter: blur(15px); border-bottom: 1px solid var(--border); z-index: 100;
 }
 
-.password-group { position: relative; width: 100%; }
-.eye-icon { 
-    position: absolute; 
-    right: 15px; 
-    top: 50%; 
-    transform: translateY(-50%); 
-    cursor: pointer; 
-    opacity: 0.6; 
+.nav-icon { height: 40px; width: auto; margin-right: 15px; }
+
+/* GRID DO DASHBOARD */
+.dashboard-grid {
+    padding: 110px 25px 40px; display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 20px; max-width: 1200px; margin: 0 auto;
 }
 
-.btn-primary { 
-    width: 100%; 
-    padding: 14px; 
-    background: var(--primary); 
-    border: none; 
-    border-radius: 12px; 
-    color: white; 
-    font-weight: 600; 
-    cursor: pointer; 
-    margin-top: 10px; 
-}
-
-/* --- DASHBOARD --- */
-.top-nav { 
-    position: fixed; 
-    top: 0; 
-    width: 100%; 
-    height: 75px; 
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center; 
-    padding: 0 30px; 
-    background: rgba(10, 15, 25, 0.8); 
-    backdrop-filter: blur(15px); 
-    z-index: 100; 
-    border-bottom: 1px solid var(--border); 
-}
-
-.dashboard-grid { 
-    padding: 110px 25px 40px; 
-    display: grid; 
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); 
-    gap: 20px; 
-    max-width: 1100px; 
-    margin: 0 auto; 
-}
-
-.card-glass { 
-    background: var(--glass); 
-    border: 1px solid var(--border); 
-    border-radius: 22px; 
-    padding: 25px; 
-    display: flex; /* Adicionado para controlar o conteúdo interno */
-    flex-direction: column;
-}
+.card-glass { background: var(--glass); border: 1px solid var(--border); border-radius: 22px; padding: 25px; }
 .full-span { grid-column: 1 / -1; }
 
-/* --- FINANÇAS (CORREÇÃO DO VAZAMENTO) --- */
-.input-row { 
-    display: flex; 
-    gap: 10px; 
-    margin-bottom: 15px; 
-    flex-wrap: wrap; /* CORREÇÃO: Faz o botão pular linha se não couber, em vez de sair do card */
+/* INPUTS E BOTÕES */
+.input-group { margin-bottom: 15px; }
+.input-group input, .input-row input, textarea {
+    width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--border);
+    background: rgba(255,255,255,0.05); color: white; outline: none;
 }
 
-.input-row input { 
-    flex: 1; 
-    min-width: 100px; /* Garante que o input não suma */
-    padding: 12px; 
-    border-radius: 10px; 
-    border: 1px solid var(--border); 
-    background: rgba(255,255,255,0.06); 
-    color: white; 
+.btn-primary {
+    width: 100%; padding: 14px; background: var(--primary); border: none;
+    border-radius: 12px; color: white; font-weight: 600; cursor: pointer;
 }
 
-.btn-add { 
-    padding: 12px 18px; 
-    background: var(--success); 
-    border: none; 
-    color: white; 
-    border-radius: 10px; 
-    cursor: pointer; 
-    font-weight: bold; 
+.btn-add { padding: 12px 20px; background: var(--success); border: none; color: white; border-radius: 10px; cursor: pointer; }
+
+/* TABS LOGIN */
+.auth-tabs { display: flex; background: rgba(0,0,0,0.2); padding: 5px; border-radius: 12px; margin-bottom: 25px; }
+.auth-tabs button { flex: 1; padding: 10px; border: none; background: transparent; color: #888; cursor: pointer; }
+.auth-tabs button.active { background: #1e293b; color: white; border-radius: 10px; }
+
+/* ELEMENTOS DIVERSOS */
+.progress-bg { height: 8px; background: rgba(255,255,255,0.1); border-radius: 10px; margin-top: 15px; }
+.progress-fill { height: 100%; background: var(--success); width: 0%; border-radius: 10px; transition: 0.5s; }
+.habit-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; margin-top: 20px; }
+.habit-item { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 15px; text-align: center; cursor: pointer; }
+.habit-item.done { background: rgba(52, 199, 89, 0.2); border: 1px solid var(--success); }
+.fade-in { animation: fadeIn 0.6s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; } }
+
+/* Container que agrupa o input e o ícone */
+.password-container {
+    position: relative; /* Base para o posicionamento do olho */
+    display: flex;
+    align-items: center;
+    width: 100%;
 }
 
-.finance-list { list-style: none; padding: 0; max-height: 250px; overflow-y: auto; }
-.finance-item { 
-    display: flex; 
-    justify-content: space-between; 
-    padding: 12px 15px; 
-    margin-bottom: 8px; 
-    border-radius: 10px; 
-    background: rgba(255,255,255,0.03); 
-    border-left: 4px solid transparent; 
-}
-.finance-item.income { border-left-color: var(--success); }
-.finance-item.expense { border-left-color: var(--danger); }
-
-/* --- NOTAS RÁPIDAS (CORREÇÃO DA CAIXA BRANCA) --- */
-textarea { 
-    width: 100%; /* CORREÇÃO: Ocupa toda a largura do card */
-    min-height: 100px;
-    background: rgba(255,255,255,0.05); 
-    border: 1px solid var(--border); 
-    padding: 12px; 
-    color: white; 
-    border-radius: 12px; 
-    resize: none; 
-    margin-bottom: 10px;
+/* Garante que o texto da senha não fique por baixo do ícone */
+.password-container input {
+    width: 100%;
+    padding-right: 45px !important; /* Espaço na direita para o olho */
 }
 
-.btn-save { 
-    width: fit-content; 
-    padding: 10px 25px; 
-    background: var(--primary); 
-    border: none; 
-    color: white; 
-    border-radius: 10px; 
-    cursor: pointer; 
+/* Posicionamento exato do olho */
+.eye-icon {
+    position: absolute;
+    right: 15px; /* Distância da borda direita */
+    top: 50%;
+    transform: translateY(-50%); /* Alinhamento vertical perfeito */
+    cursor: pointer;
+    font-size: 1.2rem;
+    opacity: 0.6;
+    transition: opacity 0.3s;
+    user-select: none; /* Evita selecionar o emoji como texto */
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-/* --- HÁBITOS --- */
-.progress-bg { height: 8px; background: rgba(255,255,255,0.1); border-radius: 10px; margin-top: 12px; }
-.progress-fill { height: 100%; background: var(--success); width: 0%; border-radius: 10px; transition: 0.6s ease; }
-
-.habit-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 12px; margin-top: 20px; }
-.habit-item { 
-    background: rgba(255,255,255,0.05); 
-    padding: 12px; 
-    border-radius: 12px; 
-    text-align: center; 
-    cursor: pointer; 
-}
-.habit-item.done { background: rgba(52, 199, 89, 0.15); border-color: var(--success); }
-
-/* ANIMAÇÕES */
-.fade-in { animation: fadeIn 0.6s ease-out; }
-.changing { opacity: 0; filter: blur(8px); }
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(15px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-@media (max-width: 600px) {
-    .dashboard-grid { padding-top: 90px; }
-    .top-nav { padding: 0 15px; }
+.eye-icon:hover {
+    opacity: 1;
 }
