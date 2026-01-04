@@ -1,158 +1,1405 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AXIS - Sistema de Gestão de Inventário de Impressoras Zebra">
+    <meta name="theme-color" content="#2ecc71">
+    
+    <!-- Favicon -->
     <link rel="icon" type="image/png" href="IMAGENS/Novo_Fivecon_1.2.png">
-    <title>AXIS</title>
+    <link rel="apple-touch-icon" href="IMAGENS/Novo_Fivecon_1.2.png">
+    
+    <title>AXIS - Sistema de Gestão de Inventário</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- CSS PRINCIPAL -->
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-</head>
-<body>
+    
+    <!-- WhatsApp Alerts CSS -->
+    <link rel="stylesheet" href="novos-modulos/whatsapp-alerts/whatsapp-alerts.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        /* Garantir carregamento de fontes */
+        * {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+        }
 
+        /* Card especial de Manutenção Preventiva */
+        .mod-card.preventiva-master {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(253, 126, 20, 0.1) 100%) !important;
+            border: 2px solid rgba(253, 126, 20, 0.3) !important;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .mod-card.preventiva-master::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(253, 126, 20, 0.1) 0%, transparent 70%);
+            animation: rotate 10s linear infinite;
+        }
+
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .mod-card.preventiva-master:hover {
+            border-color: #fd7e14 !important;
+            background: linear-gradient(135deg, #ffffff 0%, rgba(253, 126, 20, 0.2) 100%) !important;
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(253, 126, 20, 0.3);
+        }
+
+        .mod-card.preventiva-master .mod-icon {
+            font-size: 38px;
+            margin-bottom: 12px;
+            animation: pulse 2s ease-in-out infinite;
+            filter: drop-shadow(0 2px 4px rgba(253, 126, 20, 0.3));
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .mod-link-preventiva {
+            color: #fd7e14;
+            font-weight: 700;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Loading Screen */
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+
+        #loading-screen.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .loader {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            margin-top: 20px;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        /* Animações de entrada */
+        .fade-in {
+            animation: fadeIn 0.6s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Melhorias de acessibilidade */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+
+        /* Focus visible para acessibilidade */
+        *:focus-visible {
+            outline: 3px solid #2ecc71;
+            outline-offset: 2px;
+        }
+
+        /* Toast notifications melhorado */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: white;
+            padding: 16px 20px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 10000;
+            transform: translateX(400px);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .toast.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .toast-success {
+            border-left: 4px solid #2ecc71;
+        }
+
+        .toast-warning {
+            border-left: 4px solid #ff9500;
+        }
+
+        .toast-error {
+            border-left: 4px solid #ff3b30;
+        }
+
+        .toast-info {
+            border-left: 4px solid #007aff;
+        }
+
+        /* Tooltip container */
+        .tooltip-container {
+            position: fixed;
+            background: #1d1d1f;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            pointer-events: none;
+            z-index: 9999;
+            display: none;
+            max-width: 300px;
+            white-space: nowrap;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        /* Modal de cadastro e detalhes */
+        .modal-equipamento {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
+            z-index: 3000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 24px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: modalSlideIn 0.3s ease;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .modal-header {
+            padding: 20px 25px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            color: #1d1d1f;
+        }
+
+        .close-modal {
+            font-size: 24px;
+            cursor: pointer;
+            color: #86868b;
+            padding: 5px;
+            border-radius: 50%;
+            transition: all 0.2s ease;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            background: none;
+        }
+
+        .close-modal:hover {
+            background: #f5f5f7;
+            color: #1d1d1f;
+        }
+
+        .modal-body {
+            padding: 25px;
+        }
+
+        /* Controles de inventário */
+        .inventory-controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .search-bar-inventory {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex: 1;
+        }
+
+        .axis-input-search {
+            flex: 1;
+            padding: 12px 16px;
+            padding-left: 40px;
+            border-radius: 12px;
+            border: 1px solid #d2d2d7;
+            font-size: 14px;
+            background: white;
+        }
+
+        .axis-select {
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: 1px solid #d2d2d7;
+            background: white;
+            font-size: 14px;
+            min-width: 150px;
+        }
+
+        /* Estatísticas */
+        .inventory-stats {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 15px 20px;
+            text-align: center;
+            border: 1px solid #f0f0f0;
+            min-width: 120px;
+            flex: 1;
+        }
+
+        .stat-number {
+            display: block;
+            font-size: 28px;
+            font-weight: 700;
+            color: #1d1d1f;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #86868b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 5px;
+        }
+
+        /* Paginação */
+        .pagination-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .pagination-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .pagination-btn {
+            padding: 8px 12px;
+            border: 1px solid #d2d2d7;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .pagination-btn:hover:not(:disabled) {
+            background: #007aff;
+            color: white;
+            border-color: #007aff;
+        }
+
+        .pagination-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination-btn.active {
+            background: #007aff;
+            color: white;
+            border-color: #007aff;
+        }
+
+        /* Menu de modelos */
+        .model-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+        }
+
+        .model-tab {
+            padding: 12px 20px;
+            background: #f5f5f7;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 14px;
+            white-space: nowrap;
+            transition: all 0.3s ease;
+        }
+
+        .model-tab:hover {
+            background: #e5e5ea;
+        }
+
+        .model-tab.active {
+            background: #007aff;
+            color: white;
+        }
+
+        /* Ações do header */
+        .nav-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .theme-toggle, .notifications-bell {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f5f5f7;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        .notification-count {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #ff3b30;
+            color: white;
+            font-size: 11px;
+            font-weight: 700;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* FAB */
+        .fab-container {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 1000;
+        }
+
+        .fab-main {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #2ecc71, #007aff);
+            color: white;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 8px 25px rgba(46, 204, 113, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .fab-main:hover {
+            transform: scale(1.1);
+            box-shadow: 0 12px 30px rgba(46, 204, 113, 0.4);
+        }
+
+        .fab-menu {
+            position: absolute;
+            bottom: 70px;
+            right: 0;
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .fab-container.active .fab-menu {
+            display: flex;
+        }
+
+        .fab-item {
+            padding: 12px 20px;
+            background: white;
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            white-space: nowrap;
+            animation: fadeInUp 0.3s ease;
+        }
+
+        .fab-item:nth-child(1) { animation-delay: 0.1s; }
+        .fab-item:nth-child(2) { animation-delay: 0.2s; }
+        .fab-item:nth-child(3) { animation-delay: 0.3s; }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Loading Screen -->
+    <div id="loading-screen">
+        <div class="loader"></div>
+        <div class="loading-text">Carregando AXIS...</div>
+    </div>
+
+    <!-- ============================================
+         TELA DE AUTENTICAÇÃO
+         ============================================ -->
     <div id="auth-screen">
-        <div class="auth-card">
+        <div class="auth-card fade-in">
             <div class="logo-area">
-                <img src="IMAGENS/Nova_Logo_Sem_Fundo_1.2.png" alt="AXIS" class="main-auth-logo">
+                <img src="IMAGENS/Nova_Logo_Sem_Fundo_1.2.png" alt="AXIS - Sistema de Gestão" class="main-auth-logo">
             </div>
 
-            <div class="auth-tabs">
-                <button onclick="toggleAuth('login')" id="tab-login" class="active">Entrar</button>
-                <button onclick="toggleAuth('register')" id="tab-register">Criar Conta</button>
+            <div class="auth-tabs" role="tablist">
+                <button onclick="toggleAuth('login')" 
+                        id="tab-login" 
+                        class="active" 
+                        role="tab" 
+                        aria-selected="true"
+                        aria-controls="login-panel">
+                    Entrar
+                </button>
+                <button onclick="toggleAuth('register')" 
+                        id="tab-register" 
+                        role="tab" 
+                        aria-selected="false"
+                        aria-controls="register-panel">
+                    Criar Conta
+                </button>
             </div>
             
+            <!-- Campos de Registro -->
             <div id="register-fields" style="display: none;">
                 <div class="input-group">
-                    <input type="text" id="reg-fullname" placeholder="Nome Completo">
+                    <label for="reg-fullname">Nome Completo</label>
+                    <input type="text" 
+                           id="reg-fullname" 
+                           placeholder="Digite seu nome completo"
+                           autocomplete="name"
+                           aria-required="true">
                 </div>
             </div>
 
+            <!-- Campos de Login -->
             <div class="input-group">
-                <input type="text" id="username" placeholder="Usuário">
+                <label for="username">Usuário</label>
+                <input type="text" 
+                       id="username" 
+                       placeholder="Digite seu usuário"
+                       autocomplete="username"
+                       aria-required="true">
             </div>
 
             <div class="input-group password-container">
-                <input type="password" id="password" placeholder="Senha">
-                <button type="button" class="eye-toggle" onclick="togglePassword()">
+                <label for="password">Senha</label>
+                <input type="password" 
+                       id="password" 
+                       placeholder="Digite sua senha"
+                       autocomplete="current-password"
+                       aria-required="true">
+                <button type="button" 
+                        class="eye-toggle" 
+                        onclick="togglePassword()"
+                        aria-label="Mostrar/Ocultar senha">
                     <span id="eye-icon">👁️</span>
                 </button>
             </div>
 
-            <button onclick="handleAuth()" id="auth-main-btn" class="btn-primary-auth">Acessar AXIS</button>
+            <button onclick="handleAuth()" 
+                    id="auth-main-btn" 
+                    class="btn-primary-auth"
+                    aria-label="Acessar sistema">
+                Acessar AXIS
+            </button>
         </div>
     </div>
 
+    <!-- ============================================
+         CONTEÚDO PRINCIPAL DO SISTEMA
+         ============================================ -->
     <div id="main-content" style="display: none;">
         
-        <header class="apple-nav">
+        <!-- Header Principal -->
+        <header class="apple-nav" role="banner">
             <div class="nav-container">
                 <div class="nav-left">
-                    <button class="menu-trigger-ios" onclick="toggleSidebar()">
+                    <button class="menu-trigger-ios" 
+                            onclick="toggleSidebar()"
+                            aria-label="Abrir menu"
+                            aria-expanded="false">
                         <div class="bar"></div>
                         <div class="bar"></div>
                         <div class="bar"></div>
                     </button>
-                    <img src="IMAGENS/Novo_Fivecon_1.2.png" alt="AXIS" class="brand-logo-ios">
+                    <img src="IMAGENS/Novo_Fivecon_1.2.png" alt="AXIS Logo" class="brand-logo-ios">
                 </div>
 
                 <div class="nav-welcome-text">
-                    BEM-VINDO A AXIS, <span id="user-display-name">FILIPE DA SILVA</span>
+                    BEM-VINDO AO AXIS, <span id="user-display-name">USUÁRIO</span>
                 </div>
 
-                <div class="nav-status-right">
-                    <div class="status-dot"></div>
-                    <span>SISTEMA ONLINE</span>
+                <div class="nav-actions">
+                    <button class="theme-toggle" onclick="toggleTheme()" id="theme-toggle" aria-label="Alternar tema">
+                        <span id="theme-icon">🌙</span>
+                    </button>
+                    <button class="notifications-bell" onclick="toggleNotifications()" aria-label="Notificações">
+                        🔔
+                        <span id="notification-badge" class="notification-count" style="display: none;">0</span>
+                    </button>
+                    <div class="nav-status-right">
+                        <div class="status-dot" aria-label="Sistema online"></div>
+                        <span>SISTEMA ONLINE</span>
+                    </div>
                 </div>
             </div>
         </header>
 
-        <aside id="side-menu" class="glass-sidebar">
+        <!-- Menu Lateral -->
+        <aside id="side-menu" class="glass-sidebar" role="navigation" aria-label="Menu principal">
             <div class="sidebar-header">
-                <h3></h3>
+                <h3 class="sr-only">Navegação Principal</h3>
             </div>
 
             <nav class="side-nav-links">
-                <button onclick="navigate('page-home')" class="side-item active">Início</button>
-                <button onclick="navigate('page-inventario')" class="side-item">Inventário</button>
-                <button onclick="navigate('page-rondas')" class="side-item">Rondas</button>
-                <button onclick="navigate('page-Manutenções Preventivas')" class="side-item">Manutenções Preventivas</button>
-                <button onclick="navigate('page-suporte')" class="side-item">Suporte</button>
+                <button onclick="navigate('page-home')" class="side-item active">
+                    📊 Início
+                </button>
+                <button onclick="navigate('page-inventario')" class="side-item">
+                    📦 Inventário
+                </button>
+                <button onclick="navigate('page-rondas')" class="side-item">
+                    🛡️ Rondas
+                </button>
+                <button onclick="window.location.href='manutenção_preventiva.html'" class="side-item">
+                    ⚙️ Manutenções Preventivas
+                </button>
+                <button onclick="navigate('page-suporte')" class="side-item">
+                    💬 Suporte
+                </button>
+                <button onclick="navigate('page-configuracoes')" class="side-item">
+                    ⚙️ Configurações
+                </button>
                 <hr class="nav-divider">
-                <button onclick="logout()" class="side-item logout">Sair do AXIS</button>
+                <button onclick="logout()" class="side-item logout">
+                    🚪 Sair do AXIS
+                </button>
             </nav>
         </aside>
+
+        <!-- Overlay do Menu -->
         <div id="menu-overlay" class="menu-overlay" onclick="toggleSidebar()"></div>
 
-        <main class="content-wrapper">
+        <!-- Conteúdo Principal -->
+        <main class="content-wrapper" role="main">
             
+            <!-- ============================================
+                 PÁGINA INICIAL - DASHBOARD
+                 ============================================ -->
             <section id="page-home" class="main-section active">
                 <div class="dashboard-header">
                     <div class="welcome-text">
                         <h1>Módulos Técnicos</h1>
-                        <p>Gestão centralizada de ativos e vistorias.</p>
+                        <p>Gestão centralizada de ativos e vistorias técnicas.</p>
                     </div>
                 </div>
 
+                <!-- Busca Global -->
                 <div class="quick-search-container">
-                    <input type="text" id="global-search" placeholder="Buscar TAG, IP ou Equipamento..." onkeyup="handleGlobalSearch()">
+                    <input type="search" 
+                           id="global-search" 
+                           placeholder="🔍 Buscar TAG, IP, Serial ou Equipamento..." 
+                           onkeyup="handleGlobalSearch()"
+                           aria-label="Busca global no sistema">
                 </div>
 
+                <!-- Grid de Módulos -->
                 <div class="dashboard-grid">
-                    <div class="mod-card" onclick="navigate('page-inventario')">
+                    <!-- Card Inventário -->
+                    <div class="mod-card" onclick="navigate('page-inventario')" tabindex="0" role="button">
                         <div class="mod-icon">📦</div>
                         <div class="mod-content">
                             <h3>Inventário</h3>
-                            <p>Controle de impressoras ZT411 e hardware.</p>
+                            <p>Controle completo de impressoras ZT411, ZD421 e ZQ630.</p>
                             <span class="mod-link">Acessar Frota →</span>
                         </div>
                     </div>
 
-                    <div class="mod-card" onclick="navigate('page-rondas')">
+                    <!-- Card Rondas -->
+                    <div class="mod-card" onclick="navigate('page-rondas')" tabindex="0" role="button">
                         <div class="mod-icon">🛡️</div>
                         <div class="mod-content">
                             <h3>Rondas</h3>
-                            <p>Checklists e vistorias preventivas.</p>
+                            <p>Checklists e vistorias preventivas diárias.</p>
                             <span class="mod-link">Ver Relatórios →</span>
                         </div>
                     </div>
 
-                    <div class="mod-card highlight">
-                        <div class="equipment-view">
-                            <div class="equipment-info">
-                                <span class="badge-new">DESTAQUE</span>
-                                <h3>Zebra ZT411</h3>
-                                <p>Status: <span class="status-ok" style="color: #2ecc71; font-weight: bold;">Operacional</span></p>
-                                <button class="btn-mini" onclick="navigate('page-inventario')">Ver Tudo</button>
+                    <!-- Card Manutenção Preventiva (DESTAQUE) -->
+                    <div class="mod-card preventiva-master" 
+                         onclick="window.location.href='manutenção_preventiva.html'" 
+                         tabindex="0" 
+                         role="button">
+                        <div class="mod-icon">⚙️</div>
+                        <div class="mod-content">
+                            <h3 class="txt-axis-gradient">Manutenção Preventiva</h3>
+                            <p>Módulo avançado de checklist e laudos técnicos especializados.</p>
+                            <span class="mod-link-preventiva">Iniciar Vistoria →</span>
+                        </div>
+                    </div>
+
+                    <!-- Card Suporte -->
+                    <div class="mod-card" onclick="navigate('page-suporte')" tabindex="0" role="button">
+                        <div class="mod-icon">💬</div>
+                        <div class="mod-content">
+                            <h3>Suporte Técnico</h3>
+                            <p>Central de ajuda e documentação do sistema.</p>
+                            <span class="mod-link">Abrir Ticket →</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================
+                 PÁGINA DE INVENTÁRIO
+                 ============================================ -->
+            <section id="page-inventario" class="main-section">
+                <div class="section-header">
+                    <h2>📦 Gestão de Inventário</h2>
+                    <p class="section-subtitle">Controle total de impressoras Zebra em tempo real</p>
+                </div>
+
+                <!-- Menu de Modelos -->
+                <div class="models-nav">
+                    <div class="model-tabs">
+                        <button class="model-tab active" onclick="filtrarPorModelo('todos')">
+                            <span class="tab-icon">🌐</span>
+                            <span class="tab-label">Todos</span>
+                            <span class="tab-count" id="count-todos">50</span>
+                        </button>
+                        <button class="model-tab" onclick="filtrarPorModelo('ZT411')">
+                            <span class="tab-icon">🏭</span>
+                            <span class="tab-label">ZT411</span>
+                            <span class="model-badge industrial">Industrial</span>
+                            <span class="tab-count" id="count-zt411">15</span>
+                        </button>
+                        <button class="model-tab" onclick="filtrarPorModelo('ZD421')">
+                            <span class="tab-icon">💻</span>
+                            <span class="tab-label">ZD421</span>
+                            <span class="model-badge desktop">Desktop</span>
+                            <span class="tab-count" id="count-zd421">15</span>
+                        </button>
+                        <button class="model-tab" onclick="filtrarPorModelo('ZQ630')">
+                            <span class="tab-icon">🚀</span>
+                            <span class="tab-label">ZQ630</span>
+                            <span class="model-badge pagewide">Pagewide</span>
+                            <span class="tab-count" id="count-zq630">15</span>
+                        </button>
+                        <button class="model-tab add-new" onclick="abrirCadastroRapido()">
+                            <span class="tab-icon">➕</span>
+                            <span class="tab-label">Novo Equipamento</span>
+                        </button>
+                    </div>
+
+                    <!-- Estatísticas do Modelo Selecionado -->
+                    <div class="model-stats" id="model-stats">
+                        <!-- Será preenchido via JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Controles do Inventário -->
+                <div class="inventory-controls">
+                    <div class="search-bar-inventory">
+                        <input type="text" 
+                               id="search-inventory" 
+                               class="axis-input-search" 
+                               placeholder="🔍 Buscar por serial, tag, IP, MAC..."
+                               onkeyup="filtrarInventario()">
+                    </div>
+                    
+                    <div class="filter-group">
+                        <select id="filter-modelo" class="axis-select" onchange="filtrarInventario()">
+                            <option value="todos">Todos Modelos</option>
+                            <option value="ZT411">ZT411</option>
+                            <option value="ZD421">ZD421</option>
+                            <option value="ZQ630">ZQ630</option>
+                        </select>
+                        
+                        <select id="filter-status" class="axis-select" onchange="filtrarInventario()">
+                            <option value="todos">Todos Status</option>
+                            <option value="online">Online</option>
+                            <option value="offline">Offline</option>
+                            <option value="manutencao">Manutenção</option>
+                        </select>
+                        
+                        <select id="filter-setor" class="axis-select" onchange="filtrarInventario()">
+                            <option value="todos">Todos Setores</option>
+                            <option value="packing-mono">PACKING MONO</option>
+                            <option value="packing-ptw">PACKING PTW</option>
+                            <option value="rk">RK</option>
+                            <option value="check-in">CHECK-IN</option>
+                            <option value="returns">RETURNS</option>
+                            <option value="insumos">INSUMOS</option>
+                        </select>
+
+                        <div class="export-dropdown">
+                            <button class="btn-export-main" id="export-btn">
+                                📤 Exportar
+                            </button>
+                            <div class="export-options" id="export-dropdown">
+                                <button class="export-option" onclick="exportarDados('csv')">
+                                    <span class="export-icon">📄</span>
+                                    Exportar CSV
+                                </button>
+                                <button class="export-option" onclick="exportarDados('excel')">
+                                    <span class="export-icon">📊</span>
+                                    Exportar Excel
+                                </button>
+                                <button class="export-option" onclick="exportarDados('pdf')">
+                                    <span class="export-icon">📑</span>
+                                    Exportar PDF
+                                </button>
+                                <button class="export-option" onclick="imprimirInventario()">
+                                    <span class="export-icon">🖨️</span>
+                                    Imprimir
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Estatísticas Gerais -->
+                <div class="inventory-stats">
+                    <div class="stat-card online">
+                        <div class="stat-number" id="total-equipamentos">50</div>
+                        <div class="stat-label">Total Equipamentos</div>
+                    </div>
+                    <div class="stat-card online">
+                        <div class="stat-number" id="equipamentos-online">35</div>
+                        <div class="stat-label">Online</div>
+                    </div>
+                    <div class="stat-card offline">
+                        <div class="stat-number" id="equipamentos-offline">10</div>
+                        <div class="stat-label">Offline</div>
+                    </div>
+                    <div class="stat-card manutencao">
+                        <div class="stat-number" id="equipamentos-manutencao">5</div>
+                        <div class="stat-label">Em Manutenção</div>
+                    </div>
+                </div>
+
+                <!-- Gráfico de Status -->
+                <div class="chart-container" style="margin-bottom: 30px;">
+                    <canvas id="statusChart"></canvas>
+                </div>
+
+                <!-- Tabela de Inventário -->
+                <div class="glass-table-container" id="inventory-container">
+                    <div class="table-responsive">
+                        <table class="axis-table" id="inventory-table" role="table" aria-label="Tabela de inventário de impressoras">
+                            <thead>
+                                <tr>
+                                    <th scope="col" onclick="ordenarTabela('serial')">
+                                        Serial
+                                        <span class="sort-indicator" id="sort-serial">▼</span>
+                                    </th>
+                                    <th scope="col" onclick="ordenarTabela('modelo')">
+                                        Modelo
+                                        <span class="sort-indicator" id="sort-modelo">▼</span>
+                                    </th>
+                                    <th scope="col" onclick="ordenarTabela('ip')">
+                                        IP
+                                        <span class="sort-indicator" id="sort-ip">▼</span>
+                                    </th>
+                                    <th scope="col" onclick="ordenarTabela('macRede')">
+                                        MAC Rede
+                                        <span class="sort-indicator" id="sort-macRede">▼</span>
+                                    </th>
+                                    <th scope="col" onclick="ordenarTabela('macBluetooth')">
+                                        MAC Bluetooth
+                                        <span class="sort-indicator" id="sort-macBluetooth">▼</span>
+                                    </th>
+                                    <th scope="col" onclick="ordenarTabela('selb')">
+                                        SELB
+                                        <span class="sort-indicator" id="sort-selb">▼</span>
+                                    </th>
+                                    <th scope="col" onclick="ordenarTabela('patrimonio')">
+                                        Patrimônio
+                                        <span class="sort-indicator" id="sort-patrimonio">▼</span>
+                                    </th>
+                                    <th scope="col" onclick="ordenarTabela('setor')">
+                                        Setor
+                                        <span class="sort-indicator" id="sort-setor">▼</span>
+                                    </th>
+                                    <th scope="col" onclick="ordenarTabela('status')">
+                                        Status
+                                        <span class="sort-indicator" id="sort-status">▼</span>
+                                    </th>
+                                    <th scope="col" onclick="ordenarTabela('ultimaChecagem')">
+                                        Última Checagem
+                                        <span class="sort-indicator" id="sort-ultimaChecagem">▼</span>
+                                    </th>
+                                    <th scope="col">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inventory-data">
+                                <!-- Dados serão carregados via JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Controles de Paginação -->
+                <div class="pagination-controls" id="pagination-controls">
+                    <!-- Será preenchido via JavaScript -->
+                </div>
+            </section>
+
+            <!-- ============================================
+                 PÁGINA DE RONDAS
+                 ============================================ -->
+            <section id="page-rondas" class="main-section">
+                <div class="section-header">
+                    <h2>🛡️ Sistema de Rondas</h2>
+                    <p class="section-subtitle">Checklists e vistorias preventivas</p>
+                </div>
+                <div class="empty-state">
+                    <div class="empty-icon">🔧</div>
+                    <h4>Módulo em desenvolvimento</h4>
+                    <p>Em breve você poderá gerenciar todas as rondas técnicas por aqui.</p>
+                </div>
+            </section>
+
+            <!-- ============================================
+                 PÁGINA DE SUPORTE
+                 ============================================ -->
+            <section id="page-suporte" class="main-section">
+                <div class="section-header">
+                    <h2>💬 Suporte Técnico</h2>
+                    <p class="section-subtitle">Central de ajuda e documentação</p>
+                </div>
+                <div class="empty-state">
+                    <div class="empty-icon">📚</div>
+                    <h4>Central de Suporte</h4>
+                    <p>Sistema de tickets e documentação em desenvolvimento.</p>
+                </div>
+            </section>
+
+            <!-- ============================================
+                 PÁGINA DE CONFIGURAÇÕES
+                 ============================================ -->
+            <section id="page-configuracoes" class="main-section">
+                <div class="section-header">
+                    <h2>⚙️ Configurações do Sistema</h2>
+                    <p class="section-subtitle">Personalize sua experiência no AXIS</p>
+                </div>
+                
+                <div class="settings-container">
+                    <div class="settings-card">
+                        <h3>Aparência</h3>
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <h4>Tema do Sistema</h4>
+                                <p>Escolha entre modo claro ou escuro</p>
+                            </div>
+                            <div class="setting-control">
+                                <label class="switch">
+                                    <input type="checkbox" id="theme-toggle-switch" onchange="toggleTheme()">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <h4>Alto Contraste</h4>
+                                <p>Melhore a visibilidade para baixa visão</p>
+                            </div>
+                            <div class="setting-control">
+                                <label class="switch">
+                                    <input type="checkbox" id="high-contrast-toggle" onchange="toggleHighContrast()">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-card">
+                        <h3>Preferências</h3>
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <h4>Itens por Página</h4>
+                                <p>Quantidade de equipamentos exibidos por página</p>
+                            </div>
+                            <div class="setting-control">
+                                <select id="items-per-page" class="axis-select" onchange="updateItemsPerPage()">
+                                    <option value="10">10 itens</option>
+                                    <option value="15" selected>15 itens</option>
+                                    <option value="20">20 itens</option>
+                                    <option value="30">30 itens</option>
+                                    <option value="50">50 itens</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-card">
+                        <h3>Sistema</h3>
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <h4>Limpar Cache Local</h4>
+                                <p>Remove dados temporários do navegador</p>
+                            </div>
+                            <div class="setting-control">
+                                <button class="btn-secondary" onclick="clearLocalCache()">Limpar</button>
+                            </div>
+                        </div>
+                        
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <h4>Exportar Configurações</h4>
+                                <p>Salve suas configurações em um arquivo</p>
+                            </div>
+                            <div class="setting-control">
+                                <button class="btn-secondary" onclick="exportSettings()">Exportar</button>
                             </div>
                         </div>
                     </div>
                 </div>
             </section>
 
-            <section id="page-inventario" class="main-section">
-                <div class="section-header">
-                    <h2>Gestão de Inventário</h2>
-                </div>
-                <div class="glass-table-container">
-                    <table class="axis-table">
-                        <thead>
-                            <tr>
-                                <th>Tag</th>
-                                <th>Modelo</th>
-                                <th>IP</th>
-                                <th>Status</th>
-                                <th>Setor</th>
-                            </tr>
-                        </thead>
-                        <tbody id="zt411-data">
-                            </tbody>
-                    </table>
-                </div>
-            </section>
-
         </main>
     </div>
 
+    <!-- ============================================
+         MODAIS
+         ============================================ -->
+    
+    <!-- Modal de Cadastro de Equipamento -->
+    <div id="cadastro-modal" class="modal-equipamento">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>➕ Cadastrar Nova Impressora</h3>
+                <button class="close-modal" onclick="fecharCadastro()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="cadastro-steps">
+                    <div class="step active" id="step-1">1. Modelo</div>
+                    <div class="step" id="step-2">2. Dados Técnicos</div>
+                    <div class="step" id="step-3">3. Confirmação</div>
+                </div>
+                
+                <form id="cadastro-form">
+                    <!-- Passo 1: Seleção de Modelo -->
+                    <div class="cadastro-step active" id="step-1-content">
+                        <div class="model-options">
+                            <label class="model-option">
+                                <input type="radio" name="modelo" value="ZT411" id="cad-modelo-zt411" required>
+                                <div class="option-content">
+                                    <div class="option-icon">🏭</div>
+                                    <div class="option-title">ZT411</div>
+                                    <div class="option-desc">Impressora Industrial</div>
+                                </div>
+                            </label>
+                            
+                            <label class="model-option">
+                                <input type="radio" name="modelo" value="ZD421" id="cad-modelo-zd421">
+                                <div class="option-content">
+                                    <div class="option-icon">💻</div>
+                                    <div class="option-title">ZD421</div>
+                                    <div class="option-desc">Impressora Desktop</div>
+                                </div>
+                            </label>
+                            
+                            <label class="model-option">
+                                <input type="radio" name="modelo" value="ZQ630" id="cad-modelo-zq630">
+                                <div class="option-content">
+                                    <div class="option-icon">🚀</div>
+                                    <div class="option-title">ZQ630</div>
+                                    <div class="option-desc">Impressora Pagewide</div>
+                                </div>
+                            </label>
+                        </div>
+                        
+                        <div class="input-group">
+                            <label for="cad-serial">Número de Série *</label>
+                            <input type="text" id="cad-serial" required placeholder="Ex: 18J194501111">
+                        </div>
+                    </div>
+                    
+                    <!-- Passo 2: Dados Técnicos -->
+                    <div class="cadastro-step" id="step-2-content">
+                        <div class="form-grid">
+                            <div class="input-group">
+                                <label for="cad-ip">Endereço IP *</label>
+                                <input type="text" id="cad-ip" required placeholder="Ex: 10.15.20.101">
+                            </div>
+                            
+                            <div class="input-group">
+                                <label for="cad-mac-rede">MAC Rede *</label>
+                                <input type="text" id="cad-mac-rede" required placeholder="Ex: 00:1B:44:11:3A:B7">
+                            </div>
+                            
+                            <div class="input-group">
+                                <label for="cad-mac-bluetooth">MAC Bluetooth</label>
+                                <input type="text" id="cad-mac-bluetooth" placeholder="Ex: 00:1B:44:11:3A:B8">
+                            </div>
+                            
+                            <div class="input-group">
+                                <label for="cad-setor">Setor *</label>
+                                <select id="cad-setor" class="cadastro-select" required>
+                                    <option value="">Selecione um setor</option>
+                                    <option value="packing-mono">PACKING MONO</option>
+                                    <option value="packing-ptw">PACKING PTW</option>
+                                    <option value="rk">RK</option>
+                                    <option value="check-in">CHECK-IN</option>
+                                    <option value="returns">RETURNS</option>
+                                    <option value="insumos">INSUMOS</option>
+                                </select>
+                            </div>
+                            
+                            <div class="input-group">
+                                <label for="cad-patrimonio">Número do Patrimônio</label>
+                                <input type="text" id="cad-patrimonio" placeholder="Ex: 123456789">
+                            </div>
+                            
+                            <div class="input-group full-width">
+                                <label for="cad-localizacao">Localização Detalhada</label>
+                                <input type="text" id="cad-localizacao" placeholder="Ex: Setor A, Posição 1, Corredor Principal">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Passo 3: Confirmação -->
+                    <div class="cadastro-step" id="step-3-content">
+                        <div class="confirmation-details">
+                            <div class="detail-row">
+                                <span>Modelo:</span>
+                                <strong id="confirm-modelo">-</strong>
+                            </div>
+                            <div class="detail-row">
+                                <span>Serial:</span>
+                                <strong id="confirm-serial">-</strong>
+                            </div>
+                            <div class="detail-row">
+                                <span>IP:</span>
+                                <strong id="confirm-ip">-</strong>
+                            </div>
+                            <div class="detail-row">
+                                <span>Setor:</span>
+                                <strong id="confirm-setor">-</strong>
+                            </div>
+                            <div class="detail-row">
+                                <span>Status:</span>
+                                <strong>🟢 Online</strong>
+                            </div>
+                        </div>
+                        
+                        <div class="input-group full-width">
+                            <label for="cad-observacoes">Observações</label>
+                            <textarea id="cad-observacoes" rows="3" placeholder="Informações adicionais sobre o equipamento..."></textarea>
+                        </div>
+                    </div>
+                </form>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn-back" onclick="passoAnteriorCadastro()" id="btn-back" style="display: none;">
+                        ← Voltar
+                    </button>
+                    <button type="button" class="btn-next" onclick="proximoPassoCadastro()" id="btn-next">
+                        Próximo →
+                    </button>
+                    <button type="button" class="btn-submit" onclick="finalizarCadastro()" id="btn-submit" style="display: none;">
+                        ✅ Finalizar Cadastro
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Detalhes do Equipamento -->
+    <div id="detalhes-modal" class="modal-equipamento">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🔍 Detalhes do Equipamento</h3>
+                <button class="close-modal" onclick="fecharDetalhes()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="detalhe-header">
+                    <h4 id="detail-tag">ZT411-IND-001</h4>
+                    <span class="status-online" id="detail-status">● Online</span>
+                </div>
+                
+                <div class="detalhe-info">
+                    <div class="info-row">
+                        <span class="info-label">Número de Série:</span>
+                        <span class="info-value" id="detail-serial">18J194501111</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Modelo:</span>
+                        <span class="info-value" id="detail-modelo">ZT411</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Endereço IP:</span>
+                        <span class="info-value" id="detail-ip">10.15.20.101</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">MAC Rede:</span>
+                        <span class="info-value" id="detail-mac-rede">00:1B:44:11:3A:B7</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">MAC Bluetooth:</span>
+                        <span class="info-value" id="detail-mac-bluetooth">00:1B:44:11:3A:B8</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">SELB:</span>
+                        <span class="info-value" id="detail-selb">SELB-2024-001</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Patrimônio:</span>
+                        <span class="info-value" id="detail-patrimonio">123456789</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Setor:</span>
+                        <span class="info-value" id="detail-setor">PACKING MONO</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Localização:</span>
+                        <span class="info-value" id="detail-localizacao">Setor A, Posição 1, Corredor Principal</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Última Checagem:</span>
+                        <span class="info-value" id="detail-ultima-checagem">15/01/2024 14:30</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Responsável:</span>
+                        <span class="info-value" id="detail-responsavel">Filipe da Silva</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Fabricante:</span>
+                        <span class="info-value" id="detail-fabricante">Zebra Technologies</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Firmware:</span>
+                        <span class="info-value" id="detail-firmware">V72.20.15Z</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Contador:</span>
+                        <span class="info-value" id="detail-contador">12,543</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Garantia até:</span>
+                        <span class="info-value" id="detail-garantia">10/01/2025</span>
+                    </div>
+                </div>
+                
+                <!-- Status de Consumíveis -->
+                <div class="detalhe-acoes">
+                    <h4>Status dos Consumíveis</h4>
+                    <div id="detail-consumiveis">
+                        <div class="consumivel">
+                            <span class="consumivel-label">Toner:</span>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 85%"></div>
+                            </div>
+                            <span class="consumivel-value">85%</span>
+                        </div>
+                        <div class="consumivel">
+                            <span class="consumivel-label">Ribbon:</span>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 60%"></div>
+                            </div>
+                            <span class="consumivel-value">60%</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Observações -->
+                <div class="obs-container">
+                    <h4>Observações</h4>
+                    <p id="detail-observacoes">Impressora nova, calibração realizada em 10/01/2024</p>
+                </div>
+                
+                <!-- Ações -->
+                <div class="detalhe-acoes">
+                    <button class="btn-action btn-detalhes" id="detail-ping-btn">
+                        <span class="btn-icon">📶</span>
+                        <span class="btn-text">Testar Conexão</span>
+                    </button>
+                    <button class="btn-action btn-detalhes" id="detail-edit-btn">
+                        <span class="btn-icon">✏️</span>
+                        <span class="btn-text">Editar</span>
+                    </button>
+                    <button class="btn-action btn-detalhes" id="detail-history-btn">
+                        <span class="btn-icon">📊</span>
+                        <span class="btn-text">Histórico</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tooltip Container -->
+    <div id="tooltip-container" class="tooltip-container"></div>
+
+    <!-- ============================================
+         SCRIPTS - ORDEM CORRETA DE CARREGAMENTO
+         ============================================ -->
+    
+    <!-- Script Principal do Sistema -->
     <script src="script.js"></script>
+
+    <!-- WhatsApp Alerts System -->
+    <script src="novos-modulos/whatsapp-alerts/whatsapp-alerts.js"></script>
+
+    <!-- Script de Inicialização Final -->
+    <script>
+        // Remove loading screen quando tudo estiver carregado
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                const loadingScreen = document.getElementById('loading-screen');
+                if (loadingScreen) {
+                    loadingScreen.classList.add('hidden');
+                    setTimeout(function() {
+                        loadingScreen.style.display = 'none';
+                    }, 500);
+                }
+                
+                // Inicializa tema
+                const savedTheme = localStorage.getItem('axis-theme') || 'light';
+                document.body.setAttribute('data-theme', savedTheme);
+                document.getElementById('theme-icon').textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+                
+            }, 800);
+        });
+
+        // Prevenção de erro se scripts não carregarem
+        window.addEventListener('error', function(e) {
+            console.error('Erro detectado:', e);
+            const loadingScreen = document.getElementById('loading-screen');
+            if (loadingScreen) {
+                loadingScreen.innerHTML = `
+                    <div style="color: white; text-align: center; padding: 20px;">
+                        <h2>⚠️ Erro ao carregar sistema</h2>
+                        <p>Verifique sua conexão e recarregue a página.</p>
+                        <button onclick="location.reload()" style="margin-top: 20px; padding: 10px 20px; background: white; border: none; border-radius: 8px; cursor: pointer;">
+                            Recarregar Página
+                        </button>
+                    </div>
+                `;
+            }
+        });
+
+        // Log de sucesso no carregamento
+        console.log('%c🚀 AXIS Sistema Inicializado!', 'color: #2ecc71; font-size: 16px; font-weight: bold;');
+        console.log('%c✅ HTML, CSS e JavaScript conectados corretamente', 'color: #007aff; font-size: 12px;');
+    </script>
+
 </body>
 </html>
