@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AXIS Intelligence | Full Inspection</title>
+    <link rel="stylesheet" href="manutenção_preventiva.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body>
+
+    
+    <!-- Menu Hambúrguer -->
+    <div class="hamburger-menu-container">
+        <button class="hamburger-btn" id="hamburger-btn" onclick="toggleHamburgerMenu()">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+        <div class="hamburger-menu" id="hamburger-menu">
+            <a href="index.html#home" class="menu-item" onclick="voltarParaHome(event)">
+                <i class="fas fa-arrow-left"></i>
+                <span>Voltar para Dashboard</span>
+            </a>
+            <a href="manutencoes-dashboard.html" class="menu-item">
+                <i class="fas fa-clipboard-list"></i>
+                <span>Manutenções Preventivas</span>
+            </a>
+        </div>
+    </div>
+
+
+    <div class="axis-container" id="pdf-content">
+        <header class="main-header">
+            <h1 class="logo-text">MANUTENÇÃO<span>PREVENTIVA</span></h1>
+        </header>
+
+        <form id="preventiva-form">
+            <section class="glass-card">
+                <h2 class="title-gradient">Identificação do Ativo</h2>
+                <div class="row-2">
+                    <div class="ios-input"><label>Setor</label><input type="text" id="setor_id" required></div>
+                    <div class="ios-input"><label>Unidade</label><input type="text" id="unidade_id" required></div>
+                </div>
+                <div class="row-2">
+                    <div class="ios-input"><label>Técnico</label><input type="text" id="tecnico_id" required></div>
+                    <div class="ios-input"><label>Data</label><input type="date" id="data_id" required></div>
+                </div>
+                <div class="row-3">
+                    <div class="ios-input"><label>Serial Number</label><input type="text" id="serial_id" required></div>
+                    <div class="ios-input"><label>Modelo</label><input type="text" id="modelo_id" required></div>
+                    <div class="ios-input"><label>Patrimônio (SELB)</label><input type="text" id="selb_id" required></div>
+                </div>
+                <div class="row-3">
+                    <div class="ios-input"><label>IP</label><input type="text" id="ip_id"></div>
+                    <div class="ios-input"><label>MAC Rede</label><input type="text" id="mac_rede_id"></div>
+                    <div class="ios-input"><label>MAC Bluetooth</label><input type="text" id="mac_bt_id"></div>
+                </div>
+            </section>
+
+            <div class="checklist-grid">
+    <div class="glass-card">
+        <h3 class="txt-green">Estado Geral do Equipamento</h3>
+        <label class="ios-check"><input type="checkbox"><span>Quebrado fisicamente (Tricas/Carcaça)</span></label>
+        <label class="ios-check"><input type="checkbox"><span>Sujeira excessiva (Poeira/Resíduos)</span></label>
+        <label class="ios-check"><input type="checkbox"><span>Componentes soltos ou faltantes</span></label>
+        <label class="ios-check"><input type="checkbox"><span>Peel Off Quebrado/Desgastado</span></label>
+    </div>
+
+    <div class="glass-card">
+        <h3 class="txt-orange">Alimentação de Papel</h3>
+        <label class="ios-check"><input type="checkbox"><span>Papel não traciona</span></label>
+        <label class="ios-check"><input type="checkbox"><span>Papel emperra com frequência</span></label>
+        <label class="ios-check"><input type="checkbox"><span>Papel saindo torto (Desalinhado)</span></label>
+        <label class="ios-check"><input type="checkbox"><span>Duplicidade de Etiqueta</span></label>
+        <label class="ios-check"><input type="checkbox"><span>Etiqueta Enrola no Platen (Rolo)</span></label>
+    </div>
+
+    <div class="glass-card">
+        <h3 class="txt-green">Cabeçote de Impressão</h3>
+        <label class="ios-check"><input type="checkbox"><span>Impressão falhando (Linhas Brancas)</span></label>
+        <label class="ios-check"><input type="checkbox"><span>Cabeçote sujo ou carbonizado</span></label>
+        <label class="ios-check"><input type="checkbox"><span>Superaquecimento do Cabeçote</span></label>
+        <label class="ios-check"><input type="checkbox"><span>Resistência Interna Alta</span></label>
+    </div>
+
+    <div class="glass-card">
+        <h3 class="txt-orange">Sensor de Etiqueta ou Tampa</h3>
+        <label class="ios-check"><input type="checkbox"><span>Sensor Etiqueta não detecta</span></label>
+        <label class="ios-check"><input type="checkbox"><span>Sensor de Tampa aberta com falha</span></label>
+        <label class="ios-check"><input type="checkbox"><span>Sensor de Mídia com fita grudada</span></label>
+        <label class="ios-check"><input type="checkbox"><span>Falha de Calibração Automática</span></label>
+    </div>
+
+    <div class="glass-card">
+        <h3 class="txt-green">Placa Eletrônica e Conexões</h3>
+        <label class="ios-check"><input type="checkbox"><span>Equipamento Não Liga</span></label>
+        <label class="ios-check"><input type="checkbox"><span>Reinicia Sozinha durante uso</span></label>
+        <label class="ios-check"><input type="checkbox"><span>Conectores Traseiros Danificados</span></label>
+        <label class="ios-check"><input type="checkbox"><span>Erro na Fonte de Alimentação</span></label>
+    </div>
+
+    <div class="glass-card">
+        <h3 class="txt-orange">Conexão com Sistema</h3>
+        <label class="ios-check"><input type="checkbox"><span>Porta USB/Serial Danificada</span></label>
+        <label class="ios-check"><input type="checkbox"><span>Impressora não reconhecida no PC</span></label>
+        <label class="ios-check"><input type="checkbox"><span>Drivers Desatualizados ou Ausentes</span></label>
+        <label class="ios-check"><input type="checkbox"><span>Falha de Comunicação via Rede</span></label>
+    </div>
+
+    <div class="glass-card">
+        <h3 class="txt-green">Qualidade da Impressão</h3>
+        <label class="ios-check"><input type="checkbox"><span>Impressão Clara ou Distorcida</span></label>
+        <label class="ios-check"><input type="checkbox"><span>Impressão Escura em Excesso</span></label>
+        <label class="ios-check"><input type="checkbox"><span>Falhas Intermitentes (Pontos)</span></label>
+        <label class="ios-check"><input type="checkbox"><span>Sombra na Impressão (Ghosting)</span></label>
+    </div>
+
+    <div class="glass-card">
+        <h3 class="txt-orange">Ruídos ou Aquecimentos</h3>
+        <label class="ios-check"><input type="checkbox"><span>Ruídos Incomuns Operacionais</span></label>
+        <label class="ios-check"><input type="checkbox"><span>Aquecimento Excessivo na Carcaça</span></label>
+        <label class="ios-check"><input type="checkbox"><span>Vibração Fora do Normal</span></label>
+        <label class="ios-check"><input type="checkbox"><span>Cheiro de Queimado/Odor Químico</span></label>
+    </div>
+
+    <div class="glass-card">
+        <h3 class="txt-green">Mecanismos de Tração</h3>
+        <label class="ios-check"><input type="checkbox"><span>Correia de Transmissão Frouxa</span></label>
+        <label class="ios-check"><input type="checkbox"><span>Engrenagens Quebradas/Gastas</span></label>
+        <label class="ios-check"><input type="checkbox"><span>Rolo de Pressão (Platen) Danificado</span></label>
+        <label class="ios-check"><input type="checkbox"><span>Mola de Pressão sem Tensão</span></label>
+    </div>
+</div>
+
+             <div style="page-break-before: always;"></div>
+            <section class="glass-card pdf-page-break" id="section-obs">
+                <h2 class="title-gradient">Descrição dos Problemas | Observações</h2>
+                <textarea id="obs_id" placeholder="Relate aqui os detalhes técnicos encontrados..."></textarea>
+            </section>
+
+            <section class="glass-card">
+                <h2 class="title-gradient">Registro Fotográfico</h2>
+                <div class="photo-system">
+                    <div class="photo-col">
+                        <h4 class="txt-orange">SITUAÇÃO ANTES</h4>
+                        <div class="grid-photos-final">
+                            <div class="photo-placeholder">+</div><div class="photo-placeholder">+</div><div class="photo-placeholder">+</div>
+                            <div class="photo-placeholder">+</div><div class="photo-placeholder">+</div><div class="photo-placeholder">+</div>
+                        </div>
+                    </div>
+                    <div class="photo-col">
+                        <h4 class="txt-green">SITUAÇÃO DEPOIS</h4>
+                        <div class="grid-photos-final">
+                            <div class="photo-placeholder">+</div><div class="photo-placeholder">+</div><div class="photo-placeholder">+</div>
+                            <div class="photo-placeholder">+</div><div class="photo-placeholder">+</div><div class="photo-placeholder">+</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <button type="submit" id="btn-gerar" class="btn-gradient">FINALIZAR E GERAR RELATÓRIO PDF</button>
+        </form>
+    </div>
+    <script src="manutenção_preventiva.js"></script>
+
+    </form>
+</div> <div id="custom-alert" class="glass-overlay no-print">
+    <div class="glass-modal">
+        <div class="glass-icon">!</div>
+        <h2 id="alert-title">Aviso do Sistema</h2>
+        <p id="alert-message">Aguarde...</p>
+        <button onclick="closeAlert()" class="glass-button">Entendido</button>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="manutenção_preventiva.js"></script>
+</body>
+</html>
