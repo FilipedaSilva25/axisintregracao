@@ -585,17 +585,17 @@ function exportSettings() {
 // ================= 4. SISTEMA DE AUTENTICAÇÃO =================
 // Cria usuário administrador padrão se não existir
 function inicializarUsuarioAdmin() {
-    const adminKey = 'db_ADMIN';
+    const adminKey = 'db_admin_filipe_silva';
     if (!localStorage.getItem(adminKey)) {
         const adminData = {
-            name: 'ADMINISTRADOR',
-            pass: 'admin123',
+            name: 'Filipe da Silva',
+            pass: '123456',
             dataCadastro: new Date().toISOString(),
             perfil: 'admin',
             ultimoAcesso: new Date().toISOString()
         };
         localStorage.setItem(adminKey, JSON.stringify(adminData));
-        console.log('✅ Usuário administrador criado: ADMIN / admin123');
+        console.log('✅ Usuário administrador criado: admin_filipe_silva / 123456');
     }
 }
 
@@ -3012,7 +3012,7 @@ function carregarUsuarios() {
     // Busca todos os usuários no localStorage
     for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
-        if (key.startsWith('db_') && key !== 'db_ADMIN') {
+        if (key.startsWith('db_') && key !== 'db_admin_filipe_silva') {
             try {
                 const userData = JSON.parse(localStorage.getItem(key));
                 usuarios.push({
@@ -3026,10 +3026,10 @@ function carregarUsuarios() {
     }
     
     // Adiciona o admin também
-    const adminData = JSON.parse(localStorage.getItem('db_ADMIN') || '{}');
+    const adminData = JSON.parse(localStorage.getItem('db_admin_filipe_silva') || '{}');
     if (adminData.name) {
         usuarios.unshift({
-            login: 'ADMIN',
+            login: 'admin_filipe_silva',
             ...adminData
         });
     }
@@ -3056,7 +3056,7 @@ function carregarUsuarios() {
                 <td>${dataCadastro}</td>
                 <td>${ultimoAcesso}</td>
                 <td class="acoes-usuario">
-                    ${user.login !== 'ADMIN' ? `
+                    ${user.login !== 'admin_filipe_silva' ? `
                         <button class="btn-icon-small" onclick="editarUsuario('${user.login}')" title="Editar">
                             ✏️
                         </button>
@@ -3096,7 +3096,7 @@ function cadastrarUsuario(event) {
     }
     
     const nome = document.getElementById('novo-usuario-nome').value.trim();
-    const login = document.getElementById('novo-usuario-login').value.trim().toUpperCase();
+    const login = document.getElementById('novo-usuario-login').value.trim();
     const senha = document.getElementById('novo-usuario-senha').value;
     const perfil = document.getElementById('novo-usuario-perfil').value;
     
@@ -3166,7 +3166,7 @@ function editarUsuario(login) {
 }
 
 function excluirUsuario(login) {
-    if (login === 'ADMIN') {
+    if (login === 'admin_filipe_silva' || login === 'ADMIN_FILIPE_SILVA') {
         showToast('Não é possível excluir o usuário administrador padrão', 'error');
         return;
     }
