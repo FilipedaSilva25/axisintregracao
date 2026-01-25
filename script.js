@@ -664,11 +664,11 @@ function handleAuth() {
             
             // Atualiza último acesso do usuário
             db.ultimoAcesso = new Date().toISOString();
-            localStorage.setItem('db_' + userInput, JSON.stringify(db));
+            localStorage.setItem('db_' + loginNormalizado, JSON.stringify(db));
             
             // Registra login
             const loginData = {
-                usuario: userInput,
+                usuario: loginNormalizado,
                 data: new Date().toISOString(),
                 ip: '192.168.1.1' // Simulado
             };
