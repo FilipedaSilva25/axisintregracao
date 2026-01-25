@@ -607,7 +607,7 @@ function handleAuth() {
     
     const userField = document.getElementById('username');
     const passField = document.getElementById('password');
-    const userInput = userField.value.trim().toUpperCase();
+    const userInput = userField.value.trim();
     const pass = passField.value;
 
     if (!userInput || !pass) {
@@ -615,7 +615,9 @@ function handleAuth() {
         return;
     }
 
-    const dbRaw = localStorage.getItem('db_' + userInput);
+    // Normaliza o login (remove espaços, converte para minúsculas)
+    const loginNormalizado = userInput.toLowerCase().replace(/\s+/g, '_');
+    const dbRaw = localStorage.getItem('db_' + loginNormalizado);
     if (dbRaw) {
         const db = JSON.parse(dbRaw);
         if (db.pass === pass) {
