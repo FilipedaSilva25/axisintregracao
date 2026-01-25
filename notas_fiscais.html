@@ -7,6 +7,7 @@
     
     <!-- CSS Principal -->
     <link rel="stylesheet" href="notas_fiscais.css">
+    <link rel="stylesheet" href="notas_fiscais_configuracoes.css">
     
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -66,6 +67,11 @@
                     <a href="#" class="nav-item" onclick="showSection('relatorios')">
                         <i class="fas fa-chart-bar"></i>
                         <span>Relatórios</span>
+                    </a>
+                    <a href="#" class="nav-item" onclick="mostrarLixeira()">
+                        <i class="fas fa-trash-alt"></i>
+                        <span>Lixeira</span>
+                        <span class="nav-badge" id="lixeira-count">0</span>
                     </a>
                 </div>
                 
@@ -137,7 +143,7 @@
             </div>
         </aside>
         
-        <!-- Overlay para mobile -->
+        <!-- Overlay para menu hambúrguer -->
         <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
         
         <!-- Axis Quick Stats Bar -->
@@ -193,7 +199,7 @@
                         <i class="fas fa-moon" id="theme-icon"></i>
                     </button>
                     
-                    <button class="header-btn" onclick="openCommandPalette()" title="Command Palette (Ctrl+K)">
+                    <button class="header-btn" onclick="abrirCommandPalette()" title="Command Palette (Ctrl+K)">
                         <i class="fas fa-terminal"></i>
                     </button>
                     
@@ -284,7 +290,7 @@
                         <!-- Widgets serão carregados dinamicamente -->
                     </div>
                     
-                    <!-- Estatísticas -->
+                    <!-- Estatísticas Completas -->
                     <div class="stats-grid">
                         <div class="stat-card axis-card">
                             <div class="stat-icon primary">
@@ -293,6 +299,16 @@
                             <div class="stat-info">
                                 <h3 id="total-nfs">0</h3>
                                 <p>Total de NFs</p>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card axis-card">
+                            <div class="stat-icon success">
+                                <i class="fas fa-dollar-sign"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 id="valor-total-nfs">R$ 0,00</h3>
+                                <p>Valor Total</p>
                             </div>
                         </div>
                         
@@ -307,6 +323,26 @@
                         </div>
                         
                         <div class="stat-card axis-card">
+                            <div class="stat-icon danger">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 id="vencidas-nfs">0</h3>
+                                <p>Vencidas</p>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card axis-card">
+                            <div class="stat-icon" style="background: linear-gradient(135deg, rgba(255, 204, 0, 0.2), rgba(255, 204, 0, 0.1)); color: #ffcc00;">
+                                <i class="fas fa-hourglass-half"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 id="a-vencer-nfs">0</h3>
+                                <p>A Vencer</p>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card axis-card">
                             <div class="stat-icon success">
                                 <i class="fas fa-check-circle"></i>
                             </div>
@@ -317,29 +353,56 @@
                         </div>
                         
                         <div class="stat-card axis-card">
-                            <div class="stat-icon danger">
-                                <i class="fas fa-exclamation-triangle"></i>
+                            <div class="stat-icon" style="background: linear-gradient(135deg, rgba(142, 68, 173, 0.2), rgba(142, 68, 173, 0.1)); color: #8e44ad;">
+                                <i class="fas fa-calendar-times"></i>
                             </div>
                             <div class="stat-info">
-                                <h3 id="vencidas-nfs">0</h3>
-                                <p>Vencidas</p>
+                                <h3 id="em-atraso-nfs">0</h3>
+                                <p>Em Atraso</p>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card axis-card">
+                            <div class="stat-icon primary">
+                                <i class="fas fa-calendar-check"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 id="concluidas-mes-nfs">0</h3>
+                                <p>Concluídas este Mês</p>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card axis-card">
+                            <div class="stat-icon success">
+                                <i class="fas fa-calculator"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 id="valor-medio-nfs">R$ 0,00</h3>
+                                <p>Valor Médio por Nota</p>
                             </div>
                         </div>
                     </div>
                     
-                    <!-- Gráficos -->
+                    <!-- Gráficos Completos -->
                     <div class="charts-grid">
                         <div class="chart-card axis-card">
-                            <h3><i class="fas fa-chart-pie"></i> Distribuição por Tipo</h3>
+                            <h3><i class="fas fa-chart-pie"></i> Distribuição por Status</h3>
                             <div class="chart-container">
-                                <canvas id="chart-tipo"></canvas>
+                                <canvas id="chart-status"></canvas>
                             </div>
                         </div>
                         
                         <div class="chart-card axis-card">
-                            <h3><i class="fas fa-chart-bar"></i> Evolução Mensal</h3>
+                            <h3><i class="fas fa-chart-line"></i> Entrada de Notas (6 meses)</h3>
                             <div class="chart-container">
-                                <canvas id="chart-mensal"></canvas>
+                                <canvas id="chart-timeline"></canvas>
+                            </div>
+                        </div>
+                        
+                        <div class="chart-card axis-card">
+                            <h3><i class="fas fa-chart-bar"></i> Distribuição por Tipo</h3>
+                            <div class="chart-container">
+                                <canvas id="chart-tipo"></canvas>
                             </div>
                         </div>
                     </div>
@@ -406,6 +469,50 @@
                     </div>
                 </section>
                 
+                <!-- Lixeira -->
+                <section id="lixeira" class="content-section">
+                    <div class="section-header">
+                        <h2><i class="fas fa-trash-alt"></i> Lixeira</h2>
+                        <p>Notas fiscais excluídas</p>
+                    </div>
+                    
+                    <div class="lixeira-actions" style="margin-bottom: 24px; display: flex; gap: 12px; align-items: center;">
+                        <button class="btn-secondary" onclick="esvaziarLixeira()">
+                            <i class="fas fa-trash"></i> Esvaziar Lixeira
+                        </button>
+                        <button class="btn-secondary" onclick="restaurarTodasLixeira()">
+                            <i class="fas fa-undo"></i> Restaurar Todas
+                        </button>
+                    </div>
+                    
+                    <!-- Grid de Notas da Lixeira -->
+                    <div class="nfs-grid" id="lixeira-grid">
+                        <!-- Notas da lixeira serão carregadas aqui -->
+                    </div>
+                    
+                    <!-- Lista de Notas da Lixeira -->
+                    <div class="nfs-list" id="lixeira-list" style="display: none;">
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Número NF</th>
+                                        <th>Fornecedor</th>
+                                        <th>Data Emissão</th>
+                                        <th>Valor</th>
+                                        <th>Excluído em</th>
+                                        <th>Dias Restantes</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="lixeira-table-body">
+                                    <!-- Notas da lixeira serão carregadas aqui -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+                
                 <!-- Lista de Notas Fiscais -->
                 <section id="notas" class="content-section">
                     <div class="section-header">
@@ -416,26 +523,56 @@
                     <!-- Filtros Rápidos -->
                     <div class="quick-filters">
                         <div class="filter-tabs">
-                            <button class="filter-tab active" onclick="filtrarPorTipo('all')">
+                            <button class="filter-tab active" onclick="filtrarPorStatus('all')">
                                 <i class="fas fa-layer-group"></i> Todas
                             </button>
-                            <button class="filter-tab" onclick="filtrarPorTipo('pendente')">
+                            <button class="filter-tab" onclick="filtrarPorStatus('pendente')">
                                 <i class="fas fa-clock"></i> Pendentes
                             </button>
-                            <button class="filter-tab" onclick="filtrarPorTipo('entrada')">
-                                <i class="fas fa-sign-in-alt"></i> Entrada
+                            <button class="filter-tab" onclick="filtrarPorStatus('pago')">
+                                <i class="fas fa-check-circle"></i> Pagas
                             </button>
-                            <button class="filter-tab" onclick="filtrarPorTipo('saida')">
-                                <i class="fas fa-sign-out-alt"></i> Saída
+                            <button class="filter-tab" onclick="filtrarPorStatus('vencido')">
+                                <i class="fas fa-exclamation-triangle"></i> Vencidas
+                            </button>
+                            <button class="filter-tab" onclick="filtrarPorStatus('a-vencer')">
+                                <i class="fas fa-hourglass-half"></i> A Vencer
                             </button>
                         </div>
                         
                         <div class="view-controls">
-                            <button class="view-btn active" onclick="changeView('grid')">
+                            <button class="view-btn active" id="view-grid-btn" onclick="changeView('grid')" title="Visualização em Grid">
                                 <i class="fas fa-th-large"></i>
                             </button>
-                            <button class="view-btn" onclick="changeView('list')">
+                            <button class="view-btn" id="view-list-btn" onclick="changeView('list')" title="Visualização em Lista">
                                 <i class="fas fa-list"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Barra de Ações em Massa -->
+                    <div class="batch-actions-bar" id="batch-actions-bar" style="display: none;">
+                        <div class="batch-actions-content">
+                            <span class="batch-count" id="batch-count">0 selecionadas</span>
+                            <div class="batch-actions-buttons">
+                                <button class="batch-btn" onclick="alterarStatusEmMassa()" title="Alterar Status">
+                                    <i class="fas fa-edit"></i> Alterar Status
+                                </button>
+                                <button class="batch-btn" onclick="exportarEmMassa()" title="Exportar">
+                                    <i class="fas fa-file-export"></i> Exportar
+                                </button>
+                                <button class="batch-btn" onclick="enviarEmailEmMassa()" title="Enviar Email">
+                                    <i class="fas fa-envelope"></i> Enviar Email
+                                </button>
+                                <button class="batch-btn" onclick="aplicarTagEmMassa()" title="Aplicar Tag">
+                                    <i class="fas fa-tag"></i> Aplicar Tag
+                                </button>
+                                <button class="batch-btn batch-btn-danger" onclick="excluirEmMassa()" title="Excluir">
+                                    <i class="fas fa-trash"></i> Excluir
+                                </button>
+                            </div>
+                            <button class="batch-close" onclick="fecharBarraAcoesMassa()">
+                                <i class="fas fa-times"></i>
                             </button>
                         </div>
                     </div>
@@ -451,12 +588,15 @@
                             <table class="data-table">
                                 <thead>
                                     <tr>
-                                        <th onclick="sortTable('numero')">Número</th>
+                                        <th class="col-checkbox">
+                                            <input type="checkbox" id="select-all-nfs" onchange="selecionarTodasNotas()">
+                                        </th>
+                                        <th onclick="sortTable('numero')">Número NF</th>
                                         <th onclick="sortTable('fornecedor')">Fornecedor</th>
-                                        <th onclick="sortTable('data')">Data</th>
+                                        <th onclick="sortTable('data')">Data Emissão</th>
+                                        <th onclick="sortTable('vencimento')">Data Vencimento</th>
                                         <th onclick="sortTable('valor')">Valor</th>
                                         <th onclick="sortTable('status')">Status</th>
-                                        <th onclick="sortTable('tipo')">Tipo</th>
                                         <th>Ações</th>
                                     </tr>
                                 </thead>
@@ -825,11 +965,11 @@
                                     <div class="integration-status" id="google-drive-status">
                                         <span class="status-badge disconnected">Não conectado</span>
                                         <button class="btn-secondary" onclick="conectarGoogleDrive()">
-                                            Conectar
+                                            <i class="fas fa-plug"></i> Conectar
                                         </button>
                                     </div>
                                     <p class="setting-description">
-                                        Conecte com o Google Drive para backup automático
+                                        Conecte com o Google Drive para backup automático de suas notas fiscais
                                     </p>
                                 </div>
                                 
@@ -837,16 +977,16 @@
                                     <h4><i class="fas fa-envelope"></i> E-mail</h4>
                                     <div class="email-settings">
                                         <label>Servidor SMTP</label>
-                                        <input type="text" id="smtp-server" placeholder="smtp.gmail.com">
+                                        <input type="text" id="smtp-server" placeholder="smtp.gmail.com" value="smtp.gmail.com">
                                         
                                         <label>Porta</label>
-                                        <input type="number" id="smtp-port" value="587">
+                                        <input type="number" id="smtp-port" value="587" min="1" max="65535">
                                         
                                         <label>E-mail</label>
                                         <input type="email" id="smtp-email" placeholder="seu@email.com">
                                         
-                                        <button class="btn-secondary" onclick="testarEmail()">
-                                            Testar Conexão
+                                        <button class="btn-secondary" onclick="testarEmail()" style="margin-top: 8px;">
+                                            <i class="fas fa-check-circle"></i> Testar Conexão
                                         </button>
                                     </div>
                                 </div>
@@ -897,11 +1037,12 @@
                                     <h4>Autenticação</h4>
                                     <div class="auth-settings">
                                         <label>
-                                            <input type="checkbox" id="two-factor-auth">
+                                            <input type="checkbox" id="two-factor-auth" onchange="if(typeof toggle2FA === 'function') toggle2FA();">
                                             Autenticação em dois fatores (2FA)
                                         </label>
                                         
-                                        <div class="auth-methods" id="auth-methods" style="margin-top: 10px; display: none;">
+                                        <div class="auth-methods" id="auth-methods" style="margin-top: 16px; display: none;">
+                                            <label>Método de autenticação</label>
                                             <select id="two-factor-method">
                                                 <option value="email">E-mail</option>
                                                 <option value="authenticator">Google Authenticator</option>
@@ -999,62 +1140,24 @@
             </div>
             
             <!-- Axis Command Palette -->
-            <div class="command-palette" id="command-palette">
-                <div class="command-header">
-                    <i class="fas fa-terminal"></i>
-                    <input type="text" id="command-input" placeholder="Digite um comando... (Ctrl+K para fechar)">
-                    <button class="close-btn" onclick="closeCommandPalette()">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <div class="command-suggestions" id="command-suggestions">
-                    <div class="command-item" onclick="executeCommand('upload')">
-                        <i class="fas fa-cloud-upload-alt"></i>
-                        <div>
-                            <strong>upload</strong>
-                            <span>Abrir upload de nota fiscal</span>
-                        </div>
+            <div class="command-palette" id="command-palette" style="display: none;">
+                <div class="command-palette-content">
+                    <div class="command-palette-header">
+                        <i class="fas fa-terminal"></i>
+                        <input type="text" id="command-input" placeholder="Digite um comando..." onkeyup="filtrarComandos(event)" onkeydown="executarComando(event)">
+                        <span style="font-size: 12px; color: var(--text-secondary);">(Ctrl+K)</span>
+                        <button class="close-btn" onclick="fecharCommandPalette()" style="background: transparent; border: none; cursor: pointer; color: var(--text-secondary); padding: 4px; margin-left: 8px;">
+                            <i class="fas fa-times"></i>
+                        </button>
                     </div>
-                    <div class="command-item" onclick="executeCommand('dashboard')">
-                        <i class="fas fa-home"></i>
-                        <div>
-                            <strong>dashboard</strong>
-                            <span>Ir para o dashboard</span>
-                        </div>
-                    </div>
-                    <div class="command-item" onclick="executeCommand('scanner')">
-                        <i class="fas fa-camera"></i>
-                        <div>
-                            <strong>scanner</strong>
-                            <span>Abrir scanner de notas</span>
-                        </div>
-                    </div>
-                    <div class="command-item" onclick="executeCommand('relatorio')">
-                        <i class="fas fa-chart-line"></i>
-                        <div>
-                            <strong>relatorio</strong>
-                            <span>Gerar relatório</span>
-                        </div>
-                    </div>
-                    <div class="command-item" onclick="executeCommand('backup')">
-                        <i class="fas fa-database"></i>
-                        <div>
-                            <strong>backup</strong>
-                            <span>Abrir backup</span>
-                        </div>
-                    </div>
-                    <div class="command-item" onclick="executeCommand('configuracoes')">
-                        <i class="fas fa-cog"></i>
-                        <div>
-                            <strong>configuracoes</strong>
-                            <span>Abrir configurações</span>
-                        </div>
+                    <div class="command-palette-list" id="command-palette-list">
+                        <!-- Comandos serão renderizados dinamicamente pelo JavaScript -->
                     </div>
                 </div>
             </div>
             
-            <!-- Axis AI Assistant -->
-            <div class="ai-assistant" id="ai-assistant">
+            <!-- Axis AI Assistant - REMOVIDO TEMPORARIAMENTE -->
+            <div class="ai-assistant" id="ai-assistant" style="display: none !important;">
                 <div class="ai-header">
                     <div class="ai-title">
                         <i class="fas fa-robot"></i>
@@ -1083,20 +1186,6 @@
             </div>
             
             <!-- Footer -->
-            <footer class="main-footer">
-                <div class="footer-content">
-                    <div class="footer-left">
-                        <span>© 2024 AXIS Documents. Todos os direitos reservados.</span>
-                    </div>
-                    <div class="footer-right">
-                        <span class="footer-stat" id="footer-nf-count">0 notas fiscais</span>
-                        <span class="footer-stat">v2.0.0 ⚡</span>
-                        <button class="footer-btn" onclick="toggleAIAssistant()">
-                            <i class="fas fa-robot"></i> Axis AI
-                        </button>
-                    </div>
-                </div>
-            </footer>
         </main>
     </div>
 
@@ -1302,30 +1391,51 @@
 
     <!-- ================= SCRIPTS ================= -->
     <script src="notas_fiscais.js"></script>
+    <script src="notas_fiscais_features.js"></script>
+    <script src="notas_fiscais_integracao.js"></script>
+    <script src="notas_fiscais_botoes.js"></script>
+    <script src="notas_fiscais_funcoes_completas.js"></script>
+    <script src="notas_fiscais_lixeira_estrutura.js"></script>
+    <script src="notas_fiscais_preview_download.js"></script>
+    <script src="notas_fiscais_configuracoes.js"></script>
     
     <!-- Atalho Keyboard Shortcut para Command Palette -->
     <script>
         document.addEventListener('keydown', function(e) {
             if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
                 e.preventDefault();
-                openCommandPalette();
+                if (typeof abrirCommandPalette !== 'undefined') {
+                    abrirCommandPalette();
+                } else if (typeof openCommandPalette !== 'undefined') {
+                    openCommandPalette();
+                }
             }
             
             // Fechar modais com ESC
             if (e.key === 'Escape') {
-                closeAllModals();
-                closeCommandPalette();
-                toggleAIAssistant(false);
+                if (typeof closeAllModals !== 'undefined') closeAllModals();
+                
+                const palette = document.getElementById('command-palette');
+                if (palette && (palette.style.display === 'flex' || palette.classList.contains('show'))) {
+                    if (typeof fecharCommandPalette !== 'undefined') {
+                        fecharCommandPalette();
+                    } else if (typeof closeCommandPalette !== 'undefined') {
+                        closeCommandPalette();
+                    } else {
+                        palette.style.display = 'none';
+                        palette.classList.remove('show');
+                    }
+                }
+                
+                // Axis AI desabilitado
+                const aiAssistant = document.getElementById('ai-assistant');
+                if (aiAssistant) {
+                    aiAssistant.style.display = 'none !important';
+                }
             }
         });
         
-        // Atalho para Axis AI (Ctrl + .)
-        document.addEventListener('keydown', function(e) {
-            if ((e.ctrlKey || e.metaKey) && e.key === '.') {
-                e.preventDefault();
-                toggleAIAssistant();
-            }
-        });
+        // Atalho para Axis AI removido temporariamente
     </script>
 </body>
 </html>

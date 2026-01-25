@@ -755,35 +755,7 @@
                 <img src="IMAGENS/Nova_Logo_Sem_Fundo_1.2.png" alt="AXIS - Sistema de Gestão" class="main-auth-logo">
             </div>
 
-            <div class="auth-tabs" role="tablist">
-                <button onclick="toggleAuth('login')" 
-                        id="tab-login" 
-                        class="active" 
-                        role="tab" 
-                        aria-selected="true"
-                        aria-controls="login-panel">
-                    Entrar
-                </button>
-                <button onclick="toggleAuth('register')" 
-                        id="tab-register" 
-                        role="tab" 
-                        aria-selected="false"
-                        aria-controls="register-panel">
-                    Criar Conta
-                </button>
-            </div>
-            
-            <!-- Campos de Registro -->
-            <div id="register-fields" style="display: none;">
-                <div class="input-group">
-                    <label for="reg-fullname">Nome Completo</label>
-                    <input type="text" 
-                           id="reg-fullname" 
-                           placeholder="Digite seu nome completo"
-                           autocomplete="name"
-                           aria-required="true">
-                </div>
-            </div>
+            <!-- Área de cadastro removida - usuários são criados pela equipe de T.I -->
 
             <!-- Campos de Login -->
             <div class="input-group">
@@ -792,7 +764,8 @@
                        id="username" 
                        placeholder="Digite seu usuário"
                        autocomplete="username"
-                       aria-required="true">
+                       aria-required="true"
+                       onkeypress="if(event.key === 'Enter') document.getElementById('password').focus()">
             </div>
 
             <div class="input-group password-container">
@@ -801,7 +774,8 @@
                        id="password" 
                        placeholder="Digite sua senha"
                        autocomplete="current-password"
-                       aria-required="true">
+                       aria-required="true"
+                       onkeypress="if(event.key === 'Enter') handleAuth()">
                 <button type="button" 
                         class="eye-toggle" 
                         onclick="togglePassword()"
@@ -813,7 +787,8 @@
             <button onclick="handleAuth()" 
                     id="auth-main-btn" 
                     class="btn-primary-auth"
-                    aria-label="Acessar sistema">
+                    aria-label="Acessar sistema"
+                    type="button">
                 Acessar AXIS
             </button>
         </div>
@@ -883,6 +858,9 @@
                 </button>
                 <button onclick="navigate('page-configuracoes')" class="side-item">
                     ⚙️ Configurações
+                </button>
+                <button onclick="navigate('page-administracao')" class="side-item" id="menu-admin" style="display: none;">
+                    👤 Administração
                 </button>
                 <hr class="nav-divider">
                 <button onclick="logout()" class="side-item logout">
@@ -961,200 +939,127 @@
                             <span class="mod-link">Abrir Ticket →</span>
                         </div>
                     </div>
+
+                    <!-- Card Notas Fiscais -->
+                    <div class="mod-card" onclick="window.location.href='notas_fiscais.html'" tabindex="0" role="button">
+                        <div class="mod-icon">📄</div>
+                        <div class="mod-content">
+                            <h3>Notas Fiscais</h3>
+                            <p>Sistema inteligente de gestão e organização de notas fiscais.</p>
+                            <span class="mod-link">Acessar Biblioteca →</span>
+                        </div>
+                    </div>
+
+                    <!-- Card Bloco de Notas -->
+                    <div class="mod-card" onclick="window.location.href='bloco_de_notas_apple.html'" tabindex="0" role="button">
+                        <div class="mod-icon">📝</div>
+                        <div class="mod-content">
+                            <h3>Bloco de Notas</h3>
+                            <p>Editor de notas estilo Apple com recursos avançados de formatação.</p>
+                            <span class="mod-link">Abrir Editor →</span>
+                        </div>
+                    </div>
+
+                    <!-- Card Configurações -->
+                    <div class="mod-card" onclick="navigate('page-configuracoes')" tabindex="0" role="button">
+                        <div class="mod-icon">⚙️</div>
+                        <div class="mod-content">
+                            <h3>Configurações</h3>
+                            <p>Personalize sua experiência e ajuste as preferências do sistema.</p>
+                            <span class="mod-link">Abrir Configurações →</span>
+                        </div>
+                    </div>
                 </div>
             </section>
 
             <!-- ============================================
                  PÁGINA DE INVENTÁRIO
                  ============================================ -->
-            <section id="page-inventario" class="main-section">
-                <div class="section-header">
-                    <h2>📦 Gestão de Inventário</h2>
-                    <p class="section-subtitle">Controle total de impressoras Zebra em tempo real</p>
-                </div>
-
-                <!-- Menu de Modelos -->
-                <div class="models-nav">
-                    <div class="model-tabs">
-                        <button class="model-tab active" onclick="filtrarPorModelo('todos')">
-                            <span class="tab-icon">🌐</span>
-                            <span class="tab-label">Todos</span>
-                            <span class="tab-count" id="count-todos">50</span>
-                        </button>
-                        <button class="model-tab" onclick="filtrarPorModelo('ZT411')">
-                            <span class="tab-icon">🏭</span>
-                            <span class="tab-label">ZT411</span>
-                            <span class="model-badge industrial">Industrial</span>
-                            <span class="tab-count" id="count-zt411">15</span>
-                        </button>
-                        <button class="model-tab" onclick="filtrarPorModelo('ZD421')">
-                            <span class="tab-icon">💻</span>
-                            <span class="tab-label">ZD421</span>
-                            <span class="model-badge desktop">Desktop</span>
-                            <span class="tab-count" id="count-zd421">15</span>
-                        </button>
-                        <button class="model-tab" onclick="filtrarPorModelo('ZQ630')">
-                            <span class="tab-icon">🚀</span>
-                            <span class="tab-label">ZQ630</span>
-                            <span class="model-badge pagewide">Pagewide</span>
-                            <span class="tab-count" id="count-zq630">15</span>
-                        </button>
-                        <button class="model-tab add-new" onclick="abrirCadastroRapido()">
-                            <span class="tab-icon">➕</span>
-                            <span class="tab-label">Novo Equipamento</span>
-                        </button>
+            <section id="page-inventario" class="main-section ucs-inventory-section">
+                <!-- Card de Busca -->
+                <div class="ucs-search-card">
+                    <div class="ucs-search-header">
+                        <span class="ucs-search-icon">🔍</span>
+                        <h3 class="ucs-search-title">Buscar Dispositivos</h3>
                     </div>
-
-                    <!-- Estatísticas do Modelo Selecionado -->
-                    <div class="model-stats" id="model-stats">
-                        <!-- Será preenchido via JavaScript -->
-                    </div>
-                </div>
-
-                <!-- Controles do Inventário -->
-                <div class="inventory-controls">
-                    <div class="search-bar-inventory">
-                        <input type="text" 
-                               id="search-inventory" 
-                               class="axis-input-search" 
-                               placeholder="🔍 Buscar por serial, tag, IP, MAC..."
-                               onkeyup="filtrarInventario()">
-                    </div>
-                    
-                    <div class="filter-group">
-                        <select id="filter-modelo" class="axis-select" onchange="filtrarInventario()">
-                            <option value="todos">Todos Modelos</option>
-                            <option value="ZT411">ZT411</option>
-                            <option value="ZD421">ZD421</option>
-                            <option value="ZQ630">ZQ630</option>
-                        </select>
-                        
-                        <select id="filter-status" class="axis-select" onchange="filtrarInventario()">
-                            <option value="todos">Todos Status</option>
-                            <option value="online">Online</option>
-                            <option value="offline">Offline</option>
-                            <option value="manutencao">Manutenção</option>
-                        </select>
-                        
-                        <select id="filter-setor" class="axis-select" onchange="filtrarInventario()">
-                            <option value="todos">Todos Setores</option>
-                            <option value="packing-mono">PACKING MONO</option>
-                            <option value="packing-ptw">PACKING PTW</option>
-                            <option value="rk">RK</option>
-                            <option value="check-in">CHECK-IN</option>
-                            <option value="returns">RETURNS</option>
-                            <option value="insumos">INSUMOS</option>
-                        </select>
-
-                        <div class="export-dropdown">
-                            <button class="btn-export-main" id="export-btn">
-                                📤 Exportar
-                            </button>
-                            <div class="export-options" id="export-dropdown">
-                                <button class="export-option" onclick="exportarDados('csv')">
-                                    <span class="export-icon">📄</span>
-                                    Exportar CSV
-                                </button>
-                                <button class="export-option" onclick="exportarDados('excel')">
-                                    <span class="export-icon">📊</span>
-                                    Exportar Excel
-                                </button>
-                                <button class="export-option" onclick="exportarDados('pdf')">
-                                    <span class="export-icon">📑</span>
-                                    Exportar PDF
-                                </button>
-                                <button class="export-option" onclick="imprimirInventario()">
-                                    <span class="export-icon">🖨️</span>
-                                    Imprimir
-                                </button>
-                            </div>
+                    <div class="ucs-search-fields">
+                        <div class="ucs-field-group">
+                            <label class="ucs-field-label">País</label>
+                            <select id="ucs-filtro-pais" class="ucs-field-select">
+                                <option value="">Selecione um país</option>
+                                <option value="brasil" selected>Brasil</option>
+                            </select>
+                        </div>
+                        <div class="ucs-field-group">
+                            <label class="ucs-field-label">
+                                Nodo Centro logístico
+                                <span class="ucs-info-icon" title="Informações sobre o nodo">ℹ️</span>
+                            </label>
+                            <select id="ucs-filtro-nodo" class="ucs-field-select">
+                                <option value="">Selecione um nodo</option>
+                                <option value="brsc02">(BRSC02) Cad Floripa</option>
+                            </select>
+                        </div>
+                        <div class="ucs-field-group">
+                            <label class="ucs-field-label">Dispositivo</label>
+                            <select id="ucs-filtro-dispositivo" class="ucs-field-select">
+                                <option value="">Selecione um dispositivo</option>
+                                <option value="printer" selected>Printer</option>
+                            </select>
+                        </div>
+                        <div class="ucs-search-actions">
+                            <button class="ucs-btn-reset" onclick="resetarFiltrosInventario()">X Reset</button>
+                            <button class="ucs-btn-search" onclick="filtrarInventario()">Buscar</button>
                         </div>
                     </div>
                 </div>
 
-                <!-- Estatísticas Gerais -->
-                <div class="inventory-stats">
-                    <div class="stat-card online">
-                        <div class="stat-number" id="total-equipamentos">50</div>
-                        <div class="stat-label">Total Equipamentos</div>
-                    </div>
-                    <div class="stat-card online">
-                        <div class="stat-number" id="equipamentos-online">35</div>
-                        <div class="stat-label">Online</div>
-                    </div>
-                    <div class="stat-card offline">
-                        <div class="stat-number" id="equipamentos-offline">10</div>
-                        <div class="stat-label">Offline</div>
-                    </div>
-                    <div class="stat-card manutencao">
-                        <div class="stat-number" id="equipamentos-manutencao">5</div>
-                        <div class="stat-label">Em Manutenção</div>
-                    </div>
+                <!-- Cabeçalho do Inventário -->
+                <div class="ucs-inventory-header">
+                    <h2 class="ucs-inventory-title">Impressoras</h2>
+                    <span class="ucs-inventory-count" id="ucs-total-count">0 EM TOTAL</span>
                 </div>
 
-                <!-- Gráfico de Status -->
-                <div class="chart-container" style="margin-bottom: 30px;">
-                    <canvas id="statusChart"></canvas>
-                </div>
-
-                <!-- Tabela de Inventário -->
-                <div class="glass-table-container" id="inventory-container">
-                    <div class="table-responsive">
-                        <table class="axis-table" id="inventory-table" role="table" aria-label="Tabela de inventário de impressoras">
-                            <thead>
-                                <tr>
-                                    <th scope="col" onclick="ordenarTabela('serial')">
-                                        Serial
-                                        <span class="sort-indicator" id="sort-serial">▼</span>
-                                    </th>
-                                    <th scope="col" onclick="ordenarTabela('modelo')">
-                                        Modelo
-                                        <span class="sort-indicator" id="sort-modelo">▼</span>
-                                    </th>
-                                    <th scope="col" onclick="ordenarTabela('ip')">
-                                        IP
-                                        <span class="sort-indicator" id="sort-ip">▼</span>
-                                    </th>
-                                    <th scope="col" onclick="ordenarTabela('macRede')">
-                                        MAC Rede
-                                        <span class="sort-indicator" id="sort-macRede">▼</span>
-                                    </th>
-                                    <th scope="col" onclick="ordenarTabela('macBluetooth')">
-                                        MAC Bluetooth
-                                        <span class="sort-indicator" id="sort-macBluetooth">▼</span>
-                                    </th>
-                                    <th scope="col" onclick="ordenarTabela('selb')">
-                                        SELB
-                                        <span class="sort-indicator" id="sort-selb">▼</span>
-                                    </th>
-                                    <th scope="col" onclick="ordenarTabela('patrimonio')">
-                                        Patrimônio
-                                        <span class="sort-indicator" id="sort-patrimonio">▼</span>
-                                    </th>
-                                    <th scope="col" onclick="ordenarTabela('setor')">
-                                        Setor
-                                        <span class="sort-indicator" id="sort-setor">▼</span>
-                                    </th>
-                                    <th scope="col" onclick="ordenarTabela('status')">
-                                        Status
-                                        <span class="sort-indicator" id="sort-status">▼</span>
-                                    </th>
-                                    <th scope="col" onclick="ordenarTabela('ultimaChecagem')">
-                                        Última Checagem
-                                        <span class="sort-indicator" id="sort-ultimaChecagem">▼</span>
-                                    </th>
-                                    <th scope="col">Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody id="inventory-data">
-                                <!-- Dados serão carregados via JavaScript -->
-                            </tbody>
-                        </table>
+                <!-- Ações do Inventário -->
+                <div class="ucs-inventory-actions">
+                    <div class="ucs-download-dropdown">
+                        <button class="ucs-btn-download">
+                            Baixar
+                            <span class="ucs-dropdown-arrow">▼</span>
+                        </button>
+                        <div class="ucs-download-menu">
+                            <button class="ucs-download-option" onclick="exportarDados('csv')">CSV</button>
+                            <button class="ucs-download-option" onclick="exportarDados('excel')">Excel</button>
+                            <button class="ucs-download-option" onclick="exportarDados('pdf')">PDF</button>
+                        </div>
                     </div>
+                    <button class="ucs-btn-create" onclick="abrirCadastroRapido()">
+                        Criar Dispositivo
+                    </button>
                 </div>
 
-                <!-- Controles de Paginação -->
-                <div class="pagination-controls" id="pagination-controls">
+                <!-- Tabela de Dispositivos -->
+                <div class="ucs-table-container">
+                    <table class="ucs-table" id="ucs-inventory-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nome</th>
+                                <th>IP</th>
+                                <th>Modelo</th>
+                                <th>Descrição</th>
+                                <th>Gestão</th>
+                                <th>Controles</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ucs-inventory-data">
+                            <!-- Dados serão carregados via JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Paginação -->
+                <div class="ucs-pagination" id="ucs-pagination">
                     <!-- Será preenchido via JavaScript -->
                 </div>
             </section>
@@ -1186,6 +1091,206 @@
                     <div class="empty-icon">📚</div>
                     <h4>Central de Suporte</h4>
                     <p>Sistema de tickets e documentação em desenvolvimento.</p>
+                </div>
+            </section>
+
+            <!-- ============================================
+                 PÁGINA DE ADMINISTRAÇÃO
+                 ============================================ -->
+            <section id="page-administracao" class="main-section">
+                <div class="section-header">
+                    <h2>👑 Painel de Administração</h2>
+                    <p class="section-subtitle">Gerenciamento completo do sistema AXIS</p>
+                </div>
+                
+                <!-- Grid de Cards de Administração -->
+                <div class="admin-dashboard-grid">
+                    <!-- Card 1: Gerenciar Usuários -->
+                    <div class="admin-dashboard-card admin-card-users" onclick="abrirGerenciarUsuarios()">
+                        <div class="admin-card-icon-wrapper">
+                            <div class="admin-card-icon users-icon">
+                                <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <!-- Pessoa 1 (Roxo) -->
+                                    <circle cx="20" cy="18" r="8" fill="#8A2BE2" opacity="0.9"/>
+                                    <ellipse cx="20" cy="35" rx="10" ry="12" fill="#8A2BE2" opacity="0.9"/>
+                                    <!-- Pessoa 2 (Azul) -->
+                                    <circle cx="44" cy="18" r="8" fill="#4169E1" opacity="0.9"/>
+                                    <ellipse cx="44" cy="35" rx="10" ry="12" fill="#4169E1" opacity="0.9"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="admin-card-content">
+                            <h3>Gerenciar Usuários</h3>
+                            <p>Crie, edite e gerencie contas de usuários do sistema.</p>
+                            <div class="admin-stats">
+                                <div class="admin-stat-item">
+                                    <span class="admin-stat-number" id="total-usuarios">0</span>
+                                    <span class="admin-stat-label">TOTAL DE USUÁRIOS</span>
+                                </div>
+                                <div class="admin-stat-item">
+                                    <span class="admin-stat-number" id="usuarios-ativos">0</span>
+                                    <span class="admin-stat-label">USUÁRIOS ATIVOS</span>
+                                </div>
+                            </div>
+                            <button class="admin-card-btn">Gerenciar Usuários →</button>
+                        </div>
+                    </div>
+
+                    <!-- Card 2: Estatísticas do Sistema -->
+                    <div class="admin-dashboard-card admin-card-stats" onclick="abrirEstatisticasSistema()">
+                        <div class="admin-card-icon-wrapper">
+                            <div class="admin-card-icon stats-icon">
+                                <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <!-- Barra 1 (Rosa) -->
+                                    <rect x="8" y="32" width="12" height="24" fill="#FF69B4" rx="3"/>
+                                    <!-- Barra 2 (Laranja) -->
+                                    <rect x="24" y="20" width="12" height="36" fill="#FFA500" rx="3"/>
+                                    <!-- Barra 3 (Rosa) -->
+                                    <rect x="40" y="12" width="12" height="44" fill="#FF69B4" rx="3"/>
+                                    <!-- Seta para cima -->
+                                    <path d="M32 8 L28 14 L36 14 Z" fill="#FFA500"/>
+                                    <line x1="32" y1="8" x2="32" y2="14" stroke="#FFA500" stroke-width="2" stroke-linecap="round"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="admin-card-content">
+                            <h3>Estatísticas do Sistema</h3>
+                            <p>Visualize métricas e estatísticas gerais do sistema.</p>
+                            <div class="admin-stats">
+                                <div class="admin-stat-item">
+                                    <span class="admin-stat-number" id="total-equipamentos">0</span>
+                                    <span class="admin-stat-label">EQUIPAMENTOS</span>
+                                </div>
+                                <div class="admin-stat-item">
+                                    <span class="admin-stat-number" id="rondas-realizadas">0</span>
+                                    <span class="admin-stat-label">RONDAS REALIZADAS</span>
+                                </div>
+                            </div>
+                            <button class="admin-card-btn">Ver Estatísticas →</button>
+                        </div>
+                    </div>
+
+                    <!-- Card 3: Configurações Avançadas -->
+                    <div class="admin-dashboard-card admin-card-config" onclick="abrirConfiguracoesAvancadas()">
+                        <div class="admin-card-icon-wrapper">
+                            <div class="admin-card-icon config-icon">
+                                <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <!-- Engrenagem -->
+                                    <circle cx="32" cy="32" r="12" fill="#87CEEB" opacity="0.3"/>
+                                    <path d="M32 8 L32 4 M32 60 L32 56 M8 32 L4 32 M60 32 L56 32 M20.97 20.97 L18.34 18.34 M45.03 45.03 L47.66 47.66 M20.97 43.03 L18.34 45.66 M45.03 18.97 L47.66 16.34" stroke="#87CEEB" stroke-width="3" stroke-linecap="round"/>
+                                    <circle cx="32" cy="32" r="8" stroke="#87CEEB" stroke-width="3" fill="none"/>
+                                    <!-- Cursor -->
+                                    <path d="M48 16 L56 8 L52 20 L48 16 Z" fill="#87CEEB"/>
+                                    <line x1="48" y1="16" x2="52" y2="20" stroke="#87CEEB" stroke-width="2"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="admin-card-content">
+                            <h3>Configurações Avançadas</h3>
+                            <p>Ajustes avançados e configurações do sistema.</p>
+                            <button class="admin-card-btn">Configurações →</button>
+                        </div>
+                    </div>
+
+                    <!-- Card 4: Logs e Auditoria -->
+                    <div class="admin-dashboard-card admin-card-logs" onclick="abrirLogsAuditoria()">
+                        <div class="admin-card-icon-wrapper">
+                            <div class="admin-card-icon logs-icon">
+                                <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <!-- Documento -->
+                                    <rect x="12" y="8" width="32" height="44" rx="2" fill="white" stroke="#2ECC71" stroke-width="3"/>
+                                    <path d="M12 8 L12 20 L28 20 L28 8" fill="#2ECC71" opacity="0.2"/>
+                                    <line x1="12" y1="20" x2="28" y2="20" stroke="#2ECC71" stroke-width="3"/>
+                                    <!-- Check verde -->
+                                    <circle cx="48" cy="24" r="12" fill="#2ECC71"/>
+                                    <path d="M42 24 L46 28 L54 18" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="admin-card-content">
+                            <h3>Logs e Auditoria</h3>
+                            <p>Visualize logs de acesso e atividades do sistema.</p>
+                            <button class="admin-card-btn">Ver Logs →</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal de Gerenciar Usuários -->
+                <div id="modal-gerenciar-usuarios" class="admin-modal" style="display: none;">
+                    <div class="admin-modal-content">
+                        <div class="admin-modal-header">
+                            <h3>👥 Gerenciar Usuários</h3>
+                            <button class="admin-modal-close" onclick="fecharModalUsuarios()">×</button>
+                        </div>
+                        <div class="admin-modal-body">
+                            <!-- Card de Cadastro de Usuário -->
+                            <div class="admin-card">
+                                <h3>➕ Cadastrar Novo Usuário</h3>
+                                <form id="cadastro-usuario-form" class="admin-form" onsubmit="cadastrarUsuario(event)">
+                                    <div class="form-row">
+                                        <div class="input-group">
+                                            <label for="novo-usuario-nome">Nome Completo *</label>
+                                            <input type="text" id="novo-usuario-nome" required placeholder="Ex: João Silva">
+                                        </div>
+                                        <div class="input-group">
+                                            <label for="novo-usuario-login">Login (Usuário) *</label>
+                                            <input type="text" id="novo-usuario-login" required placeholder="Ex: JOAO.SILVA" style="text-transform: uppercase;">
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-row">
+                                        <div class="input-group">
+                                            <label for="novo-usuario-senha">Senha *</label>
+                                            <input type="password" id="novo-usuario-senha" required placeholder="Mínimo 6 caracteres" minlength="6">
+                                        </div>
+                                        <div class="input-group">
+                                            <label for="novo-usuario-perfil">Perfil *</label>
+                                            <select id="novo-usuario-perfil" required>
+                                                <option value="">Selecione um perfil</option>
+                                                <option value="admin">Administrador</option>
+                                                <option value="tecnico">Técnico</option>
+                                                <option value="operador">Operador</option>
+                                                <option value="visualizador">Visualizador</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-actions">
+                                        <button type="button" class="btn-secondary" onclick="limparFormularioUsuario()">Limpar</button>
+                                        <button type="submit" class="btn-primary">Cadastrar Usuário</button>
+                                    </div>
+                                </form>
+                            </div>
+                            
+                            <!-- Lista de Usuários -->
+                            <div class="admin-card">
+                                <div class="admin-card-header">
+                                    <h3>👥 Usuários Cadastrados</h3>
+                                    <div class="admin-search">
+                                        <input type="text" id="buscar-usuario" placeholder="🔍 Buscar usuário..." onkeyup="filtrarUsuarios()">
+                                    </div>
+                                </div>
+                                
+                                <div class="usuarios-table-container">
+                                    <table class="usuarios-table" id="tabela-usuarios">
+                                        <thead>
+                                            <tr>
+                                                <th>Nome</th>
+                                                <th>Login</th>
+                                                <th>Perfil</th>
+                                                <th>Data Cadastro</th>
+                                                <th>Último Acesso</th>
+                                                <th>Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="usuarios-tbody">
+                                            <!-- Será preenchido via JavaScript -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
 
@@ -1350,6 +1455,11 @@
                             </div>
                             
                             <div class="input-group">
+                                <label for="cad-selb">SELB</label>
+                                <input type="text" id="cad-selb" placeholder="Ex: SELB-2024-001">
+                            </div>
+                            
+                            <div class="input-group">
                                 <label for="cad-setor">Setor *</label>
                                 <select id="cad-setor" class="cadastro-select" required>
                                     <option value="">Selecione um setor</option>
@@ -1367,9 +1477,11 @@
                                 <input type="text" id="cad-patrimonio" placeholder="Ex: 123456789">
                             </div>
                             
-                            <div class="input-group full-width">
-                                <label for="cad-localizacao">Localização Detalhada</label>
-                                <input type="text" id="cad-localizacao" placeholder="Ex: Setor A, Posição 1, Corredor Principal">
+                            <div class="input-group">
+                                <label for="cad-bancada">Bancada</label>
+                                <select id="cad-bancada" class="cadastro-select">
+                                    <option value="">Selecione uma bancada</option>
+                                </select>
                             </div>
                         </div>
                     </div>
@@ -1468,8 +1580,8 @@
                         <span class="info-value" id="detail-setor">PACKING MONO</span>
                     </div>
                     <div class="info-row">
-                        <span class="info-label">Localização:</span>
-                        <span class="info-value" id="detail-localizacao">Setor A, Posição 1, Corredor Principal</span>
+                        <span class="info-label">Bancada:</span>
+                        <span class="info-value" id="detail-bancada">-</span>
                     </div>
                     <div class="info-row">
                         <span class="info-label">Última Checagem:</span>

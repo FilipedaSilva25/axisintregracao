@@ -14,27 +14,57 @@ document.getElementById('preventiva-form').addEventListener('submit', function(e
     const dataAtual = new Date().toLocaleDateString('pt-BR').replaceAll('/', '-');
     const element = document.getElementById('pdf-content');
     const btn = document.getElementById('btn-gerar');
+    
+    // Obter ano e mês selecionados no menu organizador
+    const anoSelecionado = document.getElementById('organizer-ano')?.value || new Date().getFullYear().toString();
+    const mesSelecionado = document.getElementById('organizer-mes')?.value || String(new Date().getMonth() + 1).padStart(2, '0');
+    
+    // Nomes dos meses em português
+    const mesesNomes = {
+        '01': 'Janeiro', '02': 'Fevereiro', '03': 'Março', '04': 'Abril',
+        '05': 'Maio', '06': 'Junho', '07': 'Julho', '08': 'Agosto',
+        '09': 'Setembro', '10': 'Outubro', '11': 'Novembro', '12': 'Dezembro'
+    };
+    
+    const nomeMes = mesesNomes[mesSelecionado] || 'Mes';
+    
+    // Criar nome do arquivo com estrutura organizada (ano e mês no nome)
+    // Nota: Navegadores não podem criar pastas automaticamente, então incluímos no nome
+    // Formato: AXIS_PV_SERIAL_ANO_MES_DATA.pdf
+    const nomeArquivo = `AXIS_PV_${serial}_${anoSelecionado}_${nomeMes}_${dataAtual}.pdf`;
+    
+    console.log('📁 Organização do PDF:', `${anoSelecionado}/${nomeMes}`);
+    console.log('📄 Nome do arquivo:', nomeArquivo);
 
     // Feedback visual e desabilita o botão
     btn.disabled = true;
     btn.textContent = "PROCESSANDO RELATÓRIO...";
     btn.style.opacity = '0.5';
 
-    // Configurações otimizadas para PDF
+    // Configurações otimizadas para PDF com melhor alinhamento
     const opt = {
-        margin: [10, 0, 10, 0],
-        filename: `AXIS_PV_${serial}_${dataAtual}.pdf`,
-        image: { type: 'jpeg', quality: 1.0 },
+        margin: [15, 10, 15, 10],
+        filename: nomeArquivo,
+        image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { 
             scale: 2, 
             useCORS: true,
-            windowWidth: 2383, 
+            windowWidth: 2100, // Largura A4 em pixels (210mm * 10)
+            windowHeight: 2970, // Altura A4 em pixels (297mm * 10)
             scrollY: 0,
-            logging: false
+            scrollX: 0,
+            logging: false,
+            letterRendering: true,
+            allowTaint: false
         },
         // MODO DE QUEBRA ESPECÍFICO
         pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        jsPDF: { 
+            unit: 'mm', 
+            format: 'a4', 
+            orientation: 'portrait',
+            compress: true
+        }
     };
 
     // GERAÇÃO DO PDF + NUMERAÇÃO DE PÁGINA
@@ -133,6 +163,44 @@ document.addEventListener('DOMContentLoaded', () => {
     if (dataInput) {
         const today = new Date().toISOString().split('T')[0];
         dataInput.value = today;
+        
+        // Atualizar menu organizador quando a data mudar
+        dataInput.addEventListener('change', function() {
+            const dataSelecionada = new Date(this.value + 'T00:00:00');
+            const ano = dataSelecionada.getFullYear();
+            const mes = String(dataSelecionada.getMonth() + 1).padStart(2, '0');
+            
+            const anoSelect = document.getElementById('organizer-ano');
+            const mesSelect = document.getElementById('organizer-mes');
+            
+            if (anoSelect) {
+                anoSelect.value = ano.toString();
+            }
+            if (mesSelect) {
+                mesSelect.value = mes;
+            }
+        });
+    }
+    
+    // Inicializar menu organizador com data atual
+    const hoje = new Date();
+    const anoAtual = hoje.getFullYear();
+    const mesAtual = String(hoje.getMonth() + 1).padStart(2, '0');
+    
+    const anoSelect = document.getElementById('organizer-ano');
+    const mesSelect = document.getElementById('organizer-mes');
+    
+    if (anoSelect) {
+        // Se não tiver valor selecionado, usar ano atual
+        if (!anoSelect.value || anoSelect.value === '') {
+            anoSelect.value = anoAtual.toString();
+        }
+    }
+    if (mesSelect) {
+        // Se não tiver valor selecionado, usar mês atual
+        if (!mesSelect.value || mesSelect.value === '') {
+            mesSelect.value = mesAtual;
+        }
     }
 });
 
@@ -159,3 +227,95 @@ function showAlert(titulo, mensagem) {
 function closeAlert() {
     document.getElementById('custom-alert').style.display = 'none';
 }
+
+// Função para voltar para a home do sistema - VERSÃO DEFINITIVA E FUNCIONAL
+function voltarParaHome(e) {
+    // Previne comportamento padrão se evento existir
+    if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    
+    console.log('🔄 Botão "Voltar para Dashboard" clicado');
+    console.log('📍 URL atual:', window.location.href);
+    console.log('📍 Pathname:', window.location.pathname);
+    
+    try {
+        // Abordagem mais simples e direta
+        // Sempre usa caminho relativo simples, que funciona tanto em file:// quanto em http://
+        
+        // Primeiro, tenta o caminho mais comum
+        const targetUrl = 'index.html#home';
+        
+        console.log('🎯 Navegando para:', targetUrl);
+        
+        // Usa window.location.replace para evitar adicionar ao histórico
+        // Isso faz com que o botão "voltar" do navegador não volte para a página de manutenção
+        window.location.replace(targetUrl);
+        
+        // Se replace não funcionar (alguns navegadores), usa href como fallback
+        setTimeout(() => {
+            if (window.location.pathname.includes('manutenção_preventiva') || 
+                window.location.pathname.includes('manutencao')) {
+                console.log('⚠️ Replace não funcionou, tentando href...');
+                window.location.href = targetUrl;
+            }
+        }, 100);
+        
+        return false;
+        
+    } catch (error) {
+        console.error('❌ Erro ao voltar para home:', error);
+        
+        // Fallbacks progressivos
+        const fallbacks = [
+            'index.html#home',
+            './index.html#home',
+            '../index.html#home',
+            'index.html',
+            './index.html'
+        ];
+        
+        for (let i = 0; i < fallbacks.length; i++) {
+            try {
+                console.log(`🔄 Tentando fallback ${i + 1}:`, fallbacks[i]);
+                window.location.href = fallbacks[i];
+                break;
+            } catch (e) {
+                if (i === fallbacks.length - 1) {
+                    console.error('❌ Todos os fallbacks falharam');
+                    alert('Erro ao navegar. Por favor, use o menu do navegador para voltar à página inicial.');
+                }
+            }
+        }
+        
+        return false;
+    }
+}
+
+// Torna a função global
+window.voltarParaHome = voltarParaHome;
+
+// Menu Hambúrguer
+function toggleHamburgerMenu() {
+    const menu = document.getElementById('hamburger-menu');
+    const btn = document.getElementById('hamburger-btn');
+    
+    if (menu && btn) {
+        menu.classList.toggle('show');
+        btn.classList.toggle('active');
+    }
+}
+
+// Fechar menu ao clicar fora
+document.addEventListener('click', function(e) {
+    const menu = document.getElementById('hamburger-menu');
+    const btn = document.getElementById('hamburger-btn');
+    
+    if (menu && btn && !menu.contains(e.target) && !btn.contains(e.target)) {
+        menu.classList.remove('show');
+        btn.classList.remove('active');
+    }
+});
+
+window.toggleHamburgerMenu = toggleHamburgerMenu;

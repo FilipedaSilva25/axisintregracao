@@ -2,7 +2,7 @@
    SISTEMA PRINCIPAL - VARIÁVEIS GLOBAIS
    ============================================ */
 let currentUser = null;
-let authMode = 'login';
+let currentUserProfile = 'operador'; // Perfil do usuário logado
 let activePage = 'page-home'; // Para controle de navegação
 
 // ================= INVENTÁRIO AVANÇADO =================
@@ -446,6 +446,15 @@ function navigate(pageId) {
             loadSettings();
             showToast('Configurações carregadas', 'info');
             break;
+        case 'page-administracao':
+            if (currentUserProfile !== 'admin') {
+                showToast('Acesso negado. Apenas administradores podem acessar esta página.', 'error');
+                navigate('page-home');
+                return;
+            }
+            atualizarEstatisticasAdmin();
+            showToast('Página de administração carregada', 'info');
+            break;
     }
 
     // Scroll suave para o topo
@@ -574,29 +583,24 @@ function exportSettings() {
 }
 
 // ================= 4. SISTEMA DE AUTENTICAÇÃO =================
-function toggleAuth(mode) {
-    console.log(`🔐 Alternando modo de autenticação: ${mode}`);
-    
-    authMode = mode;
-    const registerFields = document.getElementById('register-fields');
-    const mainBtn = document.getElementById('auth-main-btn');
-    const tabLogin = document.getElementById('tab-login');
-    const tabRegister = document.getElementById('tab-register');
-
-    if (!registerFields || !mainBtn || !tabLogin || !tabRegister) return;
-
-    if (mode === 'login') {
-        registerFields.style.display = 'none';
-        mainBtn.innerText = 'Acessar AXIS';
-        tabLogin.classList.add(CSSClasses.active);
-        tabRegister.classList.remove(CSSClasses.active);
-    } else {
-        registerFields.style.display = 'block';
-        mainBtn.innerText = 'Finalizar Cadastro';
-        tabLogin.classList.remove(CSSClasses.active);
-        tabRegister.classList.add(CSSClasses.active);
+// Cria usuário administrador padrão se não existir
+function inicializarUsuarioAdmin() {
+    const adminKey = 'db_ADMIN';
+    if (!localStorage.getItem(adminKey)) {
+        const adminData = {
+            name: 'ADMINISTRADOR',
+            pass: 'admin123',
+            dataCadastro: new Date().toISOString(),
+            perfil: 'admin',
+            ultimoAcesso: new Date().toISOString()
+        };
+        localStorage.setItem(adminKey, JSON.stringify(adminData));
+        console.log('✅ Usuário administrador criado: ADMIN / admin123');
     }
 }
+
+// Inicializa admin ao carregar
+inicializarUsuarioAdmin();
 
 function handleAuth() {
     console.log('🔐 Processando autenticação...');
@@ -611,97 +615,78 @@ function handleAuth() {
         return;
     }
 
-    if (authMode === 'register') {
-        const nameField = document.getElementById('reg-fullname');
-        const name = nameField.value.trim();
-        
-        if (!name) {
-            showToast('Digite seu nome completo!', 'warning');
-            return;
-        }
-        
-        // Verifica se usuário já existe
-        if (localStorage.getItem('db_' + userInput)) {
-            showToast('Usuário já cadastrado!', 'warning');
-            return;
-        }
-        
-        const userData = { 
-            name: name.toUpperCase(), 
-            pass: pass,
-            dataCadastro: new Date().toISOString(),
-            perfil: 'tecnico',
-            ultimoAcesso: new Date().toISOString()
-        };
-        
-        localStorage.setItem('db_' + userInput, JSON.stringify(userData));
-        showToast('Conta criada com sucesso!', 'success');
-        toggleAuth('login');
-        
-        // Limpa campos
-        nameField.value = '';
-        userField.value = '';
-        passField.value = '';
-        
-    } else {
-        const dbRaw = localStorage.getItem('db_' + userInput);
-        if (dbRaw) {
-            const db = JSON.parse(dbRaw);
-            if (db.pass === pass) {
-                // SUCESSO NO LOGIN
-                currentUser = db.name || userInput;
-                
-                // Atualiza saudação
-                const userDisplay = document.getElementById('user-display-name');
-                if (userDisplay) userDisplay.innerText = currentUser;
-
-                // Transição de telas com animação
-                const authScreen = document.getElementById('auth-screen');
-                const mainContent = document.getElementById('main-content');
-                
-                if (authScreen) {
-                    authScreen.style.opacity = '0';
-                    authScreen.style.transform = 'translateY(-20px)';
+    const dbRaw = localStorage.getItem('db_' + userInput);
+    if (dbRaw) {
+        const db = JSON.parse(dbRaw);
+        if (db.pass === pass) {
+            // SUCESSO NO LOGIN
+            currentUser = db.name || userInput;
+            currentUserProfile = db.perfil || 'operador';
+            
+            // Atualiza saudação
+            const userDisplay = document.getElementById('user-display-name');
+            if (userDisplay) userDisplay.innerText = currentUser;
+            
+            // Mostra menu de administração apenas para admins
+            const menuAdmin = document.getElementById('menu-admin');
+            if (menuAdmin) {
+                if (currentUserProfile === 'admin') {
+                    menuAdmin.style.display = 'block';
+                } else {
+                    menuAdmin.style.display = 'none';
                 }
-                
-                setTimeout(() => {
-                    if (authScreen) authScreen.style.display = 'none';
-                    if (mainContent) {
-                        mainContent.style.display = 'block';
-                        mainContent.style.opacity = '0';
-                        mainContent.style.transform = 'translateY(20px)';
-                        
-                        setTimeout(() => {
-                            mainContent.style.opacity = '1';
-                            mainContent.style.transform = 'translateY(0)';
-                        }, 50);
-                    }
-                }, 300);
-                
-                // Registra login
-                const loginData = {
-                    usuario: userInput,
-                    data: new Date().toISOString(),
-                    ip: '192.168.1.1' // Simulado
-                };
-                localStorage.setItem('last_login', JSON.stringify(loginData));
-                
-                showToast(`Bem-vindo, ${currentUser}!`, 'success');
-                
-                // Inicia na Home
-                navigate('page-home');
-                
-            } else {
-                // Animação de erro
-                passField.classList.add('shake-animation');
-                setTimeout(() => passField.classList.remove('shake-animation'), 500);
-                showToast('Senha incorreta.', 'warning');
             }
+
+            // Transição de telas com animação
+            const authScreen = document.getElementById('auth-screen');
+            const mainContent = document.getElementById('main-content');
+            
+            if (authScreen) {
+                authScreen.style.opacity = '0';
+                authScreen.style.transform = 'translateY(-20px)';
+            }
+            
+            setTimeout(() => {
+                if (authScreen) authScreen.style.display = 'none';
+                if (mainContent) {
+                    mainContent.style.display = 'block';
+                    mainContent.style.opacity = '0';
+                    mainContent.style.transform = 'translateY(20px)';
+                    
+                    setTimeout(() => {
+                        mainContent.style.opacity = '1';
+                        mainContent.style.transform = 'translateY(0)';
+                    }, 50);
+                }
+            }, 300);
+            
+            // Atualiza último acesso do usuário
+            db.ultimoAcesso = new Date().toISOString();
+            localStorage.setItem('db_' + userInput, JSON.stringify(db));
+            
+            // Registra login
+            const loginData = {
+                usuario: userInput,
+                data: new Date().toISOString(),
+                ip: '192.168.1.1' // Simulado
+            };
+            localStorage.setItem('last_login', JSON.stringify(loginData));
+            
+            showToast(`Bem-vindo, ${currentUser}!`, 'success');
+            
+            // Inicia na Home
+            navigate('page-home');
+            
         } else {
-            userField.classList.add('shake-animation');
-            setTimeout(() => userField.classList.remove('shake-animation'), 500);
-            showToast('Usuário não encontrado.', 'warning');
+            // Animação de erro
+            passField.classList.add('shake-animation');
+            setTimeout(() => passField.classList.remove('shake-animation'), 500);
+            showToast('Senha incorreta.', 'warning');
         }
+    } else {
+        userField.classList.add('shake-animation');
+        setTimeout(() => userField.classList.remove('shake-animation'), 500);
+        showToast('Usuário não encontrado.', 'warning');
     }
 }
 
@@ -827,23 +812,11 @@ function initFormEvents() {
 function inicializarInventario() {
     console.log('📊 Inicializando inventário...');
     
-    // Mostra estado de carregamento
-    showSkeletonTable();
-    
     // Carrega dados
     inventarioData = [...equipamentosExemplo];
     
-    // Atualiza contadores de modelo
-    atualizarContadoresModelo();
-    
-    // Atualiza estatísticas
-    atualizarEstatisticas();
-    atualizarEstatisticasModelo('todos');
-    
-    // Aplica filtros
-    setTimeout(() => {
-        filtrarInventario();
-    }, 500);
+    // Renderiza tabela
+    renderizarTabela();
     
     // Inicializa export dropdown
     initExportDropdown();
@@ -905,34 +878,22 @@ function filtrarPorModelo(modelo) {
 function filtrarInventario() {
     console.log('⚙️ Aplicando filtros...');
     
-    const modeloFiltro = document.getElementById('filter-modelo')?.value || 'todos';
-    const statusFiltro = document.getElementById('filter-status')?.value || 'todos';
-    const setorFiltro = document.getElementById('filter-setor')?.value || 'todos';
-    const busca = document.getElementById('search-inventory')?.value.toLowerCase() || '';
+    const paisFiltro = document.getElementById('ucs-filtro-pais')?.value || '';
+    const nodoFiltro = document.getElementById('ucs-filtro-nodo')?.value || '';
+    const dispositivoFiltro = document.getElementById('ucs-filtro-dispositivo')?.value || '';
+    const busca = ''; // Busca será implementada depois se necessário
     
-    console.log(`Filtros: Modelo=${modeloFiltro}, Status=${statusFiltro}, Setor=${setorFiltro}, Busca="${busca}"`);
+    console.log(`Filtros: País=${paisFiltro}, Nodo=${nodoFiltro}, Dispositivo=${dispositivoFiltro}`);
     
     let filtrados = equipamentosExemplo.filter(eqp => {
-        // Filtro por modelo (menu de tabs)
-        if (modeloAtual !== 'todos' && eqp.modelo !== modeloAtual) return false;
-        
-        // Filtro por modelo (select)
-        if (modeloFiltro !== 'todos' && eqp.modelo !== modeloFiltro) return false;
-        
-        // Filtro por status
-        if (statusFiltro !== 'todos' && eqp.status !== statusFiltro) return false;
-        
-        // Filtro por setor
-        if (setorFiltro !== 'todos' && eqp.setor !== setorFiltro) return false;
-        
-        // Filtro por busca (em todos os campos relevantes)
+        // Filtro por busca (serial, tag, IP, nome)
         if (busca) {
             const camposBusca = [
                 eqp.serial?.toLowerCase(),
                 eqp.tag?.toLowerCase(),
-                eqp.modelo?.toLowerCase(),
+                eqp.nome?.toLowerCase(),
+                eqp.nombre?.toLowerCase(),
                 eqp.ip?.toLowerCase(),
-                eqp.macRede?.toLowerCase(),
                 eqp.macBluetooth?.toLowerCase(),
                 eqp.selb?.toLowerCase(),
                 eqp.patrimonio?.toLowerCase(),
@@ -955,8 +916,20 @@ function filtrarInventario() {
     inventarioData = filtrados;
     currentPage = 1;
     
-    atualizarEstatisticas();
     renderizarTabela();
+}
+
+// Função para resetar filtros
+function resetarFiltrosInventario() {
+    const paisSelect = document.getElementById('ucs-filtro-pais');
+    const nodoSelect = document.getElementById('ucs-filtro-nodo');
+    const dispositivoSelect = document.getElementById('ucs-filtro-dispositivo');
+    
+    if (paisSelect) paisSelect.value = '';
+    if (nodoSelect) nodoSelect.value = '';
+    if (dispositivoSelect) dispositivoSelect.value = '';
+    
+    filtrarInventario();
 }
 
 // ================= ORDENAÇÃO DA TABELA =================
@@ -1016,10 +989,22 @@ function ordenarTabela(coluna) {
 function renderizarTabela() {
     console.log('🔄 Renderizando tabela...');
     
-    const tbody = document.getElementById('inventory-data');
+    // Atualiza contador total
+    const totalCount = document.getElementById('ucs-total-count');
+    if (totalCount) {
+        totalCount.textContent = `${inventarioData.length} EM TOTAL`;
+    }
+    
+    const tbody = document.getElementById('ucs-inventory-data');
     if (!tbody) {
-        console.error('❌ Tbody não encontrado');
-        return;
+        // Fallback para estrutura antiga
+        const oldTbody = document.getElementById('inventory-data');
+        if (oldTbody) {
+            tbody = oldTbody;
+        } else {
+            console.error('❌ Tbody não encontrado');
+            return;
+        }
     }
     
     // Limpa animações anteriores
@@ -1030,12 +1015,12 @@ function renderizarTabela() {
     if (inventarioData.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="11" class="empty-state">
-                    <div class="empty-icon">🔍</div>
-                    <h4>Nenhum equipamento encontrado</h4>
-                    <p>Tente ajustar os filtros ou cadastrar um novo equipamento</p>
-                    <button onclick="abrirCadastroRapido()" class="btn-primary">
-                        ➕ Cadastrar Nova Impressora
+                <td colspan="7" style="text-align: center; padding: 40px;">
+                    <div style="font-size: 48px; margin-bottom: 16px;">📦</div>
+                    <h4 style="margin: 0 0 8px 0; color: var(--text-main);">Nenhum equipamento encontrado</h4>
+                    <p style="color: var(--text-secondary); margin-bottom: 20px;">Tente ajustar os filtros ou cadastrar um novo equipamento</p>
+                    <button onclick="abrirCadastroRapido()" style="padding: 10px 20px; background: #007aff; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                        ➕ Criar Dispositivo
                     </button>
                 </td>
             </tr>
@@ -1054,80 +1039,45 @@ function renderizarTabela() {
     let html = '';
     
     pageItems.forEach((eqp, index) => {
-        const statusClass = `status-${eqp.status}`;
-        const statusText = eqp.status === 'online' ? '● Online' : 
-                          eqp.status === 'offline' ? '● Offline' : '● Em Manutenção';
+        // Formata descrição incluindo bancada
+        const descricao = eqp.descricao || eqp.descripcion || 
+                         (eqp.bancada ? `${eqp.modelo} - Bancada ${eqp.bancada}` : eqp.modelo);
         
-        const setorText = formatarSetor(eqp.setor);
-        const isNew = Date.now() - new Date(eqp.dataCadastro).getTime() < 24 * 60 * 60 * 1000;
-        const rowClass = isNew ? 'new-equipment' : (index % 2 === 0 ? '' : 'table-row-alt');
-        
-        // Formata MAC Address para exibição
-        const macRedeFormatado = formatarMAC(eqp.macRede);
-        const macBluetoothFormatado = eqp.macBluetooth ? formatarMAC(eqp.macBluetooth) : 'N/A';
+        // Nome do equipamento
+        const nome = eqp.nome || eqp.nombre || eqp.tag || eqp.serial;
         
         html += `
-            <tr class="${rowClass}" data-serial="${eqp.serial}" data-tag="${eqp.tag}">
+            <tr data-serial="${eqp.serial}" data-tag="${eqp.tag}">
+                <td>${eqp.serial || eqp.id || '-'}</td>
+                <td>${nome}</td>
+                <td>${eqp.ip || '-'}</td>
+                <td>${eqp.modelo || '-'}</td>
+                <td>${descricao}</td>
                 <td>
-                    <div class="tag-with-actions">
-                        <strong>${eqp.serial}</strong>
-                        <div class="row-actions">
-                            <button onclick="copiarParaClipboard('${eqp.serial}')" title="Copiar Serial" data-tooltip="Copiar Serial">
-                                📋
+                    <button class="ucs-action-btn" onclick="editarEquipamento('${eqp.tag}')" title="Editar">
+                        ✏️ Editar
+                    </button>
+                </td>
+                <td>
+                    <div class="ucs-controls-dropdown">
+                        <button class="ucs-action-btn">
+                            ⚙️ Controles
+                            <span class="ucs-dropdown-arrow">▼</span>
+                        </button>
+                        <div class="ucs-controls-menu">
+                            <button class="ucs-controls-option" onclick="editarEquipamento('${eqp.tag}')">
+                                ✏️ Editar
                             </button>
-                            <button onclick="verDetalhes('${eqp.tag}')" title="Ver detalhes" data-tooltip="Ver detalhes">
-                                👁️
+                            <button class="ucs-controls-option" onclick="verDetalhes('${eqp.tag}')">
+                                👁️ Ver Detalhes
+                            </button>
+                            <button class="ucs-controls-option" onclick="pingEquipamento('${eqp.ip}', '${eqp.tag}')">
+                                📶 Testar Conexão
+                            </button>
+                            <button class="ucs-controls-option" onclick="excluirEquipamento('${eqp.tag}')" style="color: #ff3b30;">
+                                🗑️ Excluir
                             </button>
                         </div>
-                    </div>
-                </td>
-                <td>
-                    <span class="modelo-badge" data-tooltip="Zebra ${eqp.modelo}">
-                        ${eqp.modelo}
-                    </span>
-                </td>
-                <td>
-                    <code class="copyable" onclick="copiarParaClipboard('${eqp.ip}')" data-tooltip="Clique para copiar IP">
-                        ${eqp.ip}
-                    </code>
-                </td>
-                <td>
-                    <code class="copyable" onclick="copiarParaClipboard('${eqp.macRede}')" data-tooltip="Clique para copiar MAC">
-                        ${macRedeFormatado}
-                    </code>
-                </td>
-                <td>
-                    <code class="copyable" onclick="copiarParaClipboard('${eqp.macBluetooth || ''}')" data-tooltip="Clique para copiar Bluetooth">
-                        ${macBluetoothFormatado}
-                    </code>
-                </td>
-                <td>
-                    <span class="selb-badge">${eqp.selb}</span>
-                </td>
-                <td>
-                    ${eqp.patrimonio || 'N/A'}
-                </td>
-                <td>
-                    ${setorText}
-                </td>
-                <td>
-                    <span class="${statusClass}" data-tooltip="${eqp.ultimaChecagem}">
-                        ${statusText}
-                    </span>
-                </td>
-                <td>
-                    ${formatarDataBonita(eqp.ultimaChecagem)}
-                </td>
-                <td>
-                    <div class="action-buttons">
-                        <button onclick="verDetalhes('${eqp.tag}')" class="btn-action btn-detalhes" data-tooltip="Ver todos os detalhes">
-                            <span class="btn-icon">👁️</span>
-                            <span class="btn-text">Detalhes</span>
-                        </button>
-                        <button onclick="pingEquipamento('${eqp.ip}', '${eqp.tag}')" class="btn-action btn-ping" data-tooltip="Testar conexão">
-                            <span class="btn-icon">📶</span>
-                            <span class="btn-text">Ping</span>
-                        </button>
                     </div>
                 </td>
             </tr>
@@ -1137,20 +1087,20 @@ function renderizarTabela() {
     tbody.innerHTML = html;
     atualizarPaginacao();
     
-    // Adiciona animação de entrada nas linhas
-    setTimeout(() => {
-        document.querySelectorAll('#inventory-data tr').forEach((row, i) => {
-            row.style.opacity = '0';
-            row.style.transform = 'translateY(10px)';
-            setTimeout(() => {
-                row.style.opacity = '1';
-                row.style.transform = 'translateY(0)';
-                row.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
-            }, i * 50);
-        });
-    }, 100);
-    
     console.log('✅ Tabela renderizada com sucesso');
+}
+
+// Funções auxiliares para ações da tabela
+function editarEquipamento(tag) {
+    verDetalhes(tag);
+}
+
+function excluirEquipamento(tag) {
+    if (confirm('Tem certeza que deseja excluir este equipamento?')) {
+        inventarioData = inventarioData.filter(eqp => eqp.tag !== tag);
+        renderizarTabela();
+        showToast('Equipamento excluído com sucesso', 'success');
+    }
 }
 
 // ================= FUNÇÕES UTILITÁRIAS DO INVENTÁRIO =================
@@ -1890,6 +1840,24 @@ function abrirCadastroRapido() {
     const cadastroForm = document.getElementById('cadastro-form');
     if (cadastroForm) cadastroForm.reset();
     
+    // Popula select de bancada (B01 até B200)
+    const selectBancada = document.getElementById('cad-bancada');
+    if (selectBancada) {
+        // Limpa opções existentes (exceto a primeira "Selecione")
+        while (selectBancada.options.length > 1) {
+            selectBancada.remove(1);
+        }
+        
+        // Adiciona opções B01 até B200
+        for (let i = 1; i <= 200; i++) {
+            const option = document.createElement('option');
+            const valor = `B${String(i).padStart(2, '0')}`;
+            option.value = valor;
+            option.textContent = valor;
+            selectBancada.appendChild(option);
+        }
+    }
+    
     // Foca no primeiro campo
     const serialInput = document.getElementById('cad-serial');
     if (serialInput) serialInput.focus();
@@ -1911,10 +1879,9 @@ function fecharCadastro() {
 }
 
 function proximoPassoCadastro() {
-    const stepAtual = document.querySelector('.cadastro-step.active');
-    if (!stepAtual) return;
-    
-    const stepNum = parseInt(stepAtual.id.split('-')[1]);
+    const stepNum = cadastroStep;
+    const stepAtualContent = document.getElementById(`step-${stepNum}-content`);
+    if (!stepAtualContent) return;
     
     // Validação básica
     if (stepNum === 1) {
@@ -1922,16 +1889,14 @@ function proximoPassoCadastro() {
         const modeloRadio = document.querySelector('input[name="modelo"]:checked');
         
         if (!serial || !modeloRadio) {
-            showToast('Preencha Serial e selecione o Modelo para continuar', 'warning');
-            return;
+            return; // Validação silenciosa - sem avisos
         }
         
         const modelo = modeloRadio.value;
         
         // Verifica se serial já existe
         if (equipamentosExemplo.some(e => e.serial === serial)) {
-            showToast('Serial já cadastrado no sistema', 'warning');
-            return;
+            return; // Validação silenciosa - sem avisos
         }
         
         // Atualiza confirmação
@@ -1971,8 +1936,8 @@ function proximoPassoCadastro() {
     }
     
     // Animação de transição
-    stepAtual.style.opacity = '0';
-    stepAtual.style.transform = 'translateX(-20px)';
+    stepAtualContent.style.opacity = '0';
+    stepAtualContent.style.transform = 'translateX(-20px)';
     
     setTimeout(() => {
         // Avança para próximo passo
@@ -1981,14 +1946,19 @@ function proximoPassoCadastro() {
         const nextStepContent = document.getElementById(`step-${nextStep}-content`);
         
         if (nextStepElement && nextStepContent) {
-            stepAtual.classList.remove(CSSClasses.active);
-            nextStepElement.classList.add(CSSClasses.active);
-            
-            // Atualiza conteúdo
-            document.querySelectorAll('.cadastro-step-content').forEach(content => {
-                content.classList.remove(CSSClasses.active);
+            // Atualiza indicadores no topo - apenas os .step dentro de .cadastro-steps
+            document.querySelectorAll('.cadastro-steps .step').forEach(step => {
+                step.classList.remove('active');
             });
-            nextStepContent.classList.add(CSSClasses.active);
+            nextStepElement.classList.add('active');
+            
+            // Atualiza conteúdo dos steps - apenas os conteúdos com id step-X-content
+            document.querySelectorAll('[id^="step-"][id$="-content"]').forEach(step => {
+                step.classList.remove('active');
+                step.style.opacity = '0';
+                step.style.transform = '';
+            });
+            nextStepContent.classList.add('active');
             
             // Animação de entrada do próximo passo
             nextStepContent.style.opacity = '0';
@@ -2012,19 +1982,22 @@ function proximoPassoCadastro() {
                 if (btnSubmit) btnSubmit.style.display = 'block';
             }
             
-            showToast(`Passo ${nextStep} de 3`, 'info');
+            // Removido aviso de passo
         }
     }, 300);
 }
 
 function passoAnteriorCadastro() {
-    const stepAtualContent = document.querySelector('.cadastro-step-content.active');
     const stepNum = cadastroStep;
     
     if (stepNum > 1) {
+        const stepAtualContent = document.getElementById(`step-${stepNum}-content`);
+        
         // Animação de transição
-        stepAtualContent.style.opacity = '0';
-        stepAtualContent.style.transform = 'translateX(20px)';
+        if (stepAtualContent) {
+            stepAtualContent.style.opacity = '0';
+            stepAtualContent.style.transform = 'translateX(20px)';
+        }
         
         setTimeout(() => {
             const prevStep = stepNum - 1;
@@ -2032,17 +2005,19 @@ function passoAnteriorCadastro() {
             const prevStepContent = document.getElementById(`step-${prevStep}-content`);
             
             if (prevStepElement && prevStepContent) {
-                // Atualiza passos
-                document.querySelectorAll('.cadastro-step').forEach(step => {
-                    step.classList.remove(CSSClasses.active);
+                // Atualiza passos (indicadores no topo) - apenas os .step
+                document.querySelectorAll('.cadastro-steps .step').forEach(step => {
+                    step.classList.remove('active');
                 });
-                prevStepElement.classList.add(CSSClasses.active);
+                prevStepElement.classList.add('active');
                 
-                // Atualiza conteúdo
-                document.querySelectorAll('.cadastro-step-content').forEach(content => {
-                    content.classList.remove(CSSClasses.active);
+                // Atualiza conteúdo dos steps - apenas os conteúdos com id step-X-content
+                document.querySelectorAll('[id^="step-"][id$="-content"]').forEach(step => {
+                    step.classList.remove('active');
+                    step.style.opacity = '0';
+                    step.style.transform = '';
                 });
-                prevStepContent.classList.add(CSSClasses.active);
+                prevStepContent.classList.add('active');
                 
                 // Animação de entrada do passo anterior
                 prevStepContent.style.opacity = '0';
@@ -2055,6 +2030,13 @@ function passoAnteriorCadastro() {
                 
                 cadastroStep = prevStep;
                 
+                // Atualiza classe de progresso
+                const stepsContainer = document.querySelector('.cadastro-steps');
+                if (stepsContainer) {
+                    stepsContainer.classList.remove('step-1', 'step-2', 'step-3');
+                    stepsContainer.classList.add(`step-${prevStep}`);
+                }
+                
                 // Atualiza botões
                 const btnBack = document.getElementById('btn-back');
                 const btnNext = document.getElementById('btn-next');
@@ -2064,11 +2046,38 @@ function passoAnteriorCadastro() {
                 if (btnSubmit) btnSubmit.style.display = 'none';
                 if (prevStep === 1) {
                     if (btnBack) btnBack.style.display = 'none';
+                } else {
+                    if (btnBack) btnBack.style.display = 'block';
                 }
                 
-                showToast(`Passo ${prevStep} de 3`, 'info');
+                // Garante que o modal está visível
+                const modal = document.getElementById('cadastro-modal');
+                if (modal) {
+                    modal.style.display = 'flex';
+                    modal.style.opacity = '1';
+                }
             }
         }, 300);
+    } else if (stepNum === 1) {
+        // Se já está no passo 1, apenas garante que está visível
+        const step1Content = document.getElementById('step-1-content');
+        if (step1Content) {
+            step1Content.classList.add('active');
+            step1Content.style.opacity = '1';
+            step1Content.style.transform = 'translateX(0)';
+        }
+        
+        const step1 = document.getElementById('step-1');
+        if (step1) step1.classList.add('active');
+        
+        const btnBack = document.getElementById('btn-back');
+        if (btnBack) btnBack.style.display = 'none';
+        
+        const modal = document.getElementById('cadastro-modal');
+        if (modal) {
+            modal.style.display = 'flex';
+            modal.style.opacity = '1';
+        }
     }
 }
 
@@ -2081,15 +2090,15 @@ function finalizarCadastro() {
     const modelo = modeloRadio ? modeloRadio.value : '';
     const ip = document.getElementById('cad-ip')?.value.trim() || '';
     const macRede = document.getElementById('cad-mac-rede')?.value.trim() || '';
+    const macBluetooth = document.getElementById('cad-mac-bluetooth')?.value.trim() || '';
+    const selb = document.getElementById('cad-selb')?.value.trim() || '';
     const setor = document.getElementById('cad-setor')?.value || '';
     const patrimonio = document.getElementById('cad-patrimonio')?.value.trim() || '';
-    const localizacao = document.getElementById('cad-localizacao')?.value.trim() || '';
-    const macBluetooth = document.getElementById('cad-mac-bluetooth')?.value.trim() || '';
+    const bancada = document.getElementById('cad-bancada')?.value || '';
     const observacoes = document.getElementById('cad-observacoes')?.value.trim() || '';
     
-    // Validações finais
-    if (!serial || !modelo || !ip || !macRede || !setor) {
-        showToast('Preencha todos os campos obrigatórios', 'warning');
+    // Validações finais (silenciosas - sem avisos)
+    if (!serial || !modelo || !ip || !macRede) {
         return;
     }
     
@@ -2101,10 +2110,10 @@ function finalizarCadastro() {
         ip: ip,
         macRede: macRede.toUpperCase(),
         macBluetooth: macBluetooth ? macBluetooth.toUpperCase() : null,
-        selb: `SELB-${new Date().getFullYear()}-${String(equipamentosExemplo.length + 1).padStart(3, '0')}`,
+        selb: selb || null,
         patrimonio: patrimonio || null,
         setor: setor,
-        localizacao: localizacao || 'Localização não especificada',
+        bancada: bancada || null,
         status: 'online',
         ultimaChecagem: new Date().toISOString().replace('T', ' ').substring(0, 16),
         dataCadastro: new Date().toISOString(),
@@ -2269,7 +2278,7 @@ function verDetalhes(tag) {
         'detail-selb': equipamento.selb,
         'detail-patrimonio': equipamento.patrimonio || 'N/A',
         'detail-setor': formatarSetor(equipamento.setor),
-        'detail-localizacao': equipamento.localizacao,
+        'detail-bancada': equipamento.bancada || '-',
         'detail-ultima-checagem': formatarDataBonita(equipamento.ultimaChecagem),
         'detail-responsavel': equipamento.responsavel,
         'detail-fabricante': equipamento.fabricante,
@@ -2915,17 +2924,279 @@ function startRealTimeSimulation() {
     }, 60000); // A cada minuto
 }
 
+// ================= ADMINISTRAÇÃO DE USUÁRIOS =================
+function atualizarEstatisticasAdmin() {
+    // Atualiza estatísticas de usuários
+    const usuarios = [];
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key.startsWith('db_')) {
+            try {
+                const userData = JSON.parse(localStorage.getItem(key));
+                usuarios.push({
+                    login: key.replace('db_', ''),
+                    ...userData
+                });
+            } catch (e) {
+                console.error('Erro ao carregar usuário:', key, e);
+            }
+        }
+    }
+    
+    const totalUsuarios = usuarios.length;
+    const usuariosAtivos = usuarios.filter(u => u.ultimoAcesso).length;
+    
+    const totalUsuariosEl = document.getElementById('total-usuarios');
+    const usuariosAtivosEl = document.getElementById('usuarios-ativos');
+    
+    if (totalUsuariosEl) totalUsuariosEl.textContent = totalUsuarios;
+    if (usuariosAtivosEl) usuariosAtivosEl.textContent = usuariosAtivos;
+    
+    // Atualiza estatísticas de equipamentos
+    const totalEquipamentosEl = document.getElementById('total-equipamentos');
+    if (totalEquipamentosEl) {
+        totalEquipamentosEl.textContent = equipamentosExemplo.length;
+    }
+    
+    // Atualiza rondas realizadas (simulado - pode ser ajustado depois)
+    const rondasRealizadasEl = document.getElementById('rondas-realizadas');
+    if (rondasRealizadasEl) {
+        const rondas = JSON.parse(localStorage.getItem('rondas') || '[]');
+        rondasRealizadasEl.textContent = rondas.length || 0;
+    }
+}
+
+function abrirGerenciarUsuarios() {
+    const modal = document.getElementById('modal-gerenciar-usuarios');
+    if (modal) {
+        modal.style.display = 'flex';
+        carregarUsuarios();
+        atualizarEstatisticasAdmin();
+        
+        // Fecha modal ao clicar fora
+        modal.onclick = function(e) {
+            if (e.target === modal) {
+                fecharModalUsuarios();
+            }
+        };
+    }
+}
+
+function fecharModalUsuarios() {
+    const modal = document.getElementById('modal-gerenciar-usuarios');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+function abrirEstatisticasSistema() {
+    showToast('Módulo de estatísticas em desenvolvimento', 'info');
+    // Aqui pode ser implementado um modal ou navegação para página de estatísticas
+}
+
+function abrirConfiguracoesAvancadas() {
+    navigate('page-configuracoes');
+}
+
+function abrirLogsAuditoria() {
+    showToast('Módulo de logs e auditoria em desenvolvimento', 'info');
+    // Aqui pode ser implementado um modal ou navegação para página de logs
+}
+
+function carregarUsuarios() {
+    const tbody = document.getElementById('usuarios-tbody');
+    if (!tbody) return;
+    
+    const usuarios = [];
+    
+    // Busca todos os usuários no localStorage
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key.startsWith('db_') && key !== 'db_ADMIN') {
+            try {
+                const userData = JSON.parse(localStorage.getItem(key));
+                usuarios.push({
+                    login: key.replace('db_', ''),
+                    ...userData
+                });
+            } catch (e) {
+                console.error('Erro ao carregar usuário:', key, e);
+            }
+        }
+    }
+    
+    // Adiciona o admin também
+    const adminData = JSON.parse(localStorage.getItem('db_ADMIN') || '{}');
+    if (adminData.name) {
+        usuarios.unshift({
+            login: 'ADMIN',
+            ...adminData
+        });
+    }
+    
+    // Ordena por nome
+    usuarios.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    
+    // Renderiza tabela
+    tbody.innerHTML = usuarios.map(user => {
+        const dataCadastro = user.dataCadastro ? new Date(user.dataCadastro).toLocaleDateString('pt-BR') : '-';
+        const ultimoAcesso = user.ultimoAcesso ? new Date(user.ultimoAcesso).toLocaleDateString('pt-BR') : '-';
+        const perfilLabel = {
+            'admin': '👑 Administrador',
+            'tecnico': '🔧 Técnico',
+            'operador': '👤 Operador',
+            'visualizador': '👁️ Visualizador'
+        }[user.perfil] || user.perfil || 'Operador';
+        
+        return `
+            <tr>
+                <td>${user.name || '-'}</td>
+                <td><strong>${user.login}</strong></td>
+                <td>${perfilLabel}</td>
+                <td>${dataCadastro}</td>
+                <td>${ultimoAcesso}</td>
+                <td class="acoes-usuario">
+                    ${user.login !== 'ADMIN' ? `
+                        <button class="btn-icon-small" onclick="editarUsuario('${user.login}')" title="Editar">
+                            ✏️
+                        </button>
+                        <button class="btn-icon-small btn-danger" onclick="excluirUsuario('${user.login}')" title="Excluir">
+                            🗑️
+                        </button>
+                    ` : '<span class="text-muted">Protegido</span>'}
+                </td>
+            </tr>
+        `;
+    }).join('');
+    
+    // Atualiza estatísticas após carregar
+    atualizarEstatisticasAdmin();
+}
+
+function filtrarUsuarios() {
+    const busca = document.getElementById('buscar-usuario').value.toLowerCase();
+    const linhas = document.querySelectorAll('#usuarios-tbody tr');
+    
+    linhas.forEach(linha => {
+        const texto = linha.textContent.toLowerCase();
+        linha.style.display = texto.includes(busca) ? '' : 'none';
+    });
+}
+
+function limparFormularioUsuario() {
+    document.getElementById('cadastro-usuario-form').reset();
+}
+
+function cadastrarUsuario(event) {
+    if (event) event.preventDefault();
+    
+    if (currentUserProfile !== 'admin') {
+        showToast('Apenas administradores podem cadastrar usuários', 'error');
+        return;
+    }
+    
+    const nome = document.getElementById('novo-usuario-nome').value.trim();
+    const login = document.getElementById('novo-usuario-login').value.trim().toUpperCase();
+    const senha = document.getElementById('novo-usuario-senha').value;
+    const perfil = document.getElementById('novo-usuario-perfil').value;
+    
+    if (!nome || !login || !senha || !perfil) {
+        showToast('Preencha todos os campos obrigatórios', 'warning');
+        return;
+    }
+    
+    if (senha.length < 6) {
+        showToast('A senha deve ter no mínimo 6 caracteres', 'warning');
+        return;
+    }
+    
+    const userKey = 'db_' + login;
+    
+    // Verifica se usuário já existe
+    if (localStorage.getItem(userKey)) {
+        showToast('Usuário já existe! Escolha outro login.', 'warning');
+        return;
+    }
+    
+    // Cria novo usuário
+    const novoUsuario = {
+        name: nome,
+        pass: senha,
+        perfil: perfil,
+        dataCadastro: new Date().toISOString(),
+        ultimoAcesso: null
+    };
+    
+    localStorage.setItem(userKey, JSON.stringify(novoUsuario));
+    
+    showToast(`Usuário ${nome} cadastrado com sucesso!`, 'success');
+    limparFormularioUsuario();
+    carregarUsuarios();
+    atualizarEstatisticasAdmin();
+}
+
+function editarUsuario(login) {
+    const userKey = 'db_' + login;
+    const userData = JSON.parse(localStorage.getItem(userKey) || '{}');
+    
+    if (!userData.name) {
+        showToast('Usuário não encontrado', 'error');
+        return;
+    }
+    
+    const novoNome = prompt('Novo nome completo:', userData.name);
+    if (!novoNome || novoNome.trim() === '') return;
+    
+    const novoPerfil = prompt('Novo perfil (admin/tecnico/operador/visualizador):', userData.perfil || 'operador');
+    if (!novoPerfil) return;
+    
+    const perfisValidos = ['admin', 'tecnico', 'operador', 'visualizador'];
+    if (!perfisValidos.includes(novoPerfil)) {
+        showToast('Perfil inválido', 'error');
+        return;
+    }
+    
+    userData.name = novoNome.trim();
+    userData.perfil = novoPerfil;
+    
+    localStorage.setItem(userKey, JSON.stringify(userData));
+    showToast('Usuário atualizado com sucesso!', 'success');
+    carregarUsuarios();
+    atualizarEstatisticasAdmin();
+}
+
+function excluirUsuario(login) {
+    if (login === 'ADMIN') {
+        showToast('Não é possível excluir o usuário administrador padrão', 'error');
+        return;
+    }
+    
+    if (!confirm(`Tem certeza que deseja excluir o usuário ${login}?`)) {
+        return;
+    }
+    
+    const userKey = 'db_' + login;
+    localStorage.removeItem(userKey);
+    
+    showToast(`Usuário ${login} excluído com sucesso!`, 'success');
+    carregarUsuarios();
+    atualizarEstatisticasAdmin();
+}
+
 // ================= FUNÇÕES GLOBAIS EXPORTADAS =================
 // Torna funções disponíveis globalmente para eventos onclick
 window.toggleSidebar = toggleSidebar;
 window.navigate = navigate;
-window.toggleAuth = toggleAuth;
+// Função toggleAuth removida - apenas login disponível
 window.handleAuth = handleAuth;
 window.togglePassword = togglePassword;
 window.logout = logout;
 window.handleGlobalSearch = handleGlobalSearch;
 window.filtrarPorModelo = filtrarPorModelo;
 window.filtrarInventario = filtrarInventario;
+window.resetarFiltrosInventario = resetarFiltrosInventario;
+window.editarEquipamento = editarEquipamento;
+window.excluirEquipamento = excluirEquipamento;
 window.ordenarTabela = ordenarTabela;
 window.mudarPagina = mudarPagina;
 window.exportarDados = exportarDados;
@@ -2933,6 +3204,16 @@ window.abrirCadastroRapido = abrirCadastroRapido;
 window.fecharCadastro = fecharCadastro;
 window.proximoPassoCadastro = proximoPassoCadastro;
 window.passoAnteriorCadastro = passoAnteriorCadastro;
+window.cadastrarUsuario = cadastrarUsuario;
+window.limparFormularioUsuario = limparFormularioUsuario;
+window.filtrarUsuarios = filtrarUsuarios;
+window.editarUsuario = editarUsuario;
+window.excluirUsuario = excluirUsuario;
+window.abrirGerenciarUsuarios = abrirGerenciarUsuarios;
+window.fecharModalUsuarios = fecharModalUsuarios;
+window.abrirEstatisticasSistema = abrirEstatisticasSistema;
+window.abrirConfiguracoesAvancadas = abrirConfiguracoesAvancadas;
+window.abrirLogsAuditoria = abrirLogsAuditoria;
 window.finalizarCadastro = finalizarCadastro;
 window.pingEquipamento = pingEquipamento;
 window.verDetalhes = verDetalhes;

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AXIS Intelligence | Dashboard de Manutenções Preventivas</title>
+    <link rel="stylesheet" href="manutencoes-dashboard.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Menu Hambúrguer - Transparente com Emojis -->
+    <div class="hamburger-menu-container">
+        <button class="hamburger-btn" id="hamburger-btn" onclick="toggleHamburgerMenu()">
+            <span>☰</span>
+        </button>
+        <div class="hamburger-menu" id="hamburger-menu">
+            <a href="index.html#home" class="menu-item">
+                <span class="menu-emoji">🏠</span>
+                <span>Voltar para Dashboard</span>
+            </a>
+            <a href="manutencoes-dashboard.html" class="menu-item active">
+                <span class="menu-emoji">📋</span>
+                <span>Manutenções Preventivas</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Preview Modal (tipo WhatsApp) -->
+    <div class="preview-modal" id="preview-modal">
+        <div class="preview-content">
+            <div class="preview-header">
+                <h3>Visualização Rápida</h3>
+                <button class="preview-close" onclick="esconderPreview()">✕</button>
+            </div>
+            <div class="preview-body" id="preview-body">
+                <!-- Conteúdo do PDF será carregado aqui -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Header Apple Style -->
+    <div class="apple-header">
+        <div class="apple-header-left">
+            <div class="apple-title-group">
+                <h1 class="apple-title">Manutenções Preventivas</h1>
+                <p class="apple-subtitle" id="current-path">Todas as manutenções</p>
+            </div>
+        </div>
+        <div class="apple-header-actions">
+            <button class="apple-btn-icon" onclick="toggleViewMode()" title="Alternar visualização" style="--delay: 0;">
+                <span id="view-mode-icon">📊</span>
+            </button>
+            <button class="apple-btn-icon" onclick="atualizarDashboard()" title="Atualizar" style="--delay: 1;">
+                <span>🔄</span>
+            </button>
+            <button class="apple-btn-icon" onclick="adicionarManutencao()" title="Adicionar manutenção" style="--delay: 2;">
+                <span>➕</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Container Principal -->
+    <div class="apple-container">
+        <!-- Sidebar de Anos -->
+        <aside class="apple-sidebar">
+            <div class="apple-sidebar-header">
+                <h2 class="apple-sidebar-title">Anos</h2>
+            </div>
+            <nav class="apple-sidebar-nav" id="anos-menu">
+                <!-- Anos serão carregados dinamicamente -->
+            </nav>
+        </aside>
+
+        <!-- Área de Conteúdo -->
+        <main class="apple-main-content">
+            <!-- Toolbar -->
+            <div class="apple-toolbar" id="meses-toolbar" style="display: none;">
+                <div class="apple-toolbar-content">
+                    <h3 class="apple-toolbar-title" id="ano-selecionado">Selecione um ano</h3>
+                    <div class="apple-toolbar-actions">
+                        <button class="apple-btn-text" onclick="voltarParaMeses()" id="btn-voltar-meses" style="display: none;">
+                            ⬅️ Voltar para Meses
+                        </button>
+                        <button class="apple-btn-text" onclick="voltarParaAnos()" id="btn-voltar-anos">
+                            ⬅️ Voltar para Anos
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Grid de Meses (visível quando ano selecionado) -->
+            <div class="apple-grid-meses" id="meses-grid" style="display: none;">
+                <!-- Meses serão carregados aqui -->
+            </div>
+
+            <!-- Grid de Setores (visível quando mês selecionado) -->
+            <div class="apple-grid-setores" id="setores-grid" style="display: none;">
+                <!-- Setores serão carregados aqui -->
+            </div>
+
+            <!-- Grid de Manutenções -->
+            <div class="apple-grid-manutencoes" id="manutencoes-grid">
+                <div class="apple-empty-state">
+                    <div class="apple-empty-icon">
+                        <i class="fas fa-clipboard-list"></i>
+                    </div>
+                    <h3 class="apple-empty-title">Selecione um ano</h3>
+                    <p class="apple-empty-text">Escolha um ano no menu lateral para ver as manutenções preventivas organizadas por mês.</p>
+                </div>
+            </div>
+
+            <!-- Lista de Manutenções (alternativa) -->
+            <div class="apple-list-manutencoes" id="manutencoes-list" style="display: none;">
+                <div class="apple-list-container">
+                    <table class="apple-table">
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Serial</th>
+                                <th>Modelo</th>
+                                <th>Técnico</th>
+                                <th>Setor</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="manutencoes-table-body">
+                            <!-- Manutenções serão carregadas aqui -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="manutencoes-dashboard.js"></script>
+</body>
+</html>

@@ -29,10 +29,10 @@ class WhatsAppAlerts {
     inicializar() {
         console.log('🔄 Inicializando sistema de alertas...');
         
-        // Criar botão flutuante
-        this.criarBotaoFlutuante();
+        // NÃO cria o botão aqui - será criado apenas quando usuário estiver logado
+        // this.criarBotaoFlutuante(); // Removido - será criado dinamicamente
         
-        // Criar badge de notificações
+        // Criar badge de notificações (se botão existir)
         this.atualizarBadge();
         
         // Verificar logs antigos
@@ -58,10 +58,30 @@ class WhatsAppAlerts {
         localStorage.setItem('whatsapp_config', JSON.stringify(this.config));
     }
     
-    // 4. CRIAR BOTÃO FLUTUANTE
+    // 4. CRIAR BOTÃO FLUTUANTE (APENAS SE USUÁRIO ESTIVER LOGADO E MENU FAB NÃO EXISTIR)
     criarBotaoFlutuante() {
         // Verificar se já existe
         if (document.getElementById('whatsapp-float-button')) return;
+        
+        // Se o menu FAB unificado existe, não criar botão individual
+        if (document.getElementById('fab-menu-unificado')) {
+            console.log('ℹ️ Menu FAB unificado detectado. Botão WhatsApp individual não será criado.');
+            return;
+        }
+        
+        // Verificar se o usuário está logado (verifica se a tela principal está visível)
+        const authScreen = document.getElementById('auth-screen');
+        const mainContent = document.getElementById('main-content');
+        
+        // Só cria o botão se o usuário estiver logado (main-content visível e auth-screen oculto)
+        const isLoggedIn = (mainContent && mainContent.style.display !== 'none') || 
+                          (authScreen && authScreen.style.display === 'none') ||
+                          (!authScreen && mainContent); // Fallback: se não houver auth-screen, assume logado
+        
+        if (!isLoggedIn) {
+            console.log('🔒 Usuário não está logado. Botão WhatsApp não será exibido.');
+            return;
+        }
         
         const botaoHTML = `
             <div id="whatsapp-float-button" class="whatsapp-float">
@@ -82,6 +102,8 @@ class WhatsAppAlerts {
             e.preventDefault();
             this.abrirPainelControle();
         });
+        
+        console.log('✅ Botão WhatsApp criado e exibido');
     }
     
     // 5. ALERTA DE PREVENTIVA CONCLUÍDA
@@ -539,10 +561,72 @@ class WhatsAppAlerts {
     }
 } // ← CHAVE QUE FECHA A CLASSE WhatsAppAlerts (ADICIONE SE FALTAR)
 
+// Função para verificar se deve exibir o botão WhatsApp
+function verificarEExibirBotaoWhatsApp() {
+    const authScreen = document.getElementById('auth-screen');
+    const mainContent = document.getElementById('main-content');
+    
+    // Verifica se está na página de manutenção (não tem auth-screen nem main-content)
+    const isManutencaoPage = !authScreen && !mainContent;
+    
+    if (isManutencaoPage) {
+        // Se estiver na página de manutenção, sempre exibe o botão
+        if (window.whatsAppAlerts) {
+            window.whatsAppAlerts.criarBotaoFlutuante();
+        }
+        return;
+    }
+    
+    // Verifica se usuário está logado
+    const isLoggedIn = (mainContent && mainContent.style.display !== 'none') || 
+                      (authScreen && (authScreen.style.display === 'none' || !authScreen.offsetParent));
+    
+    if (isLoggedIn && window.whatsAppAlerts) {
+        window.whatsAppAlerts.criarBotaoFlutuante();
+    }
+}
+
+// Observar quando o usuário fizer login
+function observarLogin() {
+    const authScreen = document.getElementById('auth-screen');
+    const mainContent = document.getElementById('main-content');
+    
+    if (!authScreen || !mainContent) return;
+    
+    // Usar MutationObserver para detectar mudanças no display
+    const observer = new MutationObserver(() => {
+        const isLoggedIn = mainContent.style.display !== 'none' && 
+                          (authScreen.style.display === 'none' || !authScreen.offsetParent);
+        
+        if (isLoggedIn && window.whatsAppAlerts) {
+            // Se logou e botão não existe, cria
+            if (!document.getElementById('whatsapp-float-button')) {
+                window.whatsAppAlerts.criarBotaoFlutuante();
+            }
+        } else {
+            // Se deslogou, remove o botão
+            const btn = document.getElementById('whatsapp-float-button');
+            if (btn) {
+                btn.remove();
+            }
+        }
+    });
+    
+    // Observar mudanças no display dos elementos
+    observer.observe(authScreen, { attributes: true, attributeFilter: ['style'] });
+    observer.observe(mainContent, { attributes: true, attributeFilter: ['style'] });
+}
+
 // Inicializar quando a página carregar
 document.addEventListener('DOMContentLoaded', () => {
     window.whatsAppAlerts = new WhatsAppAlerts();
     console.log('🎯 WhatsApp Alerts carregado e pronto!');
+    
+    // Verificar se usuário está logado e criar botão
+    setTimeout(() => {
+        verificarEExibirBotaoWhatsApp();
+        observarLogin();
+    }, 500); // Delay para garantir que o DOM está totalmente carregado
     
     // Expor métodos globais para teste
     window.testarAlertaPreventiva = () => window.whatsAppAlerts.testarPreventiva();

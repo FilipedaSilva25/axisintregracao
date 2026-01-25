@@ -6,14 +6,31 @@
     <title>AXIS Intelligence | Full Inspection</title>
     <link rel="stylesheet" href="manutenção_preventiva.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
 
     
-    <button class="btn-voltar" onclick="showSection('home'); return false;">
-    ← Voltar para Dashboard
-</button>
+    <!-- Menu Hambúrguer -->
+    <div class="hamburger-menu-container">
+        <button class="hamburger-btn" id="hamburger-btn" onclick="toggleHamburgerMenu()">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+        <div class="hamburger-menu" id="hamburger-menu">
+            <a href="index.html#home" class="menu-item" onclick="voltarParaHome(event)">
+                <i class="fas fa-arrow-left"></i>
+                <span>Voltar para Dashboard</span>
+            </a>
+            <a href="manutencoes-dashboard.html" class="menu-item">
+                <i class="fas fa-clipboard-list"></i>
+                <span>Manutenções Preventivas</span>
+            </a>
+        </div>
+    </div>
+
 
     <div class="axis-container" id="pdf-content">
         <header class="main-header">
