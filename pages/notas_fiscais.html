@@ -6,8 +6,8 @@
     <title>AXIS Documents - Sistema Inteligente de Notas Fiscais</title>
     
     <!-- CSS Principal -->
-    <link rel="stylesheet" href="notas_fiscais.css">
-    <link rel="stylesheet" href="notas_fiscais_configuracoes.css">
+    <link rel="stylesheet" href="../css/notas_fiscais.css">
+    <link rel="stylesheet" href="../css/notas_fiscais_configuracoes.css">
     
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -38,14 +38,7 @@
             </div>
             
             <div class="sidebar-user">
-                <div class="user-avatar">
-                    <i class="fas fa-user-circle"></i>
-                </div>
-                <div class="user-info">
-                    <span class="user-name" id="user-name">Administrador</span>
-                    <span class="user-role">Gestor Financeiro</span>
-                    <div class="user-points" id="axis-points-display">1000 pts</div>
-                </div>
+                <span class="user-name-only" id="user-name">Carregando...</span>
             </div>
             
             <nav class="sidebar-nav">
@@ -95,43 +88,6 @@
                     </a>
                 </div>
                 
-                <div class="nav-section">
-                    <h3 class="nav-title">Ações Rápidas</h3>
-                    <a href="#" class="nav-item" onclick="abrirUpload()">
-                        <i class="fas fa-cloud-upload-alt"></i>
-                        <span>Upload de NF</span>
-                    </a>
-                    <a href="#" class="nav-item" onclick="abrirValidacaoChave()">
-                        <i class="fas fa-key"></i>
-                        <span>Validar Chave</span>
-                    </a>
-                    <a href="#" class="nav-item" onclick="gerarRelatorio()">
-                        <i class="fas fa-file-export"></i>
-                        <span>Exportar Dados</span>
-                    </a>
-                    <a href="#" class="nav-item" onclick="abrirLembretes()">
-                        <i class="fas fa-clock"></i>
-                        <span>Lembretes</span>
-                    </a>
-                </div>
-                
-                <div class="nav-section">
-                    <h3 class="nav-title">Conquistas</h3>
-                    <div class="achievements-list">
-                        <div class="achievement">
-                            <span class="achievement-icon">📝</span>
-                            <span class="achievement-text">Primeira NF</span>
-                        </div>
-                        <div class="achievement">
-                            <span class="achievement-icon">🏆</span>
-                            <span class="achievement-text">10 Notas</span>
-                        </div>
-                        <div class="achievement">
-                            <span class="achievement-icon">💾</span>
-                            <span class="achievement-text">Backup</span>
-                        </div>
-                    </div>
-                </div>
             </nav>
             
             <div class="sidebar-footer">
@@ -145,26 +101,6 @@
         
         <!-- Overlay para menu hambúrguer -->
         <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
-        
-        <!-- Axis Quick Stats Bar -->
-        <div class="axis-stats-bar">
-            <div class="axis-stat">
-                <i class="fas fa-bolt"></i>
-                <span>Status: <strong>Operacional</strong></span>
-            </div>
-            <div class="axis-stat">
-                <i class="fas fa-sync-alt"></i>
-                <span>Sincronizado: <strong id="sync-status">Agora</strong></span>
-            </div>
-            <div class="axis-stat">
-                <i class="fas fa-shield-alt"></i>
-                <span>Segurança: <strong>Nível Máximo</strong></span>
-            </div>
-            <div class="axis-stat">
-                <i class="fas fa-rocket"></i>
-                <span>Performance: <strong>100%</strong></span>
-            </div>
-        </div>
         
         <!-- Conteúdo Principal -->
         <main class="main-content">
@@ -302,7 +238,7 @@
                             </div>
                         </div>
                         
-                        <div class="stat-card axis-card">
+                        <div class="stat-card axis-card stat-card-valor-total">
                             <div class="stat-icon success">
                                 <i class="fas fa-dollar-sign"></i>
                             </div>
@@ -404,40 +340,6 @@
                             <div class="chart-container">
                                 <canvas id="chart-tipo"></canvas>
                             </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Ações Rápidas -->
-                    <div class="quick-actions-grid">
-                        <h3><i class="fas fa-bolt"></i> Ações Rápidas</h3>
-                        <div class="actions-grid">
-                            <button class="action-btn axis-card" onclick="abrirUpload()">
-                                <div class="action-icon">
-                                    <i class="fas fa-cloud-upload-alt"></i>
-                                </div>
-                                <span>Upload NF</span>
-                            </button>
-                            
-                            <button class="action-btn axis-card" onclick="abrirScanner()">
-                                <div class="action-icon">
-                                    <i class="fas fa-camera"></i>
-                                </div>
-                                <span>Escanear NF</span>
-                            </button>
-                            
-                            <button class="action-btn axis-card" onclick="abrirImportacaoXML()">
-                                <div class="action-icon">
-                                    <i class="fas fa-file-code"></i>
-                                </div>
-                                <span>Importar XML</span>
-                            </button>
-                            
-                            <button class="action-btn axis-card" onclick="abrirValidacaoChave()">
-                                <div class="action-icon">
-                                    <i class="fas fa-key"></i>
-                                </div>
-                                <span>Validar Chave</span>
-                            </button>
                         </div>
                     </div>
                     
@@ -625,7 +527,7 @@
                         <div class="filter-row">
                             <div class="filter-group">
                                 <label>Período</label>
-                                <select id="report-period">
+                                <select id="report-period" class="report-select">
                                     <option value="current_month">Este Mês</option>
                                     <option value="last_month">Mês Anterior</option>
                                     <option value="current_quarter">Este Trimestre</option>
@@ -645,7 +547,7 @@
                             
                             <div class="filter-group">
                                 <label>Tipo de Relatório</label>
-                                <select id="report-type">
+                                <select id="report-type" class="report-select">
                                     <option value="financial">Financeiro</option>
                                     <option value="tax">Fiscal/Tributário</option>
                                     <option value="supplier">Por Fornecedor</option>
@@ -658,9 +560,18 @@
                                 <i class="fas fa-cogs"></i> Gerar Relatório
                             </button>
                             
-                            <button class="btn-secondary" onclick="exportarRelatorioExcel()">
-                                <i class="fas fa-file-excel"></i> Exportar Excel
-                            </button>
+                            <div class="export-dropdown-wrap">
+                                <button type="button" class="btn-primary btn-export-toggle" id="btn-export-toggle" onclick="toggleExportMenu()">
+                                    <i class="fas fa-file-export"></i> Exportar <i class="fas fa-chevron-down" style="margin-left:4px;font-size:11px;"></i>
+                                </button>
+                                <div class="export-menu" id="export-menu">
+                                    <button type="button" class="export-item" onclick="exportarRelatorioPorFormato('pdf')"><i class="fas fa-file-pdf"></i> PDF</button>
+                                    <button type="button" class="export-item" onclick="exportarRelatorioPorFormato('excel')"><i class="fas fa-file-excel"></i> Excel</button>
+                                    <button type="button" class="export-item" onclick="exportarRelatorioPorFormato('google-doc')"><i class="fab fa-google"></i> Google Documento</button>
+                                    <button type="button" class="export-item" onclick="exportarRelatorioPorFormato('google-sheets')"><i class="fas fa-table"></i> Google Planilhas</button>
+                                    <button type="button" class="export-item" onclick="exportarRelatorioPorFormato('txt')"><i class="fas fa-file-alt"></i> TXT</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     
@@ -1390,14 +1301,14 @@
     <div class="toast-container" id="toast-container"></div>
 
     <!-- ================= SCRIPTS ================= -->
-    <script src="notas_fiscais.js"></script>
-    <script src="notas_fiscais_features.js"></script>
-    <script src="notas_fiscais_integracao.js"></script>
-    <script src="notas_fiscais_botoes.js"></script>
-    <script src="notas_fiscais_funcoes_completas.js"></script>
-    <script src="notas_fiscais_lixeira_estrutura.js"></script>
-    <script src="notas_fiscais_preview_download.js"></script>
-    <script src="notas_fiscais_configuracoes.js"></script>
+    <script src="../js/notas_fiscais.js"></script>
+    <script src="../js/notas_fiscais_features.js"></script>
+    <script src="../js/notas_fiscais_integracao.js"></script>
+    <script src="../js/notas_fiscais_botoes.js"></script>
+    <script src="../js/notas_fiscais_funcoes_completas.js"></script>
+    <script src="../js/notas_fiscais_lixeira_estrutura.js"></script>
+    <script src="../js/notas_fiscais_preview_download.js"></script>
+    <script src="../js/notas_fiscais_configuracoes.js"></script>
     
     <!-- Atalho Keyboard Shortcut para Command Palette -->
     <script>

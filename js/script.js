@@ -5,6 +5,19 @@ let currentUser = null;
 let currentUserProfile = 'operador'; // Perfil do usuário logado
 let activePage = 'page-home'; // Para controle de navegação
 
+// ============================================
+// 🔒 EXPORTAÇÃO IMEDIATA DE VARIÁVEIS GLOBAIS
+// ============================================
+if (typeof window.activePage === 'undefined') {
+    window.activePage = activePage;
+}
+if (typeof window.currentUser === 'undefined') {
+    window.currentUser = currentUser;
+}
+if (typeof window.currentUserProfile === 'undefined') {
+    window.currentUserProfile = currentUserProfile;
+}
+
 // ================= INVENTÁRIO AVANÇADO =================
 let inventarioData = [];
 let currentPage = 1;
@@ -238,43 +251,8 @@ for (let i = 8; i <= 50; i++) {
 }
 
 // ================= NOTIFICAÇÕES INICIAIS =================
-let notifications = [
-    { 
-        id: 1, 
-        type: 'warning', 
-        title: 'ZT411-IND-003 está offline', 
-        message: 'Equipamento não responde há mais de 24 horas',
-        time: '2 minutos atrás', 
-        read: false,
-        equipment: 'ZT411-IND-003'
-    },
-    { 
-        id: 2, 
-        type: 'info', 
-        title: 'Nova manutenção agendada', 
-        message: 'Preventiva para ZD421-DSK-002 agendada para amanhã',
-        time: '1 hora atrás', 
-        read: false,
-        equipment: 'ZD421-DSK-002'
-    },
-    { 
-        id: 3, 
-        type: 'success', 
-        title: 'ZQ630-PAG-001 voltou ao online', 
-        message: 'Conexão restabelecida após manutenção',
-        time: '3 horas atrás', 
-        read: true,
-        equipment: 'ZQ630-PAG-001'
-    },
-    { 
-        id: 4, 
-        type: 'info', 
-        title: 'Atualização de inventário', 
-        message: '3 novos equipamentos cadastrados no sistema',
-        time: '5 horas atrás', 
-        read: true 
-    }
-];
+// Notificações desabilitadas
+let notifications = [];
 
 // ================= CLASSES CSS DINÂMICAS =================
 const CSSClasses = {
@@ -295,7 +273,27 @@ const CSSClasses = {
 
 // ================= 1. INICIALIZAÇÃO DO SISTEMA =================
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('🔧 AXIS - Sistema iniciando...');
+    // Previne navegação acidental para fora do site
+    window.addEventListener('beforeunload', (e) => {
+        // Salva estado antes de sair
+        const currentPage = activePage || localStorage.getItem('axis-current-page') || 'page-home';
+        localStorage.setItem('axis-current-page', currentPage);
+    });
+    
+    // Hash #page-* tem prioridade (ex.: "Voltar para Dashboard" em Manutenções → index.html#page-home)
+    const savedPage = localStorage.getItem('axis-current-page');
+    const hashPage = (window.location.hash || '').replace('#', '').trim();
+    let pageToUse = savedPage && savedPage.startsWith('page-') ? savedPage : 'page-home';
+    if (hashPage && hashPage.startsWith('page-')) {
+        pageToUse = hashPage;
+        localStorage.setItem('axis-current-page', hashPage);
+    } else if (pageToUse && pageToUse.startsWith('page-')) {
+        try {
+            window.history.replaceState({ page: pageToUse }, '', (window.location.pathname || '/') + '#' + pageToUse);
+        } catch (_) {}
+    } else {
+        localStorage.setItem('axis-current-page', 'page-home');
+    }
     
     // Inicializa preferências de redução de movimento
     initReducedMotion();
@@ -304,20 +302,207 @@ document.addEventListener('DOMContentLoaded', () => {
     const authScreen = document.getElementById('auth-screen');
     const mainContent = document.getElementById('main-content');
     
-    if (authScreen) authScreen.style.display = 'flex';
-    if (mainContent) mainContent.style.display = 'none';
+    // Verifica se há usuário logado no localStorage
+    // Verifica tanto 'true' quanto 'True' (case insensitive)
+    const savedUser = localStorage.getItem('current_user');
+    const isLoggedInRaw = localStorage.getItem('user_logged_in');
+    const isLoggedIn = isLoggedInRaw === 'true' || isLoggedInRaw === 'True' || isLoggedInRaw === 'TRUE' || isLoggedInRaw === true;
+    
+    // Verificação adicional: se há usuário salvo mas não há flag de login, assume que está logado
+    // (para casos onde a flag pode ter sido perdida mas o usuário ainda existe)
+    const hasUserButNoFlag = savedUser && !isLoggedInRaw;
+    if (hasUserButNoFlag) {
+        localStorage.setItem('user_logged_in', 'true');
+    }
+    
+    const finalIsLoggedIn = isLoggedIn || hasUserButNoFlag;
+    
+    if (savedUser && finalIsLoggedIn) {
+        // Restaura usuário logado
+        currentUser = savedUser;
+        
+        // Restaura perfil do usuário
+        // Tenta obter o login salvo, senão tenta normalizar o nome
+        const savedLogin = localStorage.getItem('current_user_login');
+        let userLoginNormalizado = savedLogin;
+        
+        if (!userLoginNormalizado) {
+            // Fallback: tenta normalizar o nome salvo
+            userLoginNormalizado = savedUser.toLowerCase().replace(/\s+/g, '_');
+        }
+        const userKey = 'db_' + userLoginNormalizado;
+        const userDataRaw = localStorage.getItem(userKey);
+        if (userDataRaw) {
+            try {
+                const userData = JSON.parse(userDataRaw);
+                currentUserProfile = userData.perfil || 'operador';
+            } catch (e) {
+                currentUserProfile = 'operador';
+            }
+        } else {
+            currentUserProfile = 'operador';
+        }
+        
+        // Usuário já está logado, mostra conteúdo principal
+        if (authScreen) {
+            authScreen.style.display = 'none';
+            authScreen.style.opacity = '0';
+        }
+        if (mainContent) {
+            mainContent.style.display = 'block';
+            mainContent.style.opacity = '1';
+        }
+        
+        // Atualiza display do nome
+        const userDisplay = document.getElementById('user-display-name');
+        if (userDisplay) {
+            userDisplay.innerText = currentUser;
+        }
+        
+        // Mostra menu de administração se for admin
+        const menuAdmin = document.getElementById('menu-admin');
+        if (menuAdmin) {
+            if (currentUserProfile === 'admin') {
+                menuAdmin.style.display = 'block';
+            } else {
+                menuAdmin.style.display = 'none';
+            }
+        }
+        
+        // Restaura a página onde o usuário estava antes de recarregar
+        // Verifica se é um recarregamento (não primeiro login)
+        const wasJustLoggedIn = sessionStorage.getItem('just_logged_in') === 'true';
+        
+        if (!wasJustLoggedIn) {
+            const savedPage = localStorage.getItem('axis-current-page');
+            if (savedPage && savedPage.startsWith('page-')) {
+                // Aguarda um pouco para garantir que o DOM está pronto
+                activePage = savedPage;
+                // Força a navegação mesmo se a função não estiver pronta
+                const navigateToPage = function(pageId) {
+                    const targetSection = document.getElementById(pageId);
+                    if (targetSection) {
+                        document.querySelectorAll('.main-section').forEach(s => {
+                            s.classList.remove('active');
+                            s.style.display = 'none';
+                        });
+                        targetSection.classList.add('active');
+                        targetSection.style.display = 'block';
+                    }
+                };
+                
+                setTimeout(() => {
+                    if (typeof navigate === 'function') {
+                        try {
+                            navigate(savedPage);
+                        } catch (e) {
+                            navigateToPage(savedPage);
+                        }
+                    } else {
+                        navigateToPage(savedPage);
+                    }
+                }, 300);
+            } else {
+                // Sem página salva: sempre Home (nunca Inventário)
+                activePage = 'page-home';
+                localStorage.setItem('axis-current-page', 'page-home');
+                const goHome = function() {
+                    const homeSection = document.getElementById('page-home');
+                    if (homeSection) {
+                        document.querySelectorAll('.main-section').forEach(s => {
+                            s.classList.remove('active');
+                            s.style.display = 'none';
+                        });
+                        homeSection.classList.add('active');
+                        homeSection.style.display = 'block';
+                    }
+                };
+                setTimeout(() => {
+                    if (typeof navigate === 'function') {
+                        try { navigate('page-home'); } catch (e) { goHome(); }
+                    } else { goHome(); }
+                }, 300);
+            }
+        } else {
+            // Primeiro login, remove a flag e vai para home
+            sessionStorage.removeItem('just_logged_in');
+            activePage = 'page-home';
+            localStorage.setItem('axis-current-page', 'page-home');
+            setTimeout(() => {
+                if (typeof navigate === 'function') {
+                    navigate('page-home');
+                } else {
+                    // Fallback direto
+                    const homeSection = document.getElementById('page-home');
+                    if (homeSection) {
+                        document.querySelectorAll('.main-section').forEach(s => {
+                            s.classList.remove('active');
+                            s.style.display = 'none';
+                        });
+                        homeSection.classList.add('active');
+                        homeSection.style.display = 'block';
+                    }
+                }
+            }, 300);
+        }
+    } else {
+        // Não há usuário logado, mostra tela de login
+        if (authScreen) {
+            authScreen.style.display = 'flex';
+            authScreen.style.opacity = '1';
+        }
+        if (mainContent) {
+            mainContent.style.display = 'none';
+            mainContent.style.opacity = '0';
+        }
+        currentUser = null;
+        currentUserProfile = 'operador';
+    }
+
+    // Garantir que, ao recarregar, usuário permaneça logado (verificação tardia + pageshow)
+    function persistLoginCheck() {
+        var raw = localStorage.getItem('user_logged_in');
+        var ok = (raw === 'true' || raw === 'True' || raw === 'TRUE');
+        if (!ok || !localStorage.getItem('current_user')) return;
+        var au = document.getElementById('auth-screen');
+        var mn = document.getElementById('main-content');
+        if (!au || !mn) return;
+        au.style.display = 'none';
+        au.style.opacity = '0';
+        mn.style.display = 'block';
+        mn.style.opacity = '1';
+        currentUser = localStorage.getItem('current_user');
+        var ud = document.getElementById('user-display-name');
+        if (ud) ud.innerText = currentUser;
+        var ma = document.getElementById('menu-admin');
+        if (ma) {
+            var login = localStorage.getItem('current_user_login');
+            var key = 'db_' + (login || (currentUser || '').toLowerCase().replace(/\s+/g, '_'));
+            try {
+                var d = JSON.parse(localStorage.getItem(key) || '{}');
+                if (d.perfil === 'admin') ma.style.display = 'block';
+                else ma.style.display = 'none';
+            } catch (_) { ma.style.display = 'none'; }
+        }
+        var sp = localStorage.getItem('axis-current-page') || 'page-home';
+        if (typeof navigate === 'function') { try { navigate(sp); } catch (_) {} }
+    }
+    window.addEventListener('load', persistLoginCheck);
+    window.addEventListener('pageshow', function (e) {
+        if (e.persisted) persistLoginCheck();
+    });
     
     // Inicializa tema salvo
     initTheme();
     
-    // Atualiza badge de notificações
-    updateNotificationBadge();
-    
     // Adiciona FAB button
     initFAB();
     
-    // Adiciona painel de notificações
-    initNotificationsPanel();
+    // Garante que FAB esteja escondido inicialmente (só aparece na home)
+    const fabContainer = document.getElementById('fab-container');
+    if (fabContainer) {
+        fabContainer.style.display = 'none';
+    }
     
     // Configura listeners de teclado
     initKeyboardShortcuts();
@@ -331,7 +516,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Configura eventos de formulário
     initFormEvents();
     
-    console.log('✅ AXIS - Sistema inicializado com sucesso!');
+    // Garante que o botão de login funcione
+    setupAuthButton();
+    
+    // Configura listeners para os cards da home
+    setupHomeCards();
+    
 });
 
 // ================= PREFERÊNCIAS DE REDUÇÃO DE MOVIMENTO =================
@@ -353,28 +543,44 @@ function initReducedMotion() {
 
 // ================= 2. CONTROLE DO MENU LATERAL =================
 function toggleSidebar() {
+    console.log('🔄 toggleSidebar chamado');
     const sidebar = document.getElementById('side-menu');
     const overlay = document.getElementById('menu-overlay');
-    const menuBtn = document.querySelector('.menu-btn');
+    const menuBtn = document.querySelector('.menu-trigger-ios');
     
-    if (!sidebar || !overlay) return;
+    if (!sidebar) {
+        console.error('❌ Menu lateral não encontrado!');
+        return;
+    }
     
-    sidebar.classList.toggle('open');
-    overlay.classList.toggle('active');
-    if (menuBtn) menuBtn.classList.toggle('active');
+    if (!overlay) {
+        console.error('❌ Overlay do menu não encontrado!');
+        return;
+    }
     
-    // Anima overlay com opacidade
-    if (sidebar.classList.contains('open')) {
-        overlay.style.display = 'block';
-        setTimeout(() => {
-            overlay.style.opacity = '1';
-        }, 10);
-        showToast('Menu aberto', 'info');
-    } else {
+    const isOpen = sidebar.classList.contains('open');
+    
+    if (isOpen) {
+        // Fecha o menu
+        sidebar.classList.remove('open');
+        overlay.classList.remove('active');
+        if (menuBtn) menuBtn.classList.remove('active');
         overlay.style.opacity = '0';
         setTimeout(() => {
             overlay.style.display = 'none';
         }, 300);
+        console.log('✅ Menu fechado');
+    } else {
+        // Abre o menu
+        overlay.style.opacity = '1';
+        overlay.style.display = 'block';
+        overlay.classList.add('active');
+        sidebar.classList.add('open');
+        if (menuBtn) menuBtn.classList.add('active');
+        sidebar.style.display = 'flex';
+        sidebar.style.visibility = 'visible';
+        sidebar.style.opacity = '1';
+        console.log('✅ Menu aberto');
     }
 }
 
@@ -388,26 +594,127 @@ document.addEventListener('click', (e) => {
     }
 });
 
-// Fecha menu ao clicar no overlay
-document.getElementById('menu-overlay')?.addEventListener('click', toggleSidebar);
+// Overlay do menu: fechado via setupMenuOverlay (index) para evitar double-toggle
+
+// ================= CONFIGURAÇÃO DOS CARDS DA HOME =================
+function setupHomeCards() {
+    console.log('🔧 Configurando cards da home...');
+    
+    // Mapeamento de cards para páginas
+    const cardMappings = {
+        'page-inventario': 'Inventário',
+        'page-rondas': 'Rondas',
+        'page-suporte': 'Suporte',
+        'page-configuracoes': 'Configurações'
+    };
+    
+    // Adiciona listeners a todos os cards que usam navigate
+    Object.keys(cardMappings).forEach(pageId => {
+        const cards = document.querySelectorAll(`.mod-card[onclick*="${pageId}"]`);
+        cards.forEach(card => {
+            // Remove listeners antigos
+            const newCard = card.cloneNode(true);
+            card.parentNode.replaceChild(newCard, card);
+            
+            // Adiciona listener direto
+            newCard.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log(`🖱️ Card clicado: ${cardMappings[pageId]}`);
+                
+                if (typeof navigate === 'function') {
+                    navigate(pageId);
+                } else {
+                    console.error('❌ Função navigate não encontrada!');
+                    // Fallback: mostra a seção diretamente
+                    const targetSection = document.getElementById(pageId);
+                    if (targetSection) {
+                        document.querySelectorAll('.main-section').forEach(s => s.classList.remove('active'));
+                        targetSection.classList.add('active');
+                    }
+                }
+            });
+            
+            // Adiciona estilo de cursor
+            newCard.style.cursor = 'pointer';
+        });
+    });
+    
+    console.log('✅ Cards da home configurados');
+}
 
 // ================= 3. NAVEGAÇÃO ENTRE PÁGINAS =================
 function navigate(pageId) {
+    // Exporta IMEDIATAMENTE para garantir disponibilidade
+    window.navigate = navigate;
+    
     console.log(`📍 Navegando para: ${pageId}`);
     
     // Atualiza página ativa
     activePage = pageId;
+    // Marca página atual no body (para regras de CSS, ex: WhatsApp apenas na home)
+    if (document && document.body) {
+        document.body.setAttribute('data-current-page', pageId || '');
+    }
+    
+    // Salva a página atual no localStorage para restaurar após recarregar
+    // Apenas salva se for uma página interna (não página externa)
+    if (pageId && typeof pageId === 'string' && pageId.startsWith('page-')) {
+        localStorage.setItem('axis-current-page', pageId);
+        activePage = pageId; // Atualiza variável global
+        console.log(`💾 Página salva no localStorage: ${pageId}`);
+        
+        // Atualiza a hash da URL sem recarregar a página
+        if (window.history && window.history.pushState) {
+            try {
+                const currentPath = window.location.pathname || '/';
+                const newUrl = currentPath + '#' + pageId;
+                window.history.pushState({ page: pageId }, '', newUrl);
+                console.log(`🔗 URL atualizada: ${newUrl}`);
+            } catch (e) {
+                console.warn('⚠️ Erro ao atualizar URL:', e);
+                // Fallback: apenas atualiza hash sem pushState
+                window.location.hash = pageId;
+            }
+        } else {
+            // Fallback: usa hash diretamente
+            window.location.hash = pageId;
+        }
+    } else {
+        console.log(`⚠️ Página não salva (não é página interna): ${pageId}`);
+    }
     
     // 1. Oculta todas as seções
     const sections = document.querySelectorAll('.main-section');
     sections.forEach(s => {
         s.classList.remove(CSSClasses.active);
+        s.style.display = 'none'; // Garante que todas sejam ocultadas
     });
+    console.log(`🔒 ${sections.length} seções ocultadas`);
 
     // 2. Ativa a página alvo
     const target = document.getElementById(pageId);
     if (target) {
         target.classList.add(CSSClasses.active);
+        target.style.display = 'block'; // Garante que a seção seja exibida
+        console.log(`✅ Seção ${pageId} ativada e exibida`);
+        
+        // Força reflow para garantir que a mudança seja aplicada
+        target.offsetHeight;
+    } else {
+        console.error(`❌ Seção ${pageId} não encontrada no DOM!`);
+        // Lista todas as seções disponíveis para debug
+        const allSections = document.querySelectorAll('.main-section');
+        const sectionIds = Array.from(allSections).map(s => s.id).filter(id => id);
+        console.log('📋 Seções disponíveis:', sectionIds);
+        
+        // Tenta encontrar a seção home como fallback
+        const homeSection = document.getElementById('page-home');
+        if (homeSection) {
+            console.log('⚠️ Usando home como fallback');
+            homeSection.classList.add(CSSClasses.active);
+            homeSection.style.display = 'block';
+        }
     }
 
     // 3. Atualiza o estado visual dos botões no menu
@@ -426,21 +733,48 @@ function navigate(pageId) {
         toggleSidebar();
     }
 
-    // 5. Ações específicas por página
+    // 5. Mostrar/esconder elementos apenas na home
+    const navWelcomeText = document.getElementById('nav-welcome-text');
+    const fabContainer = document.getElementById('fab-container');
+    const whatsappButton = document.getElementById('whatsapp-float-button');
+    
+    if (pageId === 'page-home') {
+        // Mostra "BEM-VINDO AO AXIS" e bola do WhatsApp apenas na home
+        if (navWelcomeText) {
+            navWelcomeText.style.display = 'block';
+        }
+        if (fabContainer) {
+            fabContainer.style.display = 'block';
+        }
+        if (whatsappButton) {
+            whatsappButton.style.display = 'block';
+        }
+    } else {
+        // Esconde em outras páginas
+        if (navWelcomeText) {
+            navWelcomeText.style.display = 'none';
+        }
+        if (fabContainer) {
+            fabContainer.style.display = 'none';
+        }
+        if (whatsappButton) {
+            whatsappButton.style.display = 'none';
+        }
+    }
+
+    // 6. Ações específicas por página
     switch(pageId) {
         case 'page-inventario':
             inicializarInventario();
-            showToast('Inventário de impressoras carregado', 'info');
             break;
         case 'page-home':
             loadDashboardData();
-            showToast('Página inicial carregada', 'info');
             break;
         case 'page-rondas':
-            showToast('Módulo de rondas em desenvolvimento', 'warning');
+            carregarRondas();
             break;
         case 'page-suporte':
-            showToast('Módulo de suporte em desenvolvimento', 'warning');
+            carregarTickets();
             break;
         case 'page-configuracoes':
             loadSettings();
@@ -583,10 +917,63 @@ function exportSettings() {
 }
 
 // ================= 4. SISTEMA DE AUTENTICAÇÃO =================
+// ================= CONFIGURAÇÃO DO BOTÃO DE AUTENTICAÇÃO =================
+function setupAuthButton() {
+    const authButton = document.getElementById('auth-main-btn');
+    const usernameField = document.getElementById('username');
+    const passwordField = document.getElementById('password');
+    
+    // Adiciona listener ao botão
+    if (authButton) {
+        authButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('🔘 Botão de login clicado via addEventListener');
+            if (typeof handleAuth === 'function') {
+                handleAuth();
+            } else {
+                console.error('❌ Função handleAuth não encontrada!');
+                alert('Erro: Função de autenticação não encontrada. Recarregue a página.');
+            }
+        });
+        console.log('✅ Listener do botão de login configurado');
+    } else {
+        console.warn('⚠️ Botão de login não encontrado');
+    }
+    
+    // Adiciona listener para Enter no campo de senha
+    if (passwordField) {
+        passwordField.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' || e.keyCode === 13) {
+                e.preventDefault();
+                console.log('⌨️ Enter pressionado no campo de senha');
+                if (typeof handleAuth === 'function') {
+                    handleAuth();
+                }
+            }
+        });
+    }
+    
+    // Adiciona listener para Enter no campo de usuário
+    if (usernameField) {
+        usernameField.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' || e.keyCode === 13) {
+                e.preventDefault();
+                // Foca no campo de senha
+                if (passwordField) {
+                    passwordField.focus();
+                }
+            }
+        });
+    }
+}
+
 // Cria usuário administrador padrão se não existir
 function inicializarUsuarioAdmin() {
     const adminKey = 'db_admin_filipe_silva';
-    if (!localStorage.getItem(adminKey)) {
+    const existingUser = localStorage.getItem(adminKey);
+    
+    if (!existingUser) {
         const adminData = {
             name: 'Filipe da Silva',
             pass: '123456',
@@ -596,36 +983,92 @@ function inicializarUsuarioAdmin() {
         };
         localStorage.setItem(adminKey, JSON.stringify(adminData));
         console.log('✅ Usuário administrador criado: admin_filipe_silva / 123456');
+    } else {
+        console.log('✅ Usuário administrador já existe no localStorage');
+        try {
+            const userData = JSON.parse(existingUser);
+            console.log('📋 Dados do admin:', { name: userData.name, perfil: userData.perfil });
+        } catch (e) {
+            console.error('❌ Erro ao ler dados do admin:', e);
+        }
     }
 }
 
-// Inicializa admin ao carregar
-inicializarUsuarioAdmin();
+// Inicializa admin ao carregar (garante que seja executado imediatamente)
+if (typeof window !== 'undefined') {
+    // Executa imediatamente se já estiver no DOM
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', inicializarUsuarioAdmin);
+    } else {
+        inicializarUsuarioAdmin();
+    }
+} else {
+    inicializarUsuarioAdmin();
+}
 
 function handleAuth() {
+    console.log('🔐 ========== INICIANDO AUTENTICAÇÃO ==========');
     console.log('🔐 Processando autenticação...');
+    
+    // Garante que o usuário admin existe
+    inicializarUsuarioAdmin();
     
     const userField = document.getElementById('username');
     const passField = document.getElementById('password');
+    
+    if (!userField || !passField) {
+        console.error('❌ Campos de login não encontrados!');
+        alert('Erro: Campos de login não encontrados. Recarregue a página.');
+        return;
+    }
+    
     const userInput = userField.value.trim();
     const pass = passField.value;
 
     if (!userInput || !pass) {
-        showToast('Preencha todos os campos!', 'warning');
+        console.log('⚠️ Campos vazios');
+        if (typeof showToast === 'function') {
+            showToast('Preencha todos os campos!', 'warning');
+        } else {
+            alert('Preencha todos os campos!');
+        }
         return;
     }
+    
+    console.log('✅ Campos preenchidos, validando usuário...');
+    console.log('📝 Usuário digitado:', userInput);
+    console.log('🔑 Senha digitada:', pass ? '***' : '(vazia)');
 
     // Normaliza o login (remove espaços, converte para minúsculas)
     const loginNormalizado = userInput.toLowerCase().replace(/\s+/g, '_');
-    const dbRaw = localStorage.getItem('db_' + loginNormalizado);
+    const dbKey = 'db_' + loginNormalizado;
+    console.log('🔍 Procurando usuário com chave:', dbKey);
+    
+    // Lista todas as chaves do localStorage para debug
+    const allKeys = Object.keys(localStorage).filter(k => k.startsWith('db_'));
+    console.log('📋 Todas as chaves db_ no localStorage:', allKeys);
+    
+    const dbRaw = localStorage.getItem(dbKey);
+    console.log('📦 Dados encontrados no localStorage:', dbRaw ? 'Sim' : 'Não');
+    
     if (dbRaw) {
-        const db = JSON.parse(dbRaw);
-        if (db.pass === pass) {
-            // SUCESSO NO LOGIN
-            currentUser = db.name || userInput;
-            currentUserProfile = db.perfil || 'operador';
+        console.log('📦 Conteúdo bruto:', dbRaw.substring(0, 100) + '...');
+    }
+    
+    if (dbRaw) {
+        try {
+            const db = JSON.parse(dbRaw);
+            console.log('✅ Dados do usuário carregados:', { name: db.name, perfil: db.perfil, pass: db.pass ? '***' : '(vazia)' });
             
-            // Atualiza saudação
+            if (db.pass === pass) {
+                console.log('✅ SENHA CORRETA - INICIANDO LOGIN');
+                // SUCESSO NO LOGIN
+                currentUser = db.name || userInput;
+                currentUserProfile = db.perfil || 'operador';
+                console.log('👤 Usuário logado:', currentUser);
+                console.log('👑 Perfil:', currentUserProfile);
+                
+                // Atualiza saudação
             const userDisplay = document.getElementById('user-display-name');
             if (userDisplay) userDisplay.innerText = currentUser;
             
@@ -648,19 +1091,36 @@ function handleAuth() {
                 authScreen.style.transform = 'translateY(-20px)';
             }
             
-            setTimeout(() => {
-                if (authScreen) authScreen.style.display = 'none';
-                if (mainContent) {
-                    mainContent.style.display = 'block';
-                    mainContent.style.opacity = '0';
-                    mainContent.style.transform = 'translateY(20px)';
-                    
-                    setTimeout(() => {
-                        mainContent.style.opacity = '1';
-                        mainContent.style.transform = 'translateY(0)';
-                    }, 50);
-                }
-            }, 300);
+                // Salva estado de login
+                localStorage.setItem('current_user', currentUser);
+                localStorage.setItem('current_user_login', loginNormalizado); // Salva o login também
+                localStorage.setItem('user_logged_in', 'true');
+                // Marca que acabou de fazer login (para não restaurar página antiga)
+                sessionStorage.setItem('just_logged_in', 'true');
+                console.log('✅ Estado de login salvo no localStorage');
+                console.log('   Nome:', currentUser);
+                console.log('   Login:', loginNormalizado);
+                
+                setTimeout(() => {
+                    if (authScreen) {
+                        authScreen.style.display = 'none';
+                        console.log('✅ Tela de login ocultada');
+                    }
+                    if (mainContent) {
+                        mainContent.style.display = 'block';
+                        mainContent.style.opacity = '0';
+                        mainContent.style.transform = 'translateY(20px)';
+                        console.log('✅ Conteúdo principal exibido');
+                        
+                        setTimeout(() => {
+                            mainContent.style.opacity = '1';
+                            mainContent.style.transform = 'translateY(0)';
+                            console.log('✅ Animação de entrada concluída');
+                        }, 50);
+                    } else {
+                        console.error('❌ mainContent não encontrado!');
+                    }
+                }, 300);
             
             // Atualiza último acesso do usuário
             db.ultimoAcesso = new Date().toISOString();
@@ -673,41 +1133,81 @@ function handleAuth() {
                 ip: '192.168.1.1' // Simulado
             };
             localStorage.setItem('last_login', JSON.stringify(loginData));
+            try {
+                const audit = JSON.parse(localStorage.getItem('axis_audit_log') || '[]');
+                audit.push({ type: 'login', user: loginNormalizado, date: loginData.data });
+                localStorage.setItem('axis_audit_log', JSON.stringify(audit.slice(-100)));
+            } catch (_) {}
             
-            showToast(`Bem-vindo, ${currentUser}!`, 'success');
-            
-            // Inicia na Home
-            navigate('page-home');
-            
-        } else {
-            // Animação de erro
-            passField.classList.add('shake-animation');
-            setTimeout(() => passField.classList.remove('shake-animation'), 500);
-            showToast('Senha incorreta.', 'warning');
+                if (typeof showBemVindoModal === 'function') {
+                    showBemVindoModal(currentUser);
+                }
+                
+                // Ao fazer login: sempre vai para Início (Home)
+                localStorage.setItem('axis-current-page', 'page-home');
+                if (typeof navigate === 'function') {
+                    navigate('page-home');
+                }
+                
+            } else {
+                console.log('❌ Senha incorreta');
+                // Animação de erro
+                passField.classList.add('shake-animation');
+                setTimeout(() => passField.classList.remove('shake-animation'), 500);
+                if (typeof showToast === 'function') {
+                    showToast('Senha incorreta.', 'warning');
+                } else {
+                    alert('Senha incorreta.');
+                }
+            }
+        } catch (error) {
+            console.error('❌ Erro ao processar dados do usuário:', error);
+            if (typeof showToast === 'function') {
+                showToast('Erro ao processar dados do usuário.', 'error');
+            } else {
+                alert('Erro ao processar dados do usuário.');
+            }
         }
     } else {
+        console.log('❌ Usuário não encontrado no localStorage');
+        console.log('🔍 Chaves disponíveis no localStorage:', Object.keys(localStorage).filter(k => k.startsWith('db_')));
         userField.classList.add('shake-animation');
         setTimeout(() => userField.classList.remove('shake-animation'), 500);
-        showToast('Usuário não encontrado.', 'warning');
+        if (typeof showToast === 'function') {
+            showToast('Usuário não encontrado.', 'warning');
+        } else {
+            alert('Usuário não encontrado. Verifique se o usuário foi criado corretamente.');
+        }
     }
 }
 
 // ================= 5. FUNCIONALIDADES TÉCNICAS BÁSICAS =================
 function togglePassword() {
+    console.log('👁️ togglePassword chamado');
     const input = document.getElementById('password');
     const icon = document.getElementById('eye-icon');
-    if (!input || !icon) return;
+    
+    if (!input) {
+        console.error('❌ Campo de senha não encontrado!');
+        return;
+    }
+    if (!icon) {
+        console.error('❌ Ícone do olho não encontrado!');
+        return;
+    }
     
     if (input.type === 'password') {
         input.type = 'text';
         icon.innerText = '🙈';
         icon.title = 'Ocultar senha';
         icon.classList.add('active');
+        console.log('✅ Senha visível');
     } else {
         input.type = 'password';
         icon.innerText = '👁️';
         icon.title = 'Mostrar senha';
         icon.classList.remove('active');
+        console.log('✅ Senha oculta');
     }
 }
 
@@ -729,10 +1229,44 @@ function logout() {
                 data: new Date().toISOString()
             };
             localStorage.setItem('last_logout', JSON.stringify(logoutData));
+            try {
+                const audit = JSON.parse(localStorage.getItem('axis_audit_log') || '[]');
+                audit.push({ type: 'logout', user: currentUser || '-', date: logoutData.data });
+                localStorage.setItem('axis_audit_log', JSON.stringify(audit.slice(-100)));
+            } catch (_) {}
             
-            // Limpa campos e recarrega
+            // Limpa dados do usuário
             currentUser = null;
-            location.reload();
+            currentUserProfile = 'operador';
+            localStorage.removeItem('current_user');
+            localStorage.removeItem('current_user_login');
+            localStorage.removeItem('user_logged_in');
+            localStorage.removeItem('axis-current-page'); // Limpa também a página salva
+            sessionStorage.removeItem('just_logged_in');
+            
+            // Mostra tela de login e esconde conteúdo principal
+            const authScreen = document.getElementById('auth-screen');
+            const mainContentEl = document.getElementById('main-content');
+            
+            if (authScreen) {
+                authScreen.style.display = 'flex';
+            }
+            if (mainContentEl) {
+                mainContentEl.style.display = 'none';
+            }
+            
+            // Limpa campos do formulário
+            const usernameInput = document.getElementById('username');
+            const passwordInput = document.getElementById('password');
+            if (usernameInput) usernameInput.value = '';
+            if (passwordInput) passwordInput.value = '';
+            
+            // Foca no campo de usuário
+            if (usernameInput) {
+                setTimeout(() => {
+                    usernameInput.focus();
+                }, 100);
+            }
         }, 300);
     }
 }
@@ -812,7 +1346,10 @@ function initFormEvents() {
 
 // ================= INICIALIZAÇÃO DO INVENTÁRIO =================
 function inicializarInventario() {
-    console.log('📊 Inicializando inventário...');
+    console.log('📦 Inicializando inventário...');
+    
+    // Exporta IMEDIATAMENTE (sempre)
+    window.inicializarInventario = inicializarInventario;
     
     // Carrega dados
     inventarioData = [...equipamentosExemplo];
@@ -880,6 +1417,9 @@ function filtrarPorModelo(modelo) {
 function filtrarInventario() {
     console.log('⚙️ Aplicando filtros...');
     
+    // Exporta IMEDIATAMENTE para garantir disponibilidade
+    window.filtrarInventario = filtrarInventario;
+    
     const paisFiltro = document.getElementById('ucs-filtro-pais')?.value || '';
     const nodoFiltro = document.getElementById('ucs-filtro-nodo')?.value || '';
     const dispositivoFiltro = document.getElementById('ucs-filtro-dispositivo')?.value || '';
@@ -923,6 +1463,11 @@ function filtrarInventario() {
 
 // Função para resetar filtros
 function resetarFiltrosInventario() {
+    console.log('🔄 Resetando filtros...');
+    
+    // Exporta IMEDIATAMENTE (sempre)
+    window.resetarFiltrosInventario = resetarFiltrosInventario;
+    
     const paisSelect = document.getElementById('ucs-filtro-pais');
     const nodoSelect = document.getElementById('ucs-filtro-nodo');
     const dispositivoSelect = document.getElementById('ucs-filtro-dispositivo');
@@ -931,7 +1476,14 @@ function resetarFiltrosInventario() {
     if (nodoSelect) nodoSelect.value = '';
     if (dispositivoSelect) dispositivoSelect.value = '';
     
-    filtrarInventario();
+    // Aplica filtro vazio para mostrar todos
+    if (typeof filtrarInventario === 'function') {
+        filtrarInventario();
+    } else {
+        console.error('❌ filtrarInventario não está disponível');
+    }
+    
+    console.log('✅ Filtros resetados');
 }
 
 // ================= ORDENAÇÃO DA TABELA =================
@@ -991,13 +1543,16 @@ function ordenarTabela(coluna) {
 function renderizarTabela() {
     console.log('🔄 Renderizando tabela...');
     
+    // Exporta IMEDIATAMENTE (sempre)
+    window.renderizarTabela = renderizarTabela;
+    
     // Atualiza contador total
     const totalCount = document.getElementById('ucs-total-count');
     if (totalCount) {
         totalCount.textContent = `${inventarioData.length} EM TOTAL`;
     }
     
-    const tbody = document.getElementById('ucs-inventory-data');
+    let tbody = document.getElementById('ucs-inventory-data');
     if (!tbody) {
         // Fallback para estrutura antiga
         const oldTbody = document.getElementById('inventory-data');
@@ -1290,7 +1845,11 @@ function hideTooltip() {
 // ================= PAGINAÇÃO =================
 function atualizarPaginacao() {
     const totalPaginas = Math.ceil(inventarioData.length / itemsPerPage);
-    const paginacaoContainer = document.getElementById('pagination-controls');
+    // Tenta ambos os IDs possíveis
+    let paginacaoContainer = document.getElementById('ucs-pagination');
+    if (!paginacaoContainer) {
+        paginacaoContainer = document.getElementById('pagination-controls');
+    }
     
     if (!paginacaoContainer) return;
     
@@ -1571,10 +2130,28 @@ function atualizarGraficoStatus(online, offline, manutencao) {
 
 // ================= EXPORTAÇÃO DE DADOS =================
 function initExportDropdown() {
-    const exportBtn = document.getElementById('export-btn');
-    const exportDropdown = document.getElementById('export-dropdown');
+    // Tenta encontrar o botão e dropdown usando os IDs do HTML atual
+    const exportBtn = document.querySelector('.ucs-btn-download');
+    const exportDropdown = document.querySelector('.ucs-download-menu');
     
-    if (!exportBtn || !exportDropdown) return;
+    if (!exportBtn || !exportDropdown) {
+        // Fallback para IDs antigos
+        const oldBtn = document.getElementById('export-btn');
+        const oldDropdown = document.getElementById('export-dropdown');
+        if (oldBtn && oldDropdown) {
+            oldBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                oldDropdown.classList.toggle('show');
+            });
+            
+            document.addEventListener('click', (e) => {
+                if (!oldBtn.contains(e.target) && !oldDropdown.contains(e.target)) {
+                    oldDropdown.classList.remove('show');
+                }
+            });
+        }
+        return;
+    }
     
     exportBtn.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -1599,7 +2176,8 @@ function exportarDados(formato) {
         return;
     }
     
-    const exportBtn = document.getElementById('export-btn');
+    // Tenta encontrar o botão usando classe ou ID
+    const exportBtn = document.querySelector('.ucs-btn-download') || document.getElementById('export-btn');
     if (exportBtn) {
         // Mostra loading
         const originalText = exportBtn.innerHTML;
@@ -1624,7 +2202,7 @@ function exportarDados(formato) {
             exportBtn.classList.remove('exporting');
             
             // Fecha dropdown
-            const exportDropdown = document.getElementById('export-dropdown');
+            const exportDropdown = document.querySelector('.ucs-download-menu') || document.getElementById('export-dropdown');
             if (exportDropdown) {
                 exportDropdown.classList.remove('show');
             }
@@ -1799,10 +2377,24 @@ function imprimirInventario() {
 function abrirCadastroRapido() {
     console.log('➕ Abrindo cadastro rápido');
     
-    const modal = document.getElementById('cadastro-modal');
-    if (!modal) return;
+    // Exporta IMEDIATAMENTE para garantir disponibilidade (ANTES de qualquer coisa)
+    window.abrirCadastroRapido = abrirCadastroRapido;
     
+    // Garante que a variável global esteja disponível
+    if (typeof window.cadastroStep === 'undefined') {
+        window.cadastroStep = 1;
+    }
+    
+    const modal = document.getElementById('cadastro-modal');
+    if (!modal) {
+        console.error('❌ Modal de cadastro não encontrado!');
+        alert('Erro: Modal de cadastro não encontrado. Recarregue a página.');
+        return;
+    }
+    
+    console.log('✅ Modal encontrado, abrindo...');
     modal.style.display = 'flex';
+    modal.style.visibility = 'visible';
     
     // Animação de entrada
     setTimeout(() => {
@@ -1814,20 +2406,29 @@ function abrirCadastroRapido() {
     }, 10);
     
     cadastroStep = 1;
+    if (window.cadastroStep !== undefined) {
+        window.cadastroStep = 1;
+    }
     
     // Atualiza visual do passo
-    document.querySelectorAll('.cadastro-step').forEach(step => {
-        step.classList.remove(CSSClasses.active);
+    document.querySelectorAll('.cadastro-steps .step').forEach(step => {
+        step.classList.remove('active');
     });
     const step1 = document.getElementById('step-1');
-    if (step1) step1.classList.add(CSSClasses.active);
+    if (step1) step1.classList.add('active');
     
     // Atualiza conteúdo dos passos
-    document.querySelectorAll('.cadastro-step-content').forEach(content => {
-        content.classList.remove(CSSClasses.active);
+    document.querySelectorAll('[id^="step-"][id$="-content"]').forEach(content => {
+        content.classList.remove('active');
+        content.style.display = 'none';
+        content.style.opacity = '0';
     });
     const step1Content = document.getElementById('step-1-content');
-    if (step1Content) step1Content.classList.add(CSSClasses.active);
+    if (step1Content) {
+        step1Content.classList.add('active');
+        step1Content.style.display = 'block';
+        step1Content.style.opacity = '1';
+    }
     
     // Atualiza botões
     const btnBack = document.getElementById('btn-back');
@@ -1841,7 +2442,12 @@ function abrirCadastroRapido() {
     // Limpa formulário
     const cadastroForm = document.getElementById('cadastro-form');
     if (cadastroForm) cadastroForm.reset();
-    
+    if (typeof clearSerialPrefixSuffix === 'function') clearSerialPrefixSuffix();
+
+    if (typeof initSerialSugestoes === 'function') initSerialSugestoes();
+    if (typeof initIpMask === 'function') initIpMask();
+    if (typeof initSelbMask === 'function') initSelbMask();
+
     // Popula select de bancada (B01 até B200)
     const selectBancada = document.getElementById('cad-bancada');
     if (selectBancada) {
@@ -1860,12 +2466,181 @@ function abrirCadastroRapido() {
         }
     }
     
-    // Foca no primeiro campo
+    // Foca no primeiro campo (serial)
     const serialInput = document.getElementById('cad-serial');
     if (serialInput) serialInput.focus();
 }
 
+// Prefixos fixos para números de série por modelo (só aparecem ao clicar no campo)
+const SERIAL_PREFIXOS_MODELO = {
+    'ZT411': '99J',
+    'ZD421': 'D6J',
+    'ZQ630 PLUS': 'XXV'
+};
+
+function getSerialCompleto() {
+    const prefixSpan = document.getElementById('cad-serial-prefix');
+    const suffixInput = document.getElementById('cad-serial');
+    const prefix = (prefixSpan && prefixSpan.textContent) ? prefixSpan.textContent.trim() : '';
+    const suffix = (suffixInput && suffixInput.value) ? suffixInput.value.trim() : '';
+    return prefix + suffix;
+}
+
+function clearSerialPrefixSuffix() {
+    const prefixSpan = document.getElementById('cad-serial-prefix');
+    const suffixInput = document.getElementById('cad-serial');
+    if (prefixSpan) prefixSpan.textContent = '';
+    if (suffixInput) suffixInput.value = '';
+    if (typeof hideSerialSuggestionsPortal === 'function') hideSerialSuggestionsPortal();
+}
+
+function getSerialSuggestionsPortal() {
+    var p = document.getElementById('cad-serial-suggestions-portal');
+    if (p) return p;
+    p = document.createElement('div');
+    p.id = 'cad-serial-suggestions-portal';
+    p.className = 'serial-suggestions serial-suggestions-portal';
+    p.style.display = 'none';
+    document.body.appendChild(p);
+    return p;
+}
+
+function hideSerialSuggestionsPortal() {
+    var p = document.getElementById('cad-serial-suggestions-portal');
+    if (p) { p.innerHTML = ''; p.style.display = 'none'; }
+}
+
+function mostrarSugestoesSerial() {
+    const modeloRadio = document.querySelector('input[name="modelo"]:checked');
+    const wrapper = document.getElementById('cad-serial-wrapper');
+    if (!wrapper) return;
+
+    hideSerialSuggestionsPortal();
+
+    if (!modeloRadio) return;
+
+    const modelo = modeloRadio.value;
+    const prefixo = SERIAL_PREFIXOS_MODELO[modelo];
+    if (!prefixo) return;
+
+    const portal = getSerialSuggestionsPortal();
+    const item = document.createElement('div');
+    item.className = 'serial-suggestions-item';
+    item.innerHTML = '<strong>' + prefixo + '</strong> &ndash; ' + modelo;
+    item.dataset.prefixo = prefixo;
+    item.addEventListener('click', function () {
+        aplicarPrefixoEscolhido(this.dataset.prefixo);
+    });
+    portal.appendChild(item);
+
+    var rect = wrapper.getBoundingClientRect();
+    portal.style.display = 'block';
+    portal.style.position = 'fixed';
+    portal.style.left = rect.left + 'px';
+    portal.style.top = (rect.bottom + 4) + 'px';
+    portal.style.width = Math.max(rect.width, 200) + 'px';
+    portal.style.zIndex = '9999';
+}
+
+function aplicarPrefixoEscolhido(prefixo) {
+    const prefixSpan = document.getElementById('cad-serial-prefix');
+    const suffixInput = document.getElementById('cad-serial');
+    const eraMesmo = (prefixSpan && prefixSpan.textContent.trim() === prefixo);
+    if (prefixSpan) prefixSpan.textContent = prefixo;
+    if (suffixInput) {
+        if (!eraMesmo) suffixInput.value = '';
+        suffixInput.focus();
+    }
+    hideSerialSuggestionsPortal();
+}
+
+function initSerialSugestoes() {
+    const wrapper = document.getElementById('cad-serial-wrapper');
+    const suffixInput = document.getElementById('cad-serial');
+
+    function onSerialClick() {
+        mostrarSugestoesSerial();
+    }
+
+    function closeSuggestions(e) {
+        if (!wrapper) return;
+        if (wrapper.contains(e.target)) return;
+        var p = document.getElementById('cad-serial-suggestions-portal');
+        if (p && p.contains(e.target)) return;
+        hideSerialSuggestionsPortal();
+    }
+
+    if (wrapper) {
+        wrapper.removeEventListener('click', onSerialClick);
+        wrapper.addEventListener('click', onSerialClick);
+    }
+    if (suffixInput) {
+        suffixInput.removeEventListener('focus', onSerialClick);
+        suffixInput.addEventListener('focus', onSerialClick);
+    }
+    document.removeEventListener('click', closeSuggestions);
+    document.addEventListener('click', closeSuggestions);
+
+    ['cad-modelo-zt411', 'cad-modelo-zd421', 'cad-modelo-zq630'].forEach(function (id) {
+        const radio = document.getElementById(id);
+        if (!radio) return;
+        radio.removeEventListener('change', onModeloChange);
+        radio.addEventListener('change', onModeloChange);
+    });
+
+    function onModeloChange() {
+        const r = document.querySelector('input[name="modelo"]:checked');
+        if (!r) return;
+        const prefixo = SERIAL_PREFIXOS_MODELO[r.value];
+        if (prefixo) aplicarPrefixoEscolhido(prefixo);
+    }
+}
+
+var IP_PREFIXO = '10.201.';
+
+function getIpCompleto() {
+    var el = document.getElementById('cad-ip');
+    if (!el) return IP_PREFIXO;
+    var s = (el.value || '').trim();
+    return IP_PREFIXO + s;
+}
+
+function formatarIpSuffix(val) {
+    var d = (val || '').replace(/\D/g, '').slice(0, 6);
+    if (d.length <= 3) return d;
+    return d.slice(0, 3) + '.' + d.slice(3);
+}
+
+function initIpMask() {
+    var el = document.getElementById('cad-ip');
+    if (!el) return;
+    function onIpInput() {
+        var v = formatarIpSuffix(el.value);
+        if (v !== el.value) {
+            el.value = v;
+        }
+    }
+    el.removeEventListener('input', onIpInput);
+    el.addEventListener('input', onIpInput);
+}
+
+function initSelbMask() {
+    var el = document.getElementById('cad-selb');
+    if (!el) return;
+    function onSelbInput() {
+        var v = (el.value || '').replace(/[^A-Za-z0-9]/g, '').slice(0, 4);
+        if (v !== el.value) el.value = v;
+    }
+    el.removeEventListener('input', onSelbInput);
+    el.addEventListener('input', onSelbInput);
+}
+
 function fecharCadastro() {
+    // Exporta IMEDIATAMENTE (sempre)
+    window.fecharCadastro = fecharCadastro;
+
+    if (typeof hideSerialSuggestionsPortal === 'function') hideSerialSuggestionsPortal();
+    
     const modal = document.getElementById('cadastro-modal');
     if (!modal) return;
     
@@ -1881,60 +2656,82 @@ function fecharCadastro() {
 }
 
 function proximoPassoCadastro() {
-    const stepNum = cadastroStep;
+    // Exporta IMEDIATAMENTE (sempre)
+    window.proximoPassoCadastro = proximoPassoCadastro;
+    
+    console.log('➡️ Avançando para próximo passo...', cadastroStep);
+    
+    const stepNum = cadastroStep || 1;
     const stepAtualContent = document.getElementById(`step-${stepNum}-content`);
-    if (!stepAtualContent) return;
+    
+    if (!stepAtualContent) {
+        console.error('❌ Conteúdo do passo atual não encontrado:', `step-${stepNum}-content`);
+        return;
+    }
     
     // Validação básica
     if (stepNum === 1) {
-        const serial = document.getElementById('cad-serial').value.trim();
         const modeloRadio = document.querySelector('input[name="modelo"]:checked');
-        
-        if (!serial || !modeloRadio) {
-            return; // Validação silenciosa - sem avisos
-        }
-        
+        if (!modeloRadio) return;
+
+        const serial = typeof getSerialCompleto === 'function' ? getSerialCompleto() : '';
         const modelo = modeloRadio.value;
-        
-        // Verifica se serial já existe
-        if (equipamentosExemplo.some(e => e.serial === serial)) {
-            return; // Validação silenciosa - sem avisos
-        }
-        
-        // Atualiza confirmação
+        const prefixoEsperado = SERIAL_PREFIXOS_MODELO[modelo];
+
+        if (!serial) return;
+        if (!prefixoEsperado || !serial.startsWith(prefixoEsperado)) return;
+        if (equipamentosExemplo && equipamentosExemplo.some(function (e) { return e.serial === serial; })) return;
+
         const confirmModelo = document.getElementById('confirm-modelo');
         const confirmSerial = document.getElementById('confirm-serial');
         if (confirmModelo) confirmModelo.textContent = modelo;
         if (confirmSerial) confirmSerial.textContent = serial;
+
+        console.log('✅ Passo 1 validado:', { modelo, serial });
+        
     } else if (stepNum === 2) {
-        const ip = document.getElementById('cad-ip').value.trim();
-        const macRede = document.getElementById('cad-mac-rede').value.trim();
-        const setor = document.getElementById('cad-setor').value;
+        const ipInput = document.getElementById('cad-ip');
+        const macRedeInput = document.getElementById('cad-mac-rede');
+        const setorSelect = document.getElementById('cad-setor');
+        const selbInput = document.getElementById('cad-selb');
         
-        if (!ip || !macRede || !setor) {
-            showToast('Preencha todos os campos obrigatórios', 'warning');
+        if (!ipInput || !macRedeInput || !setorSelect) {
             return;
         }
         
-        // Validação de IP
-        const ipRegex = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
-        if (!ipRegex.test(ip)) {
-            showToast('IP inválido', 'warning');
+        const ip = typeof getIpCompleto === 'function' ? getIpCompleto() : (ipInput.value.trim() || '');
+        const macRede = macRedeInput.value.trim();
+        const setor = setorSelect.value;
+        
+        if (!ip || ip === IP_PREFIXO || !macRede || !setor) {
             return;
         }
         
-        // Validação de MAC
-        const macRegex = /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/;
+        var ipRegex = /^10\.201\.(\d{1,3})\.(\d{1,3})$/;
+        var m = ip.match(ipRegex);
+        if (!m || parseInt(m[1], 10) > 255 || parseInt(m[2], 10) > 255) {
+            return;
+        }
+        
+        var macRegex = /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/;
         if (!macRegex.test(macRede)) {
-            showToast('MAC Address inválido', 'warning');
             return;
         }
         
-        // Atualiza confirmação
-        const confirmIp = document.getElementById('confirm-ip');
-        const confirmSetor = document.getElementById('confirm-setor');
+        var selb = (selbInput && selbInput.value) ? selbInput.value.trim() : '';
+        if (selb && (!/^[A-Za-z0-9]{4}$/.test(selb) || selb.length !== 4)) {
+            return;
+        }
+        
+        var confirmIp = document.getElementById('confirm-ip');
+        var confirmSetor = document.getElementById('confirm-setor');
         if (confirmIp) confirmIp.textContent = ip;
-        if (confirmSetor) confirmSetor.textContent = formatarSetor(setor);
+        if (confirmSetor) {
+            const setorText = setorSelect.options[setorSelect.selectedIndex]?.text || setor;
+            confirmSetor.textContent = setorText;
+        }
+        
+        console.log('✅ Passo 2 validado:', { ip, macRede, setor });
     }
     
     // Animação de transição
@@ -1947,49 +2744,78 @@ function proximoPassoCadastro() {
         const nextStepElement = document.getElementById(`step-${nextStep}`);
         const nextStepContent = document.getElementById(`step-${nextStep}-content`);
         
-        if (nextStepElement && nextStepContent) {
-            // Atualiza indicadores no topo - apenas os .step dentro de .cadastro-steps
-            document.querySelectorAll('.cadastro-steps .step').forEach(step => {
-                step.classList.remove('active');
-            });
-            nextStepElement.classList.add('active');
-            
-            // Atualiza conteúdo dos steps - apenas os conteúdos com id step-X-content
-            document.querySelectorAll('[id^="step-"][id$="-content"]').forEach(step => {
-                step.classList.remove('active');
-                step.style.opacity = '0';
-                step.style.transform = '';
-            });
-            nextStepContent.classList.add('active');
-            
-            // Animação de entrada do próximo passo
-            nextStepContent.style.opacity = '0';
-            nextStepContent.style.transform = 'translateX(20px)';
-            
-            setTimeout(() => {
-                nextStepContent.style.opacity = '1';
-                nextStepContent.style.transform = 'translateX(0)';
-            }, 50);
-            
-            cadastroStep = nextStep;
-            
-            // Atualiza botões
-            const btnBack = document.getElementById('btn-back');
-            const btnNext = document.getElementById('btn-next');
-            const btnSubmit = document.getElementById('btn-submit');
-            
-            if (btnBack) btnBack.style.display = 'block';
-            if (nextStep === 3) {
-                if (btnNext) btnNext.style.display = 'none';
-                if (btnSubmit) btnSubmit.style.display = 'block';
-            }
-            
-            // Removido aviso de passo
+        console.log('📍 Tentando avançar para passo:', nextStep);
+        console.log('📍 Elemento do passo:', nextStepElement);
+        console.log('📍 Conteúdo do passo:', nextStepContent);
+        
+        if (!nextStepElement || !nextStepContent) {
+            console.error('❌ Próximo passo não encontrado:', nextStep);
+            return;
         }
+        
+        // Atualiza indicadores no topo - apenas os .step dentro de .cadastro-steps
+        document.querySelectorAll('.cadastro-steps .step').forEach(step => {
+            step.classList.remove('active');
+        });
+        nextStepElement.classList.add('active');
+        
+        // Atualiza conteúdo dos steps - apenas os conteúdos com id step-X-content
+        document.querySelectorAll('[id^="step-"][id$="-content"]').forEach(step => {
+            step.classList.remove('active');
+            step.style.opacity = '0';
+            step.style.transform = '';
+            step.style.display = 'none';
+        });
+        
+        nextStepContent.style.display = 'block';
+        nextStepContent.classList.add('active');
+        
+        // Animação de entrada do próximo passo
+        nextStepContent.style.opacity = '0';
+        nextStepContent.style.transform = 'translateX(20px)';
+        
+        setTimeout(() => {
+            nextStepContent.style.opacity = '1';
+            nextStepContent.style.transform = 'translateX(0)';
+        }, 50);
+        
+        // Atualiza variável global
+        cadastroStep = nextStep;
+        if (window.cadastroStep !== undefined) {
+            window.cadastroStep = nextStep;
+        }
+        
+        console.log('✅ Passo atualizado para:', cadastroStep);
+        
+        // Atualiza botões
+        const btnBack = document.getElementById('btn-back');
+        const btnNext = document.getElementById('btn-next');
+        const btnSubmit = document.getElementById('btn-submit');
+        
+        if (btnBack) {
+            if (nextStep > 1) {
+                btnBack.style.display = 'block';
+            } else {
+                btnBack.style.display = 'none';
+            }
+        }
+        
+        if (nextStep === 3) {
+            if (btnNext) btnNext.style.display = 'none';
+            if (btnSubmit) btnSubmit.style.display = 'block';
+        } else {
+            if (btnNext) btnNext.style.display = 'block';
+            if (btnSubmit) btnSubmit.style.display = 'none';
+        }
+        
+        console.log('✅ Navegação concluída para passo', nextStep);
     }, 300);
 }
 
 function passoAnteriorCadastro() {
+    // Exporta IMEDIATAMENTE (sempre)
+    window.passoAnteriorCadastro = passoAnteriorCadastro;
+    
     const stepNum = cadastroStep;
     
     if (stepNum > 1) {
@@ -2086,11 +2912,14 @@ function passoAnteriorCadastro() {
 function finalizarCadastro() {
     console.log('✅ Finalizando cadastro de equipamento');
     
+    // Exporta IMEDIATAMENTE (sempre)
+    window.finalizarCadastro = finalizarCadastro;
+    
     // Coleta dados do formulário
-    const serial = document.getElementById('cad-serial')?.value.trim() || '';
+    const serial = (typeof getSerialCompleto === 'function' ? getSerialCompleto() : (document.getElementById('cad-serial')?.value.trim() || ''));
     const modeloRadio = document.querySelector('input[name="modelo"]:checked');
     const modelo = modeloRadio ? modeloRadio.value : '';
-    const ip = document.getElementById('cad-ip')?.value.trim() || '';
+    const ip = (typeof getIpCompleto === 'function' ? getIpCompleto() : (document.getElementById('cad-ip')?.value.trim() || ''));
     const macRede = document.getElementById('cad-mac-rede')?.value.trim() || '';
     const macBluetooth = document.getElementById('cad-mac-bluetooth')?.value.trim() || '';
     const selb = document.getElementById('cad-selb')?.value.trim() || '';
@@ -2107,7 +2936,7 @@ function finalizarCadastro() {
     // Cria novo equipamento
     const novoEquipamento = {
         serial: serial,
-        tag: `${modelo}-${modelo === 'ZD421' ? 'DSK' : modelo === 'ZQ630' ? 'PAG' : 'IND'}-${String(equipamentosExemplo.length + 1).padStart(3, '0')}`,
+        tag: `${modelo}-${modelo === 'ZD421' ? 'DSK' : (modelo || '').indexOf('ZQ630') >= 0 ? 'PAG' : 'IND'}-${String(equipamentosExemplo.length + 1).padStart(3, '0')}`,
         modelo: modelo,
         ip: ip,
         macRede: macRede.toUpperCase(),
@@ -2124,8 +2953,8 @@ function finalizarCadastro() {
         firmware: modelo === 'ZT411' ? 'V72.20.15Z' : modelo === 'ZD421' ? 'V65.21.10Z' : 'V82.15.20Z',
         contador: 0,
         toner: 100,
-        ribbon: modelo === 'ZQ630' ? null : 100,
-        ink: modelo === 'ZQ630' ? 100 : null,
+        ribbon: (modelo || '').indexOf('ZQ630') >= 0 ? null : 100,
+        ink: (modelo || '').indexOf('ZQ630') >= 0 ? 100 : null,
         responsavel: currentUser || 'Sistema',
         garantia: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
     };
@@ -2152,16 +2981,7 @@ function finalizarCadastro() {
             modalContent.classList.remove('success-animation');
         }
         
-        // Mostra confirmação
-        showToast(`${modelo} cadastrado com sucesso!`, 'success');
-        
-        // Adiciona notificação
-        addNotification(
-            'success',
-            'Novo equipamento cadastrado',
-            `${modelo} com serial ${serial} foi adicionado ao inventário`,
-            novoEquipamento.tag
-        );
+        // Equipamento cadastrado com sucesso
     }, 1000);
 }
 
@@ -2234,14 +3054,6 @@ function pingEquipamento(ip, tag) {
             if (equipamento) {
                 equipamento.status = 'offline';
                 equipamento.ultimaChecagem = new Date().toISOString().replace('T', ' ').substring(0, 16);
-                
-                // Adiciona notificação
-                addNotification(
-                    'warning',
-                    `${tag} offline`,
-                    `Equipamento não respondeu ao ping`,
-                    tag
-                );
             }
         }
         
@@ -2388,149 +3200,30 @@ function fecharDetalhes() {
 }
 
 // ================= SISTEMA DE NOTIFICAÇÕES =================
-function addNotification(type, title, message, equipment = null) {
-    const newNotification = {
-        id: notifications.length + 1,
-        type: type,
-        title: title,
-        message: message,
-        time: 'Agora mesmo',
-        read: false,
-        equipment: equipment
-    };
-    
-    notifications.unshift(newNotification);
-    updateNotificationBadge();
-    
-    // Atualiza painel se estiver aberto
-    const notificationsPanel = document.getElementById('notifications-panel');
-    if (notificationsPanel && notificationsPanel.classList.contains('show')) {
-        renderNotifications();
-    }
-    
-    // Mostra toast se não for apenas uma notificação silenciosa
-    if (type !== 'info') {
-        showToast(title, type);
-    }
+// ================= FUNÇÕES DE NOTIFICAÇÕES =================
+// Todas as funções de notificações foram removidas
+
+// ================= MODAL BEM-VINDO (Apple / vidro) =================
+function showBemVindoModal(nome) {
+    const wrap = document.getElementById('modal-bem-vindo');
+    const span = document.getElementById('modal-bem-vindo-nome');
+    if (!wrap || !span) return;
+    if (wrap.style.display === 'flex') return;
+    span.textContent = nome || 'Usuário';
+    wrap.style.display = 'flex';
+    wrap.onclick = fecharBemVindoModal;
 }
 
-function toggleNotifications() {
-    const panel = document.getElementById('notifications-panel');
-    if (!panel) return;
-    
-    panel.classList.toggle('show');
-    
-    if (panel.classList.contains('show')) {
-        renderNotifications();
-    }
-}
-
-function renderNotifications() {
-    const container = document.getElementById('notifications-list');
-    if (!container) return;
-    
-    if (notifications.length === 0) {
-        container.innerHTML = `
-            <div class="notification-empty">
-                <div class="notification-icon">📭</div>
-                <p>Nenhuma notificação</p>
-                <small>Tudo em ordem por aqui!</small>
-            </div>
-        `;
-        return;
-    }
-    
-    let html = '';
-    notifications.forEach(notif => {
-        const icon = notif.type === 'warning' ? '⚠️' : 
-                    notif.type === 'success' ? '✅' : 'ℹ️';
-        
-        html += `
-            <div class="notification-item ${notif.read ? 'read' : 'unread'}" data-id="${notif.id}">
-                <div class="notification-icon">${icon}</div>
-                <div class="notification-content">
-                    <div class="notification-title">${notif.title}</div>
-                    <div class="notification-message">${notif.message}</div>
-                    <div class="notification-time">${notif.time}</div>
-                    ${notif.equipment ? `<div class="notification-equipment">${notif.equipment}</div>` : ''}
-                </div>
-                <button class="notification-mark-read" onclick="markNotificationAsRead(${notif.id})" title="Marcar como lida">
-                    ●
-                </button>
-            </div>
-        `;
-    });
-    
-    container.innerHTML = html;
-    updateNotificationBadge();
-}
-
-function markNotificationAsRead(id) {
-    const notification = notifications.find(n => n.id === id);
-    if (notification) {
-        notification.read = true;
-        updateNotificationBadge();
-        
-        // Animação de marcação como lida
-        const notificationElement = document.querySelector(`.notification-item[data-id="${id}"]`);
-        if (notificationElement) {
-            notificationElement.classList.add('marked-read');
-            setTimeout(() => {
-                notificationElement.classList.remove('unread');
-                notificationElement.classList.add('read');
-            }, 300);
-        }
-    }
-}
-
-function markAllNotificationsAsRead() {
-    if (notifications.every(n => n.read)) {
-        showToast('Todas notificações já estão lidas', 'info');
-        return;
-    }
-    
-    notifications.forEach(n => n.read = true);
-    updateNotificationBadge();
-    renderNotifications();
-    showToast('Todas notificações marcadas como lidas', 'success');
-}
-
-function clearAllNotifications() {
-    if (notifications.length === 0) return;
-    
-    if (confirm('Deseja limpar todas as notificações?')) {
-        notifications = notifications.filter(n => !n.read);
-        updateNotificationBadge();
-        renderNotifications();
-        showToast('Notificações limpas', 'info');
-    }
-}
-
-function updateNotificationBadge() {
-    const badge = document.getElementById('notification-badge');
-    if (!badge) return;
-    
-    const unreadCount = notifications.filter(n => !n.read).length;
-    
-    if (unreadCount > 0) {
-        badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
-        badge.style.display = 'flex';
-        
-        // Animação de pulso para novas notificações
-        if (unreadCount > parseInt(badge.dataset.lastCount || 0)) {
-            badge.classList.add('pulse');
-            setTimeout(() => badge.classList.remove('pulse'), 1000);
-        }
-        badge.dataset.lastCount = unreadCount;
-    } else {
-        badge.style.display = 'none';
+function fecharBemVindoModal() {
+    const wrap = document.getElementById('modal-bem-vindo');
+    if (wrap) {
+        wrap.style.display = 'none';
+        wrap.onclick = null;
     }
 }
 
 // ================= TOAST NOTIFICATIONS =================
 function showToast(message, type = 'info', duration = 3000) {
-    console.log(`🍞 Toast [${type}]: ${message}`);
-    
     // Remove toast existente se houver
     const existingToast = document.querySelector('.toast');
     if (existingToast) {
@@ -2551,7 +3244,7 @@ function showToast(message, type = 'info', duration = 3000) {
     toast.innerHTML = `
         <div class="toast-icon">${icons[type] || icons.info}</div>
         <div class="toast-message">${message}</div>
-        <button class="toast-close" onclick="this.parentElement.remove()">×</button>
+        <button type="button" class="toast-close" aria-label="Fechar" onclick="var t=this.closest('.toast');if(t){t.classList.remove('show');setTimeout(function(){if(t.parentElement)t.remove();},280);}">×</button>
     `;
     
     document.body.appendChild(toast);
@@ -2613,36 +3306,42 @@ function showSkeletonTable() {
 
 // ================= FLOATING ACTION BUTTON =================
 function initFAB() {
-    // Verifica se já existe
-    if (document.querySelector('.fab-container')) return;
+    // Usa o elemento existente no HTML ao invés de criar um novo
+    let fab = document.getElementById('fab-container');
     
-    const fab = document.createElement('div');
-    fab.className = 'fab-container';
-    fab.innerHTML = `
-        <button class="fab-main" onclick="toggleFAB()" aria-label="Ações rápidas">
-            <span class="fab-icon">⚡</span>
-        </button>
-        <div class="fab-menu">
-            <button class="fab-item" onclick="abrirCadastroRapido()" data-tooltip="Cadastrar equipamento">
-                <span class="fab-item-icon">➕</span>
-                <span class="fab-item-label">Cadastrar</span>
-            </button>
-            <button class="fab-item" onclick="navigate('page-inventario')" data-tooltip="Ir para inventário">
-                <span class="fab-item-icon">📋</span>
-                <span class="fab-item-label">Inventário</span>
-            </button>
-            <button class="fab-item" onclick="filtrarPorModelo('todos')" data-tooltip="Ver todos">
-                <span class="fab-item-icon">🌐</span>
-                <span class="fab-item-label">Ver Todos</span>
-            </button>
-            <button class="fab-item" onclick="toggleNotifications()" data-tooltip="Notificações">
-                <span class="fab-item-icon">🔔</span>
-                <span class="fab-item-label">Notificações</span>
-            </button>
-        </div>
-    `;
+    if (!fab) {
+        // Se não existir, cria um novo
+        fab = document.createElement('div');
+        fab.id = 'fab-container';
+        fab.className = 'fab-container';
+        document.body.appendChild(fab);
+    }
     
-    document.body.appendChild(fab);
+    // Só adiciona conteúdo se ainda não tiver
+    if (!fab.querySelector('.fab-main')) {
+        fab.innerHTML = `
+            <button class="fab-main" onclick="toggleFAB()" aria-label="Ações rápidas">
+                <span class="fab-icon">⚡</span>
+            </button>
+            <div class="fab-menu">
+                <button class="fab-item" onclick="abrirCadastroRapido()" data-tooltip="Cadastrar equipamento">
+                    <span class="fab-item-icon">➕</span>
+                    <span class="fab-item-label">Cadastrar</span>
+                </button>
+                <button class="fab-item" onclick="navigate('page-inventario')" data-tooltip="Ir para inventário">
+                    <span class="fab-item-icon">📋</span>
+                    <span class="fab-item-label">Inventário</span>
+                </button>
+                <button class="fab-item" onclick="filtrarPorModelo('todos')" data-tooltip="Ver todos">
+                    <span class="fab-item-icon">🌐</span>
+                    <span class="fab-item-label">Ver Todos</span>
+                </button>
+            </div>
+        `;
+    }
+    
+    // Inicialmente escondido (só aparece na home)
+    fab.style.display = 'none';
     
     // Fecha FAB ao clicar fora
     document.addEventListener('click', (e) => {
@@ -2660,52 +3359,7 @@ function toggleFAB() {
 }
 
 // ================= PANEL DE NOTIFICAÇÕES =================
-function initNotificationsPanel() {
-    // Verifica se já existe
-    if (document.getElementById('notifications-panel')) return;
-    
-    const panel = document.createElement('div');
-    panel.id = 'notifications-panel';
-    panel.className = 'notifications-panel';
-    panel.innerHTML = `
-        <div class="notifications-header">
-            <h3>🔔 Notificações</h3>
-            <div class="notifications-actions">
-                <button onclick="markAllNotificationsAsRead()" title="Marcar todas como lidas">
-                    👁️
-                </button>
-                <button onclick="clearAllNotifications()" title="Limpar notificações">
-                    🗑️
-                </button>
-                <button onclick="toggleNotifications()" title="Fechar">
-                    ×
-                </button>
-            </div>
-        </div>
-        <div class="notifications-body" id="notifications-list">
-            <!-- Notificações serão renderizadas aqui -->
-        </div>
-        <div class="notifications-footer">
-            <button onclick="toggleNotifications()" class="btn-secondary">
-                Fechar
-            </button>
-        </div>
-    `;
-    
-    document.body.appendChild(panel);
-    
-    // Fecha panel ao clicar fora
-    document.addEventListener('click', (e) => {
-        const panel = document.getElementById('notifications-panel');
-        if (!panel) return;
-        
-        if (!e.target.closest('.notifications-panel') && 
-            !e.target.closest('.notifications-bell') &&
-            !e.target.closest('.fab-item[onclick*="toggleNotifications"]')) {
-            panel.classList.remove('show');
-        }
-    });
-}
+// Função removida - notificações desabilitadas
 
 // ================= TEMA (DARK/LIGHT) =================
 function initTheme() {
@@ -2719,6 +3373,9 @@ function initTheme() {
 }
 
 function toggleTheme() {
+    // Exporta IMEDIATAMENTE (sempre)
+    window.toggleTheme = toggleTheme;
+    
     const currentTheme = document.body.getAttribute('data-theme') || 'light';
     const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
     
@@ -2728,11 +3385,11 @@ function toggleTheme() {
     setTimeout(() => {
         setTheme(newTheme);
         document.body.style.opacity = '1';
-        showToast(`Modo ${newTheme === 'dark' ? 'escuro' : 'claro'} ativado`, 'info');
     }, 200);
 }
 
 function setTheme(theme) {
+    console.log(`🎨 Alterando tema para: ${theme}`);
     document.body.setAttribute('data-theme', theme);
     localStorage.setItem('axis-theme', theme);
     
@@ -2741,6 +3398,9 @@ function setTheme(theme) {
     if (themeIcon) {
         themeIcon.textContent = theme === 'dark' ? '☀️' : '🌙';
         themeIcon.title = theme === 'dark' ? 'Modo claro' : 'Modo escuro';
+        console.log(`✅ Ícone atualizado: ${themeIcon.textContent}`);
+    } else {
+        console.warn('⚠️ Elemento theme-icon não encontrado');
     }
     
     // Atualiza checkbox
@@ -2748,6 +3408,8 @@ function setTheme(theme) {
     if (themeSwitch) {
         themeSwitch.checked = theme === 'dark';
     }
+    
+    console.log(`✅ Tema alterado com sucesso para: ${theme}`);
 }
 
 function toggleHighContrast() {
@@ -2821,11 +3483,6 @@ function initKeyboardShortcuts() {
                 if (modal.id === 'cadastro-modal') fecharCadastro();
                 if (modal.id === 'detalhes-modal') fecharDetalhes();
             });
-            
-            const notificationsPanel = document.getElementById('notifications-panel');
-            if (notificationsPanel && notificationsPanel.classList.contains('show')) {
-                toggleNotifications();
-            }
             
             const fab = document.querySelector('.fab-container');
             if (fab && fab.classList.contains('active')) {
@@ -2904,26 +3561,7 @@ function startRealTimeSimulation() {
         }
     }, 30000); // A cada 30 segundos
     
-    // Atualiza tempo das notificações
-    setInterval(() => {
-        notifications.forEach(notif => {
-            if (notif.time.includes('minutos')) {
-                const mins = parseInt(notif.time.split(' ')[0]);
-                notif.time = `Há ${mins + 1} minutos`;
-            } else if (notif.time.includes('hora') && !notif.time.includes('horas')) {
-                const hours = parseInt(notif.time.split(' ')[0]);
-                if (hours < 23) {
-                    notif.time = `Há ${hours + 1} horas`;
-                } else {
-                    notif.time = 'Ontem';
-                }
-            }
-        });
-        
-        if (document.getElementById('notifications-panel')?.classList.contains('show')) {
-            renderNotifications();
-        }
-    }, 60000); // A cada minuto
+    // Atualização de notificações removida
 }
 
 // ================= ADMINISTRAÇÃO DE USUÁRIOS =================
@@ -2992,8 +3630,39 @@ function fecharModalUsuarios() {
 }
 
 function abrirEstatisticasSistema() {
-    showToast('Módulo de estatísticas em desenvolvimento', 'info');
-    // Aqui pode ser implementado um modal ou navegação para página de estatísticas
+    const modal = document.getElementById('modal-estatisticas');
+    if (!modal) return;
+    preencherModalEstatisticas();
+    modal.style.display = 'flex';
+    modal.onclick = function(e) {
+        if (e.target === modal) fecharModalEstatisticas();
+    };
+}
+
+function fecharModalEstatisticas() {
+    const modal = document.getElementById('modal-estatisticas');
+    if (modal) modal.style.display = 'none';
+}
+
+function preencherModalEstatisticas() {
+    let totalUsuarios = 0;
+    let totalEquipamentos = 0;
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (!key || !key.startsWith('db_')) continue;
+        totalUsuarios++;
+        try {
+            const db = JSON.parse(localStorage.getItem(key) || '{}');
+            const inv = db.inventorio || [];
+            totalEquipamentos += Array.isArray(inv) ? inv.length : 0;
+        } catch (_) {}
+    }
+    const rondas = JSON.parse(localStorage.getItem('rondas') || '[]');
+    const rondasCount = Array.isArray(rondas) ? rondas.length : 0;
+    const el = (id) => document.getElementById(id);
+    if (el('modal-total-usuarios')) el('modal-total-usuarios').textContent = totalUsuarios;
+    if (el('modal-total-equipamentos')) el('modal-total-equipamentos').textContent = totalEquipamentos;
+    if (el('modal-rondas-realizadas')) el('modal-rondas-realizadas').textContent = rondasCount;
 }
 
 function abrirConfiguracoesAvancadas() {
@@ -3001,8 +3670,58 @@ function abrirConfiguracoesAvancadas() {
 }
 
 function abrirLogsAuditoria() {
-    showToast('Módulo de logs e auditoria em desenvolvimento', 'info');
-    // Aqui pode ser implementado um modal ou navegação para página de logs
+    const modal = document.getElementById('modal-logs');
+    if (!modal) return;
+    preencherModalLogs();
+    modal.style.display = 'flex';
+    modal.onclick = function(e) {
+        if (e.target === modal) fecharModalLogs();
+    };
+}
+
+function fecharModalLogs() {
+    const modal = document.getElementById('modal-logs');
+    if (modal) modal.style.display = 'none';
+}
+
+function preencherModalLogs() {
+    const tbody = document.getElementById('logs-tbody');
+    const logsVazio = document.getElementById('logs-vazio');
+    if (!tbody) return;
+    const entries = [];
+    try {
+        const log = JSON.parse(localStorage.getItem('axis_audit_log') || '[]');
+        if (Array.isArray(log)) entries.push(...log);
+    } catch (_) {}
+    if (entries.length === 0) {
+        const lastLogin = localStorage.getItem('last_login');
+        const lastLogout = localStorage.getItem('last_logout');
+        if (lastLogin) {
+            try {
+                const d = JSON.parse(lastLogin);
+                entries.push({ type: 'login', user: d.usuario || '-', date: d.data || '' });
+            } catch (_) {}
+        }
+        if (lastLogout) {
+            try {
+                const d = JSON.parse(lastLogout);
+                entries.push({ type: 'logout', user: d.usuario || '-', date: d.data || '' });
+            } catch (_) {}
+        }
+    }
+    entries.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+    const limited = entries.slice(0, 100);
+    if (limited.length === 0) {
+        tbody.innerHTML = '';
+        if (logsVazio) logsVazio.style.display = 'block';
+        return;
+    }
+    if (logsVazio) logsVazio.style.display = 'none';
+    tbody.innerHTML = limited.map((e) => {
+        const dt = e.date ? new Date(e.date).toLocaleString('pt-BR') : '-';
+        const ev = e.type === 'login' ? 'Login' : e.type === 'logout' ? 'Logout' : (e.type || 'Evento');
+        return `<tr><td>${dt}</td><td>${ev}</td><td>${(e.user || '-').replace(/</g, '&lt;')}</td></tr>`;
+    }).join('');
 }
 
 function carregarUsuarios() {
@@ -3185,53 +3904,361 @@ function excluirUsuario(login) {
     atualizarEstatisticasAdmin();
 }
 
+// ================= FUNÇÕES PARA RONDAS =================
+function carregarRondas() {
+    // Função para carregar dados de rondas
+    // Pode ser expandida para carregar do localStorage ou API
+}
+
+function criarNovaRonda() {
+    setTimeout(() => {
+        window.location.href = 'pages/ronda.html';
+    }, 500);
+}
+
+function verRondasPendentes() {
+    // Filtra apenas rondas pendentes
+    const pendentes = document.querySelectorAll('.status-pendente');
+    if (pendentes.length > 0) {
+        pendentes.forEach(item => {
+            item.closest('.ronda-item').style.display = 'flex';
+        });
+        document.querySelectorAll('.status-concluida').forEach(item => {
+            item.closest('.ronda-item').style.display = 'none';
+        });
+    }
+}
+
+function verHistoricoRondas() {
+    // Mostra todas as rondas
+    document.querySelectorAll('.ronda-item').forEach(item => {
+        item.style.display = 'flex';
+    });
+}
+
+function verDetalhesRonda(id) {
+    // Pode abrir modal ou redirecionar para página de detalhes
+}
+
+function continuarRonda(id) {
+    window.location.href = 'pages/ronda.html';
+}
+
+// ================= FUNÇÕES PARA SUPORTE =================
+function carregarTickets() {
+    console.log('🎫 Carregando tickets...');
+    // Função para carregar dados de tickets
+    // Pode ser expandida para carregar do localStorage ou API
+}
+
+function abrirNovoTicket() {
+    console.log('🎫 Abrindo novo ticket...');
+    const titulo = prompt('Digite o título do ticket:');
+    if (titulo) {
+        const descricao = prompt('Descreva o problema:');
+        if (descricao) {
+            showToast('Ticket criado com sucesso!', 'success');
+            // Adiciona novo ticket à lista
+            adicionarTicketToLista(titulo);
+        }
+    }
+}
+
+function verMeusTickets() {
+    console.log('📋 Visualizando meus tickets...');
+    showToast('Carregando seus tickets...', 'info');
+    // Filtra apenas tickets do usuário atual
+}
+
+function abrirDocumentacao() {
+    console.log('📚 Abrindo documentação...');
+    showToast('Abrindo documentação do sistema...', 'info');
+    // Pode abrir modal com documentação ou redirecionar
+    alert('Documentação do Sistema AXIS\n\n1. Como cadastrar equipamentos\n2. Como realizar manutenções\n3. Como gerar relatórios\n\nEm breve: documentação completa disponível!');
+}
+
+function abrirFAQ() {
+    console.log('❓ Abrindo FAQ...');
+    showToast('Abrindo perguntas frequentes...', 'info');
+    const faq = `
+Perguntas Frequentes - AXIS
+
+1. Como cadastrar um novo equipamento?
+   - Acesse o módulo de Inventário e clique em "Criar Dispositivo"
+
+2. Como realizar uma manutenção preventiva?
+   - Acesse o módulo de Manutenção Preventiva e clique em "Iniciar Vistoria"
+
+3. Como visualizar notas fiscais?
+   - Acesse o módulo de Notas Fiscais para gerenciar sua biblioteca
+
+4. Como alterar minhas configurações?
+   - Acesse o módulo de Configurações no menu lateral
+    `;
+    alert(faq);
+}
+
+function verTicket(id) {
+    console.log('🔍 Visualizando ticket:', id);
+    showToast(`Abrindo ticket ${id}...`, 'info');
+    alert(`Detalhes do Ticket ${id}\n\nStatus: Em análise\nCriado em: 26/01/2025\n\nDescrição: Problema reportado pelo usuário.\n\nEm breve: visualização completa de tickets!`);
+}
+
+function adicionarTicketToLista(titulo) {
+    const ticketsLista = document.getElementById('tickets-lista');
+    if (ticketsLista) {
+        const novoTicket = document.createElement('div');
+        novoTicket.className = 'ticket-item';
+        novoTicket.innerHTML = `
+            <div class="ticket-info">
+                <span class="ticket-id">#TKT-${String(ticketsLista.children.length + 1).padStart(3, '0')}</span>
+                <span class="ticket-titulo">${titulo}</span>
+                <span class="ticket-status status-aberto">🟢 Aberto</span>
+                <span class="ticket-data">${new Date().toLocaleDateString('pt-BR')}</span>
+            </div>
+            <button class="btn-secondary" onclick="verTicket('TKT-${String(ticketsLista.children.length + 1).padStart(3, '0')}')">Ver Detalhes</button>
+        `;
+        ticketsLista.insertBefore(novoTicket, ticketsLista.firstChild);
+    }
+}
+
 // ================= FUNÇÕES GLOBAIS EXPORTADAS =================
 // Torna funções disponíveis globalmente para eventos onclick
-window.toggleSidebar = toggleSidebar;
-window.navigate = navigate;
-// Função toggleAuth removida - apenas login disponível
-window.handleAuth = handleAuth;
-window.togglePassword = togglePassword;
-window.logout = logout;
-window.handleGlobalSearch = handleGlobalSearch;
-window.filtrarPorModelo = filtrarPorModelo;
-window.filtrarInventario = filtrarInventario;
-window.resetarFiltrosInventario = resetarFiltrosInventario;
-window.editarEquipamento = editarEquipamento;
-window.excluirEquipamento = excluirEquipamento;
-window.ordenarTabela = ordenarTabela;
-window.mudarPagina = mudarPagina;
-window.exportarDados = exportarDados;
-window.abrirCadastroRapido = abrirCadastroRapido;
-window.fecharCadastro = fecharCadastro;
-window.proximoPassoCadastro = proximoPassoCadastro;
-window.passoAnteriorCadastro = passoAnteriorCadastro;
-window.cadastrarUsuario = cadastrarUsuario;
-window.limparFormularioUsuario = limparFormularioUsuario;
-window.filtrarUsuarios = filtrarUsuarios;
-window.editarUsuario = editarUsuario;
-window.excluirUsuario = excluirUsuario;
-window.abrirGerenciarUsuarios = abrirGerenciarUsuarios;
-window.fecharModalUsuarios = fecharModalUsuarios;
-window.abrirEstatisticasSistema = abrirEstatisticasSistema;
-window.abrirConfiguracoesAvancadas = abrirConfiguracoesAvancadas;
-window.abrirLogsAuditoria = abrirLogsAuditoria;
-window.finalizarCadastro = finalizarCadastro;
-window.pingEquipamento = pingEquipamento;
-window.verDetalhes = verDetalhes;
-window.fecharDetalhes = fecharDetalhes;
-window.copiarParaClipboard = copiarParaClipboard;
-window.toggleTheme = toggleTheme;
-window.toggleHighContrast = toggleHighContrast;
-window.imprimirInventario = imprimirInventario;
-window.toggleNotifications = toggleNotifications;
-window.markNotificationAsRead = markNotificationAsRead;
-window.markAllNotificationsAsRead = markAllNotificationsAsRead;
-window.clearAllNotifications = clearAllNotifications;
-window.toggleFAB = toggleFAB;
-window.updateItemsPerPage = updateItemsPerPage;
-window.clearLocalCache = clearLocalCache;
-window.exportSettings = exportSettings;
+// Exporta ANTES de qualquer uso para garantir disponibilidade
+// FORÇA exportação - sempre sobrescreve para garantir que está atualizada
+if (typeof toggleSidebar === 'function') {
+    window.toggleSidebar = toggleSidebar;
+    Object.defineProperty(window, 'toggleSidebar', {
+        value: toggleSidebar,
+        writable: true,
+        configurable: true,
+        enumerable: true
+    });
+}
+
+if (typeof navigate === 'function') {
+    window.navigate = navigate;
+    Object.defineProperty(window, 'navigate', {
+        value: navigate,
+        writable: true,
+        configurable: true,
+        enumerable: true
+    });
+}
+
+// Garante que navigate esteja disponível imediatamente
+if (typeof window.navigate !== 'function') {
+    console.warn('⚠️ Função navigate não foi exportada corretamente, recriando...');
+    window.navigate = function(pageId) {
+        console.log(`📍 [Fallback] Navegando para: ${pageId}`);
+        const sections = document.querySelectorAll('.main-section');
+        sections.forEach(s => {
+            s.classList.remove('active');
+            s.style.display = 'none';
+        });
+        const target = document.getElementById(pageId);
+        if (target) {
+            target.classList.add('active');
+            target.style.display = 'block';
+            localStorage.setItem('axis-current-page', pageId);
+        }
+    };
+}
+// FORÇA exportação de autenticação
+if (typeof handleAuth === 'function') {
+    window.handleAuth = handleAuth;
+}
+if (typeof togglePassword === 'function') {
+    window.togglePassword = togglePassword;
+}
+if (typeof showToast === 'function') {
+    window.showToast = showToast;
+}
+if (typeof showBemVindoModal === 'function') {
+    window.showBemVindoModal = showBemVindoModal;
+}
+if (typeof fecharBemVindoModal === 'function') {
+    window.fecharBemVindoModal = fecharBemVindoModal;
+}
+if (typeof logout === 'function') {
+    window.logout = logout;
+}
+// FORÇA exportação de outras funções
+if (typeof handleGlobalSearch === 'function') {
+    window.handleGlobalSearch = handleGlobalSearch;
+}
+if (typeof filtrarPorModelo === 'function') {
+    window.filtrarPorModelo = filtrarPorModelo;
+}
+// FORÇA exportação de todas as funções críticas
+if (typeof filtrarInventario === 'function') {
+    window.filtrarInventario = filtrarInventario;
+}
+if (typeof resetarFiltrosInventario === 'function') {
+    window.resetarFiltrosInventario = resetarFiltrosInventario;
+}
+if (typeof editarEquipamento === 'function') {
+    window.editarEquipamento = editarEquipamento;
+}
+if (typeof excluirEquipamento === 'function') {
+    window.excluirEquipamento = excluirEquipamento;
+}
+if (typeof ordenarTabela === 'function') {
+    window.ordenarTabela = ordenarTabela;
+}
+if (typeof mudarPagina === 'function') {
+    window.mudarPagina = mudarPagina;
+}
+if (typeof exportarDados === 'function') {
+    window.exportarDados = exportarDados;
+}
+// FORÇA exportação de abrirCadastroRapido (CRÍTICO)
+if (typeof abrirCadastroRapido === 'function') {
+    window.abrirCadastroRapido = abrirCadastroRapido;
+    // Protege a função
+    Object.defineProperty(window, 'abrirCadastroRapido', {
+        value: abrirCadastroRapido,
+        writable: true,
+        configurable: true,
+        enumerable: true
+    });
+    console.log('✅ abrirCadastroRapido exportada e protegida');
+} else {
+    console.error('❌ abrirCadastroRapido não foi definida!');
+}
+// FORÇA exportação de funções de Rondas
+if (typeof carregarRondas === 'function') {
+    window.carregarRondas = carregarRondas;
+}
+if (typeof criarNovaRonda === 'function') {
+    window.criarNovaRonda = criarNovaRonda;
+}
+if (typeof verRondasPendentes === 'function') {
+    window.verRondasPendentes = verRondasPendentes;
+}
+if (typeof verHistoricoRondas === 'function') {
+    window.verHistoricoRondas = verHistoricoRondas;
+}
+if (typeof verDetalhesRonda === 'function') {
+    window.verDetalhesRonda = verDetalhesRonda;
+}
+if (typeof continuarRonda === 'function') {
+    window.continuarRonda = continuarRonda;
+}
+
+// FORÇA exportação de funções de Suporte
+if (typeof abrirNovoTicket === 'function') {
+    window.abrirNovoTicket = abrirNovoTicket;
+}
+if (typeof verMeusTickets === 'function') {
+    window.verMeusTickets = verMeusTickets;
+}
+if (typeof abrirDocumentacao === 'function') {
+    window.abrirDocumentacao = abrirDocumentacao;
+}
+if (typeof abrirFAQ === 'function') {
+    window.abrirFAQ = abrirFAQ;
+}
+if (typeof verTicket === 'function') {
+    window.verTicket = verTicket;
+}
+if (typeof carregarTickets === 'function') {
+    window.carregarTickets = carregarTickets;
+}
+// FORÇA exportação de funções do modal
+if (typeof fecharCadastro === 'function') {
+    window.fecharCadastro = fecharCadastro;
+}
+if (typeof proximoPassoCadastro === 'function') {
+    window.proximoPassoCadastro = proximoPassoCadastro;
+}
+if (typeof passoAnteriorCadastro === 'function') {
+    window.passoAnteriorCadastro = passoAnteriorCadastro;
+}
+if (typeof finalizarCadastro === 'function') {
+    window.finalizarCadastro = finalizarCadastro;
+}
+if (typeof renderizarTabela === 'function') {
+    window.renderizarTabela = renderizarTabela;
+}
+if (typeof inicializarInventario === 'function') {
+    window.inicializarInventario = inicializarInventario;
+}
+
+// FORÇA exportação de funções administrativas
+if (typeof cadastrarUsuario === 'function') {
+    window.cadastrarUsuario = cadastrarUsuario;
+}
+if (typeof limparFormularioUsuario === 'function') {
+    window.limparFormularioUsuario = limparFormularioUsuario;
+}
+if (typeof filtrarUsuarios === 'function') {
+    window.filtrarUsuarios = filtrarUsuarios;
+}
+if (typeof editarUsuario === 'function') {
+    window.editarUsuario = editarUsuario;
+}
+if (typeof excluirUsuario === 'function') {
+    window.excluirUsuario = excluirUsuario;
+}
+if (typeof abrirGerenciarUsuarios === 'function') {
+    window.abrirGerenciarUsuarios = abrirGerenciarUsuarios;
+}
+if (typeof fecharModalUsuarios === 'function') {
+    window.fecharModalUsuarios = fecharModalUsuarios;
+}
+if (typeof fecharModalEstatisticas === 'function') {
+    window.fecharModalEstatisticas = fecharModalEstatisticas;
+}
+if (typeof fecharModalLogs === 'function') {
+    window.fecharModalLogs = fecharModalLogs;
+}
+if (typeof abrirEstatisticasSistema === 'function') {
+    window.abrirEstatisticasSistema = abrirEstatisticasSistema;
+}
+if (typeof abrirConfiguracoesAvancadas === 'function') {
+    window.abrirConfiguracoesAvancadas = abrirConfiguracoesAvancadas;
+}
+if (typeof abrirLogsAuditoria === 'function') {
+    window.abrirLogsAuditoria = abrirLogsAuditoria;
+}
+
+// FORÇA exportação de funções de equipamentos
+if (typeof pingEquipamento === 'function') {
+    window.pingEquipamento = pingEquipamento;
+}
+if (typeof verDetalhes === 'function') {
+    window.verDetalhes = verDetalhes;
+}
+if (typeof fecharDetalhes === 'function') {
+    window.fecharDetalhes = fecharDetalhes;
+}
+if (typeof copiarParaClipboard === 'function') {
+    window.copiarParaClipboard = copiarParaClipboard;
+}
+
+// FORÇA exportação de outras funções
+if (typeof toggleHighContrast === 'function') {
+    window.toggleHighContrast = toggleHighContrast;
+}
+if (typeof imprimirInventario === 'function') {
+    window.imprimirInventario = imprimirInventario;
+}
+if (typeof toggleFAB === 'function') {
+    window.toggleFAB = toggleFAB;
+}
+if (typeof updateItemsPerPage === 'function') {
+    window.updateItemsPerPage = updateItemsPerPage;
+}
+if (typeof clearLocalCache === 'function') {
+    window.clearLocalCache = clearLocalCache;
+}
+if (typeof exportSettings === 'function') {
+    window.exportSettings = exportSettings;
+}
+
+// Log final de exportação
+console.log('✅ Todas as funções foram exportadas para window');
 
 // ================= HELPERS PARA CSS INTEGRAÇÃO =================
 // Função para adicionar classe CSS dinamicamente se necessário

@@ -652,23 +652,23 @@ function configurarLembretes() {
 setInterval(configurarLembretes, 5 * 60 * 1000);
 
 // ================= SEGURANÇA E BACKUP =================
-let lixeira = JSON.parse(localStorage.getItem('axis_lixeira') || '[]');
+let lixeiraFeatures = JSON.parse(localStorage.getItem('axis_lixeira') || '[]');
 
 function moverParaLixeira(item) {
-    lixeira.push({
+    lixeiraFeatures.push({
         item: item,
         deletadoEm: new Date().toISOString()
     });
-    localStorage.setItem('axis_lixeira', JSON.stringify(lixeira));
+    localStorage.setItem('axis_lixeira', JSON.stringify(lixeiraFeatures));
 }
 
 function restaurarDaLixeira(index) {
-    const item = lixeira[index];
-    if (item.item && item.item.nota) {
+    const item = lixeiraFeatures[index];
+    if (item && item.item && item.item.nota) {
         state.notasFiscais.push(item.item.nota);
     }
-    lixeira.splice(index, 1);
-    localStorage.setItem('axis_lixeira', JSON.stringify(lixeira));
+    lixeiraFeatures.splice(index, 1);
+    localStorage.setItem('axis_lixeira', JSON.stringify(lixeiraFeatures));
     salvarDados();
     mostrarToast('Item restaurado', 'success');
 }

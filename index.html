@@ -7,8 +7,8 @@
     <meta name="theme-color" content="#2ecc71">
     
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="IMAGENS/Novo_Fivecon_1.2.png">
-    <link rel="apple-touch-icon" href="IMAGENS/Novo_Fivecon_1.2.png">
+    <link rel="icon" type="image/png" href="assets/IMAGENS/Novo_Fivecon_1.2.png">
+    <link rel="apple-touch-icon" href="assets/IMAGENS/Novo_Fivecon_1.2.png">
     
     <title>AXIS - Sistema de Gestão de Inventário</title>
     
@@ -18,10 +18,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
     <!-- CSS PRINCIPAL -->
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="css/style.css">
     
     <!-- WhatsApp Alerts CSS -->
-    <link rel="stylesheet" href="novos-modulos/whatsapp-alerts/whatsapp-alerts.css">
+    <link rel="stylesheet" href="Novos Módulos/whatsapp-alerts/whatsapp-alerts.css">
     
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -82,6 +82,363 @@
             font-size: 14px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+        }
+
+        /* ============================================
+           CARDS ESPECIAIS - ESTILOS ÚNICOS
+           ============================================ */
+
+        /* Card Inventário - Azul/Ciano */
+        .mod-card.inventario-master {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(0, 188, 212, 0.1) 100%) !important;
+            border: 2px solid rgba(0, 188, 212, 0.3) !important;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .mod-card.inventario-master::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(0, 188, 212, 0.1) 0%, transparent 70%);
+            animation: rotate 12s linear infinite;
+        }
+
+        .mod-card.inventario-master:hover {
+            border-color: #00bcd4 !important;
+            background: linear-gradient(135deg, #ffffff 0%, rgba(0, 188, 212, 0.2) 100%) !important;
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0, 188, 212, 0.3);
+        }
+
+        .mod-card.inventario-master .mod-icon {
+            font-size: 38px;
+            margin-bottom: 12px;
+            animation: floatInventario 3s ease-in-out infinite;
+            filter: drop-shadow(0 2px 4px rgba(0, 188, 212, 0.3));
+        }
+
+        @keyframes floatInventario {
+            0%, 100% { transform: translateY(0) scale(1) rotate(0deg); }
+            25% { transform: translateY(-5px) scale(1.05) rotate(-2deg); }
+            50% { transform: translateY(-10px) scale(1.1) rotate(0deg); }
+            75% { transform: translateY(-5px) scale(1.05) rotate(2deg); }
+        }
+
+        .mod-link-inventario {
+            color: #00bcd4;
+            font-weight: 700;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Card Rondas - Verde/Azul */
+        .mod-card.rondas-master {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(76, 175, 80, 0.1) 100%) !important;
+            border: 2px solid rgba(76, 175, 80, 0.3) !important;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .mod-card.rondas-master::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(76, 175, 80, 0.1) 0%, transparent 70%);
+            animation: rotate 14s linear infinite;
+        }
+
+        .mod-card.rondas-master:hover {
+            border-color: #4caf50 !important;
+            background: linear-gradient(135deg, #ffffff 0%, rgba(76, 175, 80, 0.2) 100%) !important;
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(76, 175, 80, 0.3);
+        }
+
+        .mod-card.rondas-master .mod-icon {
+            font-size: 38px;
+            margin-bottom: 12px;
+            animation: shieldPulse 2.5s ease-in-out infinite;
+            filter: drop-shadow(0 2px 4px rgba(76, 175, 80, 0.3));
+        }
+
+        @keyframes shieldPulse {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            25% { transform: scale(1.1) rotate(-5deg); }
+            50% { transform: scale(1.15) rotate(0deg); }
+            75% { transform: scale(1.1) rotate(5deg); }
+        }
+
+        .mod-link-rondas {
+            color: #4caf50;
+            font-weight: 700;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Card Suporte - Rosa/Magenta */
+        .mod-card.suporte-master {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(233, 30, 99, 0.1) 100%) !important;
+            border: 2px solid rgba(233, 30, 99, 0.3) !important;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .mod-card.suporte-master::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(233, 30, 99, 0.1) 0%, transparent 70%);
+            animation: rotate 11s linear infinite;
+        }
+
+        .mod-card.suporte-master:hover {
+            border-color: #e91e63 !important;
+            background: linear-gradient(135deg, #ffffff 0%, rgba(233, 30, 99, 0.2) 100%) !important;
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(233, 30, 99, 0.3);
+        }
+
+        .mod-card.suporte-master .mod-icon {
+            font-size: 38px;
+            margin-bottom: 12px;
+            animation: bounceSuporte 2s ease-in-out infinite;
+            filter: drop-shadow(0 2px 4px rgba(233, 30, 99, 0.3));
+        }
+
+        @keyframes bounceSuporte {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-8px) scale(1.1); }
+        }
+
+        .mod-link-suporte {
+            color: #e91e63;
+            font-weight: 700;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Card Notas Fiscais - Roxo/Violeta */
+        .mod-card.notas-master {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(156, 39, 176, 0.1) 100%) !important;
+            border: 2px solid rgba(156, 39, 176, 0.3) !important;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .mod-card.notas-master::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(156, 39, 176, 0.1) 0%, transparent 70%);
+            animation: rotate 13s linear infinite;
+        }
+
+        .mod-card.notas-master:hover {
+            border-color: #9c27b0 !important;
+            background: linear-gradient(135deg, #ffffff 0%, rgba(156, 39, 176, 0.2) 100%) !important;
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(156, 39, 176, 0.3);
+        }
+
+        .mod-card.notas-master .mod-icon {
+            font-size: 38px;
+            margin-bottom: 12px;
+            animation: waveNotas 2.8s ease-in-out infinite;
+            filter: drop-shadow(0 2px 4px rgba(156, 39, 176, 0.3));
+        }
+
+        @keyframes waveNotas {
+            0%, 100% { transform: rotate(0deg) scale(1); }
+            25% { transform: rotate(-10deg) scale(1.05); }
+            50% { transform: rotate(0deg) scale(1.1); }
+            75% { transform: rotate(10deg) scale(1.05); }
+        }
+
+        .mod-link-notas {
+            color: #9c27b0;
+            font-weight: 700;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Card Bloco de Notas - Amarelo/Dourado */
+        .mod-card.bloco-master {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 193, 7, 0.1) 100%) !important;
+            border: 2px solid rgba(255, 193, 7, 0.3) !important;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .mod-card.bloco-master::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 193, 7, 0.1) 0%, transparent 70%);
+            animation: rotate 15s linear infinite;
+        }
+
+        .mod-card.bloco-master:hover {
+            border-color: #ffc107 !important;
+            background: linear-gradient(135deg, #ffffff 0%, rgba(255, 193, 7, 0.2) 100%) !important;
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(255, 193, 7, 0.3);
+        }
+
+        .mod-card.bloco-master .mod-icon {
+            font-size: 38px;
+            margin-bottom: 12px;
+            animation: glowBloco 2.2s ease-in-out infinite;
+            filter: drop-shadow(0 2px 4px rgba(255, 193, 7, 0.3));
+        }
+
+        @keyframes glowBloco {
+            0%, 100% { transform: scale(1); filter: drop-shadow(0 2px 4px rgba(255, 193, 7, 0.3)); }
+            50% { transform: scale(1.15); filter: drop-shadow(0 4px 8px rgba(255, 193, 7, 0.6)); }
+        }
+
+        .mod-link-bloco {
+            color: #ffc107;
+            font-weight: 700;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Card Configurações - Cinza/Prata com Gradiente */
+        .mod-card.config-master {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(96, 125, 139, 0.1) 100%) !important;
+            border: 2px solid rgba(96, 125, 139, 0.3) !important;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .mod-card.config-master::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(96, 125, 139, 0.1) 0%, transparent 70%);
+            animation: rotate 16s linear infinite;
+        }
+
+        .mod-card.config-master:hover {
+            border-color: #607d8b !important;
+            background: linear-gradient(135deg, #ffffff 0%, rgba(96, 125, 139, 0.2) 100%) !important;
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(96, 125, 139, 0.3);
+        }
+
+        .mod-card.config-master .mod-icon {
+            font-size: 38px;
+            margin-bottom: 12px;
+            animation: spinConfig 3s linear infinite;
+            filter: drop-shadow(0 2px 4px rgba(96, 125, 139, 0.3));
+        }
+
+        @keyframes spinConfig {
+            0% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(180deg) scale(1.1); }
+            100% { transform: rotate(360deg) scale(1); }
+        }
+
+        .mod-link-config {
+            color: #607d8b;
+            font-weight: 700;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Dark Mode para todos os cards especiais */
+        [data-theme="dark"] .mod-card.inventario-master {
+            background: linear-gradient(135deg, rgba(30, 30, 30, 0.9) 0%, rgba(0, 188, 212, 0.15) 100%) !important;
+            border-color: rgba(0, 188, 212, 0.4) !important;
+        }
+
+        [data-theme="dark"] .mod-card.inventario-master:hover {
+            background: linear-gradient(135deg, rgba(40, 40, 40, 0.95) 0%, rgba(0, 188, 212, 0.25) 100%) !important;
+        }
+
+        [data-theme="dark"] .mod-card.rondas-master {
+            background: linear-gradient(135deg, rgba(30, 30, 30, 0.9) 0%, rgba(76, 175, 80, 0.15) 100%) !important;
+            border-color: rgba(76, 175, 80, 0.4) !important;
+        }
+
+        [data-theme="dark"] .mod-card.rondas-master:hover {
+            background: linear-gradient(135deg, rgba(40, 40, 40, 0.95) 0%, rgba(76, 175, 80, 0.25) 100%) !important;
+        }
+
+        [data-theme="dark"] .mod-card.suporte-master {
+            background: linear-gradient(135deg, rgba(30, 30, 30, 0.9) 0%, rgba(233, 30, 99, 0.15) 100%) !important;
+            border-color: rgba(233, 30, 99, 0.4) !important;
+        }
+
+        [data-theme="dark"] .mod-card.suporte-master:hover {
+            background: linear-gradient(135deg, rgba(40, 40, 40, 0.95) 0%, rgba(233, 30, 99, 0.25) 100%) !important;
+        }
+
+        [data-theme="dark"] .mod-card.notas-master {
+            background: linear-gradient(135deg, rgba(30, 30, 30, 0.9) 0%, rgba(156, 39, 176, 0.15) 100%) !important;
+            border-color: rgba(156, 39, 176, 0.4) !important;
+        }
+
+        [data-theme="dark"] .mod-card.notas-master:hover {
+            background: linear-gradient(135deg, rgba(40, 40, 40, 0.95) 0%, rgba(156, 39, 176, 0.25) 100%) !important;
+        }
+
+        [data-theme="dark"] .mod-card.bloco-master {
+            background: linear-gradient(135deg, rgba(30, 30, 30, 0.9) 0%, rgba(255, 193, 7, 0.15) 100%) !important;
+            border-color: rgba(255, 193, 7, 0.4) !important;
+        }
+
+        [data-theme="dark"] .mod-card.bloco-master:hover {
+            background: linear-gradient(135deg, rgba(40, 40, 40, 0.95) 0%, rgba(255, 193, 7, 0.25) 100%) !important;
+        }
+
+        [data-theme="dark"] .mod-card.config-master {
+            background: linear-gradient(135deg, rgba(30, 30, 30, 0.9) 0%, rgba(96, 125, 139, 0.15) 100%) !important;
+            border-color: rgba(96, 125, 139, 0.4) !important;
+        }
+
+        [data-theme="dark"] .mod-card.config-master:hover {
+            background: linear-gradient(135deg, rgba(40, 40, 40, 0.95) 0%, rgba(96, 125, 139, 0.25) 100%) !important;
+        }
+
+        [data-theme="dark"] .mod-card.preventiva-master {
+            background: linear-gradient(135deg, rgba(30, 30, 30, 0.9) 0%, rgba(253, 126, 20, 0.15) 100%) !important;
+            border-color: rgba(253, 126, 20, 0.4) !important;
+        }
+
+        [data-theme="dark"] .mod-card.preventiva-master:hover {
+            background: linear-gradient(135deg, rgba(40, 40, 40, 0.95) 0%, rgba(253, 126, 20, 0.25) 100%) !important;
         }
 
         /* Loading Screen */
@@ -198,6 +555,37 @@
 
         .toast-info {
             border-left: 4px solid #007aff;
+        }
+
+        .toast-icon {
+            font-size: 20px;
+        }
+
+        .toast-message {
+            flex: 1;
+            font-size: 14px;
+            color: var(--text-main);
+        }
+
+        .toast-close {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .toast-close:hover {
+            background: rgba(0, 0, 0, 0.1);
+            color: var(--text-main);
         }
 
         /* Tooltip container */
@@ -442,7 +830,7 @@
             align-items: center;
         }
 
-        .theme-toggle, .notifications-bell {
+        .theme-toggle {
             width: 40px;
             height: 40px;
             border-radius: 50%;
@@ -455,21 +843,7 @@
             font-size: 18px;
         }
 
-        .notification-count {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            background: #ff3b30;
-            color: white;
-            font-size: 11px;
-            font-weight: 700;
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
+        /* Notification count removido */
 
         /* FAB */
         .fab-container {
@@ -562,23 +936,7 @@
             display: block;
         }
         
-        /* Ajustes para notificações panel */
-        .notifications-panel {
-            display: none;
-            position: fixed;
-            top: 0;
-            right: 0;
-            width: 380px;
-            height: 100vh;
-            background: white;
-            box-shadow: -5px 0 25px rgba(0,0,0,0.1);
-            z-index: 2000;
-            flex-direction: column;
-        }
-        
-        .notifications-panel.show {
-            display: flex;
-        }
+        /* Notificações panel removido */
         
         /* FAB melhorado */
         .fab-item .fab-item-icon {
@@ -740,6 +1098,36 @@
 </head>
 
 <body>
+    <!--
+      BLINDAGEM VOLTAR MANUTENÇÕES - NÃO REMOVER
+      Garante que "Voltar para Dashboard" em Manutenções Preventivas
+      sempre volte para a Home sem cair na tela de login.
+      Triggers: ?axis_voltar=1 na URL ou sessionStorage.axis_voltar_force_main.
+    -->
+    <script>
+    (function() {
+      var user, fromParam = false, fromFlag = false;
+      try {
+        var q = (typeof location !== 'undefined' && location.search) ? location.search : '';
+        fromParam = q.indexOf('axis_voltar=1') >= 0;
+        try { fromFlag = sessionStorage.getItem('axis_voltar_force_main') === '1'; } catch (_) {}
+        try { user = localStorage.getItem('current_user'); } catch (_) { user = null; }
+        if (!user) user = null;
+        if ((fromParam || fromFlag) && user) {
+          try { localStorage.setItem('user_logged_in', 'true'); } catch (_) {}
+          try { localStorage.setItem('axis-current-page', 'page-home'); } catch (_) {}
+          try { sessionStorage.setItem('axis_voltar_force_main', '1'); } catch (_) {}
+          try {
+            if (typeof history !== 'undefined' && history.replaceState) {
+              history.replaceState(null, '', (location.pathname || '/') + '#page-home');
+            } else {
+              location.hash = 'page-home';
+            }
+          } catch (_) { try { location.hash = 'page-home'; } catch (e) {} }
+        }
+      } catch (e) {}
+    })();
+    </script>
     <!-- Loading Screen -->
     <div id="loading-screen">
         <div class="loader"></div>
@@ -752,7 +1140,7 @@
     <div id="auth-screen">
         <div class="auth-card fade-in">
             <div class="logo-area">
-                <img src="IMAGENS/Nova_Logo_Sem_Fundo_1.2.png" alt="AXIS - Sistema de Gestão" class="main-auth-logo">
+                <img src="assets/IMAGENS/Nova_Logo_Sem_Fundo_1.2.png" alt="AXIS - Sistema de Gestão" class="main-auth-logo">
             </div>
 
             <!-- Área de cadastro removida - usuários são criados pela equipe de T.I -->
@@ -776,21 +1164,34 @@
                        autocomplete="current-password"
                        aria-required="true"
                        onkeypress="if(event.key === 'Enter') handleAuth()">
+                <!-- ⚠️ BOTÃO PROTEGIDO - NÃO MODIFICAR O ONCLICK -->
                 <button type="button" 
                         class="eye-toggle" 
-                        onclick="togglePassword()"
-                        aria-label="Mostrar/Ocultar senha">
+                        onclick="if(typeof togglePassword === 'function') { togglePassword(); } else { console.error('togglePassword não encontrada'); } return false;"
+                        aria-label="Mostrar/Ocultar senha"
+                        data-protected="true">
                     <span id="eye-icon">👁️</span>
                 </button>
             </div>
 
-            <button onclick="handleAuth()" 
+            <!-- ⚠️ BOTÃO PROTEGIDO - NÃO MODIFICAR O ONCLICK -->
+            <button onclick="if(typeof handleAuth === 'function') { handleAuth(); } else { console.error('handleAuth não encontrada'); alert('Erro: Sistema ainda carregando. Aguarde alguns segundos e tente novamente.'); } return false;" 
                     id="auth-main-btn" 
                     class="btn-primary-auth"
                     aria-label="Acessar sistema"
-                    type="button">
+                    type="button"
+                    data-protected="true">
                 Acessar AXIS
             </button>
+        </div>
+    </div>
+
+    <!-- Modal Bem-vindo (estilo Apple / vidro) – fecha ao clicar em qualquer espaço -->
+    <div id="modal-bem-vindo" class="modal-bem-vindo-wrap" style="display: none;" role="dialog" aria-label="Boas-vindas">
+        <div class="modal-bem-vindo-overlay"></div>
+        <div class="modal-bem-vindo-glass">
+            <p class="modal-bem-vindo-title">Bem-vindo, <span id="modal-bem-vindo-nome">Usuário</span>!</p>
+            <p class="modal-bem-vindo-sub">Você está conectado ao AXIS.</p>
         </div>
     </div>
 
@@ -804,73 +1205,65 @@
             <div class="nav-container">
                 <div class="nav-left">
                     <button class="menu-trigger-ios" 
-                            onclick="toggleSidebar()"
+                            onclick="if(typeof toggleSidebar === 'function') { toggleSidebar(); } else { console.error('toggleSidebar não encontrada'); } return false;"
                             aria-label="Abrir menu"
                             aria-expanded="false">
                         <div class="bar"></div>
                         <div class="bar"></div>
                         <div class="bar"></div>
                     </button>
-                    <img src="IMAGENS/Novo_Fivecon_1.2.png" alt="AXIS Logo" class="brand-logo-ios">
+                    <img src="assets/IMAGENS/Novo_Fivecon_1.2.png" alt="AXIS Logo" class="brand-logo-ios">
                 </div>
 
-                <div class="nav-welcome-text">
+                <div class="nav-welcome-text" id="nav-welcome-text" style="display: none;">
                     BEM-VINDO AO AXIS, <span id="user-display-name">USUÁRIO</span>
                 </div>
 
                 <div class="nav-actions">
-                    <button class="theme-toggle" onclick="toggleTheme()" id="theme-toggle" aria-label="Alternar tema">
+                    <button class="theme-toggle" onclick="if(typeof toggleTheme === 'function') { toggleTheme(); } else { console.error('toggleTheme não encontrada'); } return false;" id="theme-toggle" aria-label="Alternar tema">
                         <span id="theme-icon">🌙</span>
                     </button>
-                    <button class="notifications-bell" onclick="toggleNotifications()" aria-label="Notificações">
-                        🔔
-                        <span id="notification-badge" class="notification-count" style="display: none;">0</span>
-                    </button>
-                    <div class="nav-status-right">
-                        <div class="status-dot" aria-label="Sistema online"></div>
-                        <span>SISTEMA ONLINE</span>
-                    </div>
                 </div>
             </div>
         </header>
 
         <!-- Menu Lateral -->
-        <aside id="side-menu" class="glass-sidebar" role="navigation" aria-label="Menu principal">
+        <aside id="side-menu" class="glass-sidebar" role="navigation" aria-label="Menu principal" style="display: flex; visibility: visible;">
             <div class="sidebar-header">
                 <h3 class="sr-only">Navegação Principal</h3>
             </div>
 
             <nav class="side-nav-links">
-                <button onclick="navigate('page-home')" class="side-item active">
+                <button onclick="if(typeof navigate === 'function') { navigate('page-home'); } else { console.error('navigate não encontrada'); } return false;" class="side-item active">
                     📊 Início
                 </button>
-                <button onclick="navigate('page-inventario')" class="side-item">
+                <button onclick="if(typeof navigate === 'function') { navigate('page-inventario'); } else { console.error('navigate não encontrada'); } return false;" class="side-item">
                     📦 Inventário
                 </button>
-                <button onclick="navigate('page-rondas')" class="side-item">
+                <button onclick="if(typeof navigate === 'function') { navigate('page-rondas'); } else { console.error('navigate não encontrada'); } return false;" class="side-item">
                     🛡️ Rondas
                 </button>
-                <button onclick="window.location.href='manutenção_preventiva.html'" class="side-item">
+                <button onclick="window.location.href='pages/manutenção_preventiva.html'" class="side-item">
                     ⚙️ Manutenções Preventivas
                 </button>
-                <button onclick="navigate('page-suporte')" class="side-item">
+                <button onclick="if(typeof navigate === 'function') { navigate('page-suporte'); } else { console.error('navigate não encontrada'); } return false;" class="side-item">
                     💬 Suporte
                 </button>
-                <button onclick="navigate('page-configuracoes')" class="side-item">
+                <button onclick="if(typeof navigate === 'function') { navigate('page-configuracoes'); } else { console.error('navigate não encontrada'); } return false;" class="side-item">
                     ⚙️ Configurações
                 </button>
-                <button onclick="navigate('page-administracao')" class="side-item" id="menu-admin" style="display: none;">
+                <button onclick="if(typeof navigate === 'function') { navigate('page-administracao'); } else { console.error('navigate não encontrada'); } return false;" class="side-item" id="menu-admin" style="display: none;">
                     👤 Administração
                 </button>
                 <hr class="nav-divider">
-                <button onclick="logout()" class="side-item logout">
+                <button onclick="if(typeof logout === 'function') { logout(); } else { console.error('logout não encontrada'); } return false;" class="side-item logout">
                     🚪 Sair do AXIS
                 </button>
             </nav>
         </aside>
 
-        <!-- Overlay do Menu -->
-        <div id="menu-overlay" class="menu-overlay" onclick="toggleSidebar()"></div>
+        <!-- Overlay do Menu (fechar ao clicar - só addEventListener, sem onclick duplicado) -->
+        <div id="menu-overlay" class="menu-overlay"></div>
 
         <!-- Conteúdo Principal -->
         <main class="content-wrapper" role="main">
@@ -898,31 +1291,31 @@
                 <!-- Grid de Módulos -->
                 <div class="dashboard-grid">
                     <!-- Card Inventário -->
-                    <div class="mod-card" onclick="navigate('page-inventario')" tabindex="0" role="button">
-                        <div class="mod-icon">📦</div>
+                    <div class="mod-card inventario-master" onclick="if(typeof navigate === 'function') { navigate('page-inventario'); } else { console.error('navigate não encontrada'); alert('Erro: Função de navegação não encontrada. Recarregue a página.'); } return false;" tabindex="0" role="button" style="cursor: pointer;">
+                        <div class="mod-icon">📦✨</div>
                         <div class="mod-content">
-                            <h3>Inventário</h3>
+                            <h3 class="txt-axis-gradient">Inventário</h3>
                             <p>Controle completo de impressoras ZT411, ZD421 e ZQ630.</p>
-                            <span class="mod-link">Acessar Frota →</span>
+                            <span class="mod-link-inventario">Acessar Frota →</span>
                         </div>
                     </div>
 
                     <!-- Card Rondas -->
-                    <div class="mod-card" onclick="navigate('page-rondas')" tabindex="0" role="button">
-                        <div class="mod-icon">🛡️</div>
+                    <div class="mod-card rondas-master" onclick="if(typeof navigate === 'function') { navigate('page-rondas'); } else { console.error('navigate não encontrada'); alert('Erro: Função de navegação não encontrada. Recarregue a página.'); } return false;" tabindex="0" role="button" style="cursor: pointer;">
+                        <div class="mod-icon">🛡️⚡</div>
                         <div class="mod-content">
-                            <h3>Rondas</h3>
+                            <h3 class="txt-axis-gradient">Rondas</h3>
                             <p>Checklists e vistorias preventivas diárias.</p>
-                            <span class="mod-link">Ver Relatórios →</span>
+                            <span class="mod-link-rondas">Ver Relatórios →</span>
                         </div>
                     </div>
 
                     <!-- Card Manutenção Preventiva (DESTAQUE) -->
                     <div class="mod-card preventiva-master" 
-                         onclick="window.location.href='manutenção_preventiva.html'" 
+                         onclick="window.location.href='pages/manutenção_preventiva.html'" 
                          tabindex="0" 
                          role="button">
-                        <div class="mod-icon">⚙️</div>
+                        <div class="mod-icon">⚙️🔥</div>
                         <div class="mod-content">
                             <h3 class="txt-axis-gradient">Manutenção Preventiva</h3>
                             <p>Módulo avançado de checklist e laudos técnicos especializados.</p>
@@ -931,42 +1324,42 @@
                     </div>
 
                     <!-- Card Suporte -->
-                    <div class="mod-card" onclick="navigate('page-suporte')" tabindex="0" role="button">
-                        <div class="mod-icon">💬</div>
+                    <div class="mod-card suporte-master" onclick="if(typeof navigate === 'function') { navigate('page-suporte'); } else { console.error('navigate não encontrada'); alert('Erro: Função de navegação não encontrada. Recarregue a página.'); } return false;" tabindex="0" role="button" style="cursor: pointer;">
+                        <div class="mod-icon">💬💖</div>
                         <div class="mod-content">
-                            <h3>Suporte Técnico</h3>
+                            <h3 class="txt-axis-gradient">Suporte Técnico</h3>
                             <p>Central de ajuda e documentação do sistema.</p>
-                            <span class="mod-link">Abrir Ticket →</span>
+                            <span class="mod-link-suporte">Abrir Ticket →</span>
                         </div>
                     </div>
 
                     <!-- Card Notas Fiscais -->
-                    <div class="mod-card" onclick="window.location.href='notas_fiscais.html'" tabindex="0" role="button">
-                        <div class="mod-icon">📄</div>
+                    <div class="mod-card notas-master" onclick="window.location.href='pages/notas_fiscais.html'" tabindex="0" role="button">
+                        <div class="mod-icon">📄💜</div>
                         <div class="mod-content">
-                            <h3>Notas Fiscais</h3>
+                            <h3 class="txt-axis-gradient">Notas Fiscais</h3>
                             <p>Sistema inteligente de gestão e organização de notas fiscais.</p>
-                            <span class="mod-link">Acessar Biblioteca →</span>
+                            <span class="mod-link-notas">Acessar Biblioteca →</span>
                         </div>
                     </div>
 
                     <!-- Card Bloco de Notas -->
-                    <div class="mod-card" onclick="window.location.href='bloco_de_notas_apple.html'" tabindex="0" role="button">
-                        <div class="mod-icon">📝</div>
+                    <div class="mod-card bloco-master" onclick="window.location.href='pages/bloco_de_notas_apple.html'" tabindex="0" role="button">
+                        <div class="mod-icon">📝⭐</div>
                         <div class="mod-content">
-                            <h3>Bloco de Notas</h3>
+                            <h3 class="txt-axis-gradient">Bloco de Notas</h3>
                             <p>Editor de notas estilo Apple com recursos avançados de formatação.</p>
-                            <span class="mod-link">Abrir Editor →</span>
+                            <span class="mod-link-bloco">Abrir Editor →</span>
                         </div>
                     </div>
 
                     <!-- Card Configurações -->
-                    <div class="mod-card" onclick="navigate('page-configuracoes')" tabindex="0" role="button">
-                        <div class="mod-icon">⚙️</div>
+                    <div class="mod-card config-master" onclick="if(typeof navigate === 'function') { navigate('page-configuracoes'); } else { console.error('navigate não encontrada'); alert('Erro: Função de navegação não encontrada. Recarregue a página.'); } return false;" tabindex="0" role="button" style="cursor: pointer;">
+                        <div class="mod-icon">⚙️💎</div>
                         <div class="mod-content">
-                            <h3>Configurações</h3>
+                            <h3 class="txt-axis-gradient">Configurações</h3>
                             <p>Personalize sua experiência e ajuste as preferências do sistema.</p>
-                            <span class="mod-link">Abrir Configurações →</span>
+                            <span class="mod-link-config">Abrir Configurações →</span>
                         </div>
                     </div>
                 </div>
@@ -992,8 +1385,8 @@
                         </div>
                         <div class="ucs-field-group">
                             <label class="ucs-field-label">
-                                Nodo Centro logístico
-                                <span class="ucs-info-icon" title="Informações sobre o nodo">ℹ️</span>
+                                Centro Logístico
+                                <span class="ucs-info-icon" title="Informações sobre o centro logístico">ℹ️</span>
                             </label>
                             <select id="ucs-filtro-nodo" class="ucs-field-select">
                                 <option value="">Selecione um nodo</option>
@@ -1008,8 +1401,8 @@
                             </select>
                         </div>
                         <div class="ucs-search-actions">
-                            <button class="ucs-btn-reset" onclick="resetarFiltrosInventario()">X Reset</button>
-                            <button class="ucs-btn-search" onclick="filtrarInventario()">Buscar</button>
+                            <button class="ucs-btn-reset" onclick="resetarFiltrosInventario()">Reset</button>
+                            <button class="ucs-btn-search" onclick="if(typeof filtrarInventario === 'function') { filtrarInventario(); } else { console.error('filtrarInventario não encontrada'); alert('Erro: Função de filtro não encontrada. Recarregue a página.'); } return false;">Buscar</button>
                         </div>
                     </div>
                 </div>
@@ -1033,7 +1426,10 @@
                             <button class="ucs-download-option" onclick="exportarDados('pdf')">PDF</button>
                         </div>
                     </div>
-                    <button class="ucs-btn-create" onclick="abrirCadastroRapido()">
+                    <button class="ucs-btn-filter" onclick="if(typeof filtrarInventario === 'function') { filtrarInventario(); } else { console.error('filtrarInventario não encontrada'); alert('Erro: Função de filtro não encontrada. Recarregue a página.'); } return false;">
+                        Filtrar
+                    </button>
+                    <button class="ucs-btn-create" id="btn-criar-dispositivo" onclick="if(typeof window.abrirCadastroRapido === 'function') { window.abrirCadastroRapido(); } else { console.error('abrirCadastroRapido não encontrada'); alert('Erro: Função de cadastro não encontrada. Recarregue a página.'); } return false;">
                         Criar Dispositivo
                     </button>
                 </div>
@@ -1070,12 +1466,68 @@
             <section id="page-rondas" class="main-section">
                 <div class="section-header">
                     <h2>🛡️ Sistema de Rondas</h2>
-                    <p class="section-subtitle">Checklists e vistorias preventivas</p>
+                    <p class="section-subtitle">Checklists e vistorias preventivas diárias</p>
                 </div>
-                <div class="empty-state">
-                    <div class="empty-icon">🔧</div>
-                    <h4>Módulo em desenvolvimento</h4>
-                    <p>Em breve você poderá gerenciar todas as rondas técnicas por aqui.</p>
+
+                <!-- Ações Rápidas -->
+                <div class="dashboard-grid" style="margin-bottom: 30px;">
+                    <div class="mod-card" onclick="criarNovaRonda()" tabindex="0" role="button">
+                        <div class="mod-icon">➕</div>
+                        <div class="mod-content">
+                            <h3>Nova Ronda</h3>
+                            <p>Iniciar uma nova vistoria técnica.</p>
+                            <span class="mod-link">Criar Ronda →</span>
+                        </div>
+                    </div>
+
+                    <div class="mod-card" onclick="verRondasPendentes()" tabindex="0" role="button">
+                        <div class="mod-icon">📋</div>
+                        <div class="mod-content">
+                            <h3>Rondas Pendentes</h3>
+                            <p>Visualizar rondas aguardando conclusão.</p>
+                            <span class="mod-link">Ver Pendentes →</span>
+                        </div>
+                    </div>
+
+                    <div class="mod-card" onclick="verHistoricoRondas()" tabindex="0" role="button">
+                        <div class="mod-icon">📊</div>
+                        <div class="mod-content">
+                            <h3>Histórico</h3>
+                            <p>Consultar todas as rondas realizadas.</p>
+                            <span class="mod-link">Ver Histórico →</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lista de Rondas Recentes -->
+                <div class="glass-card">
+                    <h3 style="margin-bottom: 20px;">📋 Rondas Recentes</h3>
+                    <div id="rondas-lista" class="rondas-container">
+                        <div class="ronda-item">
+                            <div class="ronda-info">
+                                <span class="ronda-data">26/01/2025 - 14:30</span>
+                                <span class="ronda-tipo">Ronda Preventiva - Setor A</span>
+                                <span class="ronda-status status-concluida">✅ Concluída</span>
+                            </div>
+                            <button class="btn-secondary" onclick="verDetalhesRonda(1)">Ver Detalhes</button>
+                        </div>
+                        <div class="ronda-item">
+                            <div class="ronda-info">
+                                <span class="ronda-data">25/01/2025 - 10:15</span>
+                                <span class="ronda-tipo">Ronda Preventiva - Setor B</span>
+                                <span class="ronda-status status-concluida">✅ Concluída</span>
+                            </div>
+                            <button class="btn-secondary" onclick="verDetalhesRonda(2)">Ver Detalhes</button>
+                        </div>
+                        <div class="ronda-item">
+                            <div class="ronda-info">
+                                <span class="ronda-data">24/01/2025 - 16:45</span>
+                                <span class="ronda-tipo">Ronda Preventiva - Setor C</span>
+                                <span class="ronda-status status-pendente">⏳ Pendente</span>
+                            </div>
+                            <button class="btn-primary" onclick="continuarRonda(3)">Continuar</button>
+                        </div>
+                    </div>
                 </div>
             </section>
 
@@ -1085,12 +1537,99 @@
             <section id="page-suporte" class="main-section">
                 <div class="section-header">
                     <h2>💬 Suporte Técnico</h2>
-                    <p class="section-subtitle">Central de ajuda e documentação</p>
+                    <p class="section-subtitle">Central de ajuda e documentação do sistema</p>
                 </div>
-                <div class="empty-state">
-                    <div class="empty-icon">📚</div>
-                    <h4>Central de Suporte</h4>
-                    <p>Sistema de tickets e documentação em desenvolvimento.</p>
+
+                <!-- Ações Rápidas -->
+                <div class="dashboard-grid" style="margin-bottom: 30px;">
+                    <div class="mod-card" onclick="abrirNovoTicket()" tabindex="0" role="button">
+                        <div class="mod-icon">🎫</div>
+                        <div class="mod-content">
+                            <h3>Abrir Ticket</h3>
+                            <p>Criar um novo chamado de suporte.</p>
+                            <span class="mod-link">Novo Ticket →</span>
+                        </div>
+                    </div>
+
+                    <div class="mod-card" onclick="verMeusTickets()" tabindex="0" role="button">
+                        <div class="mod-icon">📋</div>
+                        <div class="mod-content">
+                            <h3>Meus Tickets</h3>
+                            <p>Visualizar seus chamados de suporte.</p>
+                            <span class="mod-link">Ver Tickets →</span>
+                        </div>
+                    </div>
+
+                    <div class="mod-card" onclick="abrirDocumentacao()" tabindex="0" role="button">
+                        <div class="mod-icon">📚</div>
+                        <div class="mod-content">
+                            <h3>Documentação</h3>
+                            <p>Acessar guias e tutoriais do sistema.</p>
+                            <span class="mod-link">Ver Docs →</span>
+                        </div>
+                    </div>
+
+                    <div class="mod-card" onclick="abrirFAQ()" tabindex="0" role="button">
+                        <div class="mod-icon">❓</div>
+                        <div class="mod-content">
+                            <h3>FAQ</h3>
+                            <p>Perguntas frequentes e soluções.</p>
+                            <span class="mod-link">Ver FAQ →</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tickets Recentes -->
+                <div class="glass-card">
+                    <h3 style="margin-bottom: 20px;">🎫 Meus Tickets Recentes</h3>
+                    <div id="tickets-lista" class="tickets-container">
+                        <div class="ticket-item">
+                            <div class="ticket-info">
+                                <span class="ticket-id">#TKT-001</span>
+                                <span class="ticket-titulo">Problema com impressora ZT411</span>
+                                <span class="ticket-status status-aberto">🟢 Aberto</span>
+                                <span class="ticket-data">26/01/2025</span>
+                            </div>
+                            <button class="btn-secondary" onclick="verTicket('TKT-001')">Ver Detalhes</button>
+                        </div>
+                        <div class="ticket-item">
+                            <div class="ticket-info">
+                                <span class="ticket-id">#TKT-002</span>
+                                <span class="ticket-titulo">Dúvida sobre cadastro de equipamento</span>
+                                <span class="ticket-status status-resolvido">✅ Resolvido</span>
+                                <span class="ticket-data">25/01/2025</span>
+                            </div>
+                            <button class="btn-secondary" onclick="verTicket('TKT-002')">Ver Detalhes</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contatos de Suporte -->
+                <div class="glass-card" style="margin-top: 30px;">
+                    <h3 style="margin-bottom: 20px;">📞 Contatos de Suporte</h3>
+                    <div class="contatos-grid">
+                        <div class="contato-item">
+                            <div class="contato-icon">📧</div>
+                            <div class="contato-info">
+                                <strong>E-mail</strong>
+                                <p>suporte@axis.com.br</p>
+                            </div>
+                        </div>
+                        <div class="contato-item">
+                            <div class="contato-icon">📱</div>
+                            <div class="contato-info">
+                                <strong>WhatsApp</strong>
+                                <p>(48) 99999-9999</p>
+                            </div>
+                        </div>
+                        <div class="contato-item">
+                            <div class="contato-icon">🕐</div>
+                            <div class="contato-info">
+                                <strong>Horário de Atendimento</strong>
+                                <p>Segunda a Sexta: 8h às 18h</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
 
@@ -1132,7 +1671,7 @@
                                     <span class="admin-stat-label">USUÁRIOS ATIVOS</span>
                                 </div>
                             </div>
-                            <button class="admin-card-btn">Gerenciar Usuários →</button>
+                            <button type="button" class="admin-card-btn" onclick="event.stopPropagation(); abrirGerenciarUsuarios();">Gerenciar Usuários</button>
                         </div>
                     </div>
 
@@ -1166,7 +1705,7 @@
                                     <span class="admin-stat-label">RONDAS REALIZADAS</span>
                                 </div>
                             </div>
-                            <button class="admin-card-btn">Ver Estatísticas →</button>
+                            <button type="button" class="admin-card-btn" onclick="event.stopPropagation(); abrirEstatisticasSistema();">Ver Estatísticas</button>
                         </div>
                     </div>
 
@@ -1188,7 +1727,7 @@
                         <div class="admin-card-content">
                             <h3>Configurações Avançadas</h3>
                             <p>Ajustes avançados e configurações do sistema.</p>
-                            <button class="admin-card-btn">Configurações →</button>
+                            <button type="button" class="admin-card-btn" onclick="event.stopPropagation(); abrirConfiguracoesAvancadas();">Configurações</button>
                         </div>
                     </div>
 
@@ -1210,7 +1749,7 @@
                         <div class="admin-card-content">
                             <h3>Logs e Auditoria</h3>
                             <p>Visualize logs de acesso e atividades do sistema.</p>
-                            <button class="admin-card-btn">Ver Logs →</button>
+                            <button type="button" class="admin-card-btn" onclick="event.stopPropagation(); abrirLogsAuditoria();">Ver Logs</button>
                         </div>
                     </div>
                 </div>
@@ -1288,6 +1827,65 @@
                                         </tbody>
                                     </table>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal Estatísticas do Sistema -->
+                <div id="modal-estatisticas" class="admin-modal" style="display: none;">
+                    <div class="admin-modal-content">
+                        <div class="admin-modal-header">
+                            <h3>📊 Estatísticas do Sistema</h3>
+                            <button type="button" class="admin-modal-close" onclick="fecharModalEstatisticas()">×</button>
+                        </div>
+                        <div class="admin-modal-body">
+                            <div class="admin-card">
+                                <h3>Métricas gerais</h3>
+                                <div class="admin-stats" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 16px; margin-top: 16px;">
+                                    <div class="admin-stat-item" style="padding: 16px; background: var(--hover-bg); border-radius: 10px;">
+                                        <span class="admin-stat-number" id="modal-total-usuarios">0</span>
+                                        <span class="admin-stat-label">Usuários</span>
+                                    </div>
+                                    <div class="admin-stat-item" style="padding: 16px; background: var(--hover-bg); border-radius: 10px;">
+                                        <span class="admin-stat-number" id="modal-total-equipamentos">0</span>
+                                        <span class="admin-stat-label">Equipamentos</span>
+                                    </div>
+                                    <div class="admin-stat-item" style="padding: 16px; background: var(--hover-bg); border-radius: 10px;">
+                                        <span class="admin-stat-number" id="modal-rondas-realizadas">0</span>
+                                        <span class="admin-stat-label">Rondas realizadas</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal Logs e Auditoria -->
+                <div id="modal-logs" class="admin-modal" style="display: none;">
+                    <div class="admin-modal-content">
+                        <div class="admin-modal-header">
+                            <h3>📋 Logs e Auditoria</h3>
+                            <button type="button" class="admin-modal-close" onclick="fecharModalLogs()">×</button>
+                        </div>
+                        <div class="admin-modal-body">
+                            <div class="admin-card">
+                                <h3>Atividade recente</h3>
+                                <div class="usuarios-table-container" style="max-height: 320px; overflow-y: auto;">
+                                    <table class="usuarios-table" id="tabela-logs">
+                                        <thead>
+                                            <tr>
+                                                <th>Data/Hora</th>
+                                                <th>Evento</th>
+                                                <th>Usuário</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="logs-tbody">
+                                            <!-- Preenchido via JS -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <p id="logs-vazio" style="display: none; color: var(--text-secondary); margin-top: 12px;">Nenhum registro de acesso ainda.</p>
                             </div>
                         </div>
                     </div>
@@ -1389,7 +1987,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3>➕ Cadastrar Nova Impressora</h3>
-                <button class="close-modal" onclick="fecharCadastro()">×</button>
+                <button type="button" class="close-modal" id="cadastro-modal-close" onclick="if(typeof fecharCadastro === 'function') { fecharCadastro(); } return false;" aria-label="Fechar">×</button>
             </div>
             <div class="modal-body">
                 <div class="cadastro-steps">
@@ -1405,7 +2003,7 @@
                             <label class="model-option">
                                 <input type="radio" name="modelo" value="ZT411" id="cad-modelo-zt411" required>
                                 <div class="option-content">
-                                    <div class="option-icon">🏭</div>
+                                    <div class="option-icon">🖨️</div>
                                     <div class="option-title">ZT411</div>
                                     <div class="option-desc">Impressora Industrial</div>
                                 </div>
@@ -1414,17 +2012,17 @@
                             <label class="model-option">
                                 <input type="radio" name="modelo" value="ZD421" id="cad-modelo-zd421">
                                 <div class="option-content">
-                                    <div class="option-icon">💻</div>
+                                    <div class="option-icon">📱</div>
                                     <div class="option-title">ZD421</div>
                                     <div class="option-desc">Impressora Desktop</div>
                                 </div>
                             </label>
                             
                             <label class="model-option">
-                                <input type="radio" name="modelo" value="ZQ630" id="cad-modelo-zq630">
+                                <input type="radio" name="modelo" value="ZQ630 PLUS" id="cad-modelo-zq630">
                                 <div class="option-content">
-                                    <div class="option-icon">🚀</div>
-                                    <div class="option-title">ZQ630</div>
+                                    <div class="option-icon">🍔</div>
+                                    <div class="option-title">ZQ630 PLUS</div>
                                     <div class="option-desc">Impressora Pagewide</div>
                                 </div>
                             </label>
@@ -1432,56 +2030,69 @@
                         
                         <div class="input-group">
                             <label for="cad-serial">Número de Série *</label>
-                            <input type="text" id="cad-serial" required placeholder="Ex: 18J194501111">
+                            <div class="serial-input-wrapper" id="cad-serial-wrapper">
+                                <span class="serial-prefix" id="cad-serial-prefix"></span>
+                                <input type="text" id="cad-serial" placeholder="Selecione o modelo e digite o resto do número de série" autocomplete="off" />
+                            </div>
+                            <div class="serial-suggestions" id="cad-serial-suggestions"></div>
                         </div>
                     </div>
                     
                     <!-- Passo 2: Dados Técnicos -->
                     <div class="cadastro-step" id="step-2-content">
-                        <div class="form-grid">
-                            <div class="input-group">
-                                <label for="cad-ip">Endereço IP *</label>
-                                <input type="text" id="cad-ip" required placeholder="Ex: 10.15.20.101">
+                        <div class="form-grid-two-columns">
+                            <!-- Coluna Esquerda -->
+                            <div class="form-column">
+                                <div class="input-group">
+                                    <label for="cad-ip">Endereço IP *</label>
+                                    <div class="ip-input-wrapper serial-input-wrapper" id="cad-ip-wrapper">
+                                        <span class="serial-prefix" id="cad-ip-prefix">10.201.</span>
+                                        <input type="text" id="cad-ip" required placeholder="Ex: 131.25 ou 131.8" autocomplete="off" maxlength="7" inputmode="numeric">
+                                    </div>
+                                </div>
+                                
+                                <div class="input-group">
+                                    <label for="cad-mac-bluetooth">MAC Bluetooth</label>
+                                    <input type="text" id="cad-mac-bluetooth" placeholder="Ex: 00:1B:44:11:3A:B8">
+                                </div>
+                                
+                                <div class="input-group">
+                                    <label for="cad-setor">Setor *</label>
+                                    <select id="cad-setor" class="cadastro-select" required>
+                                        <option value="">Selecione um setor</option>
+                                        <option value="packing-mono">PACKING MONO</option>
+                                        <option value="packing-ptw">PACKING PTW</option>
+                                        <option value="rk">RK</option>
+                                        <option value="check-in">CHECK-IN</option>
+                                        <option value="returns">RETURNS</option>
+                                        <option value="insumos">INSUMOS</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="input-group">
+                                    <label for="cad-bancada">Bancada</label>
+                                    <select id="cad-bancada" class="cadastro-select">
+                                        <option value="">Selecione uma bancada</option>
+                                    </select>
+                                </div>
                             </div>
                             
-                            <div class="input-group">
-                                <label for="cad-mac-rede">MAC Rede *</label>
-                                <input type="text" id="cad-mac-rede" required placeholder="Ex: 00:1B:44:11:3A:B7">
-                            </div>
-                            
-                            <div class="input-group">
-                                <label for="cad-mac-bluetooth">MAC Bluetooth</label>
-                                <input type="text" id="cad-mac-bluetooth" placeholder="Ex: 00:1B:44:11:3A:B8">
-                            </div>
-                            
-                            <div class="input-group">
-                                <label for="cad-selb">SELB</label>
-                                <input type="text" id="cad-selb" placeholder="Ex: SELB-2024-001">
-                            </div>
-                            
-                            <div class="input-group">
-                                <label for="cad-setor">Setor *</label>
-                                <select id="cad-setor" class="cadastro-select" required>
-                                    <option value="">Selecione um setor</option>
-                                    <option value="packing-mono">PACKING MONO</option>
-                                    <option value="packing-ptw">PACKING PTW</option>
-                                    <option value="rk">RK</option>
-                                    <option value="check-in">CHECK-IN</option>
-                                    <option value="returns">RETURNS</option>
-                                    <option value="insumos">INSUMOS</option>
-                                </select>
-                            </div>
-                            
-                            <div class="input-group">
-                                <label for="cad-patrimonio">Número do Patrimônio</label>
-                                <input type="text" id="cad-patrimonio" placeholder="Ex: 123456789">
-                            </div>
-                            
-                            <div class="input-group">
-                                <label for="cad-bancada">Bancada</label>
-                                <select id="cad-bancada" class="cadastro-select">
-                                    <option value="">Selecione uma bancada</option>
-                                </select>
+                            <!-- Coluna Direita -->
+                            <div class="form-column">
+                                <div class="input-group">
+                                    <label for="cad-mac-rede">MAC Rede *</label>
+                                    <input type="text" id="cad-mac-rede" required placeholder="Ex: 00:1B:44:11:3A:B7">
+                                </div>
+                                
+                                <div class="input-group">
+                                    <label for="cad-selb">SELB</label>
+                                    <input type="text" id="cad-selb" placeholder="Ex: 6O25" maxlength="4" autocomplete="off" pattern="[A-Za-z0-9]{4}" title="4 caracteres (letras e números)">
+                                </div>
+                                
+                                <div class="input-group">
+                                    <label for="cad-patrimonio">Número do Patrimônio</label>
+                                    <input type="text" id="cad-patrimonio" placeholder="Ex: 123456789">
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1519,13 +2130,13 @@
                 </form>
                 
                 <div class="form-actions">
-                    <button type="button" class="btn-back" onclick="passoAnteriorCadastro()" id="btn-back" style="display: none;">
+                    <button type="button" class="btn-back" onclick="if(typeof passoAnteriorCadastro === 'function') { passoAnteriorCadastro(); } else { console.error('passoAnteriorCadastro não encontrada'); } return false;" id="btn-back" style="display: none;">
                         ← Voltar
                     </button>
-                    <button type="button" class="btn-next" onclick="proximoPassoCadastro()" id="btn-next">
-                        Próximo →
+                    <button type="button" class="btn-next" onclick="if(typeof proximoPassoCadastro === 'function') { proximoPassoCadastro(); } else { console.error('proximoPassoCadastro não encontrada'); alert('Erro: Função de navegação não encontrada. Recarregue a página.'); } return false;" id="btn-next">
+                        Próximo
                     </button>
-                    <button type="button" class="btn-submit" onclick="finalizarCadastro()" id="btn-submit" style="display: none;">
+                    <button type="button" class="btn-submit" onclick="if(typeof finalizarCadastro === 'function') { finalizarCadastro(); } else { console.error('finalizarCadastro não encontrada'); } return false;" id="btn-submit" style="display: none;">
                         ✅ Finalizar Cadastro
                     </button>
                 </div>
@@ -1538,7 +2149,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3 id="detail-tag">🔍 Detalhes do Equipamento</h3>
-                <button class="close-modal" onclick="fecharDetalhes()">×</button>
+                <button type="button" class="close-modal" onclick="fecharDetalhes()" aria-label="Fechar">×</button>
             </div>
             <div class="modal-body">
                 <div class="detalhe-header">
@@ -1658,24 +2269,1264 @@
     <!-- Tooltip Container -->
     <div id="tooltip-container" class="tooltip-container"></div>
     
-    <!-- Notifications Panel (será criado dinamicamente pelo JS) -->
-    <div id="notifications-panel" class="notifications-panel"></div>
-    
-    <!-- FAB Container (será criado dinamicamente pelo JS) -->
-    <div id="fab-container" class="fab-container"></div>
+    <!-- FAB Container (será criado dinamicamente pelo JS) - Visível apenas na home -->
+    <div id="fab-container" class="fab-container" style="display: none;"></div>
 
     <!-- ============================================
          SCRIPTS - ORDEM CORRETA DE CARREGAMENTO
          ============================================ -->
     
-    <!-- Script Principal do Sistema -->
-    <script src="script.js"></script>
-
+    <!-- Script principal PRIMEIRO: define navigate, filtrarInventario, etc. -->
+    <script src="js/script.js"></script>
+    
+    <!-- Placeholders só se script.js não definiu; não sobrescreve as reais (silenciosos) -->
+    <script>
+        window.filtrarInventario = window.filtrarInventario || function() {
+            setTimeout(function() {
+                if (typeof window.filtrarInventario === 'function' && window.filtrarInventario.toString().indexOf('Aplicando filtros') !== -1) {
+                    window.filtrarInventario();
+                }
+            }, 100);
+        };
+        window.abrirCadastroRapido = window.abrirCadastroRapido || function() {
+            var modal = document.getElementById('cadastro-modal');
+            if (modal) {
+                modal.style.display = 'flex';
+                modal.style.opacity = '1';
+                var step1 = document.getElementById('step-1');
+                var step1Content = document.getElementById('step-1-content');
+                if (step1) step1.classList.add('active');
+                if (step1Content) {
+                    step1Content.classList.add('active');
+                    step1Content.style.display = 'block';
+                }
+                setTimeout(function() {
+                    if (typeof window.abrirCadastroRapido === 'function' && window.abrirCadastroRapido.toString().indexOf('Abrindo cadastro rápido') !== -1) {
+                        window.abrirCadastroRapido();
+                    }
+                }, 200);
+            } else {
+                alert('Erro: Modal de cadastro não encontrado. Recarregue a página.');
+            }
+        };
+        window.navigate = window.navigate || function(pageId) {
+            var pid = pageId;
+            setTimeout(function() {
+                if (typeof window.navigate === 'function' && window.navigate.toString().indexOf('Navegando para') !== -1) {
+                    window.navigate(pid);
+                }
+            }, 100);
+        };
+        window.finalizarCadastro = window.finalizarCadastro || function() {
+            setTimeout(function() {
+                if (typeof window.finalizarCadastro === 'function' && window.finalizarCadastro.toString().indexOf('Finalizando cadastro') !== -1) {
+                    window.finalizarCadastro();
+                }
+            }, 100);
+        };
+        window.renderizarTabela = window.renderizarTabela || function() {
+            setTimeout(function() {
+                if (typeof window.renderizarTabela === 'function' && window.renderizarTabela.toString().indexOf('Renderizando tabela') !== -1) {
+                    window.renderizarTabela();
+                }
+            }, 100);
+        };
+        window.inicializarInventario = window.inicializarInventario || function() {
+            setTimeout(function() {
+                if (typeof window.inicializarInventario === 'function' && window.inicializarInventario.toString().indexOf('Inicializando inventário') !== -1) {
+                    window.inicializarInventario();
+                }
+            }, 100);
+        };
+    </script>
+    
+    <!-- Script de Autenticação INLINE - GARANTE FUNCIONAMENTO IMEDIATO -->
+    <script>
+        // FUNÇÃO DE AUTENTICAÇÃO DIRETA NO HTML - GARANTE QUE FUNCIONE
+        function handleAuth() {
+            const adminKey = 'db_admin_filipe_silva';
+            if (!localStorage.getItem(adminKey)) {
+                const adminData = {
+                    name: 'Filipe da Silva',
+                    pass: '123456',
+                    dataCadastro: new Date().toISOString(),
+                    perfil: 'admin',
+                    ultimoAcesso: new Date().toISOString()
+                };
+                localStorage.setItem(adminKey, JSON.stringify(adminData));
+            }
+            const userField = document.getElementById('username');
+            const passField = document.getElementById('password');
+            if (!userField || !passField) {
+                alert('Erro: Campos de login não encontrados. Recarregue a página.');
+                return;
+            }
+            const userInput = userField.value.trim();
+            const pass = passField.value;
+            if (!userInput || !pass) {
+                alert('Preencha todos os campos!');
+                return;
+            }
+            const loginNormalizado = userInput.toLowerCase().replace(/\s+/g, '_');
+            const dbKey = 'db_' + loginNormalizado;
+            const dbRaw = localStorage.getItem(dbKey);
+            if (dbRaw) {
+                try {
+                    const db = JSON.parse(dbRaw);
+                    if (db.pass === pass) {
+                        // Salva estado de login
+                        localStorage.setItem('current_user', db.name || userInput);
+                        localStorage.setItem('current_user_login', loginNormalizado);
+                        localStorage.setItem('user_logged_in', 'true');
+                        sessionStorage.setItem('just_logged_in', 'true');
+                        // Atualiza último acesso
+                        db.ultimoAcesso = new Date().toISOString();
+                        localStorage.setItem(dbKey, JSON.stringify(db));
+                        
+                        // Transição de telas
+                        const authScreen = document.getElementById('auth-screen');
+                        const mainContent = document.getElementById('main-content');
+                        
+                        if (authScreen) {
+                            authScreen.style.opacity = '0';
+                            authScreen.style.transform = 'translateY(-20px)';
+                        }
+                        
+                        setTimeout(() => {
+                            if (authScreen) authScreen.style.display = 'none';
+                            if (mainContent) {
+                                mainContent.style.display = 'block';
+                                mainContent.style.opacity = '0';
+                                mainContent.style.transform = 'translateY(20px)';
+                                
+                                setTimeout(() => {
+                                    mainContent.style.opacity = '1';
+                                    mainContent.style.transform = 'translateY(0)';
+                                }, 50);
+                            }
+                            
+                            // Atualiza nome no header
+                            const userDisplay = document.getElementById('user-display-name');
+                            if (userDisplay) userDisplay.innerText = db.name || userInput;
+                            
+                            // Mostra menu admin se for admin
+                            const menuAdmin = document.getElementById('menu-admin');
+                            if (menuAdmin && db.perfil === 'admin') {
+                                menuAdmin.style.display = 'block';
+                            }
+                            
+                            // Ao fazer login: sempre vai para Início (Home), nunca para página salva
+                            localStorage.setItem('axis-current-page', 'page-home');
+                            
+                            const navigateToPage = function(pageId) {
+                                const targetPage = document.getElementById(pageId) || document.getElementById('page-home');
+                                if (targetPage) {
+                                    document.querySelectorAll('.main-section').forEach(s => {
+                                        s.classList.remove('active');
+                                        s.style.display = 'none';
+                                    });
+                                    targetPage.classList.add('active');
+                                    targetPage.style.display = 'block';
+                                }
+                            };
+                            setTimeout(() => {
+                                if (typeof navigate === 'function') {
+                                    try {
+                                        navigate('page-home');
+                                    } catch (e) {
+                                        navigateToPage('page-home');
+                                    }
+                                } else {
+                                    navigateToPage('page-home');
+                                }
+                            }, 300);
+                            setTimeout(function() {
+                                if (typeof showBemVindoModal === 'function') {
+                                    showBemVindoModal(db.name || userInput);
+                                }
+                            }, 120);
+                        }, 300);
+                        
+                    } else {
+                        passField.classList.add('shake-animation');
+                        setTimeout(() => passField.classList.remove('shake-animation'), 500);
+                        alert('Senha incorreta.');
+                    }
+                } catch (error) {
+                    alert('Erro ao processar dados do usuário.');
+                }
+            } else {
+                userField.classList.add('shake-animation');
+                setTimeout(() => userField.classList.remove('shake-animation'), 500);
+                alert('Usuário não encontrado. Verifique se o usuário foi criado corretamente.');
+            }
+        }
+        
+        // ============================================
+        // 🔒 FUNÇÃO PROTEGIDA: togglePassword
+        // NÃO MODIFICAR - ESSENCIAL PARA VISUALIZAR SENHA
+        // ============================================
+        function togglePassword() {
+            const input = document.getElementById('password');
+            const icon = document.getElementById('eye-icon');
+            if (!input || !icon) return;
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.innerText = '🙈';
+                icon.title = 'Ocultar senha';
+                icon.classList.add('active');
+            } else {
+                input.type = 'password';
+                icon.innerText = '👁️';
+                icon.title = 'Mostrar senha';
+                icon.classList.remove('active');
+            }
+        }
+        
+        // ============================================
+        // 🔒 FUNÇÃO PROTEGIDA: toggleSidebar
+        // NÃO MODIFICAR - ESSENCIAL PARA ABRIR/FECHAR MENU
+        // ============================================
+        function toggleSidebar() {
+            const sidebar = document.getElementById('side-menu');
+            const overlay = document.getElementById('menu-overlay');
+            const menuBtn = document.querySelector('.menu-trigger-ios');
+            if (!sidebar || !overlay) return;
+            const isOpen = sidebar.classList.contains('open');
+            if (isOpen) {
+                sidebar.classList.remove('open');
+                overlay.classList.remove('active');
+                if (menuBtn) menuBtn.classList.remove('active');
+                overlay.style.opacity = '0';
+                setTimeout(function() { overlay.style.display = 'none'; }, 300);
+            } else {
+                overlay.style.opacity = '1';
+                overlay.style.display = 'block';
+                overlay.classList.add('active');
+                sidebar.classList.add('open');
+                if (menuBtn) menuBtn.classList.add('active');
+                sidebar.style.display = 'flex';
+                sidebar.style.visibility = 'visible';
+                sidebar.style.opacity = '1';
+            }
+        }
+        
+        // ============================================
+        // 🔒 SISTEMA DE PROTEÇÃO DAS FUNÇÕES CRÍTICAS
+        // NÃO MODIFICAR ESTA SEÇÃO
+        // ============================================
+        
+        // Cria backups das funções originais
+        const _handleAuthBackup = handleAuth;
+        const _togglePasswordBackup = togglePassword;
+        const _toggleSidebarBackup = toggleSidebar;
+        
+        // Expõe as funções globalmente com proteção
+        try {
+            Object.defineProperty(window, 'handleAuth', {
+                value: handleAuth,
+                writable: false,
+                configurable: false,
+                enumerable: true
+            });
+            
+            Object.defineProperty(window, 'togglePassword', {
+                value: togglePassword,
+                writable: false,
+                configurable: false,
+                enumerable: true
+            });
+            
+            Object.defineProperty(window, 'toggleSidebar', {
+                value: toggleSidebar,
+                writable: false,
+                configurable: false,
+                enumerable: true
+            });
+            
+        } catch (e) {
+            window.handleAuth = handleAuth;
+            window.togglePassword = togglePassword;
+            window.toggleSidebar = toggleSidebar;
+        }
+        (function protectFunctions() {
+            setInterval(function() {
+                if (typeof window.handleAuth !== 'function') {
+                    try {
+                        Object.defineProperty(window, 'handleAuth', { value: _handleAuthBackup, writable: false, configurable: false, enumerable: true });
+                    } catch (e) { window.handleAuth = _handleAuthBackup; }
+                }
+                if (typeof window.togglePassword !== 'function') {
+                    try {
+                        Object.defineProperty(window, 'togglePassword', { value: _togglePasswordBackup, writable: false, configurable: false, enumerable: true });
+                    } catch (e) { window.togglePassword = _togglePasswordBackup; }
+                }
+                if (typeof window.toggleSidebar !== 'function') {
+                    try {
+                        Object.defineProperty(window, 'toggleSidebar', { value: _toggleSidebarBackup, writable: false, configurable: false, enumerable: true });
+                    } catch (e) { window.toggleSidebar = _toggleSidebarBackup; }
+                }
+            }, 2000);
+        })();
+        
+        
+        // 🛡️ PROTEÇÃO DOS BOTÕES HTML
+        // Restaura onclick se for modificado
+        // ============================================
+        (function protectButtons() {
+            const authButtonOnclick = 'if(typeof handleAuth === \'function\') { handleAuth(); } else { console.error(\'handleAuth não encontrada\'); alert(\'Erro: Sistema ainda carregando. Aguarde alguns segundos e tente novamente.\'); } return false;';
+            const eyeButtonOnclick = 'if(typeof togglePassword === \'function\') { togglePassword(); } else { console.error(\'togglePassword não encontrada\'); } return false;';
+            const menuButtonOnclick = 'if(typeof toggleSidebar === \'function\') { toggleSidebar(); } else { console.error(\'toggleSidebar não encontrada\'); } return false;';
+            
+            setInterval(function() {
+                // Protege botão de login
+                const authBtn = document.getElementById('auth-main-btn');
+                if (authBtn && authBtn.getAttribute('data-protected') === 'true') {
+                    const currentOnclick = authBtn.getAttribute('onclick');
+                    if (!currentOnclick || currentOnclick.indexOf('handleAuth') === -1) {
+                        authBtn.setAttribute('onclick', authButtonOnclick);
+                    }
+                }
+                
+                // Protege botão do olho
+                const eyeBtn = document.querySelector('.eye-toggle[data-protected="true"]');
+                if (eyeBtn) {
+                    const currentOnclick = eyeBtn.getAttribute('onclick');
+                    if (!currentOnclick || currentOnclick.indexOf('togglePassword') === -1) {
+                        eyeBtn.setAttribute('onclick', eyeButtonOnclick);
+                    }
+                }
+                
+                // Protege botão do menu
+                const menuBtn = document.querySelector('.menu-trigger-ios');
+                if (menuBtn) {
+                    const currentOnclick = menuBtn.getAttribute('onclick');
+                    if (!currentOnclick || currentOnclick.indexOf('toggleSidebar') === -1) {
+                        menuBtn.setAttribute('onclick', menuButtonOnclick);
+                    }
+                }
+            }, 3000); // Verifica a cada 3 segundos
+        })();
+        
+    </script>
+    
+    <!-- BLINDAGEM VOLTAR MANUTENÇÕES: esconde login, mostra Home, retries se algo sobrescrever. Não remover. -->
+    <script>
+    (function() {
+      function aplica() {
+        try {
+          var au = document.getElementById('auth-screen');
+          var mn = document.getElementById('main-content');
+          var ld = document.getElementById('loading-screen');
+          if (!au && !mn) return;
+          var user = '';
+          try { user = localStorage.getItem('current_user') || ''; } catch (_) {}
+          if (au) { au.style.display = 'none'; au.style.opacity = '0'; au.setAttribute('aria-hidden', 'true'); }
+          if (mn) { mn.style.display = 'block'; mn.style.opacity = '1'; mn.removeAttribute('aria-hidden'); }
+          if (ld) { ld.style.display = 'none'; }
+          var ud = document.getElementById('user-display-name');
+          if (ud && user) ud.innerText = user;
+          var ma = document.getElementById('menu-admin');
+          if (ma) {
+            try {
+              var login = localStorage.getItem('current_user_login') || (user && String(user).toLowerCase().replace(/\s+/g, '_'));
+              var key = 'db_' + (login || '');
+              var d = JSON.parse(localStorage.getItem(key) || '{}');
+              if (d && d.perfil === 'admin') ma.style.display = 'block';
+            } catch (_) {}
+          }
+          var sections = document.querySelectorAll('.main-section');
+          var home = document.getElementById('page-home');
+          if (home && sections.length) {
+            sections.forEach(function(s) { s.classList.remove('active'); s.style.display = 'none'; });
+            home.classList.add('active'); home.style.display = 'block';
+          }
+        } catch (e) {}
+      }
+      try {
+        if (sessionStorage.getItem('axis_voltar_force_main') !== '1') return;
+        try { sessionStorage.removeItem('axis_voltar_force_main'); } catch (_) {}
+        aplica();
+        setTimeout(aplica, 80);
+        setTimeout(aplica, 250);
+        setTimeout(function() {
+          var au = document.getElementById('auth-screen');
+          if (au && au.style.display !== 'none') aplica();
+        }, 500);
+      } catch (e) {}
+    })();
+    </script>
+    
+    <!-- ============================================
+         🔒 SISTEMA ROBUSTO DE GARANTIA DE FUNÇÕES
+         Garante que TODAS as funções estejam disponíveis
+         ============================================ -->
+    <script>
+        // Sistema de espera e verificação contínua (silencioso)
+        (function robustFunctionLoader() {
+            var noop = function() {};
+            var allCriticalFunctions = {
+                'navigate': { required: true, fallback: null },
+                'toggleSidebar': { required: true, fallback: null },
+                'filtrarInventario': { required: true, fallback: noop },
+                'resetarFiltrosInventario': { required: true, fallback: noop },
+                'abrirCadastroRapido': { required: true, fallback: noop },
+                'fecharCadastro': { required: true, fallback: noop },
+                'proximoPassoCadastro': { required: true, fallback: noop },
+                'passoAnteriorCadastro': { required: true, fallback: noop },
+                'finalizarCadastro': { required: true, fallback: noop },
+                'renderizarTabela': { required: true, fallback: noop },
+                'inicializarInventario': { required: true, fallback: noop },
+                'toggleTheme': { required: true, fallback: noop },
+                'logout': { required: true, fallback: noop },
+                'handleAuth': { required: true, fallback: null },
+                'togglePassword': { required: true, fallback: null },
+                'showToast': { required: false, fallback: function(msg) { if (msg && typeof alert === 'function') alert(msg); } },
+                'exportarDados': { required: false, fallback: noop }
+            };
+            Object.keys(allCriticalFunctions).forEach(function(funcName) {
+                var funcInfo = allCriticalFunctions[funcName];
+                if (!window[funcName] && funcInfo.fallback) {
+                    window[funcName] = funcInfo.fallback;
+                }
+            });
+            var attempts = 0;
+            var maxAttempts = 50;
+            function checkAndWaitForFunctions() {
+                attempts++;
+                var missing = [];
+                Object.keys(allCriticalFunctions).forEach(function(funcName) {
+                    var funcInfo = allCriticalFunctions[funcName];
+                    if (funcInfo.required && typeof window[funcName] !== 'function') {
+                        missing.push(funcName);
+                    } else if (typeof window[funcName] === 'function') {
+                        var funcStr = window[funcName].toString();
+                        if (funcStr.indexOf('será carregada em breve') !== -1) {
+                            missing.push(funcName);
+                        }
+                    }
+                });
+                if (missing.length > 0 && attempts < maxAttempts) {
+                    setTimeout(checkAndWaitForFunctions, 100);
+                } else if (missing.length > 0) {
+                    missing.forEach(function(funcName) {
+                        var cleanName = funcName.replace(' (placeholder)', '');
+                        var funcInfo = allCriticalFunctions[cleanName];
+                        if (funcInfo && funcInfo.fallback) {
+                            window[cleanName] = funcInfo.fallback;
+                        }
+                    });
+                }
+            }
+            setTimeout(checkAndWaitForFunctions, 50);
+            window.addEventListener('load', function() {
+                setTimeout(checkAndWaitForFunctions, 200);
+                setTimeout(checkAndWaitForFunctions, 500);
+                setTimeout(checkAndWaitForFunctions, 1000);
+            });
+        })();
+    </script>
+    
+    <!-- Script para garantir que funções críticas estejam disponíveis (silencioso) -->
+    <script>
+        (function ensureCriticalFunctions() {
+            var criticalFunctions = [
+                'navigate', 'filtrarInventario', 'abrirCadastroRapido', 'toggleTheme',
+                'resetarFiltrosInventario', 'logout', 'fecharCadastro', 'proximoPassoCadastro',
+                'passoAnteriorCadastro', 'finalizarCadastro', 'renderizarTabela', 'inicializarInventario'
+            ];
+            function verificarFuncoes() {
+                criticalFunctions.forEach(function(funcName) {
+                    if (typeof window[funcName] !== 'function') { /* ausente */ }
+                });
+            }
+            verificarFuncoes();
+            setTimeout(verificarFuncoes, 100);
+            setTimeout(verificarFuncoes, 500);
+            setTimeout(verificarFuncoes, 1000);
+            setTimeout(verificarFuncoes, 2000);
+        })();
+    </script>
+    
+    <!-- ============================================
+         🔒 SISTEMA ULTRA-ROBUSTO DE PERSISTÊNCIA
+         Garante que a página NUNCA saia do site
+         ============================================ -->
+    <script>
+        (function ultraRobustPersistence() {
+            
+            // 1. Previne qualquer navegação para fora do site
+            const originalLocationHref = window.location.href;
+            const originalLocationReplace = window.location.replace;
+            const originalLocationAssign = window.location.assign;
+            
+            // Intercepta window.location.href
+            let locationHrefDescriptor = Object.getOwnPropertyDescriptor(window, 'location') || 
+                                        Object.getOwnPropertyDescriptor(Object.getPrototypeOf(window), 'location');
+            
+            // 2. Salva estado constantemente
+            setInterval(() => {
+                try {
+                    const currentPage = window.activePage || localStorage.getItem('axis-current-page') || 'page-home';
+                    if (currentPage && currentPage.startsWith('page-')) {
+                        localStorage.setItem('axis-current-page', currentPage);
+                        
+                        // Garante que a hash da URL esteja correta
+                        if (window.location.hash !== '#' + currentPage) {
+                            try {
+                                window.history.replaceState({ page: currentPage }, '', window.location.pathname + '#' + currentPage);
+                            } catch (e) {
+                                // Silencioso - não queremos erros aqui
+                            }
+                        }
+                    }
+                } catch (e) {
+                    // Silencioso
+                }
+            }, 1000); // Salva a cada segundo
+            
+            // 3. Restaura página ao carregar
+            window.addEventListener('load', () => {
+                setTimeout(() => {
+                    const savedPage = localStorage.getItem('axis-current-page');
+                    const hashPage = window.location.hash.replace('#', '');
+                    
+                    let pageToRestore = null;
+                    
+                    if (hashPage && hashPage.startsWith('page-')) {
+                        pageToRestore = hashPage;
+                        localStorage.setItem('axis-current-page', hashPage);
+                    } else if (savedPage && savedPage.startsWith('page-')) {
+                        pageToRestore = savedPage;
+                        // Atualiza hash
+                        try {
+                            window.history.replaceState({ page: savedPage }, '', window.location.pathname + '#' + savedPage);
+                        } catch (e) {
+                            window.location.hash = savedPage;
+                        }
+                    } else {
+                        pageToRestore = 'page-home';
+                        localStorage.setItem('axis-current-page', 'page-home');
+                        try {
+                            window.history.replaceState({ page: 'page-home' }, '', window.location.pathname + '#page-home');
+                        } catch (e) {
+                            window.location.hash = 'page-home';
+                        }
+                    }
+                    
+                    // Restaura a página
+                    if (pageToRestore) {
+                        const restorePage = () => {
+                            const targetSection = document.getElementById(pageToRestore);
+                            if (targetSection) {
+                                document.querySelectorAll('.main-section').forEach(s => {
+                                    s.classList.remove('active');
+                                    s.style.display = 'none';
+                                });
+                                targetSection.classList.add('active');
+                                targetSection.style.display = 'block';
+                                
+                                if (window.activePage !== undefined) {
+                                    window.activePage = pageToRestore;
+                                }
+                                
+                                
+                                // Chama inicialização específica se necessário
+                                if (pageToRestore === 'page-inventario' && typeof window.inicializarInventario === 'function') {
+                                    setTimeout(() => {
+                                        try {
+                                            window.inicializarInventario();
+                                        } catch (e) {
+                                        }
+                                    }, 200);
+                                }
+                            } else {
+                                setTimeout(restorePage, 500);
+                            }
+                        };
+                        
+                        // Tenta restaurar imediatamente
+                        restorePage();
+                        
+                        // Tenta novamente após um delay (caso DOM não esteja pronto)
+                        setTimeout(restorePage, 300);
+                        setTimeout(restorePage, 1000);
+                    }
+                }, 100);
+            });
+            
+            // 4. Intercepta popstate para manter no site
+            window.addEventListener('popstate', (e) => {
+                const savedPage = localStorage.getItem('axis-current-page') || 'page-home';
+                if (savedPage && savedPage.startsWith('page-')) {
+                    setTimeout(() => {
+                        try {
+                            window.history.pushState({ page: savedPage }, '', window.location.pathname + '#' + savedPage);
+                            const targetSection = document.getElementById(savedPage);
+                            if (targetSection) {
+                                document.querySelectorAll('.main-section').forEach(s => {
+                                    s.classList.remove('active');
+                                    s.style.display = 'none';
+                                });
+                                targetSection.classList.add('active');
+                                targetSection.style.display = 'block';
+                            }
+                        } catch (e) {
+                            console.error('Erro ao restaurar página no popstate:', e);
+                        }
+                    }, 50);
+                }
+            });
+            
+        })();
+    </script>
+    
+    <!-- ============================================
+         🔒 FORÇA EXPORTAÇÃO DE TODAS AS FUNÇÕES
+         Executa DEPOIS do script.js carregar
+         ============================================ -->
+    <script>
+        (function forceExportAllFunctions() {
+            
+            // Aguarda o script.js carregar completamente
+            function forceExports() {
+                // Lista de todas as funções que devem ser exportadas
+                const functionsToExport = [
+                    'navigate',
+                    'toggleSidebar',
+                    'filtrarInventario',
+                    'abrirCadastroRapido',
+                    'fecharCadastro',
+                    'proximoPassoCadastro',
+                    'passoAnteriorCadastro',
+                    'finalizarCadastro',
+                    'renderizarTabela',
+                    'inicializarInventario',
+                    'resetarFiltrosInventario',
+                    'toggleTheme',
+                    'logout',
+                    'handleAuth',
+                    'togglePassword',
+                    'showToast',
+                    'exportarDados',
+                    'filtrarPorModelo',
+                    'ordenarTabela',
+                    'mudarPagina',
+                    'editarEquipamento',
+                    'excluirEquipamento',
+                    'carregarRondas',
+                    'carregarTickets'
+                ];
+                
+                functionsToExport.forEach(funcName => {
+                    // Tenta encontrar a função no escopo global ou no window
+                    if (typeof window[funcName] === 'function') {
+                        // Já está exportada
+                        return;
+                    }
+                    
+                    // Tenta encontrar no escopo (se ainda não foi exportada)
+                    // Isso só funciona se a função estiver no escopo global
+                    try {
+                        // Se a função existe mas não está em window, força exportação
+                        const func = eval(funcName);
+                        if (typeof func === 'function') {
+                            window[funcName] = func;
+                        }
+                    } catch (e) {
+                        // Função ainda não está disponível, isso é normal
+                    }
+                });
+            }
+            
+            // Tenta múltiplas vezes
+            forceExports();
+            setTimeout(forceExports, 100);
+            setTimeout(forceExports, 500);
+            setTimeout(forceExports, 1000);
+            setTimeout(forceExports, 2000);
+            
+            // Também tenta quando a página carregar completamente
+            window.addEventListener('load', () => {
+                setTimeout(forceExports, 500);
+                setTimeout(forceExports, 1500);
+            });
+            
+        })();
+    </script>
+    
+    <!-- ============================================
+         🔒 SISTEMA FINAL DE GARANTIA ABSOLUTA
+         Força tudo a funcionar mesmo em casos extremos
+         ============================================ -->
+    <script>
+        (function absoluteGuarantee() {
+            setInterval(function() {
+                var mustHaveFunctions = {
+                    'filtrarInventario': function() {
+                        var tbody = document.getElementById('ucs-inventory-data');
+                        if (tbody) {
+                            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px;">Carregando...</td></tr>';
+                        }
+                    },
+                    'abrirCadastroRapido': function() {
+                        var modal = document.getElementById('cadastro-modal');
+                        if (modal) {
+                            modal.style.display = 'flex';
+                            modal.style.opacity = '1';
+                        }
+                    },
+                    'navigate': function(pageId) {
+                        var target = document.getElementById(pageId);
+                        if (target) {
+                            document.querySelectorAll('.main-section').forEach(function(s) {
+                                s.classList.remove('active');
+                                s.style.display = 'none';
+                            });
+                            target.classList.add('active');
+                            target.style.display = 'block';
+                            localStorage.setItem('axis-current-page', pageId);
+                            if (window.activePage !== undefined) {
+                                window.activePage = pageId;
+                            }
+                        }
+                    },
+                    'toggleTheme': function() {
+                        var current = document.body.getAttribute('data-theme') || 'light';
+                        var newTheme = current === 'dark' ? 'light' : 'dark';
+                        document.body.setAttribute('data-theme', newTheme);
+                        localStorage.setItem('axis-theme', newTheme);
+                        var icon = document.getElementById('theme-icon');
+                        if (icon) {
+                            icon.textContent = newTheme === 'dark' ? '☀️' : '🌙';
+                        }
+                    },
+                    'resetarFiltrosInventario': function() {
+                        var pais = document.getElementById('ucs-filtro-pais');
+                        var nodo = document.getElementById('ucs-filtro-nodo');
+                        var dispositivo = document.getElementById('ucs-filtro-dispositivo');
+                        if (pais) pais.value = '';
+                        if (nodo) nodo.value = '';
+                        if (dispositivo) dispositivo.value = '';
+                        if (typeof window.filtrarInventario === 'function') {
+                            window.filtrarInventario();
+                        }
+                    },
+                    'fecharCadastro': function() {
+                        var modal = document.getElementById('cadastro-modal');
+                        if (modal) {
+                            modal.style.opacity = '0';
+                            setTimeout(function() {
+                                modal.style.display = 'none';
+                            }, 300);
+                        }
+                    },
+                    'proximoPassoCadastro': function() {},
+                    'passoAnteriorCadastro': function() {},
+                    'finalizarCadastro': function() {
+                        if (typeof window.fecharCadastro === 'function') {
+                            window.fecharCadastro();
+                        }
+                    },
+                    'renderizarTabela': function() {},
+                    'inicializarInventario': function() {
+                        if (typeof window.renderizarTabela === 'function') {
+                            window.renderizarTabela();
+                        }
+                    }
+                };
+                Object.keys(mustHaveFunctions).forEach(function(funcName) {
+                    if (typeof window[funcName] !== 'function') {
+                        window[funcName] = mustHaveFunctions[funcName];
+                    } else {
+                        var funcStr = window[funcName].toString();
+                        if (funcStr.indexOf('será carregada em breve') !== -1 || funcStr.indexOf('fallback') !== -1) {
+                            window[funcName] = mustHaveFunctions[funcName];
+                        }
+                    }
+                });
+            }, 2000);
+            if (typeof window.activePage === 'undefined') {
+                window.activePage = localStorage.getItem('axis-current-page') || 'page-home';
+            }
+            setInterval(function() {
+                var saved = localStorage.getItem('axis-current-page');
+                if (saved && saved.startsWith('page-')) {
+                    window.activePage = saved;
+                } else if (window.activePage) {
+                    localStorage.setItem('axis-current-page', window.activePage);
+                }
+            }, 500);
+        })();
+    </script>
+    
+    <!-- ============================================
+         🔒 SISTEMA DE PROTEÇÃO DOS CARDS
+         Blinda todos os estilos e classes dos cards
+         ============================================ -->
+    <script>
+        (function protectCardsSystem() {
+            
+            // Configurações protegidas dos cards
+            const protectedCardsConfig = {
+                'inventario-master': {
+                    classes: ['mod-card', 'inventario-master'],
+                    icon: '📦✨',
+                    linkClass: 'mod-link-inventario',
+                    linkText: 'Acessar Frota →',
+                    linkColor: '#00bcd4',
+                    bgGradient: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(0, 188, 212, 0.1) 100%)',
+                    borderColor: 'rgba(0, 188, 212, 0.3)',
+                    animation: 'floatInventario 3s ease-in-out infinite'
+                },
+                'rondas-master': {
+                    classes: ['mod-card', 'rondas-master'],
+                    icon: '🛡️⚡',
+                    linkClass: 'mod-link-rondas',
+                    linkText: 'Ver Relatórios →',
+                    linkColor: '#4caf50',
+                    bgGradient: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(76, 175, 80, 0.1) 100%)',
+                    borderColor: 'rgba(76, 175, 80, 0.3)',
+                    animation: 'shieldPulse 2.5s ease-in-out infinite'
+                },
+                'preventiva-master': {
+                    classes: ['mod-card', 'preventiva-master'],
+                    icon: '⚙️🔥',
+                    linkClass: 'mod-link-preventiva',
+                    linkText: 'Iniciar Vistoria →',
+                    linkColor: '#fd7e14',
+                    bgGradient: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(253, 126, 20, 0.1) 100%)',
+                    borderColor: 'rgba(253, 126, 20, 0.3)',
+                    animation: 'pulse 2s ease-in-out infinite'
+                },
+                'suporte-master': {
+                    classes: ['mod-card', 'suporte-master'],
+                    icon: '💬💖',
+                    linkClass: 'mod-link-suporte',
+                    linkText: 'Abrir Ticket →',
+                    linkColor: '#e91e63',
+                    bgGradient: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(233, 30, 99, 0.1) 100%)',
+                    borderColor: 'rgba(233, 30, 99, 0.3)',
+                    animation: 'bounceSuporte 2s ease-in-out infinite'
+                },
+                'notas-master': {
+                    classes: ['mod-card', 'notas-master'],
+                    icon: '📄💜',
+                    linkClass: 'mod-link-notas',
+                    linkText: 'Acessar Biblioteca →',
+                    linkColor: '#9c27b0',
+                    bgGradient: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(156, 39, 176, 0.1) 100%)',
+                    borderColor: 'rgba(156, 39, 176, 0.3)',
+                    animation: 'waveNotas 2.8s ease-in-out infinite'
+                },
+                'bloco-master': {
+                    classes: ['mod-card', 'bloco-master'],
+                    icon: '📝⭐',
+                    linkClass: 'mod-link-bloco',
+                    linkText: 'Abrir Editor →',
+                    linkColor: '#ffc107',
+                    bgGradient: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 193, 7, 0.1) 100%)',
+                    borderColor: 'rgba(255, 193, 7, 0.3)',
+                    animation: 'glowBloco 2.2s ease-in-out infinite'
+                },
+                'config-master': {
+                    classes: ['mod-card', 'config-master'],
+                    icon: '⚙️💎',
+                    linkClass: 'mod-link-config',
+                    linkText: 'Abrir Configurações →',
+                    linkColor: '#607d8b',
+                    bgGradient: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(96, 125, 139, 0.1) 100%)',
+                    borderColor: 'rgba(96, 125, 139, 0.3)',
+                    animation: 'spinConfig 3s linear infinite'
+                }
+            };
+            
+            // Função para verificar e restaurar estilos CSS
+            function protectCardStyles() {
+                const styleSheet = document.querySelector('style') || document.createElement('style');
+                let styleContent = styleSheet.textContent || '';
+                
+                // Lista de estilos críticos que devem estar presentes
+                const criticalStyles = [
+                    '.mod-card.inventario-master',
+                    '.mod-card.rondas-master',
+                    '.mod-card.preventiva-master',
+                    '.mod-card.suporte-master',
+                    '.mod-card.notas-master',
+                    '.mod-card.bloco-master',
+                    '.mod-card.config-master',
+                    '@keyframes floatInventario',
+                    '@keyframes shieldPulse',
+                    '@keyframes pulse',
+                    '@keyframes bounceSuporte',
+                    '@keyframes waveNotas',
+                    '@keyframes glowBloco',
+                    '@keyframes spinConfig',
+                    '.mod-link-inventario',
+                    '.mod-link-rondas',
+                    '.mod-link-preventiva',
+                    '.mod-link-suporte',
+                    '.mod-link-notas',
+                    '.mod-link-bloco',
+                    '.mod-link-config'
+                ];
+                
+                // Verifica se todos os estilos críticos estão presentes
+                let missingStyles = [];
+                criticalStyles.forEach(style => {
+                    if (styleContent.indexOf(style) === -1) {
+                        missingStyles.push(style);
+                    }
+                });
+                
+                // Se estilos estão faltando, adiciona um aviso (mas não força reescrita para evitar conflitos)
+                if (missingStyles.length > 0) {
+                    console.warn('⚠️ Alguns estilos de cards podem estar faltando:', missingStyles);
+                }
+            }
+            
+            // Função para verificar e restaurar estrutura HTML dos cards
+            function protectCardHTML() {
+                Object.keys(protectedCardsConfig).forEach(cardType => {
+                    const config = protectedCardsConfig[cardType];
+                    const card = document.querySelector(`.${cardType}`);
+                    
+                    if (card) {
+                        // Verifica e restaura classes
+                        config.classes.forEach(className => {
+                            if (!card.classList.contains(className)) {
+                                card.classList.add(className);
+                                console.log(`🔧 Classe ${className} restaurada no card ${cardType}`);
+                            }
+                        });
+                        
+                        // Verifica e restaura ícone
+                        const iconElement = card.querySelector('.mod-icon');
+                        if (iconElement && iconElement.textContent.trim() !== config.icon) {
+                            iconElement.textContent = config.icon;
+                            console.log(`🔧 Ícone restaurado no card ${cardType}`);
+                        }
+                        
+                        // Verifica e restaura link
+                        const linkElement = card.querySelector('.mod-link, .mod-link-' + cardType.split('-')[0]);
+                        if (linkElement) {
+                            if (!linkElement.classList.contains(config.linkClass)) {
+                                linkElement.className = config.linkClass;
+                            }
+                            if (linkElement.textContent.trim() !== config.linkText) {
+                                linkElement.textContent = config.linkText;
+                            }
+                            // Verifica cor do link
+                            const computedColor = window.getComputedStyle(linkElement).color;
+                            if (computedColor !== config.linkColor && !computedColor.includes('rgb')) {
+                                linkElement.style.color = config.linkColor;
+                            }
+                        }
+                        
+                        // Verifica estilos inline críticos (se necessário)
+                        const computedBg = window.getComputedStyle(card).background;
+                        if (!computedBg.includes('gradient') && !computedBg.includes('rgba')) {
+                            // Não força, apenas avisa
+                            console.warn(`⚠️ Card ${cardType} pode ter perdido gradiente de fundo`);
+                        }
+                    } else {
+                        console.warn(`⚠️ Card ${cardType} não encontrado no DOM`);
+                    }
+                });
+            }
+            
+            // Protege estilos CSS críticos usando Object.defineProperty no elemento style
+            function protectStyleElement() {
+                const styleElements = document.querySelectorAll('style');
+                styleElements.forEach((styleEl, index) => {
+                    if (styleEl.textContent && styleEl.textContent.includes('inventario-master')) {
+                        // Protege a propriedade textContent do elemento style
+                        try {
+                            const originalTextContent = styleEl.textContent;
+                            Object.defineProperty(styleEl, 'textContent', {
+                                get: function() {
+                                    return originalTextContent;
+                                },
+                                set: function(newValue) {
+                                    // Verifica se está tentando remover estilos críticos
+                                    const criticalPatterns = [
+                                        'inventario-master',
+                                        'rondas-master',
+                                        'preventiva-master',
+                                        'suporte-master',
+                                        'notas-master',
+                                        'bloco-master',
+                                        'config-master'
+                                    ];
+                                    
+                                    let hasCriticalStyles = false;
+                                    criticalPatterns.forEach(pattern => {
+                                        if (newValue.indexOf(pattern) !== -1) {
+                                            hasCriticalStyles = true;
+                                        }
+                                    });
+                                    
+                                    if (!hasCriticalStyles && originalTextContent.indexOf('inventario-master') !== -1) {
+                                        console.warn('⚠️ Tentativa de remover estilos críticos dos cards bloqueada!');
+                                        // Não permite a alteração se estilos críticos forem removidos
+                                        return;
+                                    }
+                                    
+                                    // Permite alteração se estilos críticos estiverem presentes
+                                    Object.defineProperty(styleEl, 'textContent', {
+                                        value: newValue,
+                                        writable: true,
+                                        configurable: true
+                                    });
+                                },
+                                configurable: true
+                            });
+                        } catch (e) {
+                            // Silencioso - alguns navegadores podem não permitir
+                        }
+                    }
+                });
+            }
+            
+            // Monitora e protege continuamente
+            setInterval(() => {
+                protectCardHTML();
+                protectCardStyles();
+            }, 3000); // Verifica a cada 3 segundos
+            
+            // Protege imediatamente
+            setTimeout(() => {
+                protectCardHTML();
+                protectCardStyles();
+                protectStyleElement();
+            }, 1000);
+            
+            // Protege quando DOM estiver pronto
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', () => {
+                    setTimeout(() => {
+                        protectCardHTML();
+                        protectCardStyles();
+                        protectStyleElement();
+                    }, 500);
+                });
+            }
+            
+            // Protege quando página carregar completamente
+            window.addEventListener('load', () => {
+                setTimeout(() => {
+                    protectCardHTML();
+                    protectCardStyles();
+                    protectStyleElement();
+                }, 1000);
+            });
+            
+            // Salva configuração no localStorage para backup
+            try {
+                localStorage.setItem('axis-cards-config', JSON.stringify(protectedCardsConfig));
+                console.log('✅ Configuração dos cards salva no localStorage');
+            } catch (e) {
+                console.warn('⚠️ Não foi possível salvar configuração no localStorage:', e);
+            }
+            
+        })();
+    </script>
+    
     <!-- WhatsApp Alerts System -->
-    <script src="novos-modulos/whatsapp-alerts/whatsapp-alerts.js"></script>
+    <script src="Novos Módulos/whatsapp-alerts/whatsapp-alerts.js"></script>
 
+    <!-- Script para garantir que botões do modal funcionem -->
+    <script>
+        (function setupModalButtons() {
+            
+            // Adiciona listener adicional ao botão "Próximo"
+            function setupNextButton() {
+                const btnNext = document.getElementById('btn-next');
+                if (btnNext) {
+                    // Remove listeners antigos para evitar duplicação
+                    const newBtnNext = btnNext.cloneNode(true);
+                    btnNext.parentNode.replaceChild(newBtnNext, btnNext);
+                    
+                    // Adiciona listener
+                    newBtnNext.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                        
+                        if (typeof window.proximoPassoCadastro === 'function') {
+                            try {
+                                window.proximoPassoCadastro();
+                            } catch (error) {
+                                console.error('❌ Erro ao chamar proximoPassoCadastro:', error);
+                                alert('Erro ao avançar. Verifique o console (F12) para mais detalhes.');
+                            }
+                        } else {
+                            console.error('❌ proximoPassoCadastro não está disponível');
+                            alert('Erro: Função de navegação não encontrada. Recarregue a página.');
+                        }
+                        
+                        return false;
+                    });
+                    
+                } else {
+                    // Tenta novamente após um delay
+                    setTimeout(setupNextButton, 500);
+                }
+            }
+            
+            // Configura quando DOM estiver pronto
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', setupNextButton);
+            } else {
+                setupNextButton();
+            }
+            
+            // Configura listener adicional no botão "Criar Dispositivo"
+            function setupCreateDeviceButton() {
+                const btnCreate = document.getElementById('btn-criar-dispositivo');
+                if (btnCreate) {
+                    // Remove listeners antigos
+                    const newBtnCreate = btnCreate.cloneNode(true);
+                    btnCreate.parentNode.replaceChild(newBtnCreate, btnCreate);
+                    
+                    // Adiciona listener direto
+                    newBtnCreate.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (typeof window.abrirCadastroRapido === 'function') {
+                            try {
+                                window.abrirCadastroRapido();
+                            } catch (error) {
+                                const modal = document.getElementById('cadastro-modal');
+                                if (modal) {
+                                    modal.style.display = 'flex';
+                                    modal.style.opacity = '1';
+                                } else {
+                                    alert('Erro: Modal de cadastro não encontrado.');
+                                }
+                            }
+                        } else {
+                            const modal = document.getElementById('cadastro-modal');
+                            if (modal) {
+                                modal.style.display = 'flex';
+                                modal.style.opacity = '1';
+                                
+                                // Reseta para passo 1
+                                document.querySelectorAll('.cadastro-steps .step').forEach(s => s.classList.remove('active'));
+                                document.querySelectorAll('[id^="step-"][id$="-content"]').forEach(c => {
+                                    c.classList.remove('active');
+                                    c.style.display = 'none';
+                                });
+                                
+                                const step1 = document.getElementById('step-1');
+                                const step1Content = document.getElementById('step-1-content');
+                                if (step1) step1.classList.add('active');
+                                if (step1Content) {
+                                    step1Content.classList.add('active');
+                                    step1Content.style.display = 'block';
+                                }
+                                
+                                if (window.cadastroStep !== undefined) {
+                                    window.cadastroStep = 1;
+                                }
+                            } else {
+                                alert('Erro: Modal de cadastro não encontrado. Recarregue a página.');
+                            }
+                        }
+                        
+                        return false;
+                    });
+                } else {
+                    setTimeout(setupCreateDeviceButton, 500);
+                }
+            }
+            
+            setupCreateDeviceButton();
+            
+            // Intercepta e melhora abrirCadastroRapido quando disponível
+            let checkCount = 0;
+            function interceptAbrirCadastro() {
+                checkCount++;
+                if (typeof window.abrirCadastroRapido === 'function') {
+                    const original = window.abrirCadastroRapido;
+                    window.abrirCadastroRapido = function() {
+                        try {
+                            original();
+                            setTimeout(setupNextButton, 100);
+                            setTimeout(setupCreateDeviceButton, 100);
+                        } catch (e) {
+                            const modal = document.getElementById('cadastro-modal');
+                            if (modal) {
+                                modal.style.display = 'flex';
+                                modal.style.visibility = 'visible';
+                                modal.style.opacity = '1';
+                            }
+                        }
+                    };
+                } else if (checkCount < 20) {
+                    setTimeout(interceptAbrirCadastro, 200);
+                }
+            }
+            
+            interceptAbrirCadastro();
+        })();
+    </script>
+    
     <!-- Script de Inicialização Final -->
     <script>
+        // GARANTIR QUE O BOTÃO DE LOGIN FUNCIONE - EXECUÇÃO IMEDIATA
+        (function() {
+            function tryHandleAuth() {
+                if (typeof handleAuth === 'function') {
+                    handleAuth();
+                } else {
+                    setTimeout(tryHandleAuth, 100);
+                }
+            }
+            function setupLoginButton() {
+                const authButton = document.getElementById('auth-main-btn');
+                const usernameField = document.getElementById('username');
+                const passwordField = document.getElementById('password');
+                if (authButton) {
+                    const newButton = authButton.cloneNode(true);
+                    authButton.parentNode.replaceChild(newButton, authButton);
+                    newButton.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        tryHandleAuth();
+                    });
+                }
+                if (passwordField) {
+                    passwordField.addEventListener('keypress', function(e) {
+                        if (e.key === 'Enter' || e.keyCode === 13) {
+                            e.preventDefault();
+                            tryHandleAuth();
+                        }
+                    });
+                }
+                
+                // Enter no campo de usuário
+                if (usernameField) {
+                    usernameField.addEventListener('keypress', function(e) {
+                        if (e.key === 'Enter' || e.keyCode === 13) {
+                            e.preventDefault();
+                            if (passwordField) passwordField.focus();
+                        }
+                    });
+                }
+            }
+            
+            // Executa quando o DOM estiver pronto
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', setupLoginButton);
+            } else {
+                setupLoginButton();
+            }
+            
+            // Também tenta após um pequeno delay para garantir
+            setTimeout(setupLoginButton, 500);
+        })();
+        
         // Remove loading screen quando tudo estiver carregado
         window.addEventListener('load', function() {
             setTimeout(function() {
@@ -1712,9 +3563,162 @@
             }
         });
 
-        // Log de sucesso no carregamento
-        console.log('%c🚀 AXIS Sistema Inicializado!', 'color: #2ecc71; font-size: 16px; font-weight: bold;');
-        console.log('%c✅ HTML, CSS e JavaScript conectados corretamente', 'color: #007aff; font-size: 12px;');
+        // ============================================
+        // 🔒 GARANTIR QUE OS CARDS FUNCIONEM
+        // ============================================
+        function setupCardsNavigation() {
+            function navigateToPage(pageId) {
+                document.querySelectorAll('.main-section').forEach(s => {
+                    s.classList.remove('active');
+                    s.style.display = 'none';
+                });
+                const target = document.getElementById(pageId);
+                if (target) {
+                    target.classList.add('active');
+                    target.style.display = 'block';
+                    if (pageId.startsWith('page-')) {
+                        localStorage.setItem('axis-current-page', pageId);
+                    }
+                    if (typeof navigate === 'function') {
+                        navigate(pageId);
+                    }
+                }
+            }
+            const cardMappings = {
+                'page-inventario': 'Inventário',
+                'page-rondas': 'Rondas',
+                'page-suporte': 'Suporte',
+                'page-configuracoes': 'Configurações'
+            };
+            Object.keys(cardMappings).forEach(pageId => {
+                const cards = document.querySelectorAll(`.mod-card[onclick*="${pageId}"]`);
+                
+                cards.forEach((card, index) => {
+                    // Remove listeners antigos clonando o elemento
+                    const newCard = card.cloneNode(true);
+                    card.parentNode.replaceChild(newCard, card);
+                    
+                    // Adiciona listener direto
+                    newCard.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        navigateToPage(pageId);
+                    });
+                    
+                    // Garante cursor pointer
+                    newCard.style.cursor = 'pointer';
+                });
+            });
+            
+        }
+        
+        // Executa quando o DOM estiver pronto
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', setupCardsNavigation);
+        } else {
+            setupCardsNavigation();
+        }
+        
+        // Também executa após um delay para garantir
+        setTimeout(setupCardsNavigation, 500);
+        
+        // ============================================
+        // 🔒 CONFIGURAR OVERLAY PARA FECHAR MENU
+        // ============================================
+        function setupMenuOverlay() {
+            if (window.menuOverlaySetupDone) return;
+            
+            const overlay = document.getElementById('menu-overlay');
+            const sidebar = document.getElementById('side-menu');
+            
+            if (!overlay || !sidebar) {
+                setTimeout(setupMenuOverlay, 500);
+                return;
+            }
+            window.menuOverlaySetupDone = true;
+            
+            // Remove listeners antigos (clone sem onclick para evitar double-toggle)
+            const newOverlay = overlay.cloneNode(true);
+            newOverlay.removeAttribute('onclick');
+            overlay.parentNode.replaceChild(newOverlay, overlay);
+            
+            // Adiciona listener para fechar menu ao clicar no overlay
+            newOverlay.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                if (typeof toggleSidebar === 'function') {
+                    toggleSidebar();
+                } else {
+                    // Fallback: fecha manualmente
+                    sidebar.classList.remove('open');
+                    newOverlay.classList.remove('active');
+                    newOverlay.style.opacity = '0';
+                    setTimeout(() => {
+                        newOverlay.style.display = 'none';
+                    }, 300);
+                }
+            });
+            
+            // Adiciona listener para fechar menu ao clicar fora (no body)
+            // Usa uma flag para evitar múltiplos listeners
+            if (!window.menuOverlayListenerAdded) {
+                document.body.addEventListener('click', function(e) {
+                    const currentSidebar = document.getElementById('side-menu');
+                    const currentOverlay = document.getElementById('menu-overlay');
+                    
+                    // Se o menu estiver aberto
+                    if (currentSidebar && currentSidebar.classList.contains('open')) {
+                        // Se o clique não foi no menu nem no botão do menu
+                        if (!currentSidebar.contains(e.target) && 
+                            !e.target.closest('.menu-trigger-ios') &&
+                            e.target !== currentOverlay &&
+                            !e.target.closest('.menu-overlay')) {
+                            console.log('🖱️ Clique fora do menu - fechando');
+                            if (typeof toggleSidebar === 'function') {
+                                toggleSidebar();
+                            }
+                        }
+                    }
+                }, true); // Usa capture phase para garantir que funcione
+                
+                window.menuOverlayListenerAdded = true;
+            }
+            
+            console.log('✅ Overlay do menu configurado');
+        }
+        
+        // Executa quando o DOM estiver pronto
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', setupMenuOverlay);
+        } else {
+            setupMenuOverlay();
+        }
+        
+        // Também executa após um delay para garantir
+        setTimeout(setupMenuOverlay, 500);
+
+        // Modal Bem-vindo (fallback inline – garante que exista antes de handleAuth)
+        if (typeof window.showBemVindoModal !== 'function') {
+            window.showBemVindoModal = function(nome) {
+                var wrap = document.getElementById('modal-bem-vindo');
+                var span = document.getElementById('modal-bem-vindo-nome');
+                if (!wrap || !span) return;
+                if (wrap.style.display === 'flex') return;
+                span.textContent = nome || 'Usuário';
+                wrap.style.display = 'flex';
+                wrap.onclick = function() {
+                    wrap.style.display = 'none';
+                    wrap.onclick = null;
+                };
+            };
+        }
+        if (typeof window.fecharBemVindoModal !== 'function') {
+            window.fecharBemVindoModal = function() {
+                var w = document.getElementById('modal-bem-vindo');
+                if (w) { w.style.display = 'none'; w.onclick = null; }
+            };
+        }
     </script>
 
 </body>

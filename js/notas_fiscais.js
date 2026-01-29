@@ -196,17 +196,30 @@ function gerarNotasExemplo() {
 function inicializarInterface() {
     aplicarViewMode();
     atualizarStatusBar();
+    setUserNameFromStorage();
+}
+
+function setUserNameFromStorage() {
+    var el = document.getElementById('user-name');
+    if (!el) return;
+    try {
+        var name = localStorage.getItem('current_user') || '';
+        el.textContent = (name && String(name).trim()) ? name : 'Usuário';
+    } catch (e) {
+        el.textContent = 'Usuário';
+    }
 }
 
 function aplicarViewMode() {
-    document.getElementById('view-grid').style.display = state.viewMode === 'grid' ? 'block' : 'none';
-    document.getElementById('view-list').style.display = state.viewMode === 'list' ? 'block' : 'none';
-    document.getElementById('view-details').style.display = state.viewMode === 'details' ? 'block' : 'none';
-    
-    const icon = document.getElementById('view-icon');
+    var vGrid = document.getElementById('view-grid') || document.getElementById('nfs-grid');
+    var vList = document.getElementById('view-list') || document.getElementById('nfs-list');
+    var vDetails = document.getElementById('view-details');
+    if (vGrid) vGrid.style.display = state.viewMode === 'grid' ? (vGrid.id === 'nfs-grid' ? 'grid' : 'block') : 'none';
+    if (vList) vList.style.display = state.viewMode === 'list' ? 'block' : 'none';
+    if (vDetails) vDetails.style.display = state.viewMode === 'details' ? 'block' : 'none';
+    var icon = document.getElementById('view-icon');
     if (icon) {
-        icon.className = state.viewMode === 'grid' ? 'fas fa-th' : 
-                        state.viewMode === 'list' ? 'fas fa-list' : 'fas fa-th-list';
+        icon.className = state.viewMode === 'grid' ? 'fas fa-th' : (state.viewMode === 'list' ? 'fas fa-list' : 'fas fa-th-list');
     }
 }
 
@@ -214,30 +227,7 @@ function toggleViewMode() {
     const modes = ['grid', 'list', 'details'];
     const currentIndex = modes.indexOf(state.viewMode);
     state.viewMode = modes[(currentIndex + 1) % modes.length];
-    
-    // Feedback visual no botão
-    const btn = document.querySelector('.btn-toolbar:has(#view-icon)');
-    if (btn) {
-        btn.style.animation = 'buttonPulse 0.5s ease';
-        const icon = btn.querySelector('#view-icon');
-        if (icon) {
-            icon.style.animation = 'iconSpin 0.6s ease';
-        }
-    }
-    
     aplicarViewMode();
-    
-    // Animação de transição
-    const views = ['view-grid', 'view-list', 'view-details'];
-    views.forEach(viewId => {
-        const view = document.getElementById(viewId);
-        if (view) {
-            if (view.style.display !== 'none') {
-                view.style.animation = 'appleFadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
-            }
-        }
-    });
-    
     renderizarConteudo();
 }
 
@@ -430,9 +420,13 @@ function navegarAcima() {
 
 // ================= RENDERIZAÇÃO DE CONTEÚDO =================
 function renderizarConteudo() {
-    const itens = obterItensAtuais();
-    const itensFiltrados = aplicarFiltros(itens);
-    const itensOrdenados = ordenarItens(itensFiltrados);
+    var itens = [];
+    try { itens = obterItensAtuais(); } catch (e) { itens = []; }
+    if (!Array.isArray(itens)) itens = [];
+    var itensFiltrados = [];
+    try { itensFiltrados = aplicarFiltros(itens) || itens; } catch (e) { itensFiltrados = itens; }
+    if (!Array.isArray(itensFiltrados)) itensFiltrados = itens;
+    var itensOrdenados = ordenarItens(itensFiltrados);
     
     if (state.viewMode === 'grid') {
         renderizarGrid(itensOrdenados);
@@ -582,6 +576,7 @@ function obterNotasData(cliente, ano, mes, data) {
 }
 
 function aplicarFiltros(itens) {
+    if (!itens || !Array.isArray(itens)) return [];
     if (!state.filters.texto && !state.filters.cliente && !state.filters.status) {
         return itens;
     }
@@ -601,7 +596,8 @@ function aplicarFiltros(itens) {
 }
 
 function ordenarItens(itens) {
-    return [...itens].sort((a, b) => {
+    if (!itens || !Array.isArray(itens)) return [];
+    return itens.slice().sort((a, b) => {
         let valA, valB;
         
         switch (state.sortBy) {
@@ -919,17 +915,29 @@ function atualizarAddressBar() {
 
 // ================= STATUS BAR =================
 function atualizarStatusBar() {
-    const itens = obterItensAtuais();
-    const itensFiltrados = aplicarFiltros(itens);
-    
-    document.getElementById('status-items').textContent = `${itensFiltrados.length} itens`;
-    document.getElementById('status-selected').textContent = `${state.selectedItems.length} selecionados`;
-    
-    const tamanhoTotal = itensFiltrados.reduce((sum, item) => sum + (item.tamanho || 0), 0);
-    document.getElementById('status-size').textContent = formatarTamanho(tamanhoTotal);
-    
-    const pathText = state.currentPath.length > 1 ? state.currentPath.slice(1).join(' > ') : 'Início';
-    document.getElementById('status-location').textContent = pathText;
+    var itens = [];
+    try {
+        itens = obterItensAtuais();
+        if (!Array.isArray(itens)) itens = [];
+    } catch (e) { itens = []; }
+    var itensFiltrados = [];
+    try {
+        itensFiltrados = aplicarFiltros(itens) || itens;
+        if (!Array.isArray(itensFiltrados)) itensFiltrados = itens;
+    } catch (e) { itensFiltrados = itens; }
+    var sel = (state && Array.isArray(state.selectedItems)) ? state.selectedItems : [];
+    var path = (state && Array.isArray(state.currentPath)) ? state.currentPath : ['root'];
+    var pathText = path.length > 1 ? path.slice(1).join(' > ') : 'Início';
+    var tamanhoTotal = itensFiltrados.reduce(function(sum, item) { return sum + (item && (item.tamanho || 0)) || 0; }, 0);
+    var fmt = typeof formatarTamanho === 'function' ? formatarTamanho : function(n) { return n + ' KB'; };
+    var elItems = document.getElementById('status-items');
+    var elSel = document.getElementById('status-selected');
+    var elSize = document.getElementById('status-size');
+    var elLoc = document.getElementById('status-location');
+    if (elItems) elItems.textContent = itensFiltrados.length + ' itens';
+    if (elSel) elSel.textContent = sel.length + ' selecionados';
+    if (elSize) elSize.textContent = fmt(tamanhoTotal);
+    if (elLoc) elLoc.textContent = pathText;
 }
 
 // ================= UPLOAD =================

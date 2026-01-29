@@ -62,12 +62,73 @@ function calcularDiasRestantes(dataExclusao) {
 }
 
 function moverParaLixeiraNF(notaId) {
-    console.log('🗑️ moverParaLixeiraNF chamado com ID:', notaId);
-    
-    // Confirmar antes de mover para lixeira
-    if (confirm('Deseja realmente mover esta nota fiscal para a lixeira?\n\nA nota ficará na lixeira por 30 dias antes da exclusão automática permanente.')) {
+    mostrarModalConfirmacaoLixeira(notaId, function() {
         moverParaLixeiraNFConfirmado(notaId);
+    });
+}
+
+function mostrarModalConfirmacaoLixeira(notaId, onConfirmar) {
+    var existente = document.getElementById('modal-confirmacao-lixeira');
+    if (existente) existente.remove();
+
+    var overlay = document.createElement('div');
+    overlay.id = 'modal-confirmacao-lixeira';
+    overlay.className = 'axis-modal-vidro-overlay';
+    overlay.innerHTML = '<div class="axis-modal-vidro">' +
+        '<div class="axis-modal-vidro-icon"><i class="fas fa-trash-alt"></i></div>' +
+        '<h2 class="axis-modal-vidro-title">Mover para Lixeira?</h2>' +
+        '<p class="axis-modal-vidro-texto">Deseja realmente mover esta nota fiscal para a lixeira? A nota ficará na lixeira por 30 dias antes da exclusão automática permanente.</p>' +
+        '<div class="axis-modal-vidro-btns">' +
+        '<button type="button" class="axis-modal-btn axis-modal-btn-cancelar">Cancelar</button>' +
+        '<button type="button" class="axis-modal-btn axis-modal-btn-confirmar">Confirmar</button>' +
+        '</div></div>';
+
+    document.body.appendChild(overlay);
+    axisModalVidroInjectStyles();
+
+    var cancelar = overlay.querySelector('.axis-modal-btn-cancelar');
+    var confirmar = overlay.querySelector('.axis-modal-btn-confirmar');
+
+    function fechar() {
+        overlay.classList.add('axis-modal-vidro-out');
+        setTimeout(function() { overlay.remove(); }, 150);
     }
+
+    var modalContent = overlay.querySelector('.axis-modal-vidro');
+    if (modalContent) modalContent.addEventListener('click', function(e) { e.stopPropagation(); });
+    cancelar.addEventListener('click', fechar);
+    confirmar.addEventListener('click', function() {
+        overlay.remove();
+        if (typeof onConfirmar === 'function') onConfirmar();
+    });
+    overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) fechar();
+    });
+}
+
+function axisModalVidroInjectStyles() {
+    if (document.getElementById('axis-modal-vidro-styles')) return;
+    var s = document.createElement('style');
+    s.id = 'axis-modal-vidro-styles';
+    s.textContent = '.axis-modal-vidro-overlay{position:fixed;inset:0;background:rgba(0,0,0,.35);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;z-index:10000;animation:axisModalFadeIn .25s ease;}' +
+        '.axis-modal-vidro{background:rgba(255,255,255,.85);backdrop-filter:blur(40px) saturate(180%);-webkit-backdrop-filter:blur(40px) saturate(180%);border:1px solid rgba(255,255,255,.4);border-radius:20px;box-shadow:0 24px 64px rgba(0,0,0,.12),0 0 0 1px rgba(0,122,255,.08);padding:32px;max-width:420px;width:90%;animation:axisModalSlideIn .3s var(--transition-smooth, cubic-bezier(0.4,0,0.2,1));text-align:center;}' +
+        '.axis-modal-vidro-icon{width:64px;height:64px;margin:0 auto 20px;background:linear-gradient(135deg,rgba(0,122,255,.15),rgba(46,204,113,.1));border-radius:50%;display:flex;align-items:center;justify-content:center;}.axis-modal-vidro-icon i{font-size:28px;color:var(--accent-blue,#007aff);}' +
+        '.axis-modal-vidro-title{margin:0 0 12px;font-size:22px;font-weight:600;color:var(--text-main,#1d1d1f);}' +
+        '.axis-modal-vidro-texto{margin:0 0 24px;font-size:15px;line-height:1.5;color:var(--text-secondary,#86868b);}' +
+        '.axis-modal-vidro-btns{display:flex;gap:12px;justify-content:stretch;}' +
+        '.axis-modal-btn{flex:1;padding:14px 20px;border:none;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;transition:all .2s ease;}' +
+        '.axis-modal-btn-cancelar{background:rgba(0,0,0,.06);color:var(--text-main,#1d1d1f);}' +
+        '.axis-modal-btn-cancelar:hover{background:rgba(0,0,0,.1);}' +
+        '.axis-modal-btn-confirmar{background:linear-gradient(135deg,var(--accent-blue,#007aff),#5AC8FA);color:#fff;box-shadow:0 4px 14px rgba(0,122,255,.35);}' +
+        '.axis-modal-btn-confirmar:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,122,255,.4);}' +
+        '.axis-modal-vidro-out{animation:axisModalFadeOut .2s ease forwards;}' +
+        '[data-theme="dark"] .axis-modal-vidro{background:rgba(28,28,30,.9);border-color:rgba(255,255,255,.08);}' +
+        '[data-theme="dark"] .axis-modal-btn-cancelar{background:rgba(255,255,255,.08);color:var(--text-main,#f5f5f7);}' +
+        '[data-theme="dark"] .axis-modal-btn-cancelar:hover{background:rgba(255,255,255,.12);}' +
+        '@keyframes axisModalFadeIn{from{opacity:0;}to{opacity:1;}}' +
+        '@keyframes axisModalFadeOut{from{opacity:1;}to{opacity:0;}}' +
+        '@keyframes axisModalSlideIn{from{opacity:0;transform:scale(0.95) translateY(10px);}to{opacity:1;transform:scale(1) translateY(0);}}';
+    document.head.appendChild(s);
 }
 
 function moverParaLixeiraNFConfirmado(notaId) {
@@ -235,59 +296,22 @@ function moverParaLixeiraNFConfirmado(notaId) {
             window.notasFiscais = stateObj.notasFiscais;
         }
         
-        // Atualizar interface - múltiplas tentativas com delay para garantir sincronização
-        setTimeout(function() {
-            // Atualizar renderização principal
-            if (typeof renderizarNotasFiscais === 'function') {
-                try {
-                    renderizarNotasFiscais(stateObj.notasFiscais);
-                    console.log('✅ Interface atualizada via renderizarNotasFiscais()');
-                } catch (e) {
-                    console.error('Erro ao chamar renderizarNotasFiscais():', e);
-                }
-            } else if (typeof window.renderizarNotasFiscais === 'function') {
-                try {
-                    window.renderizarNotasFiscais(stateObj.notasFiscais);
-                    console.log('✅ Interface atualizada via window.renderizarNotasFiscais()');
-                } catch (e) {
-                    console.error('Erro ao chamar window.renderizarNotasFiscais():', e);
-                }
-            }
-            
-            // Atualizar conteúdo (explorer view)
-            if (typeof renderizarConteudo === 'function') {
-                try {
-                    renderizarConteudo();
-                    console.log('✅ Conteúdo atualizado via renderizarConteudo()');
-                } catch (e) {
-                    console.error('Erro ao chamar renderizarConteudo():', e);
-                }
-            } else if (typeof window.renderizarConteudo === 'function') {
-                try {
-                    window.renderizarConteudo();
-                    console.log('✅ Conteúdo atualizado via window.renderizarConteudo()');
-                } catch (e) {
-                    console.error('Erro ao chamar window.renderizarConteudo():', e);
-                }
-            }
-            
-            // Atualizar dashboard
-            if (typeof atualizarDashboardCompleto === 'function') {
-                try {
-                    atualizarDashboardCompleto();
-                    console.log('✅ Dashboard atualizado via atualizarDashboardCompleto()');
-                } catch (e) {
-                    console.error('Erro ao chamar atualizarDashboardCompleto():', e);
-                }
-            } else if (typeof window.atualizarDashboardCompleto === 'function') {
-                try {
-                    window.atualizarDashboardCompleto();
-                    console.log('✅ Dashboard atualizado via window.atualizarDashboardCompleto()');
-                } catch (e) {
-                    console.error('Erro ao chamar window.atualizarDashboardCompleto():', e);
-                }
-            }
-        }, 200);
+        // Atualizar interface imediatamente (sem delay)
+        if (typeof renderizarNotasFiscais === 'function') {
+            try { renderizarNotasFiscais(stateObj.notasFiscais); } catch (e) {}
+        } else if (typeof window.renderizarNotasFiscais === 'function') {
+            try { window.renderizarNotasFiscais(stateObj.notasFiscais); } catch (e) {}
+        }
+        if (typeof renderizarConteudo === 'function') {
+            try { renderizarConteudo(); } catch (e) {}
+        } else if (typeof window.renderizarConteudo === 'function') {
+            try { window.renderizarConteudo(); } catch (e) {}
+        }
+        if (typeof atualizarDashboardCompleto === 'function') {
+            try { atualizarDashboardCompleto(); } catch (e) {}
+        } else if (typeof window.atualizarDashboardCompleto === 'function') {
+            try { window.atualizarDashboardCompleto(); } catch (e) {}
+        }
         
         // Atualizar badge da lixeira na sidebar
         atualizarBadgeLixeira();

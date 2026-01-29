@@ -3,11 +3,18 @@
    ========================================================== */
 
 /* 1. BOTÃO FLUTUANTE DO WHATSAPP */
+/* Por padrão, a bolha fica oculta e só aparece na HOME (page-home) */
 .whatsapp-float {
     position: fixed;
     bottom: 30px; /* Posicionado embaixo */
     right: 30px;
     z-index: 9998;
+    display: none !important;
+}
+
+/* Exibe a bolha SOMENTE quando o body indicar que estamos na home */
+body[data-current-page="page-home"] #whatsapp-float-button.whatsapp-float {
+    display: block !important;
 }
 
 .whatsapp-button {

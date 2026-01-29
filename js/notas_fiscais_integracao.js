@@ -64,7 +64,51 @@ function atualizarDashboardCompleto() {
         if (nfCountEl) {
             nfCountEl.textContent = notasFiscais.length;
         }
+        if (typeof atualizarRelatorioSeVisivel === 'function') atualizarRelatorioSeVisivel();
     });
+}
+
+function valorPorExtenso(v) {
+    var n = parseFloat(v);
+    if (isNaN(n) || n < 0) return '';
+    var inteiro = Math.floor(n);
+    var centavos = Math.round((n - inteiro) * 100);
+    var u = ['', 'um', 'dois', 'três', 'quatro', 'cinco', 'seis', 'sete', 'oito', 'nove'];
+    var dez = ['', 'dez', 'onze', 'doze', 'treze', 'catorze', 'quinze', 'dezesseis', 'dezessete', 'dezoito', 'dezenove'];
+    var dec = ['', '', 'vinte', 'trinta', 'quarenta', 'cinquenta', 'sessenta', 'setenta', 'oitenta', 'noventa'];
+    var cen = ['', 'cento', 'duzentos', 'trezentos', 'quatrocentos', 'quinhentos', 'seiscentos', 'setecentos', 'oitocentos', 'novecentos'];
+    function ate999(x) {
+        if (x === 0) return 'zero';
+        if (x === 100) return 'cem';
+        var s = '';
+        if (x >= 100) { s = cen[Math.floor(x / 100)]; x = x % 100; if (x) s += ' e '; }
+        if (x >= 20) { s += dec[Math.floor(x / 10)]; x = x % 10; if (x) s += ' e '; }
+        if (x >= 10) return s + dez[x - 9];
+        if (x > 0) s += u[x];
+        return s.replace(/ e $/, '');
+    }
+    function milhao(x) {
+        if (x === 0) return '';
+        if (x === 1) return 'um milhão';
+        if (x < 1000) return ate999(x) + ' milhões';
+        return '';
+    }
+    function mil(x) {
+        if (x === 0) return '';
+        if (x === 1) return 'um mil';
+        return ate999(x) + ' mil';
+    }
+    var milhoes = Math.floor(inteiro / 1000000);
+    var milhares = Math.floor((inteiro % 1000000) / 1000);
+    var rest = inteiro % 1000;
+    var p = [];
+    if (milhoes > 0) p.push(milhao(milhoes));
+    if (milhares > 0) p.push(mil(milhares));
+    if (rest > 0 || p.length === 0) p.push(ate999(rest));
+    var reais = p.join(' e ').replace(/ e zero$/, '') || 'zero';
+    var rs = (inteiro === 1 && milhares === 0 && milhoes === 0) ? 'real' : 'reais';
+    var cv = (centavos === 0) ? '' : (centavos === 1 ? ' e um centavo' : ' e ' + ate999(centavos) + ' centavos');
+    return reais + ' ' + rs + cv;
 }
 
 function atualizarKPIs(notas) {
@@ -657,10 +701,14 @@ function showSection(sectionId) {
         navItem.classList.add('active');
     }
     
-    // Se for dashboard, atualizar métricas
     if (sectionId === 'dashboard') {
         setTimeout(function() {
-            atualizarDashboardCompleto();
+            if (typeof atualizarDashboardCompleto === 'function') atualizarDashboardCompleto();
+        }, 100);
+    }
+    if (sectionId === 'relatorios') {
+        setTimeout(function() {
+            if (typeof gerarRelatorioAvancado === 'function') gerarRelatorioAvancado();
         }, 100);
     }
 }
@@ -675,10 +723,41 @@ function toggleSidebar() {
     }
 }
 
+var axisNotificacoes = [];
+
+function adicionarNotificacao(mensagem, tipo) {
+    tipo = tipo || 'info';
+    axisNotificacoes.push({ msg: mensagem, tipo: tipo, ts: Date.now() });
+    atualizarListaNotificacoes();
+    atualizarBadgeNotificacoes();
+}
+
+function atualizarBadgeNotificacoes() {
+    var badge = document.getElementById('notification-badge');
+    if (!badge) return;
+    var n = axisNotificacoes.length;
+    badge.textContent = n;
+    badge.style.display = n > 0 ? '' : 'none';
+}
+
+function atualizarListaNotificacoes() {
+    var list = document.getElementById('notifications-list');
+    if (!list) return;
+    list.innerHTML = axisNotificacoes.length === 0
+        ? '<div class="notifications-empty">Nenhuma notificação</div>'
+        : axisNotificacoes.slice().reverse().map(function(n) {
+            var c = n.tipo === 'success' ? 'success' : n.tipo === 'warning' ? 'warning' : 'info';
+            return '<div class="notification-item axis-nf-' + c + '">' +
+                '<span class="notification-msg">' + (n.msg || '').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</span>' +
+                '</div>';
+        }).join('');
+}
+
 function toggleNotifications() {
-    const panel = document.getElementById('notifications-panel');
+    var panel = document.getElementById('notifications-panel');
     if (panel) {
         panel.classList.toggle('active');
+        if (panel.classList.contains('active')) atualizarListaNotificacoes();
     }
 }
 
@@ -703,7 +782,7 @@ function aplicarFiltros() {
         renderizarNotasFiscais(state.notasFiscais);
     }
     
-    mostrarToast('Filtros aplicados com sucesso', 'success');
+    adicionarNotificacao('Filtros aplicados com sucesso', 'success');
 }
 
 function limparFiltros() {
@@ -718,22 +797,11 @@ function limparFiltros() {
         renderizarNotasFiscais(state.notasFiscais);
     }
     
-    mostrarToast('Filtros limpos', 'info');
+    adicionarNotificacao('Filtros limpos', 'info');
 }
 
 function mostrarToast(mensagem, tipo) {
-    // Implementação simples de toast
-    const toast = document.createElement('div');
-    toast.style.cssText = 'position: fixed; bottom: 20px; right: 20px; background: rgba(0, 122, 255, 0.9); color: white; padding: 16px 24px; border-radius: 12px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2); z-index: 10000; animation: slideUp 0.3s ease;';
-    toast.textContent = mensagem;
-    document.body.appendChild(toast);
-    
-    setTimeout(function() {
-        toast.style.animation = 'slideDown 0.3s ease';
-        setTimeout(function() {
-            toast.remove();
-        }, 300);
-    }, 3000);
+    adicionarNotificacao(mensagem, tipo || 'info');
 }
 
 // Exportar funções globalmente
@@ -744,6 +812,7 @@ window.toggleAdvancedSearch = toggleAdvancedSearch;
 window.aplicarFiltros = aplicarFiltros;
 window.limparFiltros = limparFiltros;
 window.mostrarToast = mostrarToast;
+window.adicionarNotificacao = adicionarNotificacao;
 window.atualizarDashboardCompleto = atualizarDashboardCompleto;
 window.atualizarKPIs = atualizarKPIs;
 window.atualizarGraficos = atualizarGraficos;
@@ -773,10 +842,16 @@ function inicializarDashboardAutomatico() {
 }
 
 // Inicializar quando a página carregar
+function initNotificacoesSino() {
+    atualizarListaNotificacoes();
+    atualizarBadgeNotificacoes();
+}
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', function() {
         inicializarDashboardAutomatico();
+        initNotificacoesSino();
     });
 } else {
     inicializarDashboardAutomatico();
+    initNotificacoesSino();
 }

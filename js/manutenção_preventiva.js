@@ -1,7 +1,14 @@
 /* ==========================================================
    1. MOTOR DE GERAÇÃO DE PDF + AVISO MODERNO (UNIFICADO)
    ========================================================== */
-document.getElementById('preventiva-form').addEventListener('submit', function(e) {
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('preventiva-form');
+    if (!form) {
+        console.error('❌ Formulário preventiva-form não encontrado!');
+        return;
+    }
+    
+    form.addEventListener('submit', function(e) {
     e.preventDefault();
 
     // Validação básica
@@ -109,6 +116,26 @@ document.getElementById('preventiva-form').addEventListener('submit', function(e
         }
         // ========== FIM DA INTEGRAÇÃO ==========
 
+        // ========== REGISTRAR NA BIBLIOTECA DE MANUTENÇÕES ==========
+        try {
+            const KEY = 'axis_manutencoes_biblioteca';
+            let bib = {};
+            try { bib = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (_) {}
+            if (!bib[anoSelecionado]) bib[anoSelecionado] = {};
+            if (!bib[anoSelecionado][mesSelecionado]) bib[anoSelecionado][mesSelecionado] = [];
+            const dataVal = document.getElementById('data_id')?.value || new Date().toISOString().slice(0, 10);
+            bib[anoSelecionado][mesSelecionado].push({
+                id: Date.now(),
+                data: dataVal,
+                serial: serial,
+                modelo: document.getElementById('modelo_id')?.value || '',
+                tecnico: document.getElementById('tecnico_id')?.value || '',
+                setor: document.getElementById('setor_id')?.value || '',
+                arquivo: nomeArquivo
+            });
+            localStorage.setItem(KEY, JSON.stringify(bib));
+        } catch (_) {}
+
     }).catch(err => {
         btn.disabled = false;
         btn.style.opacity = '1';
@@ -117,6 +144,7 @@ document.getElementById('preventiva-form').addEventListener('submit', function(e
 
     // DISPARA O AVISO MODERNO (Substitui o alert preto do navegador)
     showAlert("Relatório Concluído", "O checklist da AXIS foi gerado e o download iniciado!");
+    });
 });
 
 /* ==========================================================
@@ -190,12 +218,28 @@ document.addEventListener('DOMContentLoaded', () => {
     const anoSelect = document.getElementById('organizer-ano');
     const mesSelect = document.getElementById('organizer-mes');
     
+    // Preencher select de anos (de 2020 até 2030)
     if (anoSelect) {
+        // Limpar opções existentes
+        anoSelect.innerHTML = '';
+        
+        // Gerar anos de 2020 até 2030
+        for (let ano = 2020; ano <= 2030; ano++) {
+            const option = document.createElement('option');
+            option.value = ano.toString();
+            option.textContent = ano.toString();
+            if (ano === anoAtual) {
+                option.selected = true;
+            }
+            anoSelect.appendChild(option);
+        }
+        
         // Se não tiver valor selecionado, usar ano atual
         if (!anoSelect.value || anoSelect.value === '') {
             anoSelect.value = anoAtual.toString();
         }
     }
+    
     if (mesSelect) {
         // Se não tiver valor selecionado, usar mês atual
         if (!mesSelect.value || mesSelect.value === '') {
@@ -228,69 +272,34 @@ function closeAlert() {
     document.getElementById('custom-alert').style.display = 'none';
 }
 
-// Função para voltar para a home do sistema - VERSÃO DEFINITIVA E FUNCIONAL
+// ============================================
+// 🔒 FUNÇÃO PROTEGIDA: voltarParaHome
+// NÃO MODIFICAR - ESSENCIAL PARA NAVEGAÇÃO
+// Garante que sempre permanece no mesmo site
+// ============================================
 function voltarParaHome(e) {
-    // Previne comportamento padrão se evento existir
     if (e) {
         e.preventDefault();
         e.stopPropagation();
     }
-    
-    console.log('🔄 Botão "Voltar para Dashboard" clicado');
-    console.log('📍 URL atual:', window.location.href);
-    console.log('📍 Pathname:', window.location.pathname);
-    
+    // Sempre usa caminho absoluto a partir da raiz do site: evita "sair" do site
+    const target = '/index.html#page-home';
     try {
-        // Abordagem mais simples e direta
-        // Sempre usa caminho relativo simples, que funciona tanto em file:// quanto em http://
-        
-        // Primeiro, tenta o caminho mais comum
-        const targetUrl = 'index.html#home';
-        
-        console.log('🎯 Navegando para:', targetUrl);
-        
-        // Usa window.location.replace para evitar adicionar ao histórico
-        // Isso faz com que o botão "voltar" do navegador não volte para a página de manutenção
-        window.location.replace(targetUrl);
-        
-        // Se replace não funcionar (alguns navegadores), usa href como fallback
-        setTimeout(() => {
-            if (window.location.pathname.includes('manutenção_preventiva') || 
-                window.location.pathname.includes('manutencao')) {
-                console.log('⚠️ Replace não funcionou, tentando href...');
-                window.location.href = targetUrl;
-            }
-        }, 100);
-        
-        return false;
-        
-    } catch (error) {
-        console.error('❌ Erro ao voltar para home:', error);
-        
-        // Fallbacks progressivos
-        const fallbacks = [
-            'index.html#home',
-            './index.html#home',
-            '../index.html#home',
-            'index.html',
-            './index.html'
-        ];
-        
-        for (let i = 0; i < fallbacks.length; i++) {
-            try {
-                console.log(`🔄 Tentando fallback ${i + 1}:`, fallbacks[i]);
-                window.location.href = fallbacks[i];
-                break;
-            } catch (e) {
-                if (i === fallbacks.length - 1) {
-                    console.error('❌ Todos os fallbacks falharam');
-                    alert('Erro ao navegar. Por favor, use o menu do navegador para voltar à página inicial.');
-                }
-            }
+        const dest = new URL(target, window.location.origin);
+        if (dest.origin !== window.location.origin) {
+            window.location.href = window.location.origin + target;
+        } else {
+            window.location.href = target;
         }
-        
-        return false;
+    } catch (_) {
+        window.location.href = target;
     }
+    return false;
+}
+
+// Garante que a função esteja disponível globalmente
+if (typeof window !== 'undefined') {
+    window.voltarParaHome = voltarParaHome;
 }
 
 // Torna a função global

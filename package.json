@@ -5,7 +5,10 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "launch": "start.bat",
+    "abrir": "start.bat",
+    "organizar-manutencoes": "node scripts/organizar-manutencoes-por-pasta.js"
   },
   "keywords": [
     "axis",

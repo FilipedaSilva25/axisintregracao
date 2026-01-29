@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AXIS Intelligence | Full Inspection</title>
-    <link rel="stylesheet" href="manutenção_preventiva.css">
+    <link rel="stylesheet" href="../css/manutenção_preventiva.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -12,6 +12,7 @@
 <body>
 
     
+    <!-- BLINDAGEM VOLTAR: link deve ter href="../index.html?axis_voltar=1#page-home" e onclick que seta axis_voltar_force_main. Não remover. -->
     <!-- Menu Hambúrguer -->
     <div class="hamburger-menu-container">
         <button class="hamburger-btn" id="hamburger-btn" onclick="toggleHamburgerMenu()">
@@ -20,7 +21,7 @@
             <span></span>
         </button>
         <div class="hamburger-menu" id="hamburger-menu">
-            <a href="index.html#home" class="menu-item" onclick="voltarParaHome(event)">
+            <a href="../index.html?axis_voltar=1#page-home" class="menu-item" id="link-voltar-dashboard" onclick="try{ sessionStorage.setItem('axis_voltar_force_main','1'); }catch(e){}">
                 <i class="fas fa-arrow-left"></i>
                 <span>Voltar para Dashboard</span>
             </a>
@@ -36,6 +37,39 @@
         <header class="main-header">
             <h1 class="logo-text">MANUTENÇÃO<span>PREVENTIVA</span></h1>
         </header>
+
+        <!-- Menu Organizador (Ano e Mês) -->
+        <section class="glass-card no-print" style="margin-bottom: 20px;">
+            <h2 class="title-gradient" style="font-size: 1.2rem; margin-bottom: 15px;">📁 Organização do Relatório</h2>
+            <div class="row-2">
+                <div class="ios-input">
+                    <label>Ano</label>
+                    <select id="organizer-ano" style="width: 100%; padding: 14px; border-radius: 10px; border: 1px solid #e2e8f0; background: #ffffff; color: #1d1d1f; font-size: 14px; cursor: pointer;">
+                        <!-- Anos serão preenchidos dinamicamente -->
+                    </select>
+                </div>
+                <div class="ios-input">
+                    <label>Mês</label>
+                    <select id="organizer-mes" style="width: 100%; padding: 14px; border-radius: 10px; border: 1px solid #e2e8f0; background: #ffffff; color: #1d1d1f; font-size: 14px; cursor: pointer;">
+                        <option value="01">Janeiro</option>
+                        <option value="02">Fevereiro</option>
+                        <option value="03">Março</option>
+                        <option value="04">Abril</option>
+                        <option value="05">Maio</option>
+                        <option value="06">Junho</option>
+                        <option value="07">Julho</option>
+                        <option value="08">Agosto</option>
+                        <option value="09">Setembro</option>
+                        <option value="10">Outubro</option>
+                        <option value="11">Novembro</option>
+                        <option value="12">Dezembro</option>
+                    </select>
+                </div>
+            </div>
+            <p style="margin-top: 10px; font-size: 12px; color: #64748b; font-style: italic;">
+                💡 O PDF será salvo com o ano e mês selecionados no nome do arquivo para melhor organização.
+            </p>
+        </section>
 
         <form id="preventiva-form">
             <section class="glass-card">
@@ -164,10 +198,9 @@
             <button type="submit" id="btn-gerar" class="btn-gradient">FINALIZAR E GERAR RELATÓRIO PDF</button>
         </form>
     </div>
-    <script src="manutenção_preventiva.js"></script>
+</div> 
 
-    </form>
-</div> <div id="custom-alert" class="glass-overlay no-print">
+<div id="custom-alert" class="glass-overlay no-print">
     <div class="glass-modal">
         <div class="glass-icon">!</div>
         <h2 id="alert-title">Aviso do Sistema</h2>
@@ -177,6 +210,6 @@
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<script src="manutenção_preventiva.js"></script>
+<script src="../js/manutenção_preventiva.js"></script>
 </body>
 </html>

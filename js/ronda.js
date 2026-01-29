@@ -16,8 +16,6 @@ const mesesNomes = {
 
 // Inicialização quando a página carregar
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🔄 Sistema de Rondas inicializado');
-    
     // Inicializar formulário
     inicializarFormulario();
     
@@ -31,6 +29,17 @@ document.addEventListener('DOMContentLoaded', function() {
 // Inicializar formulário
 function inicializarFormulario() {
     mostrarPasso(1);
+    
+    // Responsável = usuário logado (localStorage)
+    var el = document.getElementById('ronda-responsavel');
+    if (el) {
+        try {
+            var nome = (localStorage.getItem('current_user') || '').trim();
+            el.value = nome || 'Operador';
+        } catch (_) {
+            el.value = 'Operador';
+        }
+    }
     
     // Selecionar status por padrão
     const statusConcluido = document.querySelector('input[name="ronda-status"][value="concluido"]');
@@ -350,9 +359,7 @@ function salvarRonda(e) {
         if (dadosSalvos) {
             rondas = JSON.parse(dadosSalvos);
         }
-    } catch (error) {
-        console.error('Erro ao carregar rondas:', error);
-    }
+    } catch (_) {}
     
     // Adicionar nova ronda
     rondas.push(ronda);
@@ -360,8 +367,6 @@ function salvarRonda(e) {
     // Salvar no localStorage
     try {
         localStorage.setItem('sistemaRondas', JSON.stringify(rondas));
-        console.log('✅ Ronda salva com sucesso!');
-        console.log('📁 Organização:', `${ano}/${nomeMes}`);
         
         // Mostrar mensagem de sucesso
         alert('✅ Ronda salva com sucesso!\n\nOrganização: ' + ano + '/' + nomeMes);
@@ -373,7 +378,6 @@ function salvarRonda(e) {
         // Atualizar contadores
         atualizarContadores();
     } catch (error) {
-        console.error('Erro ao salvar ronda:', error);
         alert('❌ Erro ao salvar ronda. Por favor, tente novamente.');
     }
 }
