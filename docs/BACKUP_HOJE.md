@@ -1,5 +1,10 @@
 # Backup – Fim do dia (Projeto Vida / AXIS)
 
+**Já feito hoje:** backup em `backups/Projeto-Vida-BACKUP-*`, commit + tag `backup-fim-do-dia`.  
+Para nova cópia, use o script abaixo.
+
+---
+
 ## Como salvar tudo e não perder nada
 
 ### 1. Script de backup (recomendado)
