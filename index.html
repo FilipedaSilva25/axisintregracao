@@ -1,0 +1,3994 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AXIS - Sistema de Gestão de Inventário de Impressoras Zebra">
+    <meta name="theme-color" content="#2ecc71">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="assets/IMAGENS/Novo_Fivecon_1.2.png">
+    <link rel="apple-touch-icon" href="assets/IMAGENS/Novo_Fivecon_1.2.png">
+    
+    <title>AXIS - Sistema de Gestão de Inventário</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- CSS PRINCIPAL -->
+    <link rel="stylesheet" href="css/style.css">
+    
+    <!-- WhatsApp Alerts CSS -->
+    <link rel="stylesheet" href="Novos Módulos/whatsapp-alerts/whatsapp-alerts.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        /* Garantir carregamento de fontes */
+        * {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+        }
+
+        /* Card especial de Manutenção Preventiva */
+        .mod-card.preventiva-master {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(253, 126, 20, 0.1) 100%) !important;
+            border: 2px solid rgba(253, 126, 20, 0.3) !important;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .mod-card.preventiva-master::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(253, 126, 20, 0.1) 0%, transparent 70%);
+            animation: rotate 10s linear infinite;
+        }
+
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .mod-card.preventiva-master:hover {
+            border-color: #fd7e14 !important;
+            background: linear-gradient(135deg, #ffffff 0%, rgba(253, 126, 20, 0.2) 100%) !important;
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(253, 126, 20, 0.3);
+        }
+
+        .mod-card.preventiva-master .mod-icon {
+            font-size: 38px;
+            margin-bottom: 12px;
+            animation: pulse 2s ease-in-out infinite;
+            filter: drop-shadow(0 2px 4px rgba(253, 126, 20, 0.3));
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .mod-link-preventiva {
+            color: #fd7e14;
+            font-weight: 700;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* ============================================
+           CARDS ESPECIAIS - ESTILOS ÚNICOS
+           ============================================ */
+
+        /* Card Inventário - Azul/Ciano */
+        .mod-card.inventario-master {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(0, 188, 212, 0.1) 100%) !important;
+            border: 2px solid rgba(0, 188, 212, 0.3) !important;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .mod-card.inventario-master::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(0, 188, 212, 0.1) 0%, transparent 70%);
+            animation: rotate 10s linear infinite;
+        }
+
+        .mod-card.inventario-master:hover {
+            border-color: #00bcd4 !important;
+            background: linear-gradient(135deg, #ffffff 0%, rgba(0, 188, 212, 0.2) 100%) !important;
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0, 188, 212, 0.3);
+        }
+
+        .mod-card.inventario-master .mod-icon {
+            font-size: 38px;
+            margin-bottom: 12px;
+            animation: pulse 2s ease-in-out infinite;
+            filter: drop-shadow(0 2px 4px rgba(0, 188, 212, 0.3));
+        }
+
+        @keyframes floatInventario {
+            0%, 100% { transform: translateY(0) scale(1) rotate(0deg); }
+            25% { transform: translateY(-5px) scale(1.05) rotate(-2deg); }
+            50% { transform: translateY(-10px) scale(1.1) rotate(0deg); }
+            75% { transform: translateY(-5px) scale(1.05) rotate(2deg); }
+        }
+
+        .mod-link-inventario {
+            color: #00bcd4;
+            font-weight: 700;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Card Rondas - Verde/Azul */
+        .mod-card.rondas-master {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(76, 175, 80, 0.1) 100%) !important;
+            border: 2px solid rgba(76, 175, 80, 0.3) !important;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .mod-card.rondas-master::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(76, 175, 80, 0.1) 0%, transparent 70%);
+            animation: rotate 10s linear infinite;
+        }
+
+        .mod-card.rondas-master:hover {
+            border-color: #4caf50 !important;
+            background: linear-gradient(135deg, #ffffff 0%, rgba(76, 175, 80, 0.2) 100%) !important;
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(76, 175, 80, 0.3);
+        }
+
+        .mod-card.rondas-master .mod-icon {
+            font-size: 38px;
+            margin-bottom: 12px;
+            animation: pulse 2s ease-in-out infinite;
+            filter: drop-shadow(0 2px 4px rgba(76, 175, 80, 0.3));
+        }
+
+        @keyframes shieldPulse {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            25% { transform: scale(1.1) rotate(-5deg); }
+            50% { transform: scale(1.15) rotate(0deg); }
+            75% { transform: scale(1.1) rotate(5deg); }
+        }
+
+        .mod-link-rondas {
+            color: #4caf50;
+            font-weight: 700;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Card Suporte - Rosa/Magenta */
+        .mod-card.suporte-master {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(233, 30, 99, 0.1) 100%) !important;
+            border: 2px solid rgba(233, 30, 99, 0.3) !important;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .mod-card.suporte-master::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(233, 30, 99, 0.1) 0%, transparent 70%);
+            animation: rotate 10s linear infinite;
+        }
+
+        .mod-card.suporte-master:hover {
+            border-color: #e91e63 !important;
+            background: linear-gradient(135deg, #ffffff 0%, rgba(233, 30, 99, 0.2) 100%) !important;
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(233, 30, 99, 0.3);
+        }
+
+        .mod-card.suporte-master .mod-icon {
+            font-size: 38px;
+            margin-bottom: 12px;
+            animation: pulse 2s ease-in-out infinite;
+            filter: drop-shadow(0 2px 4px rgba(233, 30, 99, 0.3));
+        }
+
+        @keyframes bounceSuporte {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-8px) scale(1.1); }
+        }
+
+        .mod-link-suporte {
+            color: #e91e63;
+            font-weight: 700;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Card Notas Fiscais - Roxo/Violeta */
+        .mod-card.notas-master {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(156, 39, 176, 0.1) 100%) !important;
+            border: 2px solid rgba(156, 39, 176, 0.3) !important;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .mod-card.notas-master::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(156, 39, 176, 0.1) 0%, transparent 70%);
+            animation: rotate 10s linear infinite;
+        }
+
+        .mod-card.notas-master:hover {
+            border-color: #9c27b0 !important;
+            background: linear-gradient(135deg, #ffffff 0%, rgba(156, 39, 176, 0.2) 100%) !important;
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(156, 39, 176, 0.3);
+        }
+
+        .mod-card.notas-master .mod-icon {
+            font-size: 38px;
+            margin-bottom: 12px;
+            animation: pulse 2s ease-in-out infinite;
+            filter: drop-shadow(0 2px 4px rgba(156, 39, 176, 0.3));
+        }
+
+        @keyframes waveNotas {
+            0%, 100% { transform: rotate(0deg) scale(1); }
+            25% { transform: rotate(-10deg) scale(1.05); }
+            50% { transform: rotate(0deg) scale(1.1); }
+            75% { transform: rotate(10deg) scale(1.05); }
+        }
+
+        .mod-link-notas {
+            color: #9c27b0;
+            font-weight: 700;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Card Bloco de Notas - Amarelo/Dourado */
+        .mod-card.bloco-master {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 193, 7, 0.1) 100%) !important;
+            border: 2px solid rgba(255, 193, 7, 0.3) !important;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .mod-card.bloco-master::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 193, 7, 0.1) 0%, transparent 70%);
+            animation: rotate 10s linear infinite;
+        }
+
+        .mod-card.bloco-master:hover {
+            border-color: #ffc107 !important;
+            background: linear-gradient(135deg, #ffffff 0%, rgba(255, 193, 7, 0.2) 100%) !important;
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(255, 193, 7, 0.3);
+        }
+
+        .mod-card.bloco-master .mod-icon {
+            font-size: 38px;
+            margin-bottom: 12px;
+            animation: pulse 2s ease-in-out infinite;
+            filter: drop-shadow(0 2px 4px rgba(255, 193, 7, 0.3));
+        }
+
+        @keyframes glowBloco {
+            0%, 100% { transform: scale(1); filter: drop-shadow(0 2px 4px rgba(255, 193, 7, 0.3)); }
+            50% { transform: scale(1.15); filter: drop-shadow(0 4px 8px rgba(255, 193, 7, 0.6)); }
+        }
+
+        .mod-link-bloco {
+            color: #ffc107;
+            font-weight: 700;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Card Registro de Chamados - Vidro + cores do site (azul/verde) */
+        .mod-card.chamados-master {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.85) 0%, rgba(0, 122, 255, 0.08) 50%, rgba(46, 204, 113, 0.06) 100%) !important;
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(0, 122, 255, 0.2) !important;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .mod-card.chamados-master::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(0, 122, 255, 0.08) 0%, rgba(46, 204, 113, 0.05) 40%, transparent 70%);
+            animation: rotate 10s linear infinite;
+        }
+
+        .mod-card.chamados-master:hover {
+            border-color: rgba(0, 122, 255, 0.4) !important;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.92) 0%, rgba(0, 122, 255, 0.12) 50%, rgba(46, 204, 113, 0.08) 100%) !important;
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0, 122, 255, 0.2);
+        }
+
+        .mod-card.chamados-master .mod-icon {
+            font-size: 38px;
+            margin-bottom: 12px;
+            animation: pulse 2s ease-in-out infinite;
+            filter: drop-shadow(0 2px 4px rgba(0, 122, 255, 0.25));
+        }
+
+        .mod-card.chamados-master .mod-desc {
+            font-size: 12px;
+            color: var(--text-secondary, #86868b);
+            margin-top: 6px;
+            font-weight: 400;
+        }
+
+        /* Card Configurações - Cinza/Prata com Gradiente */
+        .mod-card.config-master {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(96, 125, 139, 0.1) 100%) !important;
+            border: 2px solid rgba(96, 125, 139, 0.3) !important;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .mod-card.config-master::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(96, 125, 139, 0.1) 0%, transparent 70%);
+            animation: rotate 10s linear infinite;
+        }
+
+        .mod-card.config-master:hover {
+            border-color: #607d8b !important;
+            background: linear-gradient(135deg, #ffffff 0%, rgba(96, 125, 139, 0.2) 100%) !important;
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(96, 125, 139, 0.3);
+        }
+
+        .mod-card.config-master .mod-icon {
+            font-size: 38px;
+            margin-bottom: 12px;
+            animation: pulse 2s ease-in-out infinite;
+            filter: drop-shadow(0 2px 4px rgba(96, 125, 139, 0.3));
+        }
+
+        @keyframes spinConfig {
+            0% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(180deg) scale(1.1); }
+            100% { transform: rotate(360deg) scale(1); }
+        }
+
+        .mod-link-config {
+            color: #607d8b;
+            font-weight: 700;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Dark Mode para todos os cards especiais */
+        [data-theme="dark"] .mod-card.inventario-master {
+            background: linear-gradient(135deg, rgba(30, 30, 30, 0.9) 0%, rgba(0, 188, 212, 0.15) 100%) !important;
+            border-color: rgba(0, 188, 212, 0.4) !important;
+        }
+
+        [data-theme="dark"] .mod-card.inventario-master:hover {
+            background: linear-gradient(135deg, rgba(40, 40, 40, 0.95) 0%, rgba(0, 188, 212, 0.25) 100%) !important;
+        }
+
+        [data-theme="dark"] .mod-card.rondas-master {
+            background: linear-gradient(135deg, rgba(30, 30, 30, 0.9) 0%, rgba(76, 175, 80, 0.15) 100%) !important;
+            border-color: rgba(76, 175, 80, 0.4) !important;
+        }
+
+        [data-theme="dark"] .mod-card.rondas-master:hover {
+            background: linear-gradient(135deg, rgba(40, 40, 40, 0.95) 0%, rgba(76, 175, 80, 0.25) 100%) !important;
+        }
+
+        [data-theme="dark"] .mod-card.suporte-master {
+            background: linear-gradient(135deg, rgba(30, 30, 30, 0.9) 0%, rgba(233, 30, 99, 0.15) 100%) !important;
+            border-color: rgba(233, 30, 99, 0.4) !important;
+        }
+
+        [data-theme="dark"] .mod-card.suporte-master:hover {
+            background: linear-gradient(135deg, rgba(40, 40, 40, 0.95) 0%, rgba(233, 30, 99, 0.25) 100%) !important;
+        }
+
+        [data-theme="dark"] .mod-card.notas-master {
+            background: linear-gradient(135deg, rgba(30, 30, 30, 0.9) 0%, rgba(156, 39, 176, 0.15) 100%) !important;
+            border-color: rgba(156, 39, 176, 0.4) !important;
+        }
+
+        [data-theme="dark"] .mod-card.notas-master:hover {
+            background: linear-gradient(135deg, rgba(40, 40, 40, 0.95) 0%, rgba(156, 39, 176, 0.25) 100%) !important;
+        }
+
+        [data-theme="dark"] .mod-card.bloco-master {
+            background: linear-gradient(135deg, rgba(30, 30, 30, 0.9) 0%, rgba(255, 193, 7, 0.15) 100%) !important;
+            border-color: rgba(255, 193, 7, 0.4) !important;
+        }
+
+        [data-theme="dark"] .mod-card.bloco-master:hover {
+            background: linear-gradient(135deg, rgba(40, 40, 40, 0.95) 0%, rgba(255, 193, 7, 0.25) 100%) !important;
+        }
+
+        [data-theme="dark"] .mod-card.config-master {
+            background: linear-gradient(135deg, rgba(30, 30, 30, 0.9) 0%, rgba(96, 125, 139, 0.15) 100%) !important;
+            border-color: rgba(96, 125, 139, 0.4) !important;
+        }
+
+        [data-theme="dark"] .mod-card.config-master:hover {
+            background: linear-gradient(135deg, rgba(40, 40, 40, 0.95) 0%, rgba(96, 125, 139, 0.25) 100%) !important;
+        }
+
+        [data-theme="dark"] .mod-card.preventiva-master {
+            background: linear-gradient(135deg, rgba(30, 30, 30, 0.9) 0%, rgba(253, 126, 20, 0.15) 100%) !important;
+            border-color: rgba(253, 126, 20, 0.4) !important;
+        }
+
+        [data-theme="dark"] .mod-card.preventiva-master:hover {
+            background: linear-gradient(135deg, rgba(40, 40, 40, 0.95) 0%, rgba(253, 126, 20, 0.25) 100%) !important;
+        }
+
+        /* Loading Screen */
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+
+        #loading-screen.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .loader {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            margin-top: 20px;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        /* Animações de entrada */
+        .fade-in {
+            animation: fadeIn 0.6s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Melhorias de acessibilidade */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+
+        /* Focus visible para acessibilidade */
+        *:focus-visible {
+            outline: 3px solid #2ecc71;
+            outline-offset: 2px;
+        }
+
+        /* Toast – notificação pequena no topo, abaixo do seletor de tema (lua) */
+        .toast {
+            position: fixed;
+            top: 72px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-80px);
+            background: white;
+            padding: 10px 16px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 10000;
+            opacity: 0;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+            max-width: 360px;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        .toast-success {
+            border-left: 4px solid #2ecc71;
+        }
+
+        .toast-warning {
+            border-left: 4px solid #ff9500;
+        }
+
+        .toast-error {
+            border-left: 4px solid #ff3b30;
+        }
+
+        .toast-info {
+            border-left: 4px solid #007aff;
+        }
+
+        .toast-icon {
+            font-size: 20px;
+        }
+
+        .toast-message {
+            flex: 1;
+            font-size: 14px;
+            color: var(--text-main);
+        }
+
+        .toast-close {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .toast-close:hover {
+            background: rgba(0, 0, 0, 0.1);
+            color: var(--text-main);
+        }
+
+        /* Tooltip container */
+        .tooltip-container {
+            position: fixed;
+            background: #1d1d1f;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            pointer-events: none;
+            z-index: 9999;
+            display: none;
+            max-width: 300px;
+            white-space: nowrap;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        /* Modal de cadastro e detalhes */
+        .modal-equipamento {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
+            z-index: 3000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 24px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: modalSlideIn 0.3s ease;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .modal-header {
+            padding: 20px 25px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            color: #1d1d1f;
+        }
+
+        .close-modal {
+            font-size: 24px;
+            cursor: pointer;
+            color: #86868b;
+            padding: 5px;
+            border-radius: 50%;
+            transition: all 0.2s ease;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            background: none;
+        }
+
+        .close-modal:hover {
+            background: #f5f5f7;
+            color: #1d1d1f;
+        }
+
+        .modal-body {
+            padding: 25px;
+        }
+
+        /* Controles de inventário */
+        .inventory-controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .search-bar-inventory {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex: 1;
+        }
+
+        .axis-input-search {
+            flex: 1;
+            padding: 12px 16px;
+            padding-left: 40px;
+            border-radius: 12px;
+            border: 1px solid #d2d2d7;
+            font-size: 14px;
+            background: white;
+        }
+
+        .axis-select {
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: 1px solid #d2d2d7;
+            background: white;
+            font-size: 14px;
+            min-width: 150px;
+        }
+
+        /* Estatísticas */
+        .inventory-stats {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 15px 20px;
+            text-align: center;
+            border: 1px solid #f0f0f0;
+            min-width: 120px;
+            flex: 1;
+        }
+
+        .stat-number {
+            display: block;
+            font-size: 28px;
+            font-weight: 700;
+            color: #1d1d1f;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #86868b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 5px;
+        }
+
+        /* Paginação */
+        .pagination-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .pagination-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .pagination-btn {
+            padding: 8px 12px;
+            border: 1px solid #d2d2d7;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .pagination-btn:hover:not(:disabled) {
+            background: #007aff;
+            color: white;
+            border-color: #007aff;
+        }
+
+        .pagination-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination-btn.active {
+            background: #007aff;
+            color: white;
+            border-color: #007aff;
+        }
+
+        /* Menu de modelos */
+        .model-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+        }
+
+        .model-tab {
+            padding: 12px 20px;
+            background: #f5f5f7;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 14px;
+            white-space: nowrap;
+            transition: all 0.3s ease;
+        }
+
+        .model-tab:hover {
+            background: #e5e5ea;
+        }
+
+        .model-tab.active {
+            background: #007aff;
+            color: white;
+        }
+
+        /* Ações do header */
+        .nav-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .theme-toggle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f5f5f7;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        /* Notification count removido */
+
+        /* FAB */
+        .fab-container {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 1000;
+        }
+
+        .fab-main {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #2ecc71, #007aff);
+            color: white;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 8px 25px rgba(46, 204, 113, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .fab-main:hover {
+            transform: scale(1.1);
+            box-shadow: 0 12px 30px rgba(46, 204, 113, 0.4);
+        }
+
+        .fab-menu {
+            position: absolute;
+            bottom: 70px;
+            right: 0;
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .fab-container.active .fab-menu {
+            display: flex;
+        }
+
+        .fab-item {
+            padding: 12px 20px;
+            background: white;
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            white-space: nowrap;
+            animation: fadeInUp 0.3s ease;
+        }
+
+        .fab-item:nth-child(1) { animation-delay: 0.1s; }
+        .fab-item:nth-child(2) { animation-delay: 0.2s; }
+        .fab-item:nth-child(3) { animation-delay: 0.3s; }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* ============================================
+           NOVOS ESTILOS ADICIONADOS PARA CORREÇÕES
+           ============================================ */
+        
+        /* Garantir que as seções principais sejam encontradas */
+        .main-section {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+        
+        .main-section.active {
+            display: block;
+        }
+        
+        /* Ajustes para modal de cadastro */
+        .cadastro-step {
+            display: none;
+        }
+        
+        .cadastro-step.active {
+            display: block;
+        }
+        
+        /* Notificações panel removido */
+        
+        /* FAB melhorado */
+        .fab-item .fab-item-icon {
+            font-size: 1.2em;
+        }
+        
+        .fab-item .fab-item-label {
+            font-size: 0.9em;
+        }
+        
+        /* Skeleton loading */
+        .skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 4px;
+        }
+        
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        
+        .skeleton-row td {
+            padding: 12px !important;
+        }
+        
+        .skeleton-text {
+            height: 16px;
+            width: 80%;
+        }
+        
+        .skeleton-badge {
+            height: 24px;
+            width: 60px;
+            border-radius: 12px;
+        }
+        
+        .skeleton-code {
+            height: 20px;
+            width: 120px;
+        }
+        
+        .skeleton-button {
+            height: 36px;
+            width: 100px;
+            border-radius: 6px;
+        }
+        
+        /* Progress bars para detalhes */
+        .progress-bar {
+            height: 8px;
+            background: #f0f0f0;
+            border-radius: 4px;
+            overflow: hidden;
+            flex: 1;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #2ecc71, #27ae60);
+            transition: width 0.3s ease;
+        }
+        
+        .consumivel {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .consumivel-label {
+            width: 80px;
+            font-size: 0.9em;
+        }
+        
+        .consumivel-value {
+            width: 40px;
+            text-align: right;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+        
+        /* Confirmação no cadastro */
+        .confirmation-list {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .confirmation-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .confirmation-item:last-child {
+            border-bottom: none;
+        }
+        
+        .confirmation-label {
+            color: #6c757d;
+        }
+        
+        .confirmation-value {
+            font-weight: 500;
+            color: #212529;
+        }
+        
+        /* Animações */
+        @keyframes statusPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        
+        .status-change {
+            animation: statusPulse 1s ease;
+        }
+        
+        .ping-success {
+            animation: pingSuccess 0.5s ease;
+        }
+        
+        @keyframes pingSuccess {
+            0% { background-color: #2ecc71; }
+            100% { background-color: var(--btn-primary-bg, #007aff); }
+        }
+        
+        .ping-fail {
+            animation: pingFail 0.5s ease;
+        }
+        
+        @keyframes pingFail {
+            0% { background-color: #e74c3c; }
+            100% { background-color: var(--btn-primary-bg, #007aff); }
+        }
+        
+        /* Alto contraste */
+        .high-contrast {
+            --bg-color: #000;
+            --text-color: #fff;
+            --text-secondary: #ccc;
+            --card-bg: #111;
+            --border-color: #444;
+        }
+        
+        /* Redução de movimento */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!--
+      BLINDAGEM VOLTAR MANUTENÇÕES - NÃO REMOVER
+      Garante que "Voltar para Dashboard" em Manutenções Preventivas
+      sempre volte para a Home sem cair na tela de login.
+      Triggers: ?axis_voltar=1 na URL ou sessionStorage.axis_voltar_force_main.
+    -->
+    <script>
+    (function() {
+      var user, fromParam = false, fromFlag = false;
+      try {
+        var q = (typeof location !== 'undefined' && location.search) ? location.search : '';
+        fromParam = q.indexOf('axis_voltar=1') >= 0;
+        try { fromFlag = sessionStorage.getItem('axis_voltar_force_main') === '1'; } catch (_) {}
+        try { user = localStorage.getItem('current_user'); } catch (_) { user = null; }
+        if (!user) user = null;
+        if ((fromParam || fromFlag) && user) {
+          try { localStorage.setItem('user_logged_in', 'true'); } catch (_) {}
+          try { localStorage.setItem('axis-current-page', 'page-home'); } catch (_) {}
+          try { sessionStorage.setItem('axis_voltar_force_main', '1'); } catch (_) {}
+          try {
+            if (typeof history !== 'undefined' && history.replaceState) {
+              history.replaceState(null, '', (location.pathname || '/') + '#page-home');
+            } else {
+              location.hash = 'page-home';
+            }
+          } catch (_) { try { location.hash = 'page-home'; } catch (e) {} }
+        }
+      } catch (e) {}
+    })();
+    </script>
+    <!-- Loading Screen -->
+    <div id="loading-screen">
+        <div class="loader"></div>
+        <div class="loading-text">Carregando AXIS...</div>
+    </div>
+
+    <!-- ============================================
+         TELA DE AUTENTICAÇÃO
+         ============================================ -->
+    <div id="auth-screen">
+        <div class="auth-card fade-in">
+            <div class="logo-area">
+                <img src="assets/IMAGENS/Nova_Logo_Sem_Fundo_1.2.png" alt="AXIS - Sistema de Gestão" class="main-auth-logo">
+            </div>
+
+            <!-- Área de cadastro removida - usuários são criados pela equipe de T.I -->
+
+            <!-- Campos de Login -->
+            <div class="input-group">
+                <label for="username">Usuário</label>
+                <input type="text" 
+                       id="username" 
+                       placeholder="Digite seu usuário"
+                       autocomplete="username"
+                       aria-required="true"
+                       onkeypress="if(event.key === 'Enter') document.getElementById('password').focus()">
+            </div>
+
+            <div class="input-group password-container">
+                <label for="password">Senha</label>
+                <input type="password" 
+                       id="password" 
+                       placeholder="Digite sua senha"
+                       autocomplete="current-password"
+                       aria-required="true"
+                       onkeypress="if(event.key === 'Enter') handleAuth()">
+                <!-- ⚠️ BOTÃO PROTEGIDO - NÃO MODIFICAR O ONCLICK -->
+                <button type="button" 
+                        class="eye-toggle" 
+                        onclick="if(typeof togglePassword === 'function') { togglePassword(); } else { console.error('togglePassword não encontrada'); } return false;"
+                        aria-label="Mostrar/Ocultar senha"
+                        data-protected="true">
+                    <span id="eye-icon">👁️</span>
+                </button>
+            </div>
+
+            <!-- ⚠️ BOTÃO PROTEGIDO - NÃO MODIFICAR O ONCLICK -->
+            <button onclick="if(typeof handleAuth === 'function') { handleAuth(); } else { console.error('handleAuth não encontrada'); alert('Erro: Sistema ainda carregando. Aguarde alguns segundos e tente novamente.'); } return false;" 
+                    id="auth-main-btn" 
+                    class="btn-primary-auth"
+                    aria-label="Acessar sistema"
+                    type="button"
+                    data-protected="true">
+                Acessar AXIS
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal Bem-vindo (estilo Apple / vidro) – fecha ao clicar em qualquer espaço -->
+    <div id="modal-bem-vindo" class="modal-bem-vindo-wrap" style="display: none;" role="dialog" aria-label="Boas-vindas">
+        <div class="modal-bem-vindo-overlay"></div>
+        <div class="modal-bem-vindo-glass">
+            <p class="modal-bem-vindo-title">Bem-vindo, <span id="modal-bem-vindo-nome">Usuário</span>!</p>
+            <p class="modal-bem-vindo-sub">Você está conectado ao AXIS.</p>
+        </div>
+    </div>
+
+    <!-- Modal Sair (vidro, fino e elegante) – substitui confirm nativo -->
+    <div id="modal-sair" class="modal-sair-wrap" style="display: none;" role="dialog" aria-labelledby="modal-sair-title" aria-modal="true">
+        <div class="modal-sair-overlay"></div>
+        <div class="modal-sair-glass">
+            <p id="modal-sair-title" class="modal-sair-title">Deseja realmente sair do sistema AXIS?</p>
+            <div class="modal-sair-actions">
+                <button type="button" class="modal-sair-btn modal-sair-ok" id="modal-sair-ok">OK</button>
+                <button type="button" class="modal-sair-btn modal-sair-cancel" id="modal-sair-cancel">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================
+         CONTEÚDO PRINCIPAL DO SISTEMA
+         ============================================ -->
+    <div id="main-content" style="display: none;">
+        
+        <!-- Header Principal -->
+        <header class="apple-nav" role="banner">
+            <div class="nav-container">
+                <div class="nav-left">
+                    <button class="menu-trigger-ios" 
+                            onclick="if(typeof toggleSidebar === 'function') { toggleSidebar(); } else { console.error('toggleSidebar não encontrada'); } return false;"
+                            aria-label="Abrir menu"
+                            aria-expanded="false">
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                    </button>
+                    <img src="assets/IMAGENS/Novo_Fivecon_1.2.png" alt="AXIS Logo" class="brand-logo-ios">
+                </div>
+
+                <div class="nav-welcome-text" id="nav-welcome-text" style="display: none;">
+                    BEM-VINDO AO AXIS, <span id="user-display-name">USUÁRIO</span>
+                </div>
+
+                <div class="nav-actions">
+                    <button class="theme-toggle" onclick="if(typeof toggleTheme === 'function') { toggleTheme(); } else { console.error('toggleTheme não encontrada'); } return false;" id="theme-toggle" aria-label="Alternar tema">
+                        <span id="theme-icon">🌙</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Menu Lateral -->
+        <aside id="side-menu" class="glass-sidebar" role="navigation" aria-label="Menu principal" style="display: flex; visibility: visible;">
+            <div class="sidebar-header">
+                <h3 class="sr-only">Navegação Principal</h3>
+            </div>
+
+            <nav class="side-nav-links">
+                <button onclick="if(typeof navigate === 'function') { navigate('page-home'); } else { console.error('navigate não encontrada'); } return false;" class="side-item active">
+                    📊 Início
+                </button>
+                <button onclick="if(typeof navigate === 'function') { navigate('page-inventario'); } else { console.error('navigate não encontrada'); } return false;" class="side-item">
+                    📦 Inventário
+                </button>
+                <button onclick="if(typeof navigate === 'function') { navigate('page-rondas'); } else { console.error('navigate não encontrada'); } return false;" class="side-item">
+                    🛡️ Rondas
+                </button>
+                <button onclick="window.location.href='pages/manutenção_preventiva.html'" class="side-item">
+                    🖨️ Manutenções Preventivas
+                </button>
+                <button onclick="if(typeof navigate === 'function') { navigate('page-suporte'); } else { console.error('navigate não encontrada'); } return false;" class="side-item">
+                    💬 Suporte
+                </button>
+                <button onclick="window.location.href='pages/bloco_de_notas_apple.html'" class="side-item">
+                    📝 Bloco de Notas
+                </button>
+                <button onclick="window.location.href='pages/registro_chamados.html'" class="side-item">
+                    📋 Registro de Chamados
+                </button>
+                <button onclick="window.location.href='pages/notas_fiscais.html'" class="side-item">
+                    📄 Notas Fiscais
+                </button>
+                <button onclick="if(typeof navigate === 'function') { navigate('page-configuracoes'); } else { console.error('navigate não encontrada'); } return false;" class="side-item">
+                    ⚙️ Configurações
+                </button>
+                <button onclick="if(typeof navigate === 'function') { navigate('page-administracao'); } else { console.error('navigate não encontrada'); } return false;" class="side-item" id="menu-admin" style="display: none;">
+                    👤 Administração
+                </button>
+                <hr class="nav-divider">
+                <button onclick="if(typeof logout === 'function') { logout(); } else { console.error('logout não encontrada'); } return false;" class="side-item logout">
+                    🚪 Sair do AXIS
+                </button>
+            </nav>
+        </aside>
+
+        <!-- Overlay do Menu (fechar ao clicar - só addEventListener, sem onclick duplicado) -->
+        <div id="menu-overlay" class="menu-overlay"></div>
+
+        <!-- Conteúdo Principal -->
+        <main class="content-wrapper" role="main">
+            
+            <!-- ============================================
+                 PÁGINA INICIAL - DASHBOARD
+                 ============================================ -->
+            <section id="page-home" class="main-section active">
+                <div class="dashboard-header">
+                    <div class="welcome-text">
+                        <h1>Módulos Técnicos</h1>
+                        <p>Gestão centralizada de ativos e vistorias técnicas.</p>
+                    </div>
+                </div>
+
+                <!-- Busca Global -->
+                <div class="quick-search-container">
+                    <input type="search" 
+                           id="global-search" 
+                           placeholder="🔍 Buscar TAG, IP, Serial ou Equipamento..." 
+                           onkeyup="handleGlobalSearch()"
+                           aria-label="Busca global no sistema">
+                </div>
+
+                <!-- Grid de Módulos -->
+                <div class="dashboard-grid">
+                    <!-- Card Inventário -->
+                    <div class="mod-card inventario-master" onclick="if(typeof navigate === 'function') { navigate('page-inventario'); } else { console.error('navigate não encontrada'); alert('Erro: Função de navegação não encontrada. Recarregue a página.'); } return false;" tabindex="0" role="button" style="cursor: pointer;">
+                        <div class="mod-icon">📦</div>
+                        <div class="mod-content">
+                            <h3 class="txt-axis-gradient">Inventário</h3>
+                        </div>
+                    </div>
+
+                    <!-- Card Rondas -->
+                    <div class="mod-card rondas-master" onclick="if(typeof navigate === 'function') { navigate('page-rondas'); } else { console.error('navigate não encontrada'); alert('Erro: Função de navegação não encontrada. Recarregue a página.'); } return false;" tabindex="0" role="button" style="cursor: pointer;">
+                        <div class="mod-icon">🛡️</div>
+                        <div class="mod-content">
+                            <h3 class="txt-axis-gradient">Rondas</h3>
+                        </div>
+                    </div>
+
+                    <!-- Card Manutenção Preventiva (DESTAQUE) -->
+                    <div class="mod-card preventiva-master" 
+                         onclick="window.location.href='pages/manutenção_preventiva.html'" 
+                         tabindex="0" 
+                         role="button">
+                        <div class="mod-icon">🖨️</div>
+                        <div class="mod-content">
+                            <h3 class="txt-axis-gradient">Manutenção Preventiva</h3>
+                        </div>
+                    </div>
+
+                    <!-- Card Suporte -->
+                    <div class="mod-card suporte-master" onclick="if(typeof navigate === 'function') { navigate('page-suporte'); } else { console.error('navigate não encontrada'); alert('Erro: Função de navegação não encontrada. Recarregue a página.'); } return false;" tabindex="0" role="button" style="cursor: pointer;">
+                        <div class="mod-icon">💬</div>
+                        <div class="mod-content">
+                            <h3 class="txt-axis-gradient">Suporte Técnico</h3>
+                        </div>
+                    </div>
+
+                    <!-- Card Notas Fiscais -->
+                    <div class="mod-card notas-master" onclick="window.location.href='pages/notas_fiscais.html'" tabindex="0" role="button">
+                        <div class="mod-icon">📄</div>
+                        <div class="mod-content">
+                            <h3 class="txt-axis-gradient">Notas Fiscais</h3>
+                        </div>
+                    </div>
+
+                    <!-- Card Bloco de Notas -->
+                    <div class="mod-card bloco-master" onclick="window.location.href='pages/bloco_de_notas_apple.html'" tabindex="0" role="button">
+                        <div class="mod-icon">📝</div>
+                        <div class="mod-content">
+                            <h3 class="txt-axis-gradient">Bloco de Notas</h3>
+                        </div>
+                    </div>
+
+                    <!-- Card Registro de Chamados (design vidro, cores do site) -->
+                    <div class="mod-card chamados-master" onclick="window.location.href='pages/registro_chamados.html'" tabindex="0" role="button">
+                        <div class="mod-icon">📋</div>
+                        <div class="mod-content">
+                            <h3 class="txt-axis-gradient">Registro de Chamados</h3>
+                        </div>
+                    </div>
+
+                    <!-- Card Configurações -->
+                    <div class="mod-card config-master" onclick="if(typeof navigate === 'function') { navigate('page-configuracoes'); } else { console.error('navigate não encontrada'); alert('Erro: Função de navegação não encontrada. Recarregue a página.'); } return false;" tabindex="0" role="button" style="cursor: pointer;">
+                        <div class="mod-icon">⚙️</div>
+                        <div class="mod-content">
+                            <h3 class="txt-axis-gradient">Configurações</h3>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================
+                 PÁGINA DE INVENTÁRIO
+                 ============================================ -->
+            <section id="page-inventario" class="main-section ucs-inventory-section">
+                <!-- Card de Busca -->
+                <div class="ucs-search-card">
+                    <div class="ucs-search-header">
+                        <span class="ucs-search-icon">🔍</span>
+                        <h3 class="ucs-search-title">Buscar Dispositivos</h3>
+                    </div>
+                    <div class="ucs-search-fields">
+                        <div class="ucs-field-group">
+                            <label class="ucs-field-label">País</label>
+                            <select id="ucs-filtro-pais" class="ucs-field-select">
+                                <option value="">Selecione um país</option>
+                                <option value="brasil" selected>Brasil</option>
+                            </select>
+                        </div>
+                        <div class="ucs-field-group">
+                            <label class="ucs-field-label">Centro Logístico</label>
+                            <select id="ucs-filtro-nodo" class="ucs-field-select">
+                                <option value="">Selecione um Centro Logístico</option>
+                                <option value="brsc02">(BRSC02) Cad Floripa</option>
+                            </select>
+                        </div>
+                        <div class="ucs-field-group">
+                            <label class="ucs-field-label">Dispositivo</label>
+                            <select id="ucs-filtro-dispositivo" class="ucs-field-select">
+                                <option value="">Selecione um dispositivo</option>
+                                <option value="printer" selected>Printer</option>
+                            </select>
+                        </div>
+                        <div class="ucs-search-actions">
+                            <button class="ucs-btn-reset" onclick="resetarFiltrosInventario()">Reset</button>
+                            <button class="ucs-btn-search" onclick="if(typeof filtrarInventario === 'function') { filtrarInventario(); } else { console.error('filtrarInventario não encontrada'); alert('Erro: Função de filtro não encontrada. Recarregue a página.'); } return false;">Buscar</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cabeçalho do Inventário -->
+                <div class="ucs-inventory-header">
+                    <h2 class="ucs-inventory-title">Impressoras</h2>
+                    <span class="ucs-inventory-count" id="ucs-total-count">0 EM TOTAL</span>
+                </div>
+
+                <!-- Ações do Inventário -->
+                <div class="ucs-inventory-actions">
+                    <div class="ucs-download-dropdown">
+                        <button class="ucs-btn-download">
+                            Baixar
+                            <span class="ucs-dropdown-arrow">▼</span>
+                        </button>
+                        <div class="ucs-download-menu">
+                            <button class="ucs-download-option" onclick="exportarDados('csv')">CSV</button>
+                            <button class="ucs-download-option" onclick="exportarDados('excel')">Excel</button>
+                            <button class="ucs-download-option" onclick="exportarDados('pdf')">PDF</button>
+                        </div>
+                    </div>
+                    <div class="ucs-filter-dropdown" id="ucs-filter-dropdown">
+                        <button type="button" class="ucs-btn-filter" id="ucs-btn-filter" aria-expanded="false" aria-haspopup="true">
+                            Filtrar
+                            <span class="ucs-filter-arrow">▼</span>
+                        </button>
+                        <div class="ucs-filter-panel" id="ucs-filter-panel" role="dialog" aria-label="Painel de filtros">
+                            <div class="ucs-filter-panel-header">
+                                <span class="ucs-filter-panel-title">Filtros</span>
+                                <button type="button" class="ucs-filter-panel-close" id="ucs-filter-close" aria-label="Fechar">&times;</button>
+                            </div>
+                            <div class="ucs-filter-panel-body">
+                                <label class="ucs-filter-label">Modelo</label>
+                                <div class="setor-selector setor-selector-filter" id="modelo-selector-filter-wrap">
+                                    <select id="ucs-filtro-panel-modelo" class="setor-selector-native-hidden" aria-hidden="true">
+                                        <option value="">Todos</option>
+                                        <option value="ZT411">ZT411</option>
+                                        <option value="ZD421">ZD421</option>
+                                        <option value="ZQ630 PLUS">ZQ630 PLUS</option>
+                                    </select>
+                                    <button type="button" class="setor-selector-trigger" id="ucs-filtro-panel-modelo-trigger" aria-haspopup="listbox" aria-expanded="false">Todos</button>
+                                    <div class="setor-selector-dropdown" id="ucs-filtro-panel-modelo-dropdown" role="listbox" aria-hidden="true">
+                                        <div class="setor-selector-option" data-value="" role="option">Todos</div>
+                                        <div class="setor-selector-option" data-value="ZT411" role="option">ZT411</div>
+                                        <div class="setor-selector-option" data-value="ZD421" role="option">ZD421</div>
+                                        <div class="setor-selector-option" data-value="ZQ630 PLUS" role="option">ZQ630 PLUS</div>
+                                    </div>
+                                </div>
+                                <label class="ucs-filter-label">Setor</label>
+                                <div class="setor-selector setor-selector-filter" id="setor-selector-filter-wrap">
+                                    <select id="ucs-filtro-panel-setor" class="setor-selector-native-hidden" aria-hidden="true">
+                                        <option value="">Todos</option>
+                                        <option value="internal-systems">INTERNAL SYSTEMS</option>
+                                        <option value="lideranca">LIDERANÇA</option>
+                                        <option value="mhw">MHW</option>
+                                        <option value="p2m">P2M</option>
+                                        <option value="check-in">CHECK-IN</option>
+                                        <option value="reciving">RECIVING</option>
+                                        <option value="mz1">MZ1</option>
+                                        <option value="mz2">MZ2</option>
+                                        <option value="mz3">MZ3</option>
+                                        <option value="inventario">INVENTÁRIO</option>
+                                        <option value="cx">CX</option>
+                                        <option value="returns">RETURNS</option>
+                                        <option value="packing-mono">PACKING MONO</option>
+                                        <option value="packing-ptw">PACKING PTW</option>
+                                        <option value="sauron">SAURON</option>
+                                        <option value="insumos">INSUMOS</option>
+                                        <option value="docas-de-expedicao">DOCAS DE EXPEDIÇÃO</option>
+                                        <option value="linha-de-peixe-1">LINHA DE PEIXE 1</option>
+                                        <option value="sorter">SORTER</option>
+                                        <option value="linha-de-peixe-2">LINHA DE PEIXE 2</option>
+                                        <option value="rk">RK</option>
+                                        <option value="nt-rk">NT RK</option>
+                                        <option value="qualidade">QUALIDADE</option>
+                                        <option value="aquario-outbound">AQUÁRIO OUTBOUND</option>
+                                        <option value="adm">ADM</option>
+                                        <option value="gate">GATE</option>
+                                        <option value="ambulatorio-interno">AMBULATÓRIO INTERNO</option>
+                                        <option value="ambulatorio-externo">AMBULATÓRIO EXTERNO</option>
+                                        <option value="sala-de-epi">SALA DE EPI</option>
+                                        <option value="er">ER</option>
+                                        <option value="rr">RR</option>
+                                        <option value="deposito-de-treinamento">DEPÓSITO DE TREINAMENTO</option>
+                                        <option value="hv">HV</option>
+                                    </select>
+                                    <button type="button" class="setor-selector-trigger" id="ucs-filtro-panel-setor-trigger" aria-haspopup="listbox" aria-expanded="false">Todos</button>
+                                    <div class="setor-selector-dropdown" id="ucs-filtro-panel-setor-dropdown" role="listbox" aria-hidden="true">
+                                        <div class="setor-selector-option" data-value="" role="option">Todos</div>
+                                        <div class="setor-selector-option" data-value="internal-systems" role="option">INTERNAL SYSTEMS</div>
+                                        <div class="setor-selector-option" data-value="lideranca" role="option">LIDERANÇA</div>
+                                        <div class="setor-selector-option" data-value="mhw" role="option">MHW</div>
+                                        <div class="setor-selector-option" data-value="p2m" role="option">P2M</div>
+                                        <div class="setor-selector-option" data-value="check-in" role="option">CHECK-IN</div>
+                                        <div class="setor-selector-option" data-value="reciving" role="option">RECIVING</div>
+                                        <div class="setor-selector-option" data-value="mz1" role="option">MZ1</div>
+                                        <div class="setor-selector-option" data-value="mz2" role="option">MZ2</div>
+                                        <div class="setor-selector-option" data-value="mz3" role="option">MZ3</div>
+                                        <div class="setor-selector-option" data-value="inventario" role="option">INVENTÁRIO</div>
+                                        <div class="setor-selector-option" data-value="cx" role="option">CX</div>
+                                        <div class="setor-selector-option" data-value="returns" role="option">RETURNS</div>
+                                        <div class="setor-selector-option" data-value="packing-mono" role="option">PACKING MONO</div>
+                                        <div class="setor-selector-option" data-value="packing-ptw" role="option">PACKING PTW</div>
+                                        <div class="setor-selector-option" data-value="sauron" role="option">SAURON</div>
+                                        <div class="setor-selector-option" data-value="insumos" role="option">INSUMOS</div>
+                                        <div class="setor-selector-option" data-value="docas-de-expedicao" role="option">DOCAS DE EXPEDIÇÃO</div>
+                                        <div class="setor-selector-option" data-value="linha-de-peixe-1" role="option">LINHA DE PEIXE 1</div>
+                                        <div class="setor-selector-option" data-value="sorter" role="option">SORTER</div>
+                                        <div class="setor-selector-option" data-value="linha-de-peixe-2" role="option">LINHA DE PEIXE 2</div>
+                                        <div class="setor-selector-option" data-value="rk" role="option">RK</div>
+                                        <div class="setor-selector-option" data-value="nt-rk" role="option">NT RK</div>
+                                        <div class="setor-selector-option" data-value="qualidade" role="option">QUALIDADE</div>
+                                        <div class="setor-selector-option" data-value="aquario-outbound" role="option">AQUÁRIO OUTBOUND</div>
+                                        <div class="setor-selector-option" data-value="adm" role="option">ADM</div>
+                                        <div class="setor-selector-option" data-value="gate" role="option">GATE</div>
+                                        <div class="setor-selector-option" data-value="ambulatorio-interno" role="option">AMBULATÓRIO INTERNO</div>
+                                        <div class="setor-selector-option" data-value="ambulatorio-externo" role="option">AMBULATÓRIO EXTERNO</div>
+                                        <div class="setor-selector-option" data-value="sala-de-epi" role="option">SALA DE EPI</div>
+                                        <div class="setor-selector-option" data-value="er" role="option">ER</div>
+                                        <div class="setor-selector-option" data-value="rr" role="option">RR</div>
+                                        <div class="setor-selector-option" data-value="deposito-de-treinamento" role="option">DEPÓSITO DE TREINAMENTO</div>
+                                        <div class="setor-selector-option" data-value="hv" role="option">HV</div>
+                                    </div>
+                                </div>
+                                <div class="ucs-filter-panel-actions">
+                                    <button type="button" class="ucs-filter-btn-aplicar" id="ucs-filter-aplicar">Aplicar</button>
+                                    <button type="button" class="ucs-filter-btn-limpar" id="ucs-filter-limpar">Limpar</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="ucs-btn-create" id="btn-criar-dispositivo" onclick="if(typeof window.abrirCadastroRapido === 'function') { window.abrirCadastroRapido(); } else { console.error('abrirCadastroRapido não encontrada'); alert('Erro: Função de cadastro não encontrada. Recarregue a página.'); } return false;">
+                        Criar Dispositivo
+                    </button>
+                </div>
+
+                <!-- Tabela de Dispositivos -->
+                <div class="ucs-table-container">
+                    <table class="ucs-table" id="ucs-inventory-table">
+                        <thead>
+                            <tr>
+                                <th>SERIAL NUMBER</th>
+                                <th>IP</th>
+                                <th>MODELO</th>
+                                <th>SETOR</th>
+                                <th>ALOCAÇÃO</th>
+                                <th>CONTROLES</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ucs-inventory-data">
+                            <!-- Dados serão carregados via JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Paginação -->
+                <div class="ucs-pagination" id="ucs-pagination">
+                    <!-- Será preenchido via JavaScript -->
+                </div>
+            </section>
+
+            <!-- ============================================
+                 PÁGINA DE RONDAS
+                 ============================================ -->
+            <section id="page-rondas" class="main-section">
+                <div class="section-header">
+                    <h2>🛡️ Sistema de Rondas</h2>
+                    <p class="section-subtitle">Checklists e vistorias preventivas diárias</p>
+                </div>
+
+                <!-- Ações Rápidas -->
+                <div class="dashboard-grid" style="margin-bottom: 30px;">
+                    <div class="mod-card" onclick="criarNovaRonda()" tabindex="0" role="button">
+                        <div class="mod-icon">➕</div>
+                        <div class="mod-content">
+                            <h3>Nova Ronda</h3>
+                            <p>Iniciar uma nova vistoria técnica.</p>
+                            <span class="mod-link">Criar Ronda</span>
+                        </div>
+                    </div>
+
+                    <div class="mod-card" onclick="verRondasPendentes()" tabindex="0" role="button">
+                        <div class="mod-icon">📋</div>
+                        <div class="mod-content">
+                            <h3>Rondas Pendentes</h3>
+                            <p>Visualizar rondas aguardando conclusão.</p>
+                            <span class="mod-link">Ver Pendentes</span>
+                        </div>
+                    </div>
+
+                    <div class="mod-card" onclick="verHistoricoRondas()" tabindex="0" role="button">
+                        <div class="mod-icon">📊</div>
+                        <div class="mod-content">
+                            <h3>Histórico</h3>
+                            <p>Consultar todas as rondas realizadas.</p>
+                            <span class="mod-link">Ver Histórico</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lista de Rondas Recentes -->
+                <div class="glass-card">
+                    <h3 style="margin-bottom: 20px;">📋 Rondas Recentes</h3>
+                    <div id="rondas-lista" class="rondas-container">
+                        <div class="ronda-item">
+                            <div class="ronda-info">
+                                <span class="ronda-data">26/01/2025 - 14:30</span>
+                                <span class="ronda-tipo">Ronda Preventiva - Setor A</span>
+                                <span class="ronda-status status-concluida">✅ Concluída</span>
+                            </div>
+                            <button class="btn-secondary" onclick="verDetalhesRonda(1)">Ver Detalhes</button>
+                        </div>
+                        <div class="ronda-item">
+                            <div class="ronda-info">
+                                <span class="ronda-data">25/01/2025 - 10:15</span>
+                                <span class="ronda-tipo">Ronda Preventiva - Setor B</span>
+                                <span class="ronda-status status-concluida">✅ Concluída</span>
+                            </div>
+                            <button class="btn-secondary" onclick="verDetalhesRonda(2)">Ver Detalhes</button>
+                        </div>
+                        <div class="ronda-item">
+                            <div class="ronda-info">
+                                <span class="ronda-data">24/01/2025 - 16:45</span>
+                                <span class="ronda-tipo">Ronda Preventiva - Setor C</span>
+                                <span class="ronda-status status-pendente">⏳ Pendente</span>
+                            </div>
+                            <button class="btn-primary" onclick="continuarRonda(3)">Continuar</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================
+                 PÁGINA DE SUPORTE
+                 ============================================ -->
+            <section id="page-suporte" class="main-section">
+                <div class="section-header">
+                    <h2>💬 Suporte Técnico</h2>
+                    <p class="section-subtitle">Central de ajuda e documentação do sistema</p>
+                </div>
+
+                <!-- Ações Rápidas -->
+                <div class="dashboard-grid" style="margin-bottom: 30px;">
+                    <div class="mod-card" onclick="abrirNovoTicket()" tabindex="0" role="button">
+                        <div class="mod-icon">🎫</div>
+                        <div class="mod-content">
+                            <h3>Abrir Ticket</h3>
+                            <p>Criar um novo chamado de suporte.</p>
+                            <span class="mod-link">Novo Ticket</span>
+                        </div>
+                    </div>
+
+                    <div class="mod-card" onclick="verMeusTickets()" tabindex="0" role="button">
+                        <div class="mod-icon">📋</div>
+                        <div class="mod-content">
+                            <h3>Meus Tickets</h3>
+                            <p>Visualizar seus chamados de suporte.</p>
+                            <span class="mod-link">Ver Tickets →</span>
+                        </div>
+                    </div>
+
+                    <div class="mod-card" onclick="abrirDocumentacao()" tabindex="0" role="button">
+                        <div class="mod-icon">📚</div>
+                        <div class="mod-content">
+                            <h3>Documentação</h3>
+                            <p>Acessar guias e tutoriais do sistema.</p>
+                            <span class="mod-link">Ver Docs</span>
+                        </div>
+                    </div>
+
+                    <div class="mod-card" onclick="abrirFAQ()" tabindex="0" role="button">
+                        <div class="mod-icon">❓</div>
+                        <div class="mod-content">
+                            <h3>FAQ</h3>
+                            <p>Perguntas frequentes e soluções.</p>
+                            <span class="mod-link">Ver FAQ</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tickets Recentes -->
+                <div class="glass-card">
+                    <h3 style="margin-bottom: 20px;">🎫 Meus Tickets Recentes</h3>
+                    <div id="tickets-lista" class="tickets-container">
+                        <div class="ticket-item">
+                            <div class="ticket-info">
+                                <span class="ticket-id">#TKT-001</span>
+                                <span class="ticket-titulo">Problema com impressora ZT411</span>
+                                <span class="ticket-status status-aberto">🟢 Aberto</span>
+                                <span class="ticket-data">26/01/2025</span>
+                            </div>
+                            <button class="btn-secondary" onclick="verTicket('TKT-001')">Ver Detalhes</button>
+                        </div>
+                        <div class="ticket-item">
+                            <div class="ticket-info">
+                                <span class="ticket-id">#TKT-002</span>
+                                <span class="ticket-titulo">Dúvida sobre cadastro de equipamento</span>
+                                <span class="ticket-status status-resolvido">✅ Resolvido</span>
+                                <span class="ticket-data">25/01/2025</span>
+                            </div>
+                            <button class="btn-secondary" onclick="verTicket('TKT-002')">Ver Detalhes</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contatos de Suporte -->
+                <div class="glass-card" style="margin-top: 30px;">
+                    <h3 style="margin-bottom: 20px;">📞 Contatos de Suporte</h3>
+                    <div class="contatos-grid">
+                        <div class="contato-item">
+                            <div class="contato-icon">📧</div>
+                            <div class="contato-info">
+                                <strong>E-mail</strong>
+                                <p>suporte@axis.com.br</p>
+                            </div>
+                        </div>
+                        <div class="contato-item">
+                            <div class="contato-icon">📱</div>
+                            <div class="contato-info">
+                                <strong>WhatsApp</strong>
+                                <p>(48) 99999-9999</p>
+                            </div>
+                        </div>
+                        <div class="contato-item">
+                            <div class="contato-icon">🕐</div>
+                            <div class="contato-info">
+                                <strong>Horário de Atendimento</strong>
+                                <p>Segunda a Sexta: 8h às 18h</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================
+                 PÁGINA DE ADMINISTRAÇÃO
+                 ============================================ -->
+            <section id="page-administracao" class="main-section">
+                <div class="section-header">
+                    <h2>👑 Painel de Administração</h2>
+                    <p class="section-subtitle">Gerenciamento completo do sistema AXIS</p>
+                </div>
+                
+                <!-- Grid de Cards de Administração -->
+                <div class="admin-dashboard-grid">
+                    <!-- Card 1: Gerenciar Usuários -->
+                    <div class="admin-dashboard-card admin-card-users" onclick="abrirGerenciarUsuarios()">
+                        <div class="admin-card-icon-wrapper">
+                            <div class="admin-card-icon users-icon">
+                                <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <!-- Pessoa 1 (Roxo) -->
+                                    <circle cx="20" cy="18" r="8" fill="#8A2BE2" opacity="0.9"/>
+                                    <ellipse cx="20" cy="35" rx="10" ry="12" fill="#8A2BE2" opacity="0.9"/>
+                                    <!-- Pessoa 2 (Azul) -->
+                                    <circle cx="44" cy="18" r="8" fill="#4169E1" opacity="0.9"/>
+                                    <ellipse cx="44" cy="35" rx="10" ry="12" fill="#4169E1" opacity="0.9"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="admin-card-content">
+                            <h3>Gerenciar Usuários</h3>
+                            <p>Crie, edite e gerencie contas de usuários do sistema.</p>
+                            <div class="admin-stats">
+                                <div class="admin-stat-item">
+                                    <span class="admin-stat-number" id="total-usuarios">0</span>
+                                    <span class="admin-stat-label">TOTAL DE USUÁRIOS</span>
+                                </div>
+                                <div class="admin-stat-item">
+                                    <span class="admin-stat-number" id="usuarios-ativos">0</span>
+                                    <span class="admin-stat-label">USUÁRIOS ATIVOS</span>
+                                </div>
+                            </div>
+                            <button type="button" class="admin-card-btn" onclick="event.stopPropagation(); abrirGerenciarUsuarios();">Gerenciar Usuários</button>
+                        </div>
+                    </div>
+
+                    <!-- Card 2: Estatísticas do Sistema -->
+                    <div class="admin-dashboard-card admin-card-stats" onclick="abrirEstatisticasSistema()">
+                        <div class="admin-card-icon-wrapper">
+                            <div class="admin-card-icon stats-icon">
+                                <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <!-- Barra 1 (Rosa) -->
+                                    <rect x="8" y="32" width="12" height="24" fill="#FF69B4" rx="3"/>
+                                    <!-- Barra 2 (Laranja) -->
+                                    <rect x="24" y="20" width="12" height="36" fill="#FFA500" rx="3"/>
+                                    <!-- Barra 3 (Rosa) -->
+                                    <rect x="40" y="12" width="12" height="44" fill="#FF69B4" rx="3"/>
+                                    <!-- Seta para cima -->
+                                    <path d="M32 8 L28 14 L36 14 Z" fill="#FFA500"/>
+                                    <line x1="32" y1="8" x2="32" y2="14" stroke="#FFA500" stroke-width="2" stroke-linecap="round"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="admin-card-content">
+                            <h3>Estatísticas do Sistema</h3>
+                            <p>Visualize métricas e estatísticas gerais do sistema.</p>
+                            <div class="admin-stats">
+                                <div class="admin-stat-item">
+                                    <span class="admin-stat-number" id="total-equipamentos">0</span>
+                                    <span class="admin-stat-label">EQUIPAMENTOS</span>
+                                </div>
+                                <div class="admin-stat-item">
+                                    <span class="admin-stat-number" id="rondas-realizadas">0</span>
+                                    <span class="admin-stat-label">RONDAS REALIZADAS</span>
+                                </div>
+                            </div>
+                            <button type="button" class="admin-card-btn" onclick="event.stopPropagation(); abrirEstatisticasSistema();">Ver Estatísticas</button>
+                        </div>
+                    </div>
+
+                    <!-- Card 3: Configurações Avançadas -->
+                    <div class="admin-dashboard-card admin-card-config" onclick="abrirConfiguracoesAvancadas()">
+                        <div class="admin-card-icon-wrapper">
+                            <div class="admin-card-icon config-icon">
+                                <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <!-- Engrenagem -->
+                                    <circle cx="32" cy="32" r="12" fill="#87CEEB" opacity="0.3"/>
+                                    <path d="M32 8 L32 4 M32 60 L32 56 M8 32 L4 32 M60 32 L56 32 M20.97 20.97 L18.34 18.34 M45.03 45.03 L47.66 47.66 M20.97 43.03 L18.34 45.66 M45.03 18.97 L47.66 16.34" stroke="#87CEEB" stroke-width="3" stroke-linecap="round"/>
+                                    <circle cx="32" cy="32" r="8" stroke="#87CEEB" stroke-width="3" fill="none"/>
+                                    <!-- Cursor -->
+                                    <path d="M48 16 L56 8 L52 20 L48 16 Z" fill="#87CEEB"/>
+                                    <line x1="48" y1="16" x2="52" y2="20" stroke="#87CEEB" stroke-width="2"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="admin-card-content">
+                            <h3>Configurações Avançadas</h3>
+                            <p>Ajustes avançados e configurações do sistema.</p>
+                            <button type="button" class="admin-card-btn" onclick="event.stopPropagation(); abrirConfiguracoesAvancadas();">Configurações</button>
+                        </div>
+                    </div>
+
+                    <!-- Card 4: Logs e Auditoria -->
+                    <div class="admin-dashboard-card admin-card-logs" onclick="abrirLogsAuditoria()">
+                        <div class="admin-card-icon-wrapper">
+                            <div class="admin-card-icon logs-icon">
+                                <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <!-- Documento -->
+                                    <rect x="12" y="8" width="32" height="44" rx="2" fill="white" stroke="#2ECC71" stroke-width="3"/>
+                                    <path d="M12 8 L12 20 L28 20 L28 8" fill="#2ECC71" opacity="0.2"/>
+                                    <line x1="12" y1="20" x2="28" y2="20" stroke="#2ECC71" stroke-width="3"/>
+                                    <!-- Check verde -->
+                                    <circle cx="48" cy="24" r="12" fill="#2ECC71"/>
+                                    <path d="M42 24 L46 28 L54 18" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="admin-card-content">
+                            <h3>Logs e Auditoria</h3>
+                            <p>Visualize logs de acesso e atividades do sistema.</p>
+                            <button type="button" class="admin-card-btn" onclick="event.stopPropagation(); abrirLogsAuditoria();">Ver Logs</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal de Gerenciar Usuários -->
+                <div id="modal-gerenciar-usuarios" class="admin-modal" style="display: none;">
+                    <div class="admin-modal-content">
+                        <div class="admin-modal-header">
+                            <h3>👥 Gerenciar Usuários</h3>
+                            <button class="admin-modal-close" onclick="fecharModalUsuarios()">×</button>
+                        </div>
+                        <div class="admin-modal-body">
+                            <!-- Card de Cadastro de Usuário -->
+                            <div class="admin-card">
+                                <h3>➕ Cadastrar Novo Usuário</h3>
+                                <form id="cadastro-usuario-form" class="admin-form" onsubmit="cadastrarUsuario(event)">
+                                    <div class="form-row">
+                                        <div class="input-group">
+                                            <label for="novo-usuario-nome">Nome Completo *</label>
+                                            <input type="text" id="novo-usuario-nome" required placeholder="Ex: João Silva">
+                                        </div>
+                                        <div class="input-group">
+                                            <label for="novo-usuario-login">Login (Usuário) *</label>
+                                            <input type="text" id="novo-usuario-login" required placeholder="Ex: JOAO.SILVA" style="text-transform: uppercase;">
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-row">
+                                        <div class="input-group">
+                                            <label for="novo-usuario-senha">Senha *</label>
+                                            <input type="password" id="novo-usuario-senha" required placeholder="Mínimo 6 caracteres" minlength="6">
+                                        </div>
+                                        <div class="input-group">
+                                            <label for="novo-usuario-perfil">Perfil *</label>
+                                            <select id="novo-usuario-perfil" required>
+                                                <option value="">Selecione um perfil</option>
+                                                <option value="admin">Administrador</option>
+                                                <option value="tecnico">Técnico</option>
+                                                <option value="operador">Operador</option>
+                                                <option value="visualizador">Visualizador</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-actions">
+                                        <button type="button" class="btn-secondary" onclick="limparFormularioUsuario()">Limpar</button>
+                                        <button type="submit" class="btn-primary">Cadastrar Usuário</button>
+                                    </div>
+                                </form>
+                            </div>
+                            
+                            <!-- Lista de Usuários -->
+                            <div class="admin-card">
+                                <div class="admin-card-header">
+                                    <h3>👥 Usuários Cadastrados</h3>
+                                    <div class="admin-search">
+                                        <input type="text" id="buscar-usuario" placeholder="🔍 Buscar usuário..." onkeyup="filtrarUsuarios()">
+                                    </div>
+                                </div>
+                                
+                                <div class="usuarios-table-container">
+                                    <table class="usuarios-table" id="tabela-usuarios">
+                                        <thead>
+                                            <tr>
+                                                <th>Nome</th>
+                                                <th>Login</th>
+                                                <th>Perfil</th>
+                                                <th>Data Cadastro</th>
+                                                <th>Último Acesso</th>
+                                                <th>Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="usuarios-tbody">
+                                            <!-- Será preenchido via JavaScript -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal Estatísticas do Sistema -->
+                <div id="modal-estatisticas" class="admin-modal" style="display: none;">
+                    <div class="admin-modal-content">
+                        <div class="admin-modal-header">
+                            <h3>📊 Estatísticas do Sistema</h3>
+                            <button type="button" class="admin-modal-close" onclick="fecharModalEstatisticas()">×</button>
+                        </div>
+                        <div class="admin-modal-body">
+                            <div class="admin-card">
+                                <h3>Métricas gerais</h3>
+                                <div class="admin-stats" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 16px; margin-top: 16px;">
+                                    <div class="admin-stat-item" style="padding: 16px; background: var(--hover-bg); border-radius: 10px;">
+                                        <span class="admin-stat-number" id="modal-total-usuarios">0</span>
+                                        <span class="admin-stat-label">Usuários</span>
+                                    </div>
+                                    <div class="admin-stat-item" style="padding: 16px; background: var(--hover-bg); border-radius: 10px;">
+                                        <span class="admin-stat-number" id="modal-total-equipamentos">0</span>
+                                        <span class="admin-stat-label">Equipamentos</span>
+                                    </div>
+                                    <div class="admin-stat-item" style="padding: 16px; background: var(--hover-bg); border-radius: 10px;">
+                                        <span class="admin-stat-number" id="modal-rondas-realizadas">0</span>
+                                        <span class="admin-stat-label">Rondas realizadas</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal Logs e Auditoria -->
+                <div id="modal-logs" class="admin-modal" style="display: none;">
+                    <div class="admin-modal-content">
+                        <div class="admin-modal-header">
+                            <h3>📋 Logs e Auditoria</h3>
+                            <button type="button" class="admin-modal-close" onclick="fecharModalLogs()">×</button>
+                        </div>
+                        <div class="admin-modal-body">
+                            <div class="admin-card">
+                                <h3>Atividade recente</h3>
+                                <div class="usuarios-table-container" style="max-height: 320px; overflow-y: auto;">
+                                    <table class="usuarios-table" id="tabela-logs">
+                                        <thead>
+                                            <tr>
+                                                <th>Data/Hora</th>
+                                                <th>Evento</th>
+                                                <th>Usuário</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="logs-tbody">
+                                            <!-- Preenchido via JS -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <p id="logs-vazio" style="display: none; color: var(--text-secondary); margin-top: 12px;">Nenhum registro de acesso ainda.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================
+                 PÁGINA DE CONFIGURAÇÕES
+                 ============================================ -->
+            <section id="page-configuracoes" class="main-section">
+                <div class="section-header">
+                    <h2>⚙️ Configurações do Sistema</h2>
+                    <p class="section-subtitle">Personalize sua experiência no AXIS</p>
+                </div>
+                
+                <div class="settings-container">
+                    <div class="settings-card">
+                        <h3>Aparência</h3>
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <h4>Tema do Sistema</h4>
+                                <p>Escolha entre modo claro ou escuro</p>
+                            </div>
+                            <div class="setting-control">
+                                <label class="switch">
+                                    <input type="checkbox" id="theme-toggle-switch" onchange="toggleTheme()">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <h4>Alto Contraste</h4>
+                                <p>Melhore a visibilidade para baixa visão</p>
+                            </div>
+                            <div class="setting-control">
+                                <label class="switch">
+                                    <input type="checkbox" id="high-contrast-toggle" onchange="toggleHighContrast()">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-card">
+                        <h3>Preferências</h3>
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <h4>Itens por Página</h4>
+                                <p>Quantidade de equipamentos exibidos por página</p>
+                            </div>
+                            <div class="setting-control">
+                                <select id="items-per-page" class="axis-select" onchange="updateItemsPerPage()">
+                                    <option value="10">10 itens</option>
+                                    <option value="15" selected>15 itens</option>
+                                    <option value="20">20 itens</option>
+                                    <option value="30">30 itens</option>
+                                    <option value="50">50 itens</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-card">
+                        <h3>Sistema</h3>
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <h4>Limpar Cache Local</h4>
+                                <p>Remove dados temporários do navegador</p>
+                            </div>
+                            <div class="setting-control">
+                                <button class="btn-secondary" onclick="clearLocalCache()">Limpar</button>
+                            </div>
+                        </div>
+                        
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <h4>Exportar Configurações</h4>
+                                <p>Salve suas configurações em um arquivo</p>
+                            </div>
+                            <div class="setting-control">
+                                <button class="btn-secondary" onclick="exportSettings()">Exportar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- ============================================
+         MODAIS
+         ============================================ -->
+    
+    <!-- Modal de Cadastro de Equipamento -->
+    <div id="cadastro-modal" class="modal-equipamento">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>➕ Cadastrar Nova Impressora</h3>
+                <button type="button" class="close-modal" id="cadastro-modal-close" onclick="if(typeof fecharCadastro === 'function') { fecharCadastro(); } return false;" aria-label="Fechar">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="cadastro-steps">
+                    <div class="step active" id="step-1">1. Modelo</div>
+                    <div class="step" id="step-2">2. Dados Técnicos</div>
+                    <div class="step" id="step-3">3. Confirmação</div>
+                </div>
+                
+                <form id="cadastro-form">
+                    <!-- Passo 1: Seleção de Modelo -->
+                    <div class="cadastro-step active" id="step-1-content">
+                        <div class="model-options">
+                            <label class="model-option">
+                                <input type="radio" name="modelo" value="ZT411" id="cad-modelo-zt411" required>
+                                <div class="option-content">
+                                    <div class="option-icon">🖨️</div>
+                                    <div class="option-title">ZT411</div>
+                                    <div class="option-desc">Impressora Industrial</div>
+                                </div>
+                            </label>
+                            
+                            <label class="model-option">
+                                <input type="radio" name="modelo" value="ZD421" id="cad-modelo-zd421">
+                                <div class="option-content">
+                                    <div class="option-icon">📱</div>
+                                    <div class="option-title">ZD421</div>
+                                    <div class="option-desc">Impressora Desktop</div>
+                                </div>
+                            </label>
+                            
+                            <label class="model-option">
+                                <input type="radio" name="modelo" value="ZQ630 PLUS" id="cad-modelo-zq630">
+                                <div class="option-content">
+                                    <div class="option-icon">🍔</div>
+                                    <div class="option-title">ZQ630 PLUS</div>
+                                    <div class="option-desc">Impressora Pagewide</div>
+                                </div>
+                            </label>
+                        </div>
+                        
+                        <div class="input-group">
+                            <label for="cad-serial">Número de Série *</label>
+                            <div class="serial-input-wrapper" id="cad-serial-wrapper">
+                                <span class="serial-prefix" id="cad-serial-prefix"></span>
+                                <input type="text" id="cad-serial" placeholder="Selecione o modelo e digite o resto do número de série" autocomplete="off" />
+                            </div>
+                            <div class="serial-suggestions" id="cad-serial-suggestions"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Passo 2: Dados Técnicos -->
+                    <div class="cadastro-step" id="step-2-content">
+                        <div class="form-grid-two-columns">
+                            <!-- Coluna Esquerda -->
+                            <div class="form-column">
+                                <div class="input-group">
+                                    <label for="cad-ip">Endereço IP *</label>
+                                    <div class="ip-input-wrapper serial-input-wrapper" id="cad-ip-wrapper">
+                                        <span class="serial-prefix" id="cad-ip-prefix">10.201.</span>
+                                        <input type="text" id="cad-ip" required placeholder="Ex: 131.25 ou 131.8" autocomplete="off" maxlength="7" inputmode="numeric">
+                                    </div>
+                                </div>
+                                
+                                <div class="input-group">
+                                    <label for="cad-mac-bluetooth">MAC Bluetooth</label>
+                                    <input type="text" id="cad-mac-bluetooth" placeholder="Ex: 00:1B:44:11:3A:B8">
+                                </div>
+                                
+                                <div class="input-group">
+                                    <label for="cad-setor">Setor *</label>
+                                    <div class="setor-selector setor-selector-cadastro" id="setor-selector-cadastro-wrap">
+                                        <select id="cad-setor" class="setor-selector-native-hidden" required aria-hidden="true">
+                                            <option value="">Selecione um setor</option>
+                                            <option value="internal-systems">INTERNAL SYSTEMS</option>
+                                            <option value="lideranca">LIDERANÇA</option>
+                                            <option value="mhw">MHW</option>
+                                            <option value="p2m">P2M</option>
+                                            <option value="check-in">CHECK-IN</option>
+                                            <option value="reciving">RECIVING</option>
+                                            <option value="mz1">MZ1</option>
+                                            <option value="mz2">MZ2</option>
+                                            <option value="mz3">MZ3</option>
+                                            <option value="inventario">INVENTÁRIO</option>
+                                            <option value="cx">CX</option>
+                                            <option value="returns">RETURNS</option>
+                                            <option value="packing-mono">PACKING MONO</option>
+                                            <option value="packing-ptw">PACKING PTW</option>
+                                            <option value="sauron">SAURON</option>
+                                            <option value="insumos">INSUMOS</option>
+                                            <option value="docas-de-expedicao">DOCAS DE EXPEDIÇÃO</option>
+                                            <option value="linha-de-peixe-1">LINHA DE PEIXE 1</option>
+                                            <option value="sorter">SORTER</option>
+                                            <option value="linha-de-peixe-2">LINHA DE PEIXE 2</option>
+                                            <option value="rk">RK</option>
+                                            <option value="nt-rk">NT RK</option>
+                                            <option value="qualidade">QUALIDADE</option>
+                                            <option value="aquario-outbound">AQUÁRIO OUTBOUND</option>
+                                            <option value="adm">ADM</option>
+                                            <option value="gate">GATE</option>
+                                            <option value="ambulatorio-interno">AMBULATÓRIO INTERNO</option>
+                                            <option value="ambulatorio-externo">AMBULATÓRIO EXTERNO</option>
+                                            <option value="sala-de-epi">SALA DE EPI</option>
+                                            <option value="er">ER</option>
+                                            <option value="rr">RR</option>
+                                            <option value="deposito-de-treinamento">DEPÓSITO DE TREINAMENTO</option>
+                                            <option value="hv">HV</option>
+                                        </select>
+                                        <button type="button" class="setor-selector-trigger setor-selector-trigger-cadastro" id="cad-setor-trigger" aria-haspopup="listbox" aria-expanded="false">Selecione um setor</button>
+                                        <div class="setor-selector-dropdown" id="cad-setor-dropdown" role="listbox" aria-hidden="true">
+                                            <div class="setor-selector-option" data-value="" role="option">Selecione um setor</div>
+                                            <div class="setor-selector-option" data-value="internal-systems" role="option">INTERNAL SYSTEMS</div>
+                                            <div class="setor-selector-option" data-value="lideranca" role="option">LIDERANÇA</div>
+                                            <div class="setor-selector-option" data-value="mhw" role="option">MHW</div>
+                                            <div class="setor-selector-option" data-value="p2m" role="option">P2M</div>
+                                            <div class="setor-selector-option" data-value="check-in" role="option">CHECK-IN</div>
+                                            <div class="setor-selector-option" data-value="reciving" role="option">RECIVING</div>
+                                            <div class="setor-selector-option" data-value="mz1" role="option">MZ1</div>
+                                            <div class="setor-selector-option" data-value="mz2" role="option">MZ2</div>
+                                            <div class="setor-selector-option" data-value="mz3" role="option">MZ3</div>
+                                            <div class="setor-selector-option" data-value="inventario" role="option">INVENTÁRIO</div>
+                                            <div class="setor-selector-option" data-value="cx" role="option">CX</div>
+                                            <div class="setor-selector-option" data-value="returns" role="option">RETURNS</div>
+                                            <div class="setor-selector-option" data-value="packing-mono" role="option">PACKING MONO</div>
+                                            <div class="setor-selector-option" data-value="packing-ptw" role="option">PACKING PTW</div>
+                                            <div class="setor-selector-option" data-value="sauron" role="option">SAURON</div>
+                                            <div class="setor-selector-option" data-value="insumos" role="option">INSUMOS</div>
+                                            <div class="setor-selector-option" data-value="docas-de-expedicao" role="option">DOCAS DE EXPEDIÇÃO</div>
+                                            <div class="setor-selector-option" data-value="linha-de-peixe-1" role="option">LINHA DE PEIXE 1</div>
+                                            <div class="setor-selector-option" data-value="sorter" role="option">SORTER</div>
+                                            <div class="setor-selector-option" data-value="linha-de-peixe-2" role="option">LINHA DE PEIXE 2</div>
+                                            <div class="setor-selector-option" data-value="rk" role="option">RK</div>
+                                            <div class="setor-selector-option" data-value="nt-rk" role="option">NT RK</div>
+                                            <div class="setor-selector-option" data-value="qualidade" role="option">QUALIDADE</div>
+                                            <div class="setor-selector-option" data-value="aquario-outbound" role="option">AQUÁRIO OUTBOUND</div>
+                                            <div class="setor-selector-option" data-value="adm" role="option">ADM</div>
+                                            <div class="setor-selector-option" data-value="gate" role="option">GATE</div>
+                                            <div class="setor-selector-option" data-value="ambulatorio-interno" role="option">AMBULATÓRIO INTERNO</div>
+                                            <div class="setor-selector-option" data-value="ambulatorio-externo" role="option">AMBULATÓRIO EXTERNO</div>
+                                            <div class="setor-selector-option" data-value="sala-de-epi" role="option">SALA DE EPI</div>
+                                            <div class="setor-selector-option" data-value="er" role="option">ER</div>
+                                            <div class="setor-selector-option" data-value="rr" role="option">RR</div>
+                                            <div class="setor-selector-option" data-value="deposito-de-treinamento" role="option">DEPÓSITO DE TREINAMENTO</div>
+                                            <div class="setor-selector-option" data-value="hv" role="option">HV</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="input-group">
+                                    <label for="cad-bancada">Bancada</label>
+                                    <select id="cad-bancada" class="cadastro-select">
+                                        <option value="">Selecione uma bancada</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <!-- Coluna Direita -->
+                            <div class="form-column">
+                                <div class="input-group">
+                                    <label for="cad-mac-rede">MAC Rede *</label>
+                                    <input type="text" id="cad-mac-rede" required placeholder="Ex: 00:1B:44:11:3A:B7">
+                                </div>
+                                
+                                <div class="input-group">
+                                    <label for="cad-selb">SELB</label>
+                                    <input type="text" id="cad-selb" placeholder="Ex: 6O25" maxlength="4" autocomplete="off" pattern="[A-Za-z0-9]{4}" title="4 caracteres (letras e números)">
+                                </div>
+                                
+                                <div class="input-group">
+                                    <label for="cad-patrimonio">Número do Patrimônio</label>
+                                    <input type="text" id="cad-patrimonio" placeholder="Ex: 123456789">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Passo 3: Confirmação -->
+                    <div class="cadastro-step" id="step-3-content">
+                        <div class="confirmation-details">
+                            <div class="detail-row">
+                                <span>Modelo:</span>
+                                <strong id="confirm-modelo">-</strong>
+                            </div>
+                            <div class="detail-row">
+                                <span>Serial:</span>
+                                <strong id="confirm-serial">-</strong>
+                            </div>
+                            <div class="detail-row">
+                                <span>IP:</span>
+                                <strong id="confirm-ip">-</strong>
+                            </div>
+                            <div class="detail-row">
+                                <span>Setor:</span>
+                                <strong id="confirm-setor">-</strong>
+                            </div>
+                            <div class="detail-row">
+                                <span>Status:</span>
+                                <strong>🟢 Online</strong>
+                            </div>
+                        </div>
+                        
+                        <div class="input-group full-width">
+                            <label for="cad-observacoes">Observações</label>
+                            <textarea id="cad-observacoes" rows="3" placeholder="Informações adicionais sobre o equipamento..."></textarea>
+                        </div>
+                    </div>
+                </form>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn-back" onclick="if(typeof passoAnteriorCadastro === 'function') { passoAnteriorCadastro(); } else { console.error('passoAnteriorCadastro não encontrada'); } return false;" id="btn-back" style="display: none;">
+                        Voltar
+                    </button>
+                    <button type="button" class="btn-next" onclick="if(typeof proximoPassoCadastro === 'function') { proximoPassoCadastro(); } else { console.error('proximoPassoCadastro não encontrada'); alert('Erro: Função de navegação não encontrada. Recarregue a página.'); } return false;" id="btn-next">
+                        Próximo
+                    </button>
+                    <button type="button" class="btn-submit" onclick="if(typeof finalizarCadastro === 'function') { finalizarCadastro(); } else { console.error('finalizarCadastro não encontrada'); } return false;" id="btn-submit" style="display: none;">
+                        ✅ Finalizar Cadastro
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Detalhes do Equipamento - título = Serial Number da impressora -->
+    <div id="detalhes-modal" class="modal-equipamento">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="detail-titulo-serial">—</h3>
+                <button type="button" class="close-modal" onclick="fecharDetalhes()" aria-label="Fechar">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="detalhe-info">
+                    <div class="info-row">
+                        <span class="info-label">Modelo:</span>
+                        <span class="info-value" id="detail-modelo">ZT411</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Endereço IP:</span>
+                        <span class="info-value" id="detail-ip">10.15.20.101</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">MAC Rede:</span>
+                        <span class="info-value" id="detail-mac-rede">00:1B:44:11:3A:B7</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">MAC Bluetooth:</span>
+                        <span class="info-value" id="detail-mac-bluetooth">00:1B:44:11:3A:B8</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">SELB:</span>
+                        <span class="info-value" id="detail-selb">SELB-2024-001</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Patrimônio:</span>
+                        <span class="info-value" id="detail-patrimonio">123456789</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Setor:</span>
+                        <span class="info-value" id="detail-setor">PACKING MONO</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Bancada:</span>
+                        <span class="info-value" id="detail-bancada">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Última Checagem:</span>
+                        <span class="info-value" id="detail-ultima-checagem">15/01/2024 14:30</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Responsável:</span>
+                        <span class="info-value" id="detail-responsavel">Filipe da Silva</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Fabricante:</span>
+                        <span class="info-value" id="detail-fabricante">Zebra Technologies</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Firmware:</span>
+                        <span class="info-value" id="detail-firmware">V72.20.15Z</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Contador:</span>
+                        <span class="info-value" id="detail-contador">12,543</span>
+                    </div>
+                </div>
+                
+                <!-- Ações: apenas Histórico (ver quem alterou por último) -->
+                <div class="detalhe-acoes">
+                    <button class="btn-action btn-detalhes" id="detail-history-btn">
+                        <span class="btn-icon">📊</span>
+                        <span class="btn-text">Histórico</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Editar – mesma lista de dados que Ver Dados, com campos editáveis -->
+    <div id="editar-modal" class="modal-equipamento" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="editar-titulo-serial">—</h3>
+                <button type="button" class="close-modal" onclick="fecharModalEditar()" aria-label="Fechar">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="detalhe-info editar-info">
+                    <div class="info-row edit-row">
+                        <span class="info-label">Modelo:</span>
+                        <input type="text" id="edit-modelo" class="info-edit-input" readonly>
+                    </div>
+                    <div class="info-row edit-row">
+                        <span class="info-label">Endereço IP:</span>
+                        <input type="text" id="edit-ip" class="info-edit-input" placeholder="Ex: 10.201.130.255">
+                    </div>
+                    <div class="info-row edit-row">
+                        <span class="info-label">MAC Rede:</span>
+                        <input type="text" id="edit-mac-rede" class="info-edit-input" placeholder="00:00:00:00:00:00">
+                    </div>
+                    <div class="info-row edit-row">
+                        <span class="info-label">MAC Bluetooth:</span>
+                        <input type="text" id="edit-mac-bluetooth" class="info-edit-input" placeholder="00:00:00:00:00:00">
+                    </div>
+                    <div class="info-row edit-row">
+                        <span class="info-label">SELB:</span>
+                        <input type="text" id="edit-selb" class="info-edit-input" placeholder="Ex: 6025" maxlength="4">
+                    </div>
+                    <div class="info-row edit-row">
+                        <span class="info-label">Patrimônio:</span>
+                        <input type="text" id="edit-patrimonio" class="info-edit-input" placeholder="Número do patrimônio">
+                    </div>
+                    <div class="info-row edit-row">
+                        <span class="info-label">Setor:</span>
+                        <select id="edit-setor" class="info-edit-select"></select>
+                    </div>
+                    <div class="info-row edit-row">
+                        <span class="info-label">Bancada:</span>
+                        <select id="edit-bancada" class="info-edit-select"></select>
+                    </div>
+                    <div class="info-row edit-row">
+                        <span class="info-label">Última Checagem:</span>
+                        <input type="text" id="edit-ultima-checagem" class="info-edit-input" readonly>
+                    </div>
+                    <div class="info-row edit-row">
+                        <span class="info-label">Responsável:</span>
+                        <input type="text" id="edit-responsavel" class="info-edit-input" readonly title="Preenchido automaticamente com o usuário logado">
+                    </div>
+                    <div class="info-row edit-row">
+                        <span class="info-label">Fabricante:</span>
+                        <input type="text" id="edit-fabricante" class="info-edit-input" readonly title="Zebra Technologies">
+                    </div>
+                    <div class="info-row edit-row">
+                        <span class="info-label">Firmware:</span>
+                        <input type="text" id="edit-firmware" class="info-edit-input">
+                    </div>
+                    <div class="info-row edit-row">
+                        <span class="info-label">Contador:</span>
+                        <input type="number" id="edit-contador" class="info-edit-input" min="0" placeholder="0">
+                    </div>
+                </div>
+                <div class="detalhe-acoes">
+                    <button type="button" class="btn-action btn-detalhes" id="editar-btn-salvar" onclick="salvarEdicaoEquipamento()">
+                        <span class="btn-icon">💾</span>
+                        <span class="btn-text">Salvar</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de confirmação (vidro, centralizado) -->
+    <div id="confirm-excluir-overlay" class="confirm-overlay" style="display: none;">
+        <div class="confirm-glass-box" onclick="event.stopPropagation()">
+            <div class="confirm-glass-header">
+                <span class="confirm-glass-icon">🗑️</span>
+                <h4 class="confirm-glass-title">Excluir equipamento</h4>
+            </div>
+            <p class="confirm-glass-message" id="confirm-excluir-message">Tem certeza que deseja excluir este equipamento?</p>
+            <div class="confirm-glass-actions">
+                <button type="button" class="confirm-btn confirm-btn-cancelar" id="confirm-excluir-cancelar">Cancelar</button>
+                <button type="button" class="confirm-btn confirm-btn-excluir" id="confirm-excluir-ok">Excluir</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tooltip Container -->
+    <div id="tooltip-container" class="tooltip-container"></div>
+    
+    <!-- FAB Container (será criado dinamicamente pelo JS) - Visível apenas na home -->
+    <div id="fab-container" class="fab-container" style="display: none;"></div>
+
+    <!-- ============================================
+         SCRIPTS - ORDEM CORRETA DE CARREGAMENTO
+         ============================================ -->
+    <!-- jsPDF + autoTable para exportar inventário em PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <!-- Script principal PRIMEIRO: define navigate, filtrarInventario, etc. -->
+    <script src="js/script.js"></script>
+    
+    <!-- Placeholders só se script.js não definiu; não sobrescreve as reais (silenciosos) -->
+    <script>
+        window.filtrarInventario = window.filtrarInventario || function() {
+            setTimeout(function() {
+                if (typeof window.filtrarInventario === 'function' && window.filtrarInventario.toString().indexOf('Aplicando filtros') !== -1) {
+                    window.filtrarInventario();
+                }
+            }, 100);
+        };
+        window.abrirCadastroRapido = window.abrirCadastroRapido || function() {
+            var modal = document.getElementById('cadastro-modal');
+            if (modal) {
+                modal.style.display = 'flex';
+                modal.style.opacity = '1';
+                var step1 = document.getElementById('step-1');
+                var step1Content = document.getElementById('step-1-content');
+                if (step1) step1.classList.add('active');
+                if (step1Content) {
+                    step1Content.classList.add('active');
+                    step1Content.style.display = 'block';
+                }
+                setTimeout(function() {
+                    if (typeof window.abrirCadastroRapido === 'function' && window.abrirCadastroRapido.toString().indexOf('Abrindo cadastro rápido') !== -1) {
+                        window.abrirCadastroRapido();
+                    }
+                }, 200);
+            } else {
+                alert('Erro: Modal de cadastro não encontrado. Recarregue a página.');
+            }
+        };
+        window.navigate = window.navigate || function(pageId) {
+            var pid = pageId;
+            setTimeout(function() {
+                if (typeof window.navigate === 'function' && window.navigate.toString().indexOf('Navegando para') !== -1) {
+                    window.navigate(pid);
+                }
+            }, 100);
+        };
+        window.finalizarCadastro = window.finalizarCadastro || function() {
+            setTimeout(function() {
+                if (typeof window.finalizarCadastro === 'function' && window.finalizarCadastro.toString().indexOf('Finalizando cadastro') !== -1) {
+                    window.finalizarCadastro();
+                }
+            }, 100);
+        };
+        window.renderizarTabela = window.renderizarTabela || function() {
+            setTimeout(function() {
+                if (typeof window.renderizarTabela === 'function' && window.renderizarTabela.toString().indexOf('Renderizando tabela') !== -1) {
+                    window.renderizarTabela();
+                }
+            }, 100);
+        };
+        window.inicializarInventario = window.inicializarInventario || function() {
+            setTimeout(function() {
+                if (typeof window.inicializarInventario === 'function' && window.inicializarInventario.toString().indexOf('Inicializando inventário') !== -1) {
+                    window.inicializarInventario();
+                }
+            }, 100);
+        };
+    </script>
+    
+    <!-- Script de Autenticação INLINE - GARANTE FUNCIONAMENTO IMEDIATO -->
+    <script>
+        // FUNÇÃO DE AUTENTICAÇÃO DIRETA NO HTML - GARANTE QUE FUNCIONE
+        function handleAuth() {
+            const adminKey = 'db_admin_filipe_silva';
+            if (!localStorage.getItem(adminKey)) {
+                const adminData = {
+                    name: 'Filipe da Silva',
+                    pass: '123456',
+                    dataCadastro: new Date().toISOString(),
+                    perfil: 'admin',
+                    ultimoAcesso: new Date().toISOString()
+                };
+                localStorage.setItem(adminKey, JSON.stringify(adminData));
+            }
+            const userField = document.getElementById('username');
+            const passField = document.getElementById('password');
+            if (!userField || !passField) {
+                alert('Erro: Campos de login não encontrados. Recarregue a página.');
+                return;
+            }
+            const userInput = userField.value.trim();
+            const pass = passField.value;
+            if (!userInput || !pass) {
+                alert('Preencha todos os campos!');
+                return;
+            }
+            const loginNormalizado = userInput.toLowerCase().replace(/\s+/g, '_');
+            const dbKey = 'db_' + loginNormalizado;
+            const dbRaw = localStorage.getItem(dbKey);
+            if (dbRaw) {
+                try {
+                    const db = JSON.parse(dbRaw);
+                    if (db.pass === pass) {
+                        // Salva estado de login
+                        localStorage.setItem('current_user', db.name || userInput);
+                        localStorage.setItem('current_user_login', loginNormalizado);
+                        localStorage.setItem('user_logged_in', 'true');
+                        sessionStorage.setItem('just_logged_in', 'true');
+                        // Atualiza último acesso
+                        db.ultimoAcesso = new Date().toISOString();
+                        localStorage.setItem(dbKey, JSON.stringify(db));
+                        
+                        // Transição de telas
+                        const authScreen = document.getElementById('auth-screen');
+                        const mainContent = document.getElementById('main-content');
+                        
+                        if (authScreen) {
+                            authScreen.style.opacity = '0';
+                            authScreen.style.transform = 'translateY(-20px)';
+                        }
+                        
+                        setTimeout(() => {
+                            if (authScreen) authScreen.style.display = 'none';
+                            if (mainContent) {
+                                mainContent.style.display = 'block';
+                                mainContent.style.opacity = '0';
+                                mainContent.style.transform = 'translateY(20px)';
+                                
+                                setTimeout(() => {
+                                    mainContent.style.opacity = '1';
+                                    mainContent.style.transform = 'translateY(0)';
+                                }, 50);
+                            }
+                            
+                            // Atualiza nome no header
+                            const userDisplay = document.getElementById('user-display-name');
+                            if (userDisplay) userDisplay.innerText = db.name || userInput;
+                            
+                            // Mostra menu admin se for admin
+                            const menuAdmin = document.getElementById('menu-admin');
+                            if (menuAdmin && db.perfil === 'admin') {
+                                menuAdmin.style.display = 'block';
+                            }
+                            
+                            // Ao fazer login: sempre vai para Início (Home), nunca para página salva
+                            localStorage.setItem('axis-current-page', 'page-home');
+                            
+                            const navigateToPage = function(pageId) {
+                                const targetPage = document.getElementById(pageId) || document.getElementById('page-home');
+                                if (targetPage) {
+                                    document.querySelectorAll('.main-section').forEach(s => {
+                                        s.classList.remove('active');
+                                        s.style.display = 'none';
+                                    });
+                                    targetPage.classList.add('active');
+                                    targetPage.style.display = 'block';
+                                }
+                            };
+                            setTimeout(() => {
+                                if (typeof navigate === 'function') {
+                                    try {
+                                        navigate('page-home');
+                                    } catch (e) {
+                                        navigateToPage('page-home');
+                                    }
+                                } else {
+                                    navigateToPage('page-home');
+                                }
+                            }, 300);
+                            setTimeout(function() {
+                                if (typeof showBemVindoModal === 'function') {
+                                    showBemVindoModal(db.name || userInput);
+                                }
+                            }, 120);
+                        }, 300);
+                        
+                    } else {
+                        passField.classList.add('shake-animation');
+                        setTimeout(() => passField.classList.remove('shake-animation'), 500);
+                        alert('Senha incorreta.');
+                    }
+                } catch (error) {
+                    alert('Erro ao processar dados do usuário.');
+                }
+            } else {
+                userField.classList.add('shake-animation');
+                setTimeout(() => userField.classList.remove('shake-animation'), 500);
+                alert('Usuário não encontrado. Verifique se o usuário foi criado corretamente.');
+            }
+        }
+        
+        // ============================================
+        // 🔒 FUNÇÃO PROTEGIDA: togglePassword
+        // NÃO MODIFICAR - ESSENCIAL PARA VISUALIZAR SENHA
+        // ============================================
+        function togglePassword() {
+            const input = document.getElementById('password');
+            const icon = document.getElementById('eye-icon');
+            if (!input || !icon) return;
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.innerText = '🙈';
+                icon.title = 'Ocultar senha';
+                icon.classList.add('active');
+            } else {
+                input.type = 'password';
+                icon.innerText = '👁️';
+                icon.title = 'Mostrar senha';
+                icon.classList.remove('active');
+            }
+        }
+        
+        // ============================================
+        // 🔒 FUNÇÃO PROTEGIDA: toggleSidebar
+        // NÃO MODIFICAR - ESSENCIAL PARA ABRIR/FECHAR MENU
+        // ============================================
+        function toggleSidebar() {
+            const sidebar = document.getElementById('side-menu');
+            const overlay = document.getElementById('menu-overlay');
+            const menuBtn = document.querySelector('.menu-trigger-ios');
+            if (!sidebar || !overlay) return;
+            const isOpen = sidebar.classList.contains('open');
+            if (isOpen) {
+                sidebar.classList.remove('open');
+                overlay.classList.remove('active');
+                if (menuBtn) menuBtn.classList.remove('active');
+                overlay.style.opacity = '0';
+                setTimeout(function() { overlay.style.display = 'none'; }, 300);
+            } else {
+                overlay.style.opacity = '1';
+                overlay.style.display = 'block';
+                overlay.classList.add('active');
+                sidebar.classList.add('open');
+                if (menuBtn) menuBtn.classList.add('active');
+                sidebar.style.display = 'flex';
+                sidebar.style.visibility = 'visible';
+                sidebar.style.opacity = '1';
+            }
+        }
+        
+        // ============================================
+        // 🔒 SISTEMA DE PROTEÇÃO DAS FUNÇÕES CRÍTICAS
+        // NÃO MODIFICAR ESTA SEÇÃO
+        // ============================================
+        
+        // Cria backups das funções originais
+        const _handleAuthBackup = handleAuth;
+        const _togglePasswordBackup = togglePassword;
+        const _toggleSidebarBackup = toggleSidebar;
+        
+        // Expõe as funções globalmente com proteção
+        try {
+            Object.defineProperty(window, 'handleAuth', {
+                value: handleAuth,
+                writable: false,
+                configurable: false,
+                enumerable: true
+            });
+            
+            Object.defineProperty(window, 'togglePassword', {
+                value: togglePassword,
+                writable: false,
+                configurable: false,
+                enumerable: true
+            });
+            
+            Object.defineProperty(window, 'toggleSidebar', {
+                value: toggleSidebar,
+                writable: false,
+                configurable: false,
+                enumerable: true
+            });
+            
+        } catch (e) {
+            window.handleAuth = handleAuth;
+            window.togglePassword = togglePassword;
+            window.toggleSidebar = toggleSidebar;
+        }
+        (function protectFunctions() {
+            setInterval(function() {
+                if (typeof window.handleAuth !== 'function') {
+                    try {
+                        Object.defineProperty(window, 'handleAuth', { value: _handleAuthBackup, writable: false, configurable: false, enumerable: true });
+                    } catch (e) { window.handleAuth = _handleAuthBackup; }
+                }
+                if (typeof window.togglePassword !== 'function') {
+                    try {
+                        Object.defineProperty(window, 'togglePassword', { value: _togglePasswordBackup, writable: false, configurable: false, enumerable: true });
+                    } catch (e) { window.togglePassword = _togglePasswordBackup; }
+                }
+                if (typeof window.toggleSidebar !== 'function') {
+                    try {
+                        Object.defineProperty(window, 'toggleSidebar', { value: _toggleSidebarBackup, writable: false, configurable: false, enumerable: true });
+                    } catch (e) { window.toggleSidebar = _toggleSidebarBackup; }
+                }
+            }, 2000);
+        })();
+        
+        
+        // 🛡️ PROTEÇÃO DOS BOTÕES HTML
+        // Restaura onclick se for modificado
+        // ============================================
+        (function protectButtons() {
+            const authButtonOnclick = 'if(typeof handleAuth === \'function\') { handleAuth(); } else { console.error(\'handleAuth não encontrada\'); alert(\'Erro: Sistema ainda carregando. Aguarde alguns segundos e tente novamente.\'); } return false;';
+            const eyeButtonOnclick = 'if(typeof togglePassword === \'function\') { togglePassword(); } else { console.error(\'togglePassword não encontrada\'); } return false;';
+            const menuButtonOnclick = 'if(typeof toggleSidebar === \'function\') { toggleSidebar(); } else { console.error(\'toggleSidebar não encontrada\'); } return false;';
+            
+            setInterval(function() {
+                // Protege botão de login
+                const authBtn = document.getElementById('auth-main-btn');
+                if (authBtn && authBtn.getAttribute('data-protected') === 'true') {
+                    const currentOnclick = authBtn.getAttribute('onclick');
+                    if (!currentOnclick || currentOnclick.indexOf('handleAuth') === -1) {
+                        authBtn.setAttribute('onclick', authButtonOnclick);
+                    }
+                }
+                
+                // Protege botão do olho
+                const eyeBtn = document.querySelector('.eye-toggle[data-protected="true"]');
+                if (eyeBtn) {
+                    const currentOnclick = eyeBtn.getAttribute('onclick');
+                    if (!currentOnclick || currentOnclick.indexOf('togglePassword') === -1) {
+                        eyeBtn.setAttribute('onclick', eyeButtonOnclick);
+                    }
+                }
+                
+                // Protege botão do menu
+                const menuBtn = document.querySelector('.menu-trigger-ios');
+                if (menuBtn) {
+                    const currentOnclick = menuBtn.getAttribute('onclick');
+                    if (!currentOnclick || currentOnclick.indexOf('toggleSidebar') === -1) {
+                        menuBtn.setAttribute('onclick', menuButtonOnclick);
+                    }
+                }
+            }, 3000); // Verifica a cada 3 segundos
+        })();
+        
+    </script>
+    
+    <!-- BLINDAGEM VOLTAR MANUTENÇÕES: esconde login, mostra Home, retries se algo sobrescrever. Não remover. -->
+    <script>
+    (function() {
+      function aplica() {
+        try {
+          var au = document.getElementById('auth-screen');
+          var mn = document.getElementById('main-content');
+          var ld = document.getElementById('loading-screen');
+          if (!au && !mn) return;
+          var user = '';
+          try { user = localStorage.getItem('current_user') || ''; } catch (_) {}
+          if (au) { au.style.display = 'none'; au.style.opacity = '0'; au.setAttribute('aria-hidden', 'true'); }
+          if (mn) { mn.style.display = 'block'; mn.style.opacity = '1'; mn.removeAttribute('aria-hidden'); }
+          if (ld) { ld.style.display = 'none'; }
+          var ud = document.getElementById('user-display-name');
+          if (ud && user) ud.innerText = user;
+          var ma = document.getElementById('menu-admin');
+          if (ma) {
+            try {
+              var login = localStorage.getItem('current_user_login') || (user && String(user).toLowerCase().replace(/\s+/g, '_'));
+              var key = 'db_' + (login || '');
+              var d = JSON.parse(localStorage.getItem(key) || '{}');
+              if (d && d.perfil === 'admin') ma.style.display = 'block';
+            } catch (_) {}
+          }
+          var sections = document.querySelectorAll('.main-section');
+          var home = document.getElementById('page-home');
+          if (home && sections.length) {
+            sections.forEach(function(s) { s.classList.remove('active'); s.style.display = 'none'; });
+            home.classList.add('active'); home.style.display = 'block';
+          }
+        } catch (e) {}
+      }
+      try {
+        if (sessionStorage.getItem('axis_voltar_force_main') !== '1') return;
+        try { sessionStorage.removeItem('axis_voltar_force_main'); } catch (_) {}
+        aplica();
+        setTimeout(aplica, 80);
+        setTimeout(aplica, 250);
+        setTimeout(function() {
+          var au = document.getElementById('auth-screen');
+          if (au && au.style.display !== 'none') aplica();
+        }, 500);
+      } catch (e) {}
+    })();
+    </script>
+    
+    <!-- ============================================
+         🔒 SISTEMA ROBUSTO DE GARANTIA DE FUNÇÕES
+         Garante que TODAS as funções estejam disponíveis
+         ============================================ -->
+    <script>
+        // Sistema de espera e verificação contínua (silencioso)
+        (function robustFunctionLoader() {
+            var noop = function() {};
+            var allCriticalFunctions = {
+                'navigate': { required: true, fallback: null },
+                'toggleSidebar': { required: true, fallback: null },
+                'filtrarInventario': { required: true, fallback: noop },
+                'resetarFiltrosInventario': { required: true, fallback: noop },
+                'abrirCadastroRapido': { required: true, fallback: noop },
+                'fecharCadastro': { required: true, fallback: noop },
+                'proximoPassoCadastro': { required: true, fallback: noop },
+                'passoAnteriorCadastro': { required: true, fallback: noop },
+                'finalizarCadastro': { required: true, fallback: noop },
+                'renderizarTabela': { required: true, fallback: noop },
+                'inicializarInventario': { required: true, fallback: noop },
+                'toggleTheme': { required: true, fallback: noop },
+                'logout': { required: true, fallback: noop },
+                'handleAuth': { required: true, fallback: null },
+                'togglePassword': { required: true, fallback: null },
+                'showToast': { required: false, fallback: function(msg) { if (msg && typeof alert === 'function') alert(msg); } },
+                'exportarDados': { required: false, fallback: noop }
+            };
+            Object.keys(allCriticalFunctions).forEach(function(funcName) {
+                var funcInfo = allCriticalFunctions[funcName];
+                if (!window[funcName] && funcInfo.fallback) {
+                    window[funcName] = funcInfo.fallback;
+                }
+            });
+            var attempts = 0;
+            var maxAttempts = 50;
+            function checkAndWaitForFunctions() {
+                attempts++;
+                var missing = [];
+                Object.keys(allCriticalFunctions).forEach(function(funcName) {
+                    var funcInfo = allCriticalFunctions[funcName];
+                    if (funcInfo.required && typeof window[funcName] !== 'function') {
+                        missing.push(funcName);
+                    } else if (typeof window[funcName] === 'function') {
+                        var funcStr = window[funcName].toString();
+                        if (funcStr.indexOf('será carregada em breve') !== -1) {
+                            missing.push(funcName);
+                        }
+                    }
+                });
+                if (missing.length > 0 && attempts < maxAttempts) {
+                    setTimeout(checkAndWaitForFunctions, 100);
+                } else if (missing.length > 0) {
+                    missing.forEach(function(funcName) {
+                        var cleanName = funcName.replace(' (placeholder)', '');
+                        var funcInfo = allCriticalFunctions[cleanName];
+                        if (funcInfo && funcInfo.fallback) {
+                            window[cleanName] = funcInfo.fallback;
+                        }
+                    });
+                }
+            }
+            setTimeout(checkAndWaitForFunctions, 50);
+            window.addEventListener('load', function() {
+                setTimeout(checkAndWaitForFunctions, 200);
+                setTimeout(checkAndWaitForFunctions, 500);
+                setTimeout(checkAndWaitForFunctions, 1000);
+            });
+        })();
+    </script>
+    
+    <!-- Script para garantir que funções críticas estejam disponíveis (silencioso) -->
+    <script>
+        (function ensureCriticalFunctions() {
+            var criticalFunctions = [
+                'navigate', 'filtrarInventario', 'abrirCadastroRapido', 'toggleTheme',
+                'resetarFiltrosInventario', 'logout', 'fecharCadastro', 'proximoPassoCadastro',
+                'passoAnteriorCadastro', 'finalizarCadastro', 'renderizarTabela', 'inicializarInventario'
+            ];
+            function verificarFuncoes() {
+                criticalFunctions.forEach(function(funcName) {
+                    if (typeof window[funcName] !== 'function') { /* ausente */ }
+                });
+            }
+            verificarFuncoes();
+            setTimeout(verificarFuncoes, 100);
+            setTimeout(verificarFuncoes, 500);
+            setTimeout(verificarFuncoes, 1000);
+            setTimeout(verificarFuncoes, 2000);
+        })();
+    </script>
+    
+    <!-- ============================================
+         🔒 SISTEMA ULTRA-ROBUSTO DE PERSISTÊNCIA
+         Garante que a página NUNCA saia do site
+         ============================================ -->
+    <script>
+        (function ultraRobustPersistence() {
+            
+            // 1. Previne qualquer navegação para fora do site
+            const originalLocationHref = window.location.href;
+            const originalLocationReplace = window.location.replace;
+            const originalLocationAssign = window.location.assign;
+            
+            // Intercepta window.location.href
+            let locationHrefDescriptor = Object.getOwnPropertyDescriptor(window, 'location') || 
+                                        Object.getOwnPropertyDescriptor(Object.getPrototypeOf(window), 'location');
+            
+            // 2. Salva estado constantemente
+            setInterval(() => {
+                try {
+                    const currentPage = window.activePage || localStorage.getItem('axis-current-page') || 'page-home';
+                    if (currentPage && currentPage.startsWith('page-')) {
+                        localStorage.setItem('axis-current-page', currentPage);
+                        
+                        // Garante que a hash da URL esteja correta
+                        if (window.location.hash !== '#' + currentPage) {
+                            try {
+                                window.history.replaceState({ page: currentPage }, '', window.location.pathname + '#' + currentPage);
+                            } catch (e) {
+                                // Silencioso - não queremos erros aqui
+                            }
+                        }
+                    }
+                } catch (e) {
+                    // Silencioso
+                }
+            }, 1000); // Salva a cada segundo
+            
+            // 3. Restaura página ao carregar
+            window.addEventListener('load', () => {
+                setTimeout(() => {
+                    const savedPage = localStorage.getItem('axis-current-page');
+                    const hashPage = window.location.hash.replace('#', '');
+                    
+                    let pageToRestore = null;
+                    
+                    if (hashPage && hashPage.startsWith('page-')) {
+                        pageToRestore = hashPage;
+                        localStorage.setItem('axis-current-page', hashPage);
+                    } else if (savedPage && savedPage.startsWith('page-')) {
+                        pageToRestore = savedPage;
+                        // Atualiza hash
+                        try {
+                            window.history.replaceState({ page: savedPage }, '', window.location.pathname + '#' + savedPage);
+                        } catch (e) {
+                            window.location.hash = savedPage;
+                        }
+                    } else {
+                        pageToRestore = 'page-home';
+                        localStorage.setItem('axis-current-page', 'page-home');
+                        try {
+                            window.history.replaceState({ page: 'page-home' }, '', window.location.pathname + '#page-home');
+                        } catch (e) {
+                            window.location.hash = 'page-home';
+                        }
+                    }
+                    
+                    // Restaura a página
+                    if (pageToRestore) {
+                        const restorePage = () => {
+                            const targetSection = document.getElementById(pageToRestore);
+                            if (targetSection) {
+                                document.querySelectorAll('.main-section').forEach(s => {
+                                    s.classList.remove('active');
+                                    s.style.display = 'none';
+                                });
+                                targetSection.classList.add('active');
+                                targetSection.style.display = 'block';
+                                
+                                if (window.activePage !== undefined) {
+                                    window.activePage = pageToRestore;
+                                }
+                                
+                                
+                                // Chama inicialização específica se necessário
+                                if (pageToRestore === 'page-inventario' && typeof window.inicializarInventario === 'function') {
+                                    setTimeout(() => {
+                                        try {
+                                            window.inicializarInventario();
+                                        } catch (e) {
+                                        }
+                                    }, 200);
+                                }
+                            } else {
+                                setTimeout(restorePage, 500);
+                            }
+                        };
+                        
+                        // Tenta restaurar imediatamente
+                        restorePage();
+                        
+                        // Tenta novamente após um delay (caso DOM não esteja pronto)
+                        setTimeout(restorePage, 300);
+                        setTimeout(restorePage, 1000);
+                    }
+                }, 100);
+            });
+            
+            // 4. Intercepta popstate para manter no site
+            window.addEventListener('popstate', (e) => {
+                const savedPage = localStorage.getItem('axis-current-page') || 'page-home';
+                if (savedPage && savedPage.startsWith('page-')) {
+                    setTimeout(() => {
+                        try {
+                            window.history.pushState({ page: savedPage }, '', window.location.pathname + '#' + savedPage);
+                            const targetSection = document.getElementById(savedPage);
+                            if (targetSection) {
+                                document.querySelectorAll('.main-section').forEach(s => {
+                                    s.classList.remove('active');
+                                    s.style.display = 'none';
+                                });
+                                targetSection.classList.add('active');
+                                targetSection.style.display = 'block';
+                            }
+                        } catch (e) {
+                            console.error('Erro ao restaurar página no popstate:', e);
+                        }
+                    }, 50);
+                }
+            });
+            
+        })();
+    </script>
+    
+    <!-- ============================================
+         🔒 FORÇA EXPORTAÇÃO DE TODAS AS FUNÇÕES
+         Executa DEPOIS do script.js carregar
+         ============================================ -->
+    <script>
+        (function forceExportAllFunctions() {
+            
+            // Aguarda o script.js carregar completamente
+            function forceExports() {
+                // Lista de todas as funções que devem ser exportadas
+                const functionsToExport = [
+                    'navigate',
+                    'toggleSidebar',
+                    'filtrarInventario',
+                    'abrirCadastroRapido',
+                    'fecharCadastro',
+                    'proximoPassoCadastro',
+                    'passoAnteriorCadastro',
+                    'finalizarCadastro',
+                    'renderizarTabela',
+                    'inicializarInventario',
+                    'resetarFiltrosInventario',
+                    'toggleTheme',
+                    'logout',
+                    'handleAuth',
+                    'togglePassword',
+                    'showToast',
+                    'exportarDados',
+                    'filtrarPorModelo',
+                    'ordenarTabela',
+                    'mudarPagina',
+                    'editarEquipamento',
+                    'excluirEquipamento',
+                    'carregarRondas',
+                    'carregarTickets'
+                ];
+                
+                functionsToExport.forEach(funcName => {
+                    // Tenta encontrar a função no escopo global ou no window
+                    if (typeof window[funcName] === 'function') {
+                        // Já está exportada
+                        return;
+                    }
+                    
+                    // Tenta encontrar no escopo (se ainda não foi exportada)
+                    // Isso só funciona se a função estiver no escopo global
+                    try {
+                        // Se a função existe mas não está em window, força exportação
+                        const func = eval(funcName);
+                        if (typeof func === 'function') {
+                            window[funcName] = func;
+                        }
+                    } catch (e) {
+                        // Função ainda não está disponível, isso é normal
+                    }
+                });
+            }
+            
+            // Tenta múltiplas vezes
+            forceExports();
+            setTimeout(forceExports, 100);
+            setTimeout(forceExports, 500);
+            setTimeout(forceExports, 1000);
+            setTimeout(forceExports, 2000);
+            
+            // Também tenta quando a página carregar completamente
+            window.addEventListener('load', () => {
+                setTimeout(forceExports, 500);
+                setTimeout(forceExports, 1500);
+            });
+            
+        })();
+    </script>
+    
+    <!-- ============================================
+         🔒 SISTEMA FINAL DE GARANTIA ABSOLUTA
+         Força tudo a funcionar mesmo em casos extremos
+         ============================================ -->
+    <script>
+        (function absoluteGuarantee() {
+            setInterval(function() {
+                var mustHaveFunctions = {
+                    'filtrarInventario': function() {
+                        var tbody = document.getElementById('ucs-inventory-data');
+                        if (tbody) {
+                            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px;">Carregando...</td></tr>';
+                        }
+                    },
+                    'abrirCadastroRapido': function() {
+                        var modal = document.getElementById('cadastro-modal');
+                        if (modal) {
+                            modal.style.display = 'flex';
+                            modal.style.opacity = '1';
+                        }
+                    },
+                    'navigate': function(pageId) {
+                        var target = document.getElementById(pageId);
+                        if (target) {
+                            document.querySelectorAll('.main-section').forEach(function(s) {
+                                s.classList.remove('active');
+                                s.style.display = 'none';
+                            });
+                            target.classList.add('active');
+                            target.style.display = 'block';
+                            localStorage.setItem('axis-current-page', pageId);
+                            if (window.activePage !== undefined) {
+                                window.activePage = pageId;
+                            }
+                        }
+                    },
+                    'toggleTheme': function() {
+                        var current = document.body.getAttribute('data-theme') || 'light';
+                        var newTheme = current === 'dark' ? 'light' : 'dark';
+                        document.body.setAttribute('data-theme', newTheme);
+                        localStorage.setItem('axis-theme', newTheme);
+                        var icon = document.getElementById('theme-icon');
+                        if (icon) {
+                            icon.textContent = newTheme === 'dark' ? '☀️' : '🌙';
+                        }
+                    },
+                    'resetarFiltrosInventario': function() {
+                        var pais = document.getElementById('ucs-filtro-pais');
+                        var nodo = document.getElementById('ucs-filtro-nodo');
+                        var dispositivo = document.getElementById('ucs-filtro-dispositivo');
+                        if (pais) pais.value = '';
+                        if (nodo) nodo.value = '';
+                        if (dispositivo) dispositivo.value = '';
+                        if (typeof window.filtrarInventario === 'function') {
+                            window.filtrarInventario();
+                        }
+                    },
+                    'fecharCadastro': function() {
+                        var modal = document.getElementById('cadastro-modal');
+                        if (modal) {
+                            modal.style.opacity = '0';
+                            setTimeout(function() {
+                                modal.style.display = 'none';
+                            }, 300);
+                        }
+                    },
+                    'proximoPassoCadastro': function() {},
+                    'passoAnteriorCadastro': function() {},
+                    'finalizarCadastro': function() {
+                        if (typeof window.fecharCadastro === 'function') {
+                            window.fecharCadastro();
+                        }
+                    },
+                    'renderizarTabela': function() {},
+                    'inicializarInventario': function() {
+                        if (typeof window.renderizarTabela === 'function') {
+                            window.renderizarTabela();
+                        }
+                    }
+                };
+                Object.keys(mustHaveFunctions).forEach(function(funcName) {
+                    if (typeof window[funcName] !== 'function') {
+                        window[funcName] = mustHaveFunctions[funcName];
+                    } else {
+                        var funcStr = window[funcName].toString();
+                        if (funcStr.indexOf('será carregada em breve') !== -1 || funcStr.indexOf('fallback') !== -1) {
+                            window[funcName] = mustHaveFunctions[funcName];
+                        }
+                    }
+                });
+            }, 2000);
+            if (typeof window.activePage === 'undefined') {
+                window.activePage = localStorage.getItem('axis-current-page') || 'page-home';
+            }
+            setInterval(function() {
+                var saved = localStorage.getItem('axis-current-page');
+                if (saved && saved.startsWith('page-')) {
+                    window.activePage = saved;
+                } else if (window.activePage) {
+                    localStorage.setItem('axis-current-page', window.activePage);
+                }
+            }, 500);
+        })();
+    </script>
+    
+    <!-- ============================================
+         🔒 SISTEMA DE PROTEÇÃO DOS CARDS
+         Blinda todos os estilos e classes dos cards
+         ============================================ -->
+    <script>
+        (function protectCardsSystem() {
+            
+            // Configurações protegidas dos cards
+            const protectedCardsConfig = {
+                'inventario-master': {
+                    classes: ['mod-card', 'inventario-master'],
+                    icon: '📦',
+                    linkClass: 'mod-link-inventario',
+                    linkText: 'Acessar Frota',
+                    linkColor: '#00bcd4',
+                    bgGradient: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(0, 188, 212, 0.1) 100%)',
+                    borderColor: 'rgba(0, 188, 212, 0.3)',
+                    animation: 'pulse 2s ease-in-out infinite'
+                },
+                'rondas-master': {
+                    classes: ['mod-card', 'rondas-master'],
+                    icon: '🛡️',
+                    linkClass: 'mod-link-rondas',
+                    linkText: 'Ver Relatórios',
+                    linkColor: '#4caf50',
+                    bgGradient: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(76, 175, 80, 0.1) 100%)',
+                    borderColor: 'rgba(76, 175, 80, 0.3)',
+                    animation: 'pulse 2s ease-in-out infinite'
+                },
+                'preventiva-master': {
+                    classes: ['mod-card', 'preventiva-master'],
+                    icon: '🖨️',
+                    linkClass: 'mod-link-preventiva',
+                    linkText: 'Iniciar Vistoria',
+                    linkColor: '#fd7e14',
+                    bgGradient: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(253, 126, 20, 0.1) 100%)',
+                    borderColor: 'rgba(253, 126, 20, 0.3)',
+                    animation: 'pulse 2s ease-in-out infinite'
+                },
+                'suporte-master': {
+                    classes: ['mod-card', 'suporte-master'],
+                    icon: '💬',
+                    linkClass: 'mod-link-suporte',
+                    linkText: 'Abrir Ticket',
+                    linkColor: '#e91e63',
+                    bgGradient: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(233, 30, 99, 0.1) 100%)',
+                    borderColor: 'rgba(233, 30, 99, 0.3)',
+                    animation: 'pulse 2s ease-in-out infinite'
+                },
+                'notas-master': {
+                    classes: ['mod-card', 'notas-master'],
+                    icon: '📄',
+                    linkClass: 'mod-link-notas',
+                    linkText: 'Acessar Biblioteca',
+                    linkColor: '#9c27b0',
+                    bgGradient: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(156, 39, 176, 0.1) 100%)',
+                    borderColor: 'rgba(156, 39, 176, 0.3)',
+                    animation: 'pulse 2s ease-in-out infinite'
+                },
+                'bloco-master': {
+                    classes: ['mod-card', 'bloco-master'],
+                    icon: '📝',
+                    linkClass: 'mod-link-bloco',
+                    linkText: 'Abrir Editor',
+                    linkColor: '#ffc107',
+                    bgGradient: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 193, 7, 0.1) 100%)',
+                    borderColor: 'rgba(255, 193, 7, 0.3)',
+                    animation: 'pulse 2s ease-in-out infinite'
+                },
+                'config-master': {
+                    classes: ['mod-card', 'config-master'],
+                    icon: '⚙️',
+                    linkClass: 'mod-link-config',
+                    linkText: 'Abrir Configurações',
+                    linkColor: '#607d8b',
+                    bgGradient: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(96, 125, 139, 0.1) 100%)',
+                    borderColor: 'rgba(96, 125, 139, 0.3)',
+                    animation: 'pulse 2s ease-in-out infinite'
+                }
+            };
+            
+            // Função para verificar e restaurar estilos CSS
+            function protectCardStyles() {
+                const styleSheet = document.querySelector('style') || document.createElement('style');
+                let styleContent = styleSheet.textContent || '';
+                
+                // Lista de estilos críticos que devem estar presentes
+                const criticalStyles = [
+                    '.mod-card.inventario-master',
+                    '.mod-card.rondas-master',
+                    '.mod-card.preventiva-master',
+                    '.mod-card.suporte-master',
+                    '.mod-card.notas-master',
+                    '.mod-card.bloco-master',
+                    '.mod-card.config-master',
+                    '@keyframes floatInventario',
+                    '@keyframes shieldPulse',
+                    '@keyframes pulse',
+                    '@keyframes bounceSuporte',
+                    '@keyframes waveNotas',
+                    '@keyframes glowBloco',
+                    '@keyframes spinConfig',
+                    '.mod-link-inventario',
+                    '.mod-link-rondas',
+                    '.mod-link-preventiva',
+                    '.mod-link-suporte',
+                    '.mod-link-notas',
+                    '.mod-link-bloco',
+                    '.mod-link-config'
+                ];
+                
+                // Verifica se todos os estilos críticos estão presentes
+                let missingStyles = [];
+                criticalStyles.forEach(style => {
+                    if (styleContent.indexOf(style) === -1) {
+                        missingStyles.push(style);
+                    }
+                });
+                
+                // Se estilos estão faltando, adiciona um aviso (mas não força reescrita para evitar conflitos)
+                if (missingStyles.length > 0) {
+                    console.warn('⚠️ Alguns estilos de cards podem estar faltando:', missingStyles);
+                }
+            }
+            
+            // Função para verificar e restaurar estrutura HTML dos cards
+            function protectCardHTML() {
+                Object.keys(protectedCardsConfig).forEach(cardType => {
+                    const config = protectedCardsConfig[cardType];
+                    const card = document.querySelector(`.${cardType}`);
+                    
+                    if (card) {
+                        // Verifica e restaura classes
+                        config.classes.forEach(className => {
+                            if (!card.classList.contains(className)) {
+                                card.classList.add(className);
+                                console.log(`🔧 Classe ${className} restaurada no card ${cardType}`);
+                            }
+                        });
+                        
+                        // Verifica e restaura ícone
+                        const iconElement = card.querySelector('.mod-icon');
+                        if (iconElement && iconElement.textContent.trim() !== config.icon) {
+                            iconElement.textContent = config.icon;
+                            console.log(`🔧 Ícone restaurado no card ${cardType}`);
+                        }
+                        
+                        // Verifica e restaura link
+                        const linkElement = card.querySelector('.mod-link, .mod-link-' + cardType.split('-')[0]);
+                        if (linkElement) {
+                            if (!linkElement.classList.contains(config.linkClass)) {
+                                linkElement.className = config.linkClass;
+                            }
+                            if (linkElement.textContent.trim() !== config.linkText) {
+                                linkElement.textContent = config.linkText;
+                            }
+                            // Verifica cor do link
+                            const computedColor = window.getComputedStyle(linkElement).color;
+                            if (computedColor !== config.linkColor && !computedColor.includes('rgb')) {
+                                linkElement.style.color = config.linkColor;
+                            }
+                        }
+                        
+                        // Verifica estilos inline críticos (se necessário)
+                        const computedBg = window.getComputedStyle(card).background;
+                        if (!computedBg.includes('gradient') && !computedBg.includes('rgba')) {
+                            // Não força, apenas avisa
+                            console.warn(`⚠️ Card ${cardType} pode ter perdido gradiente de fundo`);
+                        }
+                    } else {
+                        console.warn(`⚠️ Card ${cardType} não encontrado no DOM`);
+                    }
+                });
+            }
+            
+            // Protege estilos CSS críticos usando Object.defineProperty no elemento style
+            function protectStyleElement() {
+                const styleElements = document.querySelectorAll('style');
+                styleElements.forEach((styleEl, index) => {
+                    if (styleEl.textContent && styleEl.textContent.includes('inventario-master')) {
+                        // Protege a propriedade textContent do elemento style
+                        try {
+                            const originalTextContent = styleEl.textContent;
+                            Object.defineProperty(styleEl, 'textContent', {
+                                get: function() {
+                                    return originalTextContent;
+                                },
+                                set: function(newValue) {
+                                    // Verifica se está tentando remover estilos críticos
+                                    const criticalPatterns = [
+                                        'inventario-master',
+                                        'rondas-master',
+                                        'preventiva-master',
+                                        'suporte-master',
+                                        'notas-master',
+                                        'bloco-master',
+                                        'config-master'
+                                    ];
+                                    
+                                    let hasCriticalStyles = false;
+                                    criticalPatterns.forEach(pattern => {
+                                        if (newValue.indexOf(pattern) !== -1) {
+                                            hasCriticalStyles = true;
+                                        }
+                                    });
+                                    
+                                    if (!hasCriticalStyles && originalTextContent.indexOf('inventario-master') !== -1) {
+                                        console.warn('⚠️ Tentativa de remover estilos críticos dos cards bloqueada!');
+                                        // Não permite a alteração se estilos críticos forem removidos
+                                        return;
+                                    }
+                                    
+                                    // Permite alteração se estilos críticos estiverem presentes
+                                    Object.defineProperty(styleEl, 'textContent', {
+                                        value: newValue,
+                                        writable: true,
+                                        configurable: true
+                                    });
+                                },
+                                configurable: true
+                            });
+                        } catch (e) {
+                            // Silencioso - alguns navegadores podem não permitir
+                        }
+                    }
+                });
+            }
+            
+            // Monitora e protege continuamente
+            setInterval(() => {
+                protectCardHTML();
+                protectCardStyles();
+            }, 3000); // Verifica a cada 3 segundos
+            
+            // Protege imediatamente
+            setTimeout(() => {
+                protectCardHTML();
+                protectCardStyles();
+                protectStyleElement();
+            }, 1000);
+            
+            // Protege quando DOM estiver pronto
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', () => {
+                    setTimeout(() => {
+                        protectCardHTML();
+                        protectCardStyles();
+                        protectStyleElement();
+                    }, 500);
+                });
+            }
+            
+            // Protege quando página carregar completamente
+            window.addEventListener('load', () => {
+                setTimeout(() => {
+                    protectCardHTML();
+                    protectCardStyles();
+                    protectStyleElement();
+                }, 1000);
+            });
+            
+            // Salva configuração no localStorage para backup
+            try {
+                localStorage.setItem('axis-cards-config', JSON.stringify(protectedCardsConfig));
+                console.log('✅ Configuração dos cards salva no localStorage');
+            } catch (e) {
+                console.warn('⚠️ Não foi possível salvar configuração no localStorage:', e);
+            }
+            
+        })();
+    </script>
+    
+    <!-- WhatsApp Alerts System -->
+    <script src="Novos Módulos/whatsapp-alerts/whatsapp-alerts.js"></script>
+
+    <!-- Script para garantir que botões do modal funcionem -->
+    <script>
+        (function setupModalButtons() {
+            
+            // Adiciona listener adicional ao botão "Próximo"
+            function setupNextButton() {
+                const btnNext = document.getElementById('btn-next');
+                if (btnNext) {
+                    // Remove listeners antigos para evitar duplicação
+                    const newBtnNext = btnNext.cloneNode(true);
+                    btnNext.parentNode.replaceChild(newBtnNext, btnNext);
+                    
+                    // Adiciona listener
+                    newBtnNext.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                        
+                        if (typeof window.proximoPassoCadastro === 'function') {
+                            try {
+                                window.proximoPassoCadastro();
+                            } catch (error) {
+                                console.error('❌ Erro ao chamar proximoPassoCadastro:', error);
+                                alert('Erro ao avançar. Verifique o console (F12) para mais detalhes.');
+                            }
+                        } else {
+                            console.error('❌ proximoPassoCadastro não está disponível');
+                            alert('Erro: Função de navegação não encontrada. Recarregue a página.');
+                        }
+                        
+                        return false;
+                    });
+                    
+                } else {
+                    // Tenta novamente após um delay
+                    setTimeout(setupNextButton, 500);
+                }
+            }
+            
+            // Configura quando DOM estiver pronto
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', setupNextButton);
+            } else {
+                setupNextButton();
+            }
+            
+            // Configura listener adicional no botão "Criar Dispositivo"
+            function setupCreateDeviceButton() {
+                const btnCreate = document.getElementById('btn-criar-dispositivo');
+                if (btnCreate) {
+                    // Remove listeners antigos
+                    const newBtnCreate = btnCreate.cloneNode(true);
+                    btnCreate.parentNode.replaceChild(newBtnCreate, btnCreate);
+                    
+                    // Adiciona listener direto
+                    newBtnCreate.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (typeof window.abrirCadastroRapido === 'function') {
+                            try {
+                                window.abrirCadastroRapido();
+                            } catch (error) {
+                                const modal = document.getElementById('cadastro-modal');
+                                if (modal) {
+                                    modal.style.display = 'flex';
+                                    modal.style.opacity = '1';
+                                } else {
+                                    alert('Erro: Modal de cadastro não encontrado.');
+                                }
+                            }
+                        } else {
+                            const modal = document.getElementById('cadastro-modal');
+                            if (modal) {
+                                modal.style.display = 'flex';
+                                modal.style.opacity = '1';
+                                
+                                // Reseta para passo 1
+                                document.querySelectorAll('.cadastro-steps .step').forEach(s => s.classList.remove('active'));
+                                document.querySelectorAll('[id^="step-"][id$="-content"]').forEach(c => {
+                                    c.classList.remove('active');
+                                    c.style.display = 'none';
+                                });
+                                
+                                const step1 = document.getElementById('step-1');
+                                const step1Content = document.getElementById('step-1-content');
+                                if (step1) step1.classList.add('active');
+                                if (step1Content) {
+                                    step1Content.classList.add('active');
+                                    step1Content.style.display = 'block';
+                                }
+                                
+                                if (window.cadastroStep !== undefined) {
+                                    window.cadastroStep = 1;
+                                }
+                            } else {
+                                alert('Erro: Modal de cadastro não encontrado. Recarregue a página.');
+                            }
+                        }
+                        
+                        return false;
+                    });
+                } else {
+                    setTimeout(setupCreateDeviceButton, 500);
+                }
+            }
+            
+            setupCreateDeviceButton();
+            
+            // Intercepta e melhora abrirCadastroRapido quando disponível
+            let checkCount = 0;
+            function interceptAbrirCadastro() {
+                checkCount++;
+                if (typeof window.abrirCadastroRapido === 'function') {
+                    const original = window.abrirCadastroRapido;
+                    window.abrirCadastroRapido = function() {
+                        try {
+                            original();
+                            setTimeout(setupNextButton, 100);
+                            setTimeout(setupCreateDeviceButton, 100);
+                        } catch (e) {
+                            const modal = document.getElementById('cadastro-modal');
+                            if (modal) {
+                                modal.style.display = 'flex';
+                                modal.style.visibility = 'visible';
+                                modal.style.opacity = '1';
+                            }
+                        }
+                    };
+                } else if (checkCount < 20) {
+                    setTimeout(interceptAbrirCadastro, 200);
+                }
+            }
+            
+            interceptAbrirCadastro();
+        })();
+    </script>
+    
+    <!-- Script de Inicialização Final -->
+    <script>
+        // GARANTIR QUE O BOTÃO DE LOGIN FUNCIONE - EXECUÇÃO IMEDIATA
+        (function() {
+            function tryHandleAuth() {
+                if (typeof handleAuth === 'function') {
+                    handleAuth();
+                } else {
+                    setTimeout(tryHandleAuth, 100);
+                }
+            }
+            function setupLoginButton() {
+                const authButton = document.getElementById('auth-main-btn');
+                const usernameField = document.getElementById('username');
+                const passwordField = document.getElementById('password');
+                if (authButton) {
+                    const newButton = authButton.cloneNode(true);
+                    authButton.parentNode.replaceChild(newButton, authButton);
+                    newButton.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        tryHandleAuth();
+                    });
+                }
+                if (passwordField) {
+                    passwordField.addEventListener('keypress', function(e) {
+                        if (e.key === 'Enter' || e.keyCode === 13) {
+                            e.preventDefault();
+                            tryHandleAuth();
+                        }
+                    });
+                }
+                
+                // Enter no campo de usuário
+                if (usernameField) {
+                    usernameField.addEventListener('keypress', function(e) {
+                        if (e.key === 'Enter' || e.keyCode === 13) {
+                            e.preventDefault();
+                            if (passwordField) passwordField.focus();
+                        }
+                    });
+                }
+            }
+            
+            // Executa quando o DOM estiver pronto
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', setupLoginButton);
+            } else {
+                setupLoginButton();
+            }
+            
+            // Também tenta após um pequeno delay para garantir
+            setTimeout(setupLoginButton, 500);
+        })();
+        
+        // Remove loading screen quando tudo estiver carregado
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                const loadingScreen = document.getElementById('loading-screen');
+                if (loadingScreen) {
+                    loadingScreen.classList.add('hidden');
+                    setTimeout(function() {
+                        loadingScreen.style.display = 'none';
+                    }, 500);
+                }
+                
+                // Inicializa tema
+                const savedTheme = localStorage.getItem('axis-theme') || 'light';
+                document.body.setAttribute('data-theme', savedTheme);
+                document.getElementById('theme-icon').textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+                
+            }, 800);
+        });
+
+        // Prevenção de erro se scripts não carregarem
+        window.addEventListener('error', function(e) {
+            console.error('Erro detectado:', e);
+            const loadingScreen = document.getElementById('loading-screen');
+            if (loadingScreen) {
+                loadingScreen.innerHTML = `
+                    <div style="color: white; text-align: center; padding: 20px;">
+                        <h2>⚠️ Erro ao carregar sistema</h2>
+                        <p>Verifique sua conexão e recarregue a página.</p>
+                        <button onclick="location.reload()" style="margin-top: 20px; padding: 10px 20px; background: white; border: none; border-radius: 8px; cursor: pointer;">
+                            Recarregar Página
+                        </button>
+                    </div>
+                `;
+            }
+        });
+
+        // ============================================
+        // 🔒 GARANTIR QUE OS CARDS FUNCIONEM
+        // ============================================
+        function setupCardsNavigation() {
+            function navigateToPage(pageId) {
+                document.querySelectorAll('.main-section').forEach(s => {
+                    s.classList.remove('active');
+                    s.style.display = 'none';
+                });
+                const target = document.getElementById(pageId);
+                if (target) {
+                    target.classList.add('active');
+                    target.style.display = 'block';
+                    if (pageId.startsWith('page-')) {
+                        localStorage.setItem('axis-current-page', pageId);
+                    }
+                    if (typeof navigate === 'function') {
+                        navigate(pageId);
+                    }
+                }
+            }
+            const cardMappings = {
+                'page-inventario': 'Inventário',
+                'page-rondas': 'Rondas',
+                'page-suporte': 'Suporte',
+                'page-configuracoes': 'Configurações'
+            };
+            Object.keys(cardMappings).forEach(pageId => {
+                const cards = document.querySelectorAll(`.mod-card[onclick*="${pageId}"]`);
+                
+                cards.forEach((card, index) => {
+                    // Remove listeners antigos clonando o elemento
+                    const newCard = card.cloneNode(true);
+                    card.parentNode.replaceChild(newCard, card);
+                    
+                    // Adiciona listener direto
+                    newCard.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        navigateToPage(pageId);
+                    });
+                    
+                    // Garante cursor pointer
+                    newCard.style.cursor = 'pointer';
+                });
+            });
+            
+        }
+        
+        // Executa quando o DOM estiver pronto
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', setupCardsNavigation);
+        } else {
+            setupCardsNavigation();
+        }
+        
+        // Também executa após um delay para garantir
+        setTimeout(setupCardsNavigation, 500);
+        
+        // ============================================
+        // 🔒 CONFIGURAR OVERLAY PARA FECHAR MENU
+        // ============================================
+        function setupMenuOverlay() {
+            if (window.menuOverlaySetupDone) return;
+            
+            const overlay = document.getElementById('menu-overlay');
+            const sidebar = document.getElementById('side-menu');
+            
+            if (!overlay || !sidebar) {
+                setTimeout(setupMenuOverlay, 500);
+                return;
+            }
+            window.menuOverlaySetupDone = true;
+            
+            // Remove listeners antigos (clone sem onclick para evitar double-toggle)
+            const newOverlay = overlay.cloneNode(true);
+            newOverlay.removeAttribute('onclick');
+            overlay.parentNode.replaceChild(newOverlay, overlay);
+            
+            // Adiciona listener para fechar menu ao clicar no overlay
+            newOverlay.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                if (typeof toggleSidebar === 'function') {
+                    toggleSidebar();
+                } else {
+                    // Fallback: fecha manualmente
+                    sidebar.classList.remove('open');
+                    newOverlay.classList.remove('active');
+                    newOverlay.style.opacity = '0';
+                    setTimeout(() => {
+                        newOverlay.style.display = 'none';
+                    }, 300);
+                }
+            });
+            
+            // Adiciona listener para fechar menu ao clicar fora (no body)
+            // Usa uma flag para evitar múltiplos listeners
+            if (!window.menuOverlayListenerAdded) {
+                document.body.addEventListener('click', function(e) {
+                    const currentSidebar = document.getElementById('side-menu');
+                    const currentOverlay = document.getElementById('menu-overlay');
+                    
+                    // Se o menu estiver aberto
+                    if (currentSidebar && currentSidebar.classList.contains('open')) {
+                        // Se o clique não foi no menu nem no botão do menu
+                        if (!currentSidebar.contains(e.target) && 
+                            !e.target.closest('.menu-trigger-ios') &&
+                            e.target !== currentOverlay &&
+                            !e.target.closest('.menu-overlay')) {
+                            console.log('🖱️ Clique fora do menu - fechando');
+                            if (typeof toggleSidebar === 'function') {
+                                toggleSidebar();
+                            }
+                        }
+                    }
+                }, true); // Usa capture phase para garantir que funcione
+                
+                window.menuOverlayListenerAdded = true;
+            }
+            
+            console.log('✅ Overlay do menu configurado');
+        }
+        
+        // Executa quando o DOM estiver pronto
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', setupMenuOverlay);
+        } else {
+            setupMenuOverlay();
+        }
+        
+        // Também executa após um delay para garantir
+        setTimeout(setupMenuOverlay, 500);
+
+        // Modal Bem-vindo (fallback inline – garante que exista antes de handleAuth)
+        if (typeof window.showBemVindoModal !== 'function') {
+            window.showBemVindoModal = function(nome) {
+                var wrap = document.getElementById('modal-bem-vindo');
+                var span = document.getElementById('modal-bem-vindo-nome');
+                if (!wrap || !span) return;
+                if (wrap.style.display === 'flex') return;
+                span.textContent = nome || 'Usuário';
+                wrap.style.display = 'flex';
+                wrap.onclick = function() {
+                    wrap.style.display = 'none';
+                    wrap.onclick = null;
+                };
+            };
+        }
+        if (typeof window.fecharBemVindoModal !== 'function') {
+            window.fecharBemVindoModal = function() {
+                var w = document.getElementById('modal-bem-vindo');
+                if (w) { w.style.display = 'none'; w.onclick = null; }
+            };
+        }
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,1344 @@
+/* ============================================
+   REGISTRO DE CHAMADOS (MERCADO LIVRE) - AXIS
+   Página 100% completa. Código blindado.
+   Design em vidro, modo claro/escuro.
+   Arquivo: css/registro_chamados.css
+   Não alterar sem documentar.
+   ============================================ */
+:root {
+    --rc-glass-bg: rgba(255, 255, 255, 0.75);
+    --rc-glass-border: rgba(0, 122, 255, 0.15);
+    --rc-blur: blur(20px) saturate(180%);
+    --rc-accent: #007aff;
+    --rc-success: #2ecc71;
+    --rc-danger: #ff3b30;
+    --rc-text: #1d1d1f;
+    --rc-text-sec: #86868b;
+}
+
+[data-theme="dark"] {
+    --rc-glass-bg: rgba(28, 28, 30, 0.85);
+    --rc-glass-border: rgba(255, 255, 255, 0.1);
+    --rc-text: #f5f5f7;
+    --rc-text-sec: #a1a1a6;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+/* Rolagem invisível em toda a página (sem barra verde/visível) */
+html {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+html::-webkit-scrollbar {
+    display: none;
+}
+
+body.registro-chamados-page {
+    min-height: 100vh;
+    background: linear-gradient(135deg, var(--bg-light, #f5f5f7) 0%, rgba(0, 122, 255, 0.06) 100%);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    color: var(--rc-text);
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+body.registro-chamados-page::-webkit-scrollbar {
+    display: none;
+}
+
+[data-theme="dark"] body.registro-chamados-page {
+    background: linear-gradient(135deg, #1c1c1e 0%, rgba(0, 122, 255, 0.08) 100%);
+}
+
+[data-theme="dark"] .rc-field input,
+[data-theme="dark"] .rc-field select,
+[data-theme="dark"] .rc-field textarea {
+    background: rgba(44, 44, 46, 0.8);
+    border-color: rgba(255, 255, 255, 0.12);
+    color: var(--rc-text);
+}
+
+[data-theme="dark"] .rc-select-glass-trigger {
+    background: rgba(44, 44, 46, 0.8);
+    border-color: rgba(255, 255, 255, 0.12);
+    color: var(--rc-text);
+}
+
+[data-theme="dark"] .rc-tipo-tags-trigger {
+    background: rgba(0, 122, 255, 0.12);
+    border-color: rgba(0, 122, 255, 0.3);
+    color: var(--rc-accent);
+}
+
+[data-theme="dark"] .rc-table-wrap {
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .rc-table th {
+    background: rgba(0, 122, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: var(--rc-text);
+}
+
+[data-theme="dark"] .rc-table td {
+    border-color: rgba(255, 255, 255, 0.06);
+    color: var(--rc-text);
+}
+
+[data-theme="dark"] .rc-table tbody tr:hover {
+    background: rgba(0, 122, 255, 0.08);
+}
+
+[data-theme="dark"] .rc-search-wrap input {
+    background: rgba(44, 44, 46, 0.8);
+    border-color: rgba(255, 255, 255, 0.12);
+    color: var(--rc-text);
+}
+
+[data-theme="dark"] .rc-chart-card {
+    background: rgba(44, 44, 46, 0.6);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .rc-period-select,
+[data-theme="dark"] .rc-period-dropdown-inner .rc-period-select {
+    background: rgba(44, 44, 46, 0.8);
+    border-color: rgba(255, 255, 255, 0.12);
+    color: var(--rc-text);
+}
+
+/* Qualquer área com rolagem na página fica sem barra visível */
+.registro-chamados-page * {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.registro-chamados-page *::-webkit-scrollbar {
+    display: none;
+}
+
+/* Top bar */
+.rc-top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 24px;
+    background: var(--rc-glass-bg);
+    backdrop-filter: var(--rc-blur);
+    -webkit-backdrop-filter: var(--rc-blur);
+    border-bottom: 1px solid var(--rc-glass-border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.rc-top-bar h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--rc-text);
+}
+
+.rc-top-bar-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.rc-theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 1px solid var(--rc-glass-border);
+    border-radius: 12px;
+    background: rgba(0, 122, 255, 0.1);
+    color: var(--rc-accent);
+    font-size: 18px;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s, transform 0.2s;
+}
+
+.rc-theme-toggle:hover {
+    background: rgba(0, 122, 255, 0.2);
+    border-color: rgba(0, 122, 255, 0.3);
+    transform: translateY(-1px);
+}
+
+[data-theme="dark"] .rc-theme-toggle {
+    color: #ffd60a;
+    background: rgba(255, 214, 10, 0.15);
+    border-color: rgba(255, 214, 10, 0.25);
+}
+
+[data-theme="dark"] .rc-theme-toggle:hover {
+    background: rgba(255, 214, 10, 0.25);
+    border-color: rgba(255, 214, 10, 0.4);
+}
+
+.rc-back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    background: rgba(0, 122, 255, 0.12);
+    color: var(--rc-accent);
+    border: 1px solid rgba(0, 122, 255, 0.25);
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.rc-back-btn:hover {
+    background: rgba(0, 122, 255, 0.2);
+    transform: translateY(-1px);
+}
+
+/* Main layout - dois painéis (painel direito mais largo para tabela) */
+.rc-main {
+    display: grid;
+    grid-template-columns: 350px 1fr;
+    gap: 24px;
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 24px;
+    align-items: start;
+}
+
+@media (max-width: 900px) {
+    .rc-main {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Card em vidro */
+.rc-glass-card {
+    background: var(--rc-glass-bg);
+    backdrop-filter: var(--rc-blur);
+    -webkit-backdrop-filter: var(--rc-blur);
+    border: 1px solid var(--rc-glass-border);
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(0, 122, 255, 0.08);
+    padding: 28px;
+    transition: box-shadow 0.3s ease;
+}
+
+.rc-glass-card:hover {
+    box-shadow: 0 12px 40px rgba(0, 122, 255, 0.12);
+}
+
+/* Painel esquerdo - Registro */
+.rc-form-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    color: var(--rc-text);
+}
+
+.rc-form-title .rc-title-green {
+    color: var(--rc-success);
+}
+
+.rc-form-title .rc-title-dark {
+    color: var(--rc-text);
+}
+
+.rc-field {
+    margin-bottom: 18px;
+}
+
+.rc-field label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--rc-text-sec);
+    margin-bottom: 8px;
+}
+
+.rc-field input,
+.rc-field select,
+.rc-field textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid var(--rc-glass-border);
+    border-radius: 12px;
+    font-size: 14px;
+    background: rgba(255, 255, 255, 0.6);
+    color: var(--rc-text);
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.rc-field input:focus,
+.rc-field select:focus,
+.rc-field textarea:focus {
+    outline: none;
+    border-color: var(--rc-accent);
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.15);
+}
+
+/* Select estilo vidro (dropdown customizado) */
+.rc-select-glass-wrap .rc-select-native {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+    left: -9999px;
+}
+
+.rc-select-glass {
+    position: relative;
+    width: 100%;
+}
+
+.rc-select-glass-trigger {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid var(--rc-glass-border);
+    border-radius: 12px;
+    font-size: 14px;
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: var(--rc-blur);
+    -webkit-backdrop-filter: var(--rc-blur);
+    color: var(--rc-text);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    text-align: left;
+}
+
+.rc-select-glass-trigger:hover {
+    background: rgba(255, 255, 255, 0.85);
+    border-color: rgba(0, 122, 255, 0.25);
+}
+
+.rc-select-glass-trigger[aria-expanded="true"] {
+    border-color: var(--rc-accent);
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.15);
+}
+
+.rc-select-glass-value {
+    flex: 1;
+    min-width: 0;
+}
+
+.rc-select-glass-value.rc-select-glass-placeholder {
+    color: var(--rc-text-sec);
+}
+
+.rc-select-glass-chevron {
+    font-size: 12px;
+    color: var(--rc-text-sec);
+    transition: transform 0.2s;
+}
+
+.rc-select-glass-trigger[aria-expanded="true"] .rc-select-glass-chevron {
+    transform: rotate(180deg);
+    color: var(--rc-accent);
+}
+
+.rc-select-glass-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    margin-top: 6px;
+    padding: 8px;
+    background: var(--rc-glass-bg);
+    backdrop-filter: var(--rc-blur);
+    -webkit-backdrop-filter: var(--rc-blur);
+    border: 1px solid var(--rc-glass-border);
+    border-radius: 12px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+    z-index: 50;
+    max-height: 240px;
+    overflow-y: auto;
+    display: none;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.rc-select-glass-dropdown::-webkit-scrollbar {
+    display: none;
+}
+
+.rc-select-glass-dropdown.open {
+    display: block;
+    animation: rc-fadeIn 0.2s ease;
+}
+
+.rc-select-glass-option {
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+    color: var(--rc-text);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+}
+
+.rc-select-glass-option:hover {
+    background: rgba(0, 122, 255, 0.1);
+    color: var(--rc-accent);
+}
+
+.rc-select-glass-option.selected {
+    background: rgba(0, 122, 255, 0.12);
+    color: var(--rc-accent);
+    font-weight: 600;
+}
+
+/* Tipo de Atividade - igual ao Status (trigger vidro + tags dentro + dropdown com rolagem invisível) */
+.rc-tipo-tags-wrap {
+    position: relative;
+}
+
+.rc-tipo-tags-field {
+    position: relative;
+}
+
+.rc-tipo-tags-trigger {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid var(--rc-glass-border);
+    border-radius: 12px;
+    font-size: 14px;
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: var(--rc-blur);
+    -webkit-backdrop-filter: var(--rc-blur);
+    color: var(--rc-text);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    text-align: left;
+}
+
+.rc-tipo-tags-trigger:hover {
+    background: rgba(255, 255, 255, 0.85);
+    border-color: rgba(0, 122, 255, 0.25);
+}
+
+.rc-tipo-tags-trigger[aria-expanded="true"] {
+    border-color: var(--rc-accent);
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.15);
+}
+
+.rc-tipo-tags-trigger-content {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+.rc-tipo-tags-placeholder {
+    color: var(--rc-text-sec);
+    font-size: 14px;
+}
+
+.rc-tipo-tags-selected {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+}
+
+.rc-tipo-tags-chevron {
+    font-size: 12px;
+    color: var(--rc-text-sec);
+    flex-shrink: 0;
+    transition: transform 0.2s;
+}
+
+.rc-tipo-tags-trigger[aria-expanded="true"] .rc-tipo-tags-chevron {
+    transform: rotate(180deg);
+    color: var(--rc-accent);
+}
+
+.rc-tipo-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #0066cc;
+    background: rgba(0, 122, 255, 0.15);
+    backdrop-filter: var(--rc-blur);
+    -webkit-backdrop-filter: var(--rc-blur);
+    border: 1px solid rgba(0, 122, 255, 0.25);
+    box-shadow: 0 2px 8px rgba(0, 122, 255, 0.08);
+}
+
+.rc-tipo-tag:hover {
+    background: rgba(0, 122, 255, 0.22);
+    border-color: rgba(0, 122, 255, 0.35);
+}
+
+.rc-tipo-tag-remove {
+    cursor: pointer;
+    opacity: 0.8;
+    font-size: 10px;
+    padding: 0 2px;
+}
+
+.rc-tipo-tag-remove:hover {
+    opacity: 1;
+    color: var(--rc-danger);
+}
+
+.rc-tipo-tags-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    margin-top: 6px;
+    padding: 8px;
+    background: var(--rc-glass-bg);
+    backdrop-filter: var(--rc-blur);
+    -webkit-backdrop-filter: var(--rc-blur);
+    border: 1px solid var(--rc-glass-border);
+    border-radius: 12px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+    z-index: 50;
+    max-height: 240px;
+    overflow-y: auto;
+    display: none;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.rc-tipo-tags-dropdown::-webkit-scrollbar {
+    display: none;
+}
+
+.rc-tipo-tags-dropdown.open {
+    display: block;
+    animation: rc-fadeIn 0.2s ease;
+}
+
+.rc-tipo-tags-option {
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+    color: var(--rc-text);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+}
+
+.rc-tipo-tags-option:hover {
+    background: rgba(0, 122, 255, 0.1);
+    color: var(--rc-accent);
+}
+
+.rc-tipo-tags-option.selected {
+    background: rgba(0, 122, 255, 0.18);
+    color: var(--rc-accent);
+    font-weight: 600;
+}
+
+/* Tags na coluna Tipo da tabela */
+.rc-cell-tipos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.rc-cell-tipos .rc-tipo-tag {
+    padding: 4px 10px;
+    font-size: 12px;
+}
+
+.rc-cell-tipos .rc-tipo-tag .rc-tipo-tag-remove {
+    display: none;
+}
+
+.rc-field textarea {
+    min-height: 80px;
+    resize: vertical;
+}
+
+.rc-btn-register {
+    width: 100%;
+    padding: 14px 24px;
+    background: linear-gradient(135deg, var(--rc-accent) 0%, #0056b3 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    margin-top: 8px;
+}
+
+.rc-btn-register:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 122, 255, 0.35);
+}
+
+/* Gráficos abaixo do formulário - um embaixo do outro, alinhados */
+.rc-charts-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-top: 28px;
+    padding-top: 24px;
+    border-top: 1px solid var(--rc-glass-border);
+}
+.rc-chart-card {
+    background: rgba(255, 255, 255, 0.5);
+    border: 1px solid var(--rc-glass-border);
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+    min-width: 260px;
+}
+.rc-chart-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--rc-text-sec);
+    margin: 0 0 12px 0;
+    text-align: center;
+}
+.rc-chart-container {
+    position: relative;
+    width: 100%;
+    max-width: 220px;
+    margin: 0 auto;
+    min-height: 200px;
+}
+.rc-chart-container canvas {
+    display: block;
+    max-height: 200px;
+}
+
+/* Painel direito - Tabela */
+.rc-table-header {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.rc-table-header-row1 {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.rc-table-header-row2 {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.rc-table-header .rc-filters {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.rc-table-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--rc-text);
+}
+
+/* Filtro Ano / Mês */
+.rc-period-filters {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.rc-period-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--rc-text-sec);
+}
+
+.rc-period-select {
+    padding: 8px 12px;
+    border: 1px solid var(--rc-glass-border);
+    border-radius: 10px;
+    font-size: 13px;
+    background: rgba(255, 255, 255, 0.6);
+    color: var(--rc-text);
+    min-width: 80px;
+}
+
+/* Agrupamento por dia */
+.rc-day-row td {
+    padding: 10px 16px;
+    background: rgba(0, 122, 255, 0.06);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--rc-text);
+    border-bottom: 1px solid var(--rc-glass-border);
+}
+
+.rc-filters {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.rc-filter-btn {
+    padding: 10px 18px;
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--rc-accent) 0%, #0056b3 100%);
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.rc-filter-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(0, 122, 255, 0.4);
+}
+
+.rc-filter-btn.active {
+    box-shadow: 0 4px 16px rgba(0, 122, 255, 0.5);
+    outline: 2px solid rgba(255, 255, 255, 0.5);
+    outline-offset: 2px;
+}
+
+/* Lixeira - vermelho */
+#rc-btn-lixeira {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    color: white;
+}
+
+#rc-btn-lixeira:hover {
+    box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
+}
+
+#rc-btn-lixeira.active {
+    box-shadow: 0 4px 16px rgba(231, 76, 60, 0.5);
+    outline: 2px solid rgba(255, 255, 255, 0.4);
+    outline-offset: 2px;
+}
+
+/* Botão Período (azul) + dropdown */
+.rc-period-wrap {
+    position: relative;
+}
+
+.rc-btn-period {
+    padding: 10px 18px;
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--rc-accent) 0%, #0056b3 100%);
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.rc-btn-period:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(0, 122, 255, 0.4);
+}
+
+.rc-period-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 6px;
+    min-width: 180px;
+    background: var(--rc-glass-bg);
+    backdrop-filter: var(--rc-blur);
+    -webkit-backdrop-filter: var(--rc-blur);
+    border: 1px solid var(--rc-glass-border);
+    border-radius: 12px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+    padding: 14px;
+    z-index: 100;
+    display: none;
+}
+
+.rc-period-dropdown.open {
+    display: block;
+    animation: rc-fadeIn 0.2s ease;
+}
+
+.rc-period-dropdown-inner {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.rc-period-dropdown-inner .rc-period-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--rc-text-sec);
+    margin: 0;
+}
+
+.rc-period-dropdown-inner .rc-period-select {
+    padding: 8px 12px;
+    border: 1px solid var(--rc-glass-border);
+    border-radius: 10px;
+    font-size: 13px;
+    background: rgba(255, 255, 255, 0.6);
+    color: var(--rc-text);
+    min-width: 100%;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Botão Exportar (azul) + dropdown */
+.rc-export-wrap {
+    position: relative;
+}
+
+.rc-btn-export {
+    padding: 10px 18px;
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--rc-accent) 0%, #0056b3 100%);
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.rc-btn-export:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(0, 122, 255, 0.4);
+}
+
+.rc-btn-export::after {
+    content: '\f078';
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    font-size: 10px;
+    margin-left: 4px;
+}
+
+.rc-export-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 6px;
+    min-width: 200px;
+    background: var(--rc-glass-bg);
+    backdrop-filter: var(--rc-blur);
+    -webkit-backdrop-filter: var(--rc-blur);
+    border: 1px solid var(--rc-glass-border);
+    border-radius: 12px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+    padding: 6px;
+    z-index: 100;
+    display: none;
+}
+
+.rc-export-dropdown.open {
+    display: block;
+    animation: rc-fadeIn 0.2s ease;
+}
+
+.rc-export-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 14px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--rc-text);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.15s;
+}
+
+.rc-export-option:hover {
+    background: rgba(0, 122, 255, 0.1);
+    color: var(--rc-accent);
+}
+
+.rc-export-option i {
+    width: 18px;
+    color: var(--rc-text-sec);
+}
+
+.rc-export-option:hover i {
+    color: var(--rc-accent);
+}
+
+.rc-search-wrap {
+    flex: 1;
+    min-width: 180px;
+    max-width: 280px;
+}
+
+.rc-search-wrap input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid var(--rc-glass-border);
+    border-radius: 10px;
+    font-size: 13px;
+    background: rgba(255, 255, 255, 0.5);
+    min-width: 0;
+}
+
+.rc-search-wrap input::placeholder {
+    color: var(--rc-text-sec);
+    opacity: 0.9;
+}
+
+.rc-table-wrap {
+    overflow-x: auto;
+    border-radius: 14px;
+    border: 1px solid var(--rc-glass-border);
+}
+
+.rc-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.rc-table th {
+    text-align: left;
+    padding: 14px 16px;
+    background: rgba(0, 122, 255, 0.08);
+    color: var(--rc-text);
+    font-weight: 600;
+    border-bottom: 1px solid var(--rc-glass-border);
+}
+
+.rc-table td {
+    padding: 14px 16px;
+    vertical-align: middle;
+}
+
+/* Coluna IS DO CHAMADO mais extensa - dado importante */
+.rc-table th:nth-child(2),
+.rc-table td:nth-child(2) {
+    min-width: 200px;
+    white-space: nowrap;
+}
+
+.rc-table tbody tr {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.rc-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.rc-table tbody tr:hover {
+    background: rgba(0, 122, 255, 0.04);
+}
+
+/* Pills - Fechado (verde) / Aberto (vermelho) / Em Andamento (laranja) */
+.rc-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.rc-pill.fechado {
+    background: rgba(46, 204, 113, 0.2);
+    color: #1e8449;
+}
+
+.rc-pill.aberto {
+    background: rgba(255, 59, 48, 0.15);
+    color: #c0392b;
+}
+
+.rc-pill.em-andamento {
+    background: rgba(255, 149, 0, 0.2);
+    color: #c87a0a;
+}
+
+/* Ações: Editar + Excluir */
+.rc-actions-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.rc-btn-edit {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 8px;
+    background: rgba(0, 122, 255, 0.12);
+    color: var(--rc-accent);
+    font-size: 12px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.rc-btn-edit:hover {
+    background: rgba(0, 122, 255, 0.25);
+}
+
+.rc-btn-delete {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 8px;
+    background: rgba(255, 59, 48, 0.12);
+    color: var(--rc-danger);
+    font-size: 12px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.rc-btn-delete:hover {
+    background: rgba(255, 59, 48, 0.25);
+}
+
+/* Modal em vidro estilo Apple */
+.rc-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    padding: 24px;
+    animation: rc-fadeIn 0.25s ease;
+}
+
+@keyframes rc-fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.rc-modal-glass {
+    background: var(--rc-glass-bg);
+    backdrop-filter: var(--rc-blur);
+    -webkit-backdrop-filter: var(--rc-blur);
+    border: 1px solid var(--rc-glass-border);
+    border-radius: 20px;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.2);
+    padding: 28px;
+    max-width: 400px;
+    width: 100%;
+    text-align: center;
+    animation: rc-scaleIn 0.3s ease;
+}
+
+@keyframes rc-scaleIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.rc-modal-icon {
+    width: 56px;
+    height: 56px;
+    margin: 0 auto 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+}
+
+.rc-modal-icon-danger {
+    background: rgba(255, 59, 48, 0.15);
+    color: var(--rc-danger);
+}
+
+.rc-modal-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--rc-text);
+    margin-bottom: 8px;
+}
+
+.rc-modal-text {
+    font-size: 14px;
+    color: var(--rc-text-sec);
+    margin-bottom: 20px;
+    line-height: 1.5;
+}
+
+.rc-modal-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.rc-modal-btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.rc-modal-btn-cancel {
+    background: rgba(0, 0, 0, 0.06);
+    color: var(--rc-text);
+}
+
+.rc-modal-btn-cancel:hover {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.rc-modal-btn-danger {
+    background: linear-gradient(135deg, var(--rc-danger) 0%, #c0392b 100%);
+    color: white;
+}
+
+.rc-modal-btn-danger:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(255, 59, 48, 0.35);
+}
+
+.rc-modal-btn-primary {
+    background: linear-gradient(135deg, var(--rc-accent) 0%, #0056b3 100%);
+    color: white;
+}
+
+.rc-modal-btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(0, 122, 255, 0.35);
+}
+
+.rc-modal-edit .rc-field,
+.rc-modal-edit .rc-modal-title {
+    text-align: left;
+}
+
+.rc-modal-edit .rc-modal-actions {
+    justify-content: flex-end;
+    margin-top: 16px;
+}
+
+.rc-modal-lixeira {
+    max-width: 520px;
+    max-height: 80vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.rc-lixeira-list {
+    overflow-y: auto;
+    max-height: 320px;
+    margin-bottom: 16px;
+    text-align: left;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.rc-lixeira-list::-webkit-scrollbar {
+    display: none;
+}
+
+.rc-lixeira-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 16px;
+    background: rgba(0, 0, 0, 0.04);
+    border-radius: 12px;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.rc-lixeira-item-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.rc-lixeira-item-info strong {
+    display: block;
+    margin-bottom: 2px;
+}
+
+.rc-lixeira-item-info span {
+    font-size: 12px;
+    color: var(--rc-text-sec);
+}
+
+.rc-lixeira-item-btn {
+    padding: 8px 14px;
+    border: none;
+    border-radius: 8px;
+    background: rgba(46, 204, 113, 0.2);
+    color: #1e8449;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.rc-lixeira-item-btn:hover {
+    background: rgba(46, 204, 113, 0.35);
+}
+
+.rc-lixeira-item-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.rc-lixeira-item-btn-delete {
+    padding: 8px 14px;
+    border: none;
+    border-radius: 8px;
+    background: rgba(231, 76, 60, 0.2);
+    color: #c0392b;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.rc-lixeira-item-btn-delete:hover {
+    background: rgba(231, 76, 60, 0.35);
+}
+
+.rc-lixeira-empty {
+    padding: 24px;
+    color: var(--rc-text-sec);
+    font-size: 14px;
+}
+
+/* Modal Info em vidro estilo Apple - moderno e vivo */
+.rc-modal-info-overlay {
+    background: rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+.rc-modal-info-glass {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 
+        0 0 0 1px rgba(0, 0, 0, 0.04),
+        0 24px 48px rgba(0, 0, 0, 0.12),
+        0 12px 24px rgba(0, 122, 255, 0.08);
+    border-radius: 24px;
+    padding: 32px 36px;
+    max-width: 400px;
+    text-align: center;
+}
+
+[data-theme="dark"] .rc-modal-info-glass {
+    background: rgba(44, 44, 46, 0.9);
+    border-color: rgba(255, 255, 255, 0.12);
+    box-shadow: 
+        0 0 0 1px rgba(255, 255, 255, 0.06),
+        0 24px 48px rgba(0, 0, 0, 0.4),
+        0 12px 24px rgba(0, 122, 255, 0.15);
+}
+
+.rc-modal-info-icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 20px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(0, 122, 255, 0.2) 0%, rgba(46, 204, 113, 0.15) 100%);
+    border: 2px solid rgba(0, 122, 255, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    color: var(--rc-accent);
+    box-shadow: 0 8px 24px rgba(0, 122, 255, 0.2);
+}
+
+.rc-modal-info-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--rc-text);
+    margin-bottom: 12px;
+    letter-spacing: -0.02em;
+}
+
+.rc-modal-info-text {
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--rc-text-sec);
+    margin-bottom: 24px;
+}
+
+.rc-modal-info-glass .rc-modal-actions {
+    justify-content: center;
+}
+
+.rc-modal-info-glass .rc-modal-btn-primary {
+    min-width: 120px;
+    padding: 14px 28px;
+    border-radius: 14px;
+    font-size: 16px;
+    font-weight: 600;
+    background: linear-gradient(135deg, var(--rc-accent) 0%, #0056b3 100%);
+    box-shadow: 0 4px 16px rgba(0, 122, 255, 0.35);
+}
+
+.rc-modal-info-glass .rc-modal-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 122, 255, 0.45);
+}
+
+.rc-empty {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--rc-text-sec);
+    font-size: 15px;
+}
+
+.rc-count-badge {
+    font-size: 13px;
+    color: var(--rc-text-sec);
+    font-weight: 500;
+}

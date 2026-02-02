@@ -1,0 +1,3325 @@
+/* ============================================
+   APPLE GLASSMORPHISM DESIGN - ESTILO APPLE
+   Design em vidro com efeitos Apple
+   TODOS OS BOTÕES COM VIDA E ANIMAÇÕES
+   ============================================ */
+
+/* Variáveis Apple Glass - TEMA BRANCO */
+:root {
+    --apple-bg: #ffffff;
+    --apple-glass: rgba(255, 255, 255, 0.85);
+    --apple-glass-border: rgba(0, 122, 255, 0.2);
+    --apple-glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.08);
+    --apple-blur: blur(20px) saturate(180%);
+    --apple-text: #1d1d1f;
+    --apple-text-secondary: #6e6e73;
+    --apple-accent: #007aff;
+    --apple-accent-hover: #0051d5;
+    --apple-green: #34c759;
+    --apple-orange: #ff9500;
+    --apple-red: #ff3b30;
+    --apple-purple: #af52de;
+    --apple-glass-hover: rgba(0, 122, 255, 0.1);
+}
+
+/* Background BRANCO com efeitos sutis */
+body {
+    background: #ffffff !important;
+    background-image: 
+        radial-gradient(circle at 20% 30%, rgba(0, 122, 255, 0.03) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(52, 199, 89, 0.03) 0%, transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(175, 82, 222, 0.02) 0%, transparent 50%) !important;
+    background-attachment: fixed !important;
+    min-height: 100vh !important;
+}
+
+@keyframes gradientShift {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+.explorer-container {
+    background: transparent !important;
+    position: relative !important;
+}
+
+.explorer-container::before {
+    content: '' !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    background: transparent !important;
+    pointer-events: none !important;
+    z-index: -1 !important;
+}
+
+/* ================= ANIMAÇÕES GLOBAIS ================= */
+@keyframes buttonPulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 4px 15px rgba(0, 122, 255, 0.4);
+    }
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 6px 25px rgba(0, 122, 255, 0.6);
+    }
+}
+
+@keyframes shake {
+    0%, 100% {
+        transform: translateX(0);
+    }
+    10%, 30%, 50%, 70%, 90% {
+        transform: translateX(-5px);
+    }
+    20%, 40%, 60%, 80% {
+        transform: translateX(5px);
+    }
+}
+
+@keyframes buttonRipple {
+    0% {
+        transform: scale(0);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(4);
+        opacity: 0;
+    }
+}
+
+@keyframes buttonBounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-4px);
+    }
+}
+
+@keyframes iconSpin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes iconWiggle {
+    0%, 100% {
+        transform: rotate(0deg);
+    }
+    25% {
+        transform: rotate(-5deg);
+    }
+    75% {
+        transform: rotate(5deg);
+    }
+}
+
+@keyframes glowPulse {
+    0%, 100% {
+        box-shadow: 0 0 20px rgba(0, 122, 255, 0.5);
+    }
+    50% {
+        box-shadow: 0 0 30px rgba(0, 122, 255, 0.8), 0 0 40px rgba(0, 122, 255, 0.6);
+    }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* ================= HEADER APPLE GLASS - TEMA BRANCO ================= */
+.explorer-header {
+    background: rgba(255, 255, 255, 0.8) !important;
+    backdrop-filter: blur(20px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+    border-bottom: 1px solid rgba(0, 122, 255, 0.15) !important;
+    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.05) !important;
+    background: rgba(255, 255, 255, 0.25) !important;
+    backdrop-filter: blur(40px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(40px) saturate(180%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.18) !important;
+    border-top: none !important;
+    border-left: none !important;
+    border-right: none !important;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37) !important;
+    padding: 12px 20px !important;
+}
+
+/* ================= BOTÕES DE NAVEGAÇÃO (Back, Forward, Up) ================= */
+.btn-back, .btn-forward, .btn-up {
+    background: rgba(255, 255, 255, 0.3) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 10px !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    position: relative !important;
+    overflow: hidden !important;
+    cursor: pointer !important;
+}
+
+.btn-back::before, .btn-forward::before, .btn-up::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 0 !important;
+    height: 0 !important;
+    border-radius: 50% !important;
+    background: rgba(255, 255, 255, 0.5) !important;
+    transform: translate(-50%, -50%) !important;
+    transition: width 0.6s, height 0.6s !important;
+}
+
+.btn-back:hover, .btn-forward:hover, .btn-up:hover {
+    background: rgba(255, 255, 255, 0.5) !important;
+    transform: translateY(-3px) scale(1.1) !important;
+    box-shadow: 0 8px 25px rgba(0, 122, 255, 0.4) !important;
+    border-color: var(--apple-accent) !important;
+}
+
+.btn-back:hover::before, .btn-forward:hover::before, .btn-up:hover::before {
+    width: 300px !important;
+    height: 300px !important;
+}
+
+.btn-back:active, .btn-forward:active, .btn-up:active {
+    transform: translateY(-1px) scale(1.05) !important;
+    box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3) !important;
+}
+
+.btn-back:disabled, .btn-forward:disabled, .btn-up:disabled {
+    opacity: 0.4 !important;
+    cursor: not-allowed !important;
+    transform: none !important;
+}
+
+.btn-back i, .btn-forward i, .btn-up i {
+    transition: transform 0.3s ease !important;
+    position: relative !important;
+    z-index: 1 !important;
+}
+
+.btn-back:hover i {
+    animation: slideIn 0.3s ease !important;
+    transform: translateX(-2px) !important;
+}
+
+.btn-forward:hover i {
+    animation: slideIn 0.3s ease !important;
+    transform: translateX(2px) !important;
+}
+
+.btn-up:hover i {
+    animation: buttonBounce 0.6s ease infinite !important;
+}
+
+/* ================= BOTÃO REFRESH ================= */
+.btn-refresh {
+    width: 32px !important;
+    height: 32px !important;
+    border: 1.5px solid rgba(0, 122, 255, 0.2) !important;
+    background: rgba(255, 255, 255, 0.9) !important;
+    backdrop-filter: blur(20px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+    border-radius: 8px !important;
+    cursor: pointer !important;
+    color: var(--apple-text) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    position: relative !important;
+    overflow: hidden !important;
+    box-shadow: 0 2px 10px rgba(0, 122, 255, 0.05) !important;
+}
+
+.btn-refresh:hover {
+    background: rgba(0, 122, 255, 0.3) !important;
+    color: white !important;
+    transform: rotate(180deg) scale(1.1) !important;
+    box-shadow: 0 4px 15px rgba(0, 122, 255, 0.4) !important;
+}
+
+.btn-refresh:active {
+    transform: rotate(360deg) scale(0.95) !important;
+}
+
+.btn-refresh.loading i {
+    animation: iconSpin 1s linear infinite !important;
+}
+
+/* ================= ADDRESS BAR ================= */
+.address-bar {
+    background: rgba(255, 255, 255, 0.4) !important;
+    backdrop-filter: blur(20px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 12px !important;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06), 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+    padding: 8px 16px !important;
+    transition: all 0.3s ease !important;
+}
+
+.address-bar:focus-within {
+    background: rgba(255, 255, 255, 0.6) !important;
+    box-shadow: 0 6px 20px rgba(0, 122, 255, 0.4) !important;
+    border-color: var(--apple-accent) !important;
+    transform: scale(1.02) !important;
+}
+
+.address-item {
+    background: rgba(255, 255, 255, 0.3) !important;
+    border-radius: 8px !important;
+    padding: 6px 12px !important;
+    transition: all 0.3s ease !important;
+    cursor: pointer !important;
+    position: relative !important;
+    overflow: hidden !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+}
+
+.address-item::before {
+    content: '' !important;
+    position: absolute !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    width: 0 !important;
+    height: 2px !important;
+    background: var(--apple-accent) !important;
+    transition: width 0.3s ease !important;
+}
+
+.address-item:hover {
+    background: rgba(0, 122, 255, 0.2) !important;
+    transform: scale(1.08) translateY(-2px) !important;
+    box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3) !important;
+}
+
+.address-item:hover::before {
+    width: 100% !important;
+}
+
+.address-item.active {
+    background: rgba(0, 122, 255, 0.3) !important;
+    color: var(--apple-accent) !important;
+    font-weight: 600 !important;
+}
+
+.address-item.active::before {
+    width: 100% !important;
+}
+
+/* ================= SEARCH BOX ================= */
+.search-box {
+    background: rgba(255, 255, 255, 0.4) !important;
+    backdrop-filter: blur(20px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
+    padding: 10px 16px !important;
+    transition: all 0.3s ease !important;
+    position: relative !important;
+}
+
+.search-box::after {
+    content: '' !important;
+    position: absolute !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    width: 0 !important;
+    height: 2px !important;
+    background: var(--apple-accent) !important;
+    transition: width 0.3s ease !important;
+}
+
+.search-box:focus-within {
+    background: rgba(255, 255, 255, 0.6) !important;
+    box-shadow: 0 6px 20px rgba(0, 122, 255, 0.4) !important;
+    border-color: var(--apple-accent) !important;
+    transform: scale(1.02) !important;
+}
+
+.search-box:focus-within::after {
+    width: 100% !important;
+}
+
+.search-box i {
+    color: var(--apple-text-secondary) !important;
+    transition: all 0.3s ease !important;
+}
+
+.search-box:focus-within i {
+    color: var(--apple-accent) !important;
+    transform: scale(1.2) !important;
+}
+
+.btn-search-advanced {
+    width: 28px !important;
+    height: 28px !important;
+    border: none !important;
+    background: rgba(255, 255, 255, 0.3) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    border-radius: 8px !important;
+    cursor: pointer !important;
+    color: var(--apple-text-secondary) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+.btn-search-advanced::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 0 !important;
+    height: 0 !important;
+    border-radius: 50% !important;
+    background: rgba(0, 122, 255, 0.3) !important;
+    transform: translate(-50%, -50%) !important;
+    transition: width 0.4s, height 0.4s !important;
+}
+
+.btn-search-advanced:hover {
+    background: rgba(0, 122, 255, 0.3) !important;
+    color: white !important;
+    transform: scale(1.15) rotate(15deg) !important;
+    box-shadow: 0 4px 15px rgba(0, 122, 255, 0.4) !important;
+}
+
+.btn-search-advanced:hover::before {
+    width: 200px !important;
+    height: 200px !important;
+}
+
+.btn-search-advanced:active {
+    transform: scale(1.05) rotate(30deg) !important;
+}
+
+/* ================= BOTÕES TOOLBAR (Upload, Nova Pasta, View Mode) ================= */
+.btn-toolbar {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    padding: 10px 18px !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    background: rgba(255, 255, 255, 0.3) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    border-radius: 12px !important;
+    cursor: pointer !important;
+    color: var(--apple-text) !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    position: relative !important;
+    overflow: hidden !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+.btn-toolbar::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 0 !important;
+    height: 0 !important;
+    border-radius: 50% !important;
+    background: rgba(0, 122, 255, 0.3) !important;
+    transform: translate(-50%, -50%) !important;
+    transition: width 0.6s, height 0.6s !important;
+    z-index: 0 !important;
+}
+
+.btn-toolbar i, .btn-toolbar span {
+    position: relative !important;
+    z-index: 1 !important;
+    transition: all 0.3s ease !important;
+}
+
+.btn-toolbar:hover {
+    background: rgba(0, 122, 255, 0.4) !important;
+    color: white !important;
+    border-color: var(--apple-accent) !important;
+    transform: translateY(-3px) scale(1.05) !important;
+    box-shadow: 0 8px 25px rgba(0, 122, 255, 0.5) !important;
+}
+
+.btn-toolbar:hover::before {
+    width: 400px !important;
+    height: 400px !important;
+}
+
+.btn-toolbar:hover i {
+    transform: scale(1.2) rotate(5deg) !important;
+    animation: iconWiggle 0.5s ease !important;
+}
+
+.btn-toolbar:active {
+    transform: translateY(-1px) scale(1.02) !important;
+    box-shadow: 0 4px 15px rgba(0, 122, 255, 0.4) !important;
+}
+
+.btn-toolbar.loading {
+    pointer-events: none !important;
+}
+
+.btn-toolbar.loading i {
+    animation: iconSpin 1s linear infinite !important;
+}
+
+/* ================= TOOLBAR BUTTONS (Copiar, Colar, Cortar, etc) ================= */
+.toolbar {
+    background: rgba(255, 255, 255, 0.2) !important;
+    backdrop-filter: blur(30px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(30px) saturate(180%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.18) !important;
+    border-top: none !important;
+    border-left: none !important;
+    border-right: none !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1) !important;
+    padding: 12px 20px !important;
+}
+
+.toolbar-btn {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    padding: 10px 16px !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    background: rgba(255, 255, 255, 0.3) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    border-radius: 10px !important;
+    cursor: pointer !important;
+    color: var(--apple-text) !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    position: relative !important;
+    overflow: hidden !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+.toolbar-btn::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 0 !important;
+    height: 0 !important;
+    border-radius: 50% !important;
+    background: rgba(0, 122, 255, 0.3) !important;
+    transform: translate(-50%, -50%) !important;
+    transition: width 0.5s, height 0.5s !important;
+    z-index: 0 !important;
+}
+
+.toolbar-btn::after {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: -100% !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent) !important;
+    transition: left 0.5s ease !important;
+    z-index: 1 !important;
+}
+
+.toolbar-btn i, .toolbar-btn {
+    position: relative !important;
+    z-index: 2 !important;
+}
+
+.toolbar-btn:hover {
+    background: rgba(0, 122, 255, 0.3) !important;
+    color: white !important;
+    border-color: var(--apple-accent) !important;
+    transform: translateY(-3px) scale(1.08) !important;
+    box-shadow: 0 8px 25px rgba(0, 122, 255, 0.5) !important;
+}
+
+.toolbar-btn:hover::before {
+    width: 300px !important;
+    height: 300px !important;
+}
+
+.toolbar-btn:hover::after {
+    left: 100% !important;
+}
+
+.toolbar-btn:hover i {
+    transform: scale(1.3) rotate(10deg) !important;
+    animation: iconWiggle 0.4s ease !important;
+}
+
+.toolbar-btn:active {
+    transform: translateY(-1px) scale(1.05) !important;
+    box-shadow: 0 4px 15px rgba(0, 122, 255, 0.4) !important;
+}
+
+/* Botões específicos com cores */
+.toolbar-btn:has(.fa-copy):hover {
+    background: rgba(52, 199, 89, 0.3) !important;
+    border-color: var(--apple-green) !important;
+    box-shadow: 0 8px 25px rgba(52, 199, 89, 0.5) !important;
+}
+
+.toolbar-btn:has(.fa-paste):hover {
+    background: rgba(0, 122, 255, 0.3) !important;
+}
+
+.toolbar-btn:has(.fa-cut):hover {
+    background: rgba(255, 149, 0, 0.3) !important;
+    border-color: var(--apple-orange) !important;
+    box-shadow: 0 8px 25px rgba(255, 149, 0, 0.5) !important;
+}
+
+.toolbar-btn:has(.fa-trash):hover {
+    background: rgba(255, 59, 48, 0.3) !important;
+    border-color: var(--apple-red) !important;
+    box-shadow: 0 8px 25px rgba(255, 59, 48, 0.5) !important;
+    animation: buttonPulse 1s ease infinite !important;
+}
+
+.toolbar-btn:has(.fa-edit):hover {
+    background: rgba(175, 82, 222, 0.3) !important;
+    border-color: var(--apple-purple) !important;
+    box-shadow: 0 8px 25px rgba(175, 82, 222, 0.5) !important;
+}
+
+.toolbar-btn:has(.fa-info-circle):hover {
+    background: rgba(0, 122, 255, 0.3) !important;
+}
+
+.toolbar-btn:has(.fa-check-square):hover {
+    background: rgba(52, 199, 89, 0.3) !important;
+    border-color: var(--apple-green) !important;
+}
+
+.toolbar-btn:has(.fa-sort):hover {
+    background: rgba(0, 122, 255, 0.3) !important;
+}
+
+.toolbar-btn:has(.fa-sort):hover i {
+    animation: iconSpin 0.6s ease !important;
+}
+
+/* ================= SIDEBAR BUTTONS ================= */
+/* ================= SIDEBAR - TEMA BRANCO ================= */
+.explorer-sidebar {
+    background: rgba(255, 255, 255, 0.85) !important;
+    backdrop-filter: blur(20px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+    border-right: 1px solid rgba(0, 122, 255, 0.15) !important;
+    box-shadow: 2px 0 20px rgba(0, 0, 0, 0.05) !important;
+    background: rgba(255, 255, 255, 0.25) !important;
+    backdrop-filter: blur(40px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(40px) saturate(180%) !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.18) !important;
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1) !important;
+}
+
+.btn-sidebar-toggle {
+    width: 32px !important;
+    height: 32px !important;
+    border: 1.5px solid rgba(0, 122, 255, 0.2) !important;
+    background: rgba(255, 255, 255, 0.9) !important;
+    backdrop-filter: blur(20px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+    border-radius: 8px !important;
+    box-shadow: 0 2px 10px rgba(0, 122, 255, 0.05) !important;
+    cursor: pointer !important;
+    color: var(--apple-text-secondary) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+.btn-sidebar-toggle::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 0 !important;
+    height: 0 !important;
+    border-radius: 50% !important;
+    background: rgba(0, 122, 255, 0.3) !important;
+    transform: translate(-50%, -50%) !important;
+    transition: width 0.5s, height 0.5s !important;
+}
+
+.btn-sidebar-toggle:hover {
+    background: rgba(0, 122, 255, 0.3) !important;
+    color: white !important;
+    transform: scale(1.15) rotate(180deg) !important;
+    box-shadow: 0 4px 15px rgba(0, 122, 255, 0.4) !important;
+}
+
+.btn-sidebar-toggle:hover::before {
+    width: 200px !important;
+    height: 200px !important;
+}
+
+.sidebar-section-header {
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    border-radius: 10px !important;
+    padding: 10px 12px !important;
+    position: relative !important;
+}
+
+.sidebar-section-header::before {
+    content: '' !important;
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    width: 3px !important;
+    background: var(--apple-accent) !important;
+    transform: scaleY(0) !important;
+    transition: transform 0.3s ease !important;
+    border-radius: 0 3px 3px 0 !important;
+}
+
+.sidebar-section-header:hover {
+    background: rgba(255, 255, 255, 0.2) !important;
+    transform: translateX(4px) !important;
+}
+
+.sidebar-section-header:hover::before {
+    transform: scaleY(1) !important;
+}
+
+.sidebar-section-header.active {
+    background: rgba(0, 122, 255, 0.2) !important;
+}
+
+.sidebar-section-header.active::before {
+    transform: scaleY(1) !important;
+}
+
+.sidebar-section-header.active .section-arrow {
+    transform: rotate(180deg) !important;
+}
+
+/* ================= GRID ITEMS ================= */
+.grid-item {
+    background: rgba(255, 255, 255, 0.4) !important;
+    backdrop-filter: blur(30px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(30px) saturate(180%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 20px !important;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37) !important;
+    padding: 24px !important;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    position: relative !important;
+    overflow: hidden !important;
+    cursor: pointer !important;
+}
+
+.grid-item::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: -100% !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent) !important;
+    transition: left 0.5s ease !important;
+    z-index: 1 !important;
+}
+
+.grid-item::after {
+    content: '' !important;
+    position: absolute !important;
+    inset: 0 !important;
+    border-radius: 20px !important;
+    padding: 2px !important;
+    background: linear-gradient(135deg, var(--apple-accent), var(--apple-green), var(--apple-purple)) !important;
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0) !important;
+    -webkit-mask-composite: xor !important;
+    mask-composite: exclude !important;
+    opacity: 0 !important;
+    transition: opacity 0.3s ease !important;
+    z-index: -1 !important;
+}
+
+.grid-item:hover {
+    background: rgba(255, 255, 255, 0.6) !important;
+    transform: translateY(-10px) scale(1.05) rotate(1deg) !important;
+    box-shadow: 0 15px 50px rgba(0, 122, 255, 0.4) !important;
+    border-color: rgba(255, 255, 255, 0.5) !important;
+}
+
+.grid-item:hover::before {
+    left: 100% !important;
+}
+
+.grid-item:hover::after {
+    opacity: 0.3 !important;
+    animation: gradientRotate 3s linear infinite !important;
+}
+
+.grid-item.selected {
+    background: rgba(0, 122, 255, 0.3) !important;
+    border: 2px solid var(--apple-accent) !important;
+    box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.2), 0 15px 50px rgba(0, 122, 255, 0.5) !important;
+    animation: glowPulse 2s ease infinite !important;
+}
+
+.grid-item-checkbox {
+    position: absolute !important;
+    top: 12px !important;
+    left: 12px !important;
+    width: 24px !important;
+    height: 24px !important;
+    border: 2px solid rgba(255, 255, 255, 0.5) !important;
+    border-radius: 6px !important;
+    background: rgba(255, 255, 255, 0.3) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    opacity: 0 !important;
+    transition: all 0.3s ease !important;
+    z-index: 10 !important;
+}
+
+.grid-item:hover .grid-item-checkbox,
+.grid-item.selected .grid-item-checkbox {
+    opacity: 1 !important;
+    transform: scale(1.1) !important;
+}
+
+.grid-item-checkbox.checked {
+    background: var(--apple-accent) !important;
+    border-color: var(--apple-accent) !important;
+    animation: buttonBounce 0.4s ease !important;
+}
+
+.grid-item-checkbox.checked::after {
+    content: '✓' !important;
+    color: white !important;
+    font-size: 14px !important;
+    font-weight: bold !important;
+    animation: slideIn 0.3s ease !important;
+}
+
+.grid-item-icon {
+    background: rgba(255, 255, 255, 0.5) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
+    width: 80px !important;
+    height: 80px !important;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 32px !important;
+    position: relative !important;
+    z-index: 2 !important;
+}
+
+.grid-item:hover .grid-item-icon {
+    transform: scale(1.2) rotate(5deg) translateY(-5px) !important;
+    box-shadow: 0 8px 25px rgba(0, 122, 255, 0.4) !important;
+    animation: buttonBounce 0.6s ease infinite !important;
+}
+
+.grid-item-icon.cliente {
+    background: linear-gradient(135deg, rgba(0, 122, 255, 0.4), rgba(0, 122, 255, 0.2)) !important;
+    color: var(--apple-accent) !important;
+}
+
+.grid-item-icon.ano {
+    background: linear-gradient(135deg, rgba(52, 199, 89, 0.4), rgba(52, 199, 89, 0.2)) !important;
+    color: var(--apple-green) !important;
+}
+
+.grid-item-icon.mes {
+    background: linear-gradient(135deg, rgba(255, 149, 0, 0.4), rgba(255, 149, 0, 0.2)) !important;
+    color: var(--apple-orange) !important;
+}
+
+.grid-item-icon.data {
+    background: linear-gradient(135deg, rgba(175, 82, 222, 0.4), rgba(175, 82, 222, 0.2)) !important;
+    color: var(--apple-purple) !important;
+}
+
+.grid-item-icon.pdf {
+    background: linear-gradient(135deg, rgba(255, 59, 48, 0.4), rgba(255, 59, 48, 0.2)) !important;
+    color: var(--apple-red) !important;
+}
+
+.grid-item-icon.subpasta,
+.grid-item-icon.folder {
+    background: linear-gradient(135deg, rgba(0, 122, 255, 0.4), rgba(0, 122, 255, 0.2)) !important;
+    color: var(--apple-accent) !important;
+}
+
+/* ================= LIST VIEW ================= */
+.list-table {
+    background: rgba(255, 255, 255, 0.3) !important;
+    backdrop-filter: blur(30px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(30px) saturate(180%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 20px !important;
+    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37) !important;
+    overflow: hidden !important;
+}
+
+.list-table thead {
+    background: rgba(255, 255, 255, 0.2) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+}
+
+.list-table th {
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    position: relative !important;
+}
+
+.list-table th::after {
+    content: '' !important;
+    position: absolute !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    width: 0 !important;
+    height: 2px !important;
+    background: var(--apple-accent) !important;
+    transition: width 0.3s ease !important;
+}
+
+.list-table th:hover {
+    background: rgba(255, 255, 255, 0.3) !important;
+    color: var(--apple-accent) !important;
+}
+
+.list-table th:hover::after {
+    width: 100% !important;
+}
+
+.list-table th:hover i {
+    animation: iconSpin 0.6s ease !important;
+    color: var(--apple-accent) !important;
+}
+
+.list-table tbody tr {
+    background: transparent !important;
+    transition: all 0.3s ease !important;
+    cursor: pointer !important;
+}
+
+.list-table tbody tr:hover {
+    background: rgba(255, 255, 255, 0.3) !important;
+    transform: scale(1.01) translateX(4px) !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
+}
+
+.list-table tbody tr.selected {
+    background: rgba(0, 122, 255, 0.2) !important;
+    box-shadow: inset 4px 0 0 var(--apple-accent) !important;
+}
+
+.list-table tbody tr input[type="checkbox"] {
+    width: 18px !important;
+    height: 18px !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+}
+
+.list-table tbody tr input[type="checkbox"]:hover {
+    transform: scale(1.2) !important;
+}
+
+.list-table tbody tr .btn-icon {
+    width: 32px !important;
+    height: 32px !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    background: rgba(255, 255, 255, 0.3) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    border-radius: 8px !important;
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: var(--apple-text) !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+.list-table tbody tr .btn-icon::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 0 !important;
+    height: 0 !important;
+    border-radius: 50% !important;
+    background: rgba(0, 122, 255, 0.3) !important;
+    transform: translate(-50%, -50%) !important;
+    transition: width 0.4s, height 0.4s !important;
+}
+
+.list-table tbody tr .btn-icon:hover {
+    background: rgba(0, 122, 255, 0.3) !important;
+    border-color: var(--apple-accent) !important;
+    color: white !important;
+    transform: scale(1.15) rotate(5deg) !important;
+    box-shadow: 0 4px 15px rgba(0, 122, 255, 0.4) !important;
+}
+
+.list-table tbody tr .btn-icon:hover::before {
+    width: 200px !important;
+    height: 200px !important;
+}
+
+/* ================= DETAILS VIEW ================= */
+.details-item {
+    background: rgba(255, 255, 255, 0.4) !important;
+    backdrop-filter: blur(30px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(30px) saturate(180%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37) !important;
+    padding: 20px !important;
+    transition: all 0.3s ease !important;
+    cursor: pointer !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+.details-item::before {
+    content: '' !important;
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    width: 4px !important;
+    background: linear-gradient(180deg, var(--apple-accent), var(--apple-green)) !important;
+    transform: scaleY(0) !important;
+    transition: transform 0.3s ease !important;
+    border-radius: 0 4px 4px 0 !important;
+}
+
+.details-item:hover {
+    background: rgba(255, 255, 255, 0.6) !important;
+    transform: translateX(10px) scale(1.02) !important;
+    box-shadow: 0 12px 40px rgba(0, 122, 255, 0.4) !important;
+}
+
+.details-item:hover::before {
+    transform: scaleY(1) !important;
+}
+
+.details-item.selected {
+    background: rgba(0, 122, 255, 0.2) !important;
+    border-color: var(--apple-accent) !important;
+}
+
+.details-item.selected::before {
+    transform: scaleY(1) !important;
+}
+
+.details-item-icon {
+    width: 56px !important;
+    height: 56px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 12px !important;
+    font-size: 28px !important;
+    transition: all 0.3s ease !important;
+}
+
+.details-item:hover .details-item-icon {
+    transform: scale(1.15) rotate(5deg) !important;
+    animation: buttonBounce 0.6s ease infinite !important;
+}
+
+.details-item-actions .btn-icon {
+    width: 36px !important;
+    height: 36px !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    background: rgba(255, 255, 255, 0.3) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    border-radius: 10px !important;
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: var(--apple-text) !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+.details-item-actions .btn-icon::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 0 !important;
+    height: 0 !important;
+    border-radius: 50% !important;
+    background: rgba(0, 122, 255, 0.3) !important;
+    transform: translate(-50%, -50%) !important;
+    transition: width 0.4s, height 0.4s !important;
+}
+
+.details-item-actions .btn-icon:hover {
+    background: rgba(0, 122, 255, 0.3) !important;
+    border-color: var(--apple-accent) !important;
+    color: white !important;
+    transform: scale(1.2) rotate(10deg) !important;
+    box-shadow: 0 4px 15px rgba(0, 122, 255, 0.4) !important;
+}
+
+.details-item-actions .btn-icon:hover::before {
+    width: 200px !important;
+    height: 200px !important;
+}
+
+/* ================= STATUS BAR ================= */
+.explorer-statusbar {
+    background: rgba(255, 255, 255, 0.25) !important;
+    backdrop-filter: blur(40px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(40px) saturate(180%) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.18) !important;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1) !important;
+    padding: 12px 20px !important;
+}
+
+.explorer-statusbar span {
+    transition: all 0.3s ease !important;
+    padding: 4px 8px !important;
+    border-radius: 6px !important;
+}
+
+.explorer-statusbar span:hover {
+    background: rgba(255, 255, 255, 0.2) !important;
+    color: var(--apple-accent) !important;
+    transform: scale(1.05) !important;
+}
+
+/* ================= MODAIS ================= */
+.modal {
+    background: rgba(0, 0, 0, 0.4) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    animation: fadeIn 0.3s ease !important;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.modal-content {
+    background: rgba(255, 255, 255, 0.3) !important;
+    backdrop-filter: blur(40px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(40px) saturate(180%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 24px !important;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37) !important;
+    animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.modal-header {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.18) !important;
+}
+
+.modal-close {
+    width: 36px !important;
+    height: 36px !important;
+    border: none !important;
+    background: rgba(255, 255, 255, 0.3) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    border-radius: 10px !important;
+    cursor: pointer !important;
+    color: var(--apple-text) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+.modal-close::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 0 !important;
+    height: 0 !important;
+    border-radius: 50% !important;
+    background: rgba(255, 59, 48, 0.3) !important;
+    transform: translate(-50%, -50%) !important;
+    transition: width 0.4s, height 0.4s !important;
+}
+
+.modal-close:hover {
+    background: rgba(255, 59, 48, 0.3) !important;
+    color: white !important;
+    transform: rotate(90deg) scale(1.1) !important;
+    box-shadow: 0 4px 15px rgba(255, 59, 48, 0.4) !important;
+}
+
+.modal-close:hover::before {
+    width: 200px !important;
+    height: 200px !important;
+}
+
+.modal-close:active {
+    transform: rotate(90deg) scale(0.95) !important;
+}
+
+/* ================= UPLOAD ZONE ================= */
+.upload-zone {
+    background: rgba(255, 255, 255, 0.2) !important;
+    backdrop-filter: blur(20px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+    border: 2px dashed rgba(255, 255, 255, 0.4) !important;
+    border-radius: 20px !important;
+    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37) !important;
+    transition: all 0.3s ease !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+.upload-zone::before {
+    content: '' !important;
+    position: absolute !important;
+    inset: 0 !important;
+    background: linear-gradient(45deg, transparent 30%, rgba(0, 122, 255, 0.1) 50%, transparent 70%) !important;
+    transform: translateX(-100%) !important;
+    transition: transform 0.6s ease !important;
+}
+
+.upload-zone:hover,
+.upload-zone.dragover {
+    background: rgba(0, 122, 255, 0.2) !important;
+    border-color: var(--apple-accent) !important;
+    box-shadow: 0 12px 40px rgba(0, 122, 255, 0.4) !important;
+    transform: scale(1.02) !important;
+}
+
+.upload-zone:hover::before,
+.upload-zone.dragover::before {
+    transform: translateX(100%) !important;
+}
+
+.upload-zone i {
+    font-size: 64px !important;
+    color: var(--apple-accent) !important;
+    margin-bottom: 20px !important;
+    transition: all 0.3s ease !important;
+    animation: buttonBounce 2s ease infinite !important;
+}
+
+.upload-zone:hover i {
+    transform: scale(1.2) rotate(10deg) !important;
+    animation: iconSpin 2s linear infinite !important;
+}
+
+/* ================= BUTTONS PRIMARY & SECONDARY ================= */
+/* ================= BOTÕES PRINCIPAIS - VIDRO COMPLETO ================= */
+.btn-primary {
+    background: linear-gradient(135deg, 
+        rgba(0, 122, 255, 0.8) 0%, 
+        rgba(52, 199, 89, 0.8) 100%) !important;
+    backdrop-filter: blur(30px) saturate(200%) !important;
+    -webkit-backdrop-filter: blur(30px) saturate(200%) !important;
+    border: 2px solid rgba(255, 255, 255, 0.5) !important;
+    box-shadow: 
+        0 8px 30px rgba(0, 122, 255, 0.4),
+        0 0 0 1px rgba(255, 255, 255, 0.3) inset,
+        0 0 40px rgba(255, 255, 255, 0.2) inset !important;
+    background: linear-gradient(135deg, var(--apple-accent), var(--apple-accent-hover)) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 15px rgba(0, 122, 255, 0.4) !important;
+    color: white !important;
+    padding: 12px 24px !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    position: relative !important;
+    overflow: hidden !important;
+    cursor: pointer !important;
+    font-weight: 600 !important;
+}
+
+.btn-primary::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 0 !important;
+    height: 0 !important;
+    border-radius: 50% !important;
+    background: rgba(255, 255, 255, 0.3) !important;
+    transform: translate(-50%, -50%) !important;
+    transition: width 0.6s, height 0.6s !important;
+}
+
+.btn-primary::after {
+    content: '' !important;
+    position: absolute !important;
+    inset: 0 !important;
+    background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.2) 50%, transparent 70%) !important;
+    transform: translateX(-100%) !important;
+    transition: transform 0.6s ease !important;
+}
+
+.btn-primary:hover {
+    transform: translateY(-3px) scale(1.05) !important;
+    background: linear-gradient(135deg, 
+        rgba(0, 122, 255, 0.95) 0%, 
+        rgba(52, 199, 89, 0.95) 100%) !important;
+    border-color: rgba(255, 255, 255, 0.8) !important;
+    box-shadow: 
+        0 12px 40px rgba(0, 122, 255, 0.6),
+        0 0 0 2px rgba(255, 255, 255, 0.5) inset,
+        0 0 60px rgba(255, 255, 255, 0.4) inset !important;
+    animation: glowPulse 1.5s ease infinite !important;
+}
+
+.btn-primary:hover::before {
+    width: 400px !important;
+    height: 400px !important;
+}
+
+.btn-primary:hover::after {
+    transform: translateX(100%) !important;
+}
+
+.btn-primary:active {
+    transform: translateY(-1px) scale(1.02) !important;
+    box-shadow: 0 4px 15px rgba(0, 122, 255, 0.4) !important;
+}
+
+.btn-primary.loading {
+    pointer-events: none !important;
+}
+
+.btn-primary.loading::after {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 20px !important;
+    height: 20px !important;
+    border: 3px solid rgba(255, 255, 255, 0.3) !important;
+    border-top-color: white !important;
+    border-radius: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    animation: iconSpin 1s linear infinite !important;
+}
+
+.btn-secondary {
+    background: rgba(255, 255, 255, 0.6) !important;
+    backdrop-filter: blur(30px) saturate(200%) !important;
+    -webkit-backdrop-filter: blur(30px) saturate(200%) !important;
+    border: 2px solid rgba(255, 255, 255, 0.5) !important;
+    border-radius: 14px !important;
+    box-shadow: 
+        0 6px 25px rgba(0, 0, 0, 0.1),
+        0 0 0 1px rgba(255, 255, 255, 0.3) inset,
+        0 0 30px rgba(255, 255, 255, 0.2) inset !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    position: relative !important;
+    overflow: hidden !important;
+    cursor: pointer !important;
+    padding: 14px 26px !important;
+    color: var(--apple-text) !important;
+    font-weight: 600 !important;
+    color: var(--apple-text) !important;
+    font-weight: 500 !important;
+}
+
+.btn-secondary::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 0 !important;
+    height: 0 !important;
+    border-radius: 50% !important;
+    background: rgba(0, 122, 255, 0.2) !important;
+    transform: translate(-50%, -50%) !important;
+    transition: width 0.5s, height 0.5s !important;
+}
+
+.btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.85) !important;
+    border-color: rgba(255, 255, 255, 0.8) !important;
+    transform: translateY(-2px) scale(1.03) !important;
+    box-shadow: 
+        0 10px 35px rgba(0, 0, 0, 0.15),
+        0 0 0 2px rgba(255, 255, 255, 0.6) inset,
+        0 0 50px rgba(255, 255, 255, 0.3) inset !important;
+    background: rgba(255, 255, 255, 0.5) !important;
+    transform: translateY(-2px) scale(1.03) !important;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15) !important;
+    border-color: var(--apple-accent) !important;
+    color: var(--apple-accent) !important;
+}
+
+.btn-secondary:hover::before {
+    width: 300px !important;
+    height: 300px !important;
+}
+
+.btn-secondary:active {
+    transform: translateY(0) scale(1) !important;
+}
+
+/* ================= CONTEXT MENU ================= */
+.context-menu {
+    background: rgba(255, 255, 255, 0.4) !important;
+    backdrop-filter: blur(40px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(40px) saturate(180%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37) !important;
+    padding: 8px !important;
+    animation: fadeInScale 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: scale(0.9) translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.context-menu-item {
+    background: transparent !important;
+    border-radius: 10px !important;
+    transition: all 0.2s ease !important;
+    cursor: pointer !important;
+    padding: 10px 16px !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+.context-menu-item::before {
+    content: '' !important;
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    width: 3px !important;
+    background: var(--apple-accent) !important;
+    transform: scaleX(0) !important;
+    transition: transform 0.2s ease !important;
+}
+
+.context-menu-item:hover {
+    background: rgba(0, 122, 255, 0.2) !important;
+    transform: translateX(6px) scale(1.02) !important;
+}
+
+.context-menu-item:hover::before {
+    transform: scaleX(1) !important;
+}
+
+.context-menu-item i {
+    transition: all 0.2s ease !important;
+    margin-right: 10px !important;
+}
+
+.context-menu-item:hover i {
+    transform: scale(1.2) rotate(5deg) !important;
+    color: var(--apple-accent) !important;
+}
+
+/* ================= PROPERTIES PANEL ================= */
+.properties-panel {
+    background: rgba(255, 255, 255, 0.25) !important;
+    backdrop-filter: blur(40px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(40px) saturate(180%) !important;
+    border-left: 1px solid rgba(255, 255, 255, 0.18) !important;
+    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.1) !important;
+}
+
+.properties-header button {
+    width: 32px !important;
+    height: 32px !important;
+    border: none !important;
+    background: rgba(255, 255, 255, 0.3) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    border-radius: 8px !important;
+    cursor: pointer !important;
+    color: var(--apple-text) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all 0.3s ease !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+.properties-header button::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 0 !important;
+    height: 0 !important;
+    border-radius: 50% !important;
+    background: rgba(255, 59, 48, 0.3) !important;
+    transform: translate(-50%, -50%) !important;
+    transition: width 0.4s, height 0.4s !important;
+}
+
+.properties-header button:hover {
+    background: rgba(255, 59, 48, 0.3) !important;
+    color: white !important;
+    transform: rotate(90deg) scale(1.1) !important;
+    box-shadow: 0 4px 15px rgba(255, 59, 48, 0.4) !important;
+}
+
+.properties-header button:hover::before {
+    width: 200px !important;
+    height: 200px !important;
+}
+
+/* ================= TOAST ================= */
+.toast {
+    background: rgba(255, 255, 255, 0.4) !important;
+    backdrop-filter: blur(30px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(30px) saturate(180%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37) !important;
+    animation: slideInRightBounce 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+@keyframes slideInRightBounce {
+    0% {
+        transform: translateX(120%);
+        opacity: 0;
+    }
+    60% {
+        transform: translateX(-10px);
+    }
+    100% {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* ================= EMPTY STATE ================= */
+.empty-state {
+    background: rgba(255, 255, 255, 0.2) !important;
+    backdrop-filter: blur(20px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+    border-radius: 20px !important;
+    padding: 60px 40px !important;
+}
+
+.empty-state-icon {
+    font-size: 80px !important;
+    margin-bottom: 20px !important;
+    animation: buttonBounce 2s ease infinite !important;
+    opacity: 0.6 !important;
+}
+
+/* ================= SCROLLBAR ================= */
+::-webkit-scrollbar {
+    width: 10px !important;
+    height: 10px !important;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border-radius: 10px !important;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    border-radius: 10px !important;
+    border: 2px solid transparent !important;
+    background-clip: padding-box !important;
+    transition: all 0.3s ease !important;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5) !important;
+    transform: scaleX(1.2) !important;
+}
+
+/* ================= FILTERS PANEL ================= */
+.filters-panel {
+    background: rgba(255, 255, 255, 0.3) !important;
+    backdrop-filter: blur(30px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(30px) saturate(180%) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.18) !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1) !important;
+}
+
+.filters-header button {
+    width: 32px !important;
+    height: 32px !important;
+    border: none !important;
+    background: rgba(255, 255, 255, 0.3) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    border-radius: 8px !important;
+    cursor: pointer !important;
+    color: var(--apple-text) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all 0.3s ease !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+.filters-header button::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 0 !important;
+    height: 0 !important;
+    border-radius: 50% !important;
+    background: rgba(255, 59, 48, 0.3) !important;
+    transform: translate(-50%, -50%) !important;
+    transition: width 0.4s, height 0.4s !important;
+}
+
+.filters-header button:hover {
+    background: rgba(255, 59, 48, 0.3) !important;
+    color: white !important;
+    transform: rotate(90deg) scale(1.1) !important;
+    box-shadow: 0 4px 15px rgba(255, 59, 48, 0.4) !important;
+}
+
+.filters-header button:hover::before {
+    width: 200px !important;
+    height: 200px !important;
+}
+
+.btn-apply-filters {
+    background: linear-gradient(135deg, var(--apple-accent), var(--apple-accent-hover)) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 10px !important;
+    box-shadow: 0 4px 15px rgba(0, 122, 255, 0.4) !important;
+    color: white !important;
+    padding: 10px 20px !important;
+    cursor: pointer !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    position: relative !important;
+    overflow: hidden !important;
+    font-weight: 600 !important;
+}
+
+.btn-apply-filters::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 0 !important;
+    height: 0 !important;
+    border-radius: 50% !important;
+    background: rgba(255, 255, 255, 0.3) !important;
+    transform: translate(-50%, -50%) !important;
+    transition: width 0.5s, height 0.5s !important;
+}
+
+.btn-apply-filters:hover {
+    transform: translateY(-2px) scale(1.05) !important;
+    box-shadow: 0 6px 25px rgba(0, 122, 255, 0.5) !important;
+}
+
+.btn-apply-filters:hover::before {
+    width: 300px !important;
+    height: 300px !important;
+}
+
+.btn-apply-filters:active {
+    transform: translateY(0) scale(1.02) !important;
+}
+
+/* ================= INPUTS ================= */
+input, select, textarea {
+    background: rgba(255, 255, 255, 0.3) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 12px !important;
+    color: var(--apple-text) !important;
+    transition: all 0.3s ease !important;
+    padding: 10px 14px !important;
+}
+
+input:focus, select:focus, textarea:focus {
+    background: rgba(255, 255, 255, 0.5) !important;
+    border-color: var(--apple-accent) !important;
+    box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.2), 0 4px 15px rgba(0, 122, 255, 0.3) !important;
+    outline: none !important;
+    transform: scale(1.02) !important;
+}
+
+/* ================= CHECKBOX ================= */
+input[type="checkbox"] {
+    width: 20px !important;
+    height: 20px !important;
+    border-radius: 6px !important;
+    cursor: pointer !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    background: rgba(255, 255, 255, 0.3) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    border: 2px solid rgba(255, 255, 255, 0.3) !important;
+    transition: all 0.3s ease !important;
+    position: relative !important;
+}
+
+input[type="checkbox"]:hover {
+    transform: scale(1.15) !important;
+    border-color: var(--apple-accent) !important;
+}
+
+input[type="checkbox"]:checked {
+    background: var(--apple-accent) !important;
+    border-color: var(--apple-accent) !important;
+    box-shadow: 0 4px 15px rgba(0, 122, 255, 0.4) !important;
+    animation: buttonBounce 0.4s ease !important;
+}
+
+input[type="checkbox"]:checked::after {
+    content: '✓' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    color: white !important;
+    font-size: 14px !important;
+    font-weight: bold !important;
+    animation: slideIn 0.3s ease !important;
+}
+
+/* ================= PDF VIEWER CONTROLS ================= */
+.pdf-viewer-controls .btn-icon {
+    width: 40px !important;
+    height: 40px !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    background: rgba(255, 255, 255, 0.3) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    border-radius: 10px !important;
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: var(--apple-text) !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+.pdf-viewer-controls .btn-icon::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 0 !important;
+    height: 0 !important;
+    border-radius: 50% !important;
+    background: rgba(0, 122, 255, 0.3) !important;
+    transform: translate(-50%, -50%) !important;
+    transition: width 0.4s, height 0.4s !important;
+}
+
+.pdf-viewer-controls .btn-icon:hover {
+    background: rgba(0, 122, 255, 0.3) !important;
+    border-color: var(--apple-accent) !important;
+    color: white !important;
+    transform: scale(1.15) rotate(5deg) !important;
+    box-shadow: 0 4px 15px rgba(0, 122, 255, 0.4) !important;
+}
+
+.pdf-viewer-controls .btn-icon:hover::before {
+    width: 200px !important;
+    height: 200px !important;
+}
+
+.pdf-viewer-controls .btn-icon:active {
+    transform: scale(1.05) rotate(10deg) !important;
+}
+
+/* ================= TREE ITEMS ================= */
+.tree-item {
+    background: rgba(255, 255, 255, 0.5) !important;
+    backdrop-filter: blur(10px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(10px) saturate(180%) !important;
+    border: 1px solid rgba(0, 122, 255, 0.1) !important;
+    border-radius: 10px !important;
+    margin: 4px 8px !important;
+    padding: 10px 12px !important;
+    box-shadow: 0 2px 8px rgba(0, 122, 255, 0.05) !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    cursor: pointer !important;
+    position: relative !important;
+}
+
+.tree-item::before {
+    content: '' !important;
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    width: 3px !important;
+    background: var(--apple-accent) !important;
+    transform: scaleY(0) !important;
+    transition: transform 0.3s ease !important;
+    border-radius: 0 3px 3px 0 !important;
+}
+
+.tree-item:hover {
+    background: rgba(255, 255, 255, 0.3) !important;
+    transform: translateX(6px) scale(1.02) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+.tree-item:hover::before {
+    transform: scaleY(1) !important;
+}
+
+.tree-item.selected {
+    background: rgba(0, 122, 255, 0.2) !important;
+    border-left: 3px solid var(--apple-accent) !important;
+    box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3) !important;
+}
+
+.tree-item.selected::before {
+    transform: scaleY(1) !important;
+}
+
+.tree-item-icon {
+    transition: all 0.3s ease !important;
+}
+
+.tree-item:hover .tree-item-icon {
+    transform: scale(1.2) rotate(5deg) !important;
+    color: var(--apple-accent) !important;
+}
+
+.tree-item-arrow {
+    transition: transform 0.3s ease !important;
+}
+
+.tree-item.expanded .tree-item-arrow {
+    transform: rotate(90deg) !important;
+    color: var(--apple-green) !important;
+}
+    transform: rotate(90deg) !important;
+    color: var(--apple-accent) !important;
+}
+
+/* ================= ANIMAÇÕES DE ENTRADA ================= */
+@keyframes appleFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.grid-item,
+.details-item,
+.list-table tbody tr {
+    animation: appleFadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* ================= GRADIENT ROTATE ================= */
+@keyframes gradientRotate {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+/* ================= LOADING STATES ================= */
+.loading {
+    position: relative !important;
+    pointer-events: none !important;
+}
+
+.loading::after {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 20px !important;
+    height: 20px !important;
+    border: 3px solid rgba(255, 255, 255, 0.3) !important;
+    border-top-color: white !important;
+    border-radius: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    animation: iconSpin 1s linear infinite !important;
+}
+
+/* ================= RESPONSIVE ================= */
+@media (max-width: 768px) {
+    .btn-toolbar span {
+        display: none !important;
+    }
+    
+    .toolbar-btn {
+        padding: 8px 12px !important;
+        font-size: 12px !important;
+    }
+    
+    .toolbar-btn span {
+        display: none !important;
+    }
+}
+
+/* ================= OVERRIDE PARA TEMA BRANCO ================= */
+.explorer-header,
+.toolbar,
+.explorer-sidebar,
+.properties-panel,
+.modal-content {
+    background: rgba(255, 255, 255, 0.85) !important;
+    backdrop-filter: blur(20px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+    border: 1px solid rgba(0, 122, 255, 0.15) !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Garantir que todos os botões tenham z-index correto */
+button, .btn-toolbar, .toolbar-btn, .btn-primary, .btn-secondary {
+    z-index: 1 !important;
+    position: relative !important;
+}
+
+/* ================= ANIMAÇÕES PARA TODOS OS BOTÕES ================= */
+
+/* Efeito de ondas ao clicar */
+button::after {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 0 !important;
+    height: 0 !important;
+    border-radius: 50% !important;
+    background: rgba(255, 255, 255, 0.5) !important;
+    transform: translate(-50%, -50%) !important;
+    transition: width 0.6s, height 0.6s, opacity 0.6s !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    z-index: 0 !important;
+}
+
+button:active::after {
+    width: 300px !important;
+    height: 300px !important;
+    opacity: 1 !important;
+}
+
+/* Animação de entrada para todos os botões */
+button, .btn-toolbar, .toolbar-btn, .btn-primary, .btn-secondary,
+.btn-back, .btn-forward, .btn-up, .btn-refresh, .btn-search-advanced,
+.btn-sidebar-toggle, .modal-close, .context-menu-item {
+    animation: fadeInButton 0.3s ease backwards !important;
+}
+
+@keyframes fadeInButton {
+    from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Delay escalonado para botões */
+.btn-back { animation-delay: 0.05s !important; }
+.btn-forward { animation-delay: 0.1s !important; }
+.btn-up { animation-delay: 0.15s !important; }
+.btn-refresh { animation-delay: 0.2s !important; }
+.btn-toolbar:nth-child(1) { animation-delay: 0.25s !important; }
+.btn-toolbar:nth-child(2) { animation-delay: 0.3s !important; }
+.btn-toolbar:nth-child(3) { animation-delay: 0.35s !important; }
+
+/* Hover com elevação para TODOS os botões */
+button:hover, .btn-toolbar:hover, .toolbar-btn:hover,
+.btn-primary:hover, .btn-secondary:hover, .btn-back:hover,
+.btn-forward:hover, .btn-up:hover, .btn-refresh:hover,
+.btn-search-advanced:hover, .btn-sidebar-toggle:hover,
+.modal-close:hover, .context-menu-item:hover,
+.btn-icon:hover, .btn-apply-filters:hover {
+    transform: translateY(-3px) scale(1.05) !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Active state para TODOS os botões */
+button:active, .btn-toolbar:active, .toolbar-btn:active,
+.btn-primary:active, .btn-secondary:active, .btn-back:active,
+.btn-forward:active, .btn-up:active, .btn-refresh:active,
+.btn-search-advanced:active, .btn-sidebar-toggle:active,
+.modal-close:active, .context-menu-item:active,
+.btn-icon:active, .btn-apply-filters:active {
+    transform: translateY(-1px) scale(1.02) !important;
+    transition: all 0.1s ease !important;
+}
+
+/* Loading state para TODOS os botões */
+button.loading, .btn-toolbar.loading, .toolbar-btn.loading,
+.btn-primary.loading, .btn-secondary.loading {
+    position: relative !important;
+    color: transparent !important;
+    pointer-events: none !important;
+}
+
+button.loading::before, .btn-toolbar.loading::before,
+.toolbar-btn.loading::before, .btn-primary.loading::before,
+.btn-secondary.loading::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 20px !important;
+    height: 20px !important;
+    margin: -10px 0 0 -10px !important;
+    border: 3px solid rgba(255, 255, 255, 0.3) !important;
+    border-top-color: white !important;
+    border-radius: 50% !important;
+    animation: iconSpin 1s linear infinite !important;
+    z-index: 10 !important;
+}
+
+/* Glow effect ao passar mouse */
+button:hover, .btn-toolbar:hover, .toolbar-btn:hover {
+    filter: drop-shadow(0 0 8px rgba(0, 122, 255, 0.5)) !important;
+}
+
+/* Animação de ícones em todos os botões */
+button i, .btn-toolbar i, .toolbar-btn i {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    display: inline-block !important;
+}
+
+button:hover i, .btn-toolbar:hover i, .toolbar-btn:hover i {
+    transform: scale(1.2) rotate(5deg) !important;
+}
+
+button:active i, .btn-toolbar:active i, .toolbar-btn:active i {
+    transform: scale(1.1) rotate(10deg) !important;
+}
+
+/* Efeito de brilho ao passar mouse */
+button::before, .btn-toolbar::before, .toolbar-btn::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: -100% !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent) !important;
+    transition: left 0.5s ease !important;
+    z-index: 1 !important;
+}
+
+button:hover::before, .btn-toolbar:hover::before, .toolbar-btn:hover::before {
+    left: 100% !important;
+}
+
+/* Estados disabled com animação */
+button:disabled, .btn-toolbar:disabled, .toolbar-btn:disabled {
+    opacity: 0.5 !important;
+    cursor: not-allowed !important;
+    animation: shake 0.5s ease !important;
+}
+
+button:disabled:hover {
+    transform: none !important;
+    filter: none !important;
+}
+
+/* Focus ring animado */
+button:focus-visible, .btn-toolbar:focus-visible, .toolbar-btn:focus-visible {
+    outline: 2px solid var(--apple-accent) !important;
+    outline-offset: 4px !important;
+    animation: focusPulse 1.5s ease infinite !important;
+}
+
+@keyframes focusPulse {
+    0%, 100% {
+        outline-width: 2px;
+        outline-color: var(--apple-accent);
+    }
+    50% {
+        outline-width: 4px;
+        outline-color: var(--apple-green);
+    }
+}
+
+/* Animação de sucesso após ação */
+button.success, .btn-toolbar.success, .toolbar-btn.success {
+    animation: successBounce 0.6s ease !important;
+}
+
+@keyframes successBounce {
+    0%, 100% {
+        transform: scale(1);
+    }
+    25% {
+        transform: scale(1.15) rotate(5deg);
+        background: var(--apple-green) !important;
+    }
+    50% {
+        transform: scale(1.1) rotate(-5deg);
+    }
+    75% {
+        transform: scale(1.05) rotate(2deg);
+    }
+}
+
+/* Animação de erro */
+button.error, .btn-toolbar.error, .toolbar-btn.error {
+    animation: errorShake 0.5s ease !important;
+}
+
+@keyframes errorShake {
+    0%, 100% {
+        transform: translateX(0);
+        background: rgba(255, 59, 48, 0.3) !important;
+    }
+    10%, 30%, 50%, 70%, 90% {
+        transform: translateX(-5px);
+    }
+    20%, 40%, 60%, 80% {
+        transform: translateX(5px);
+    }
+}
+
+/* Hover effect com gradiente animado */
+button:hover, .btn-toolbar:hover, .toolbar-btn:hover {
+    background-image: linear-gradient(135deg, rgba(0, 122, 255, 0.3), rgba(52, 199, 89, 0.3)) !important;
+    background-size: 200% 200% !important;
+    animation: gradientMove 3s ease infinite !important;
+}
+
+@keyframes gradientMove {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+/* Efeito de partículas ao clicar */
+button:active {
+    box-shadow: 0 0 0 0 rgba(0, 122, 255, 0.7) !important;
+    animation: ripple 0.6s ease !important;
+}
+
+@keyframes ripple {
+    to {
+        box-shadow: 0 0 0 20px rgba(0, 122, 255, 0) !important;
+    }
+}
+
+/* Animação de entrada para modais */
+.modal.show .modal-content {
+    animation: modalEnter 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+@keyframes modalEnter {
+    0% {
+        opacity: 0;
+        transform: scale(0.8) translateY(-50px) rotate(-5deg);
+    }
+    50% {
+        transform: scale(1.05) translateY(10px) rotate(2deg);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0) rotate(0deg);
+    }
+}
+
+/* Animação de saída para modais */
+.modal:not(.show) .modal-content {
+    animation: modalExit 0.3s ease !important;
+}
+
+@keyframes modalExit {
+    from {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: scale(0.8) translateY(-50px);
+    }
+}
+
+/* Efeito de hover nos itens da lista */
+.list-table tbody tr:hover .btn-icon {
+    animation: iconWiggle 0.5s ease !important;
+}
+
+/* Animação de seleção */
+.grid-item.selected, .list-table tbody tr.selected, .details-item.selected {
+    animation: selectPulse 2s ease infinite !important;
+}
+
+@keyframes selectPulse {
+    0%, 100% {
+        box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.2);
+    }
+    50% {
+        box-shadow: 0 0 0 8px rgba(0, 122, 255, 0.4);
+    }
+}
+
+/* Animação de drag */
+.grid-item[draggable="true"]:active,
+.list-table tbody tr[draggable="true"]:active,
+.details-item[draggable="true"]:active {
+    animation: dragFloat 0.5s ease infinite !important;
+    opacity: 0.8 !important;
+}
+
+@keyframes dragFloat {
+    0%, 100% {
+        transform: translateY(0) rotate(0deg);
+    }
+    50% {
+        transform: translateY(-10px) rotate(2deg);
+    }
+}
+
+/* Efeito de hover nos headers da tabela */
+.list-table th:hover {
+    animation: headerGlow 0.5s ease !important;
+}
+
+@keyframes headerGlow {
+    0%, 100% {
+        background: rgba(255, 255, 255, 0.2);
+    }
+    50% {
+        background: rgba(0, 122, 255, 0.2);
+        box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3);
+    }
+}
+
+/* Animação de carregamento para upload */
+.upload-item-progress-bar {
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+.upload-item-progress-bar::after {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: -100% !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent) !important;
+    animation: progressShine 1.5s ease infinite !important;
+}
+
+@keyframes progressShine {
+    0% {
+        left: -100%;
+    }
+    100% {
+        left: 100%;
+    }
+}
+
+/* Animação de entrada para grid items */
+.grid-item {
+    animation: gridItemEnter 0.4s cubic-bezier(0.4, 0, 0.2, 1) backwards !important;
+}
+
+.grid-item:nth-child(1) { animation-delay: 0.05s !important; }
+.grid-item:nth-child(2) { animation-delay: 0.1s !important; }
+.grid-item:nth-child(3) { animation-delay: 0.15s !important; }
+.grid-item:nth-child(4) { animation-delay: 0.2s !important; }
+.grid-item:nth-child(5) { animation-delay: 0.25s !important; }
+.grid-item:nth-child(6) { animation-delay: 0.3s !important; }
+.grid-item:nth-child(7) { animation-delay: 0.35s !important; }
+.grid-item:nth-child(8) { animation-delay: 0.4s !important; }
+.grid-item:nth-child(n+9) { animation-delay: 0.45s !important; }
+
+@keyframes gridItemEnter {
+    from {
+        opacity: 0;
+        transform: translateY(30px) scale(0.9) rotate(-5deg);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1) rotate(0deg);
+    }
+}
+
+/* Animação de entrada para lista */
+.list-table tbody tr {
+    animation: listItemEnter 0.3s ease backwards !important;
+}
+
+.list-table tbody tr:nth-child(1) { animation-delay: 0.05s !important; }
+.list-table tbody tr:nth-child(2) { animation-delay: 0.1s !important; }
+.list-table tbody tr:nth-child(3) { animation-delay: 0.15s !important; }
+.list-table tbody tr:nth-child(4) { animation-delay: 0.2s !important; }
+.list-table tbody tr:nth-child(5) { animation-delay: 0.25s !important; }
+
+@keyframes listItemEnter {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Animação de entrada para details */
+.details-item {
+    animation: detailsItemEnter 0.3s ease backwards !important;
+}
+
+.details-item:nth-child(1) { animation-delay: 0.05s !important; }
+.details-item:nth-child(2) { animation-delay: 0.1s !important; }
+.details-item:nth-child(3) { animation-delay: 0.15s !important; }
+
+@keyframes detailsItemEnter {
+    from {
+        opacity: 0;
+        transform: translateX(-30px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+    }
+}
+
+/* Efeito de hover nos tree items */
+.tree-item:hover {
+    animation: treeItemHover 0.3s ease !important;
+}
+
+@keyframes treeItemHover {
+    0% {
+        transform: translateX(0);
+    }
+    50% {
+        transform: translateX(8px) scale(1.02);
+    }
+    100% {
+        transform: translateX(6px) scale(1.02);
+    }
+}
+
+/* Animação de expansão para tree items */
+.tree-item.expanded {
+    animation: treeExpand 0.3s ease !important;
+}
+
+@keyframes treeExpand {
+    from {
+        opacity: 0.8;
+        transform: scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Efeito de hover no address bar */
+.address-item:hover {
+    animation: addressHover 0.3s ease !important;
+}
+
+@keyframes addressHover {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.15) translateY(-2px);
+    }
+    100% {
+        transform: scale(1.08) translateY(-2px);
+    }
+}
+
+/* Animação de busca */
+.search-box:focus-within {
+    animation: searchFocus 0.3s ease !important;
+}
+
+@keyframes searchFocus {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+    100% {
+        transform: scale(1.02);
+    }
+}
+
+/* Efeito de hover no upload zone */
+.upload-zone:hover {
+    animation: uploadZoneHover 0.5s ease !important;
+}
+
+@keyframes uploadZoneHover {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05) rotate(1deg);
+    }
+}
+
+/* Animação de drag over */
+.upload-zone.dragover {
+    animation: dragOverPulse 1s ease infinite !important;
+}
+
+@keyframes dragOverPulse {
+    0%, 100% {
+        border-color: var(--apple-accent);
+        box-shadow: 0 0 0 0 rgba(0, 122, 255, 0.4);
+    }
+    50% {
+        border-color: var(--apple-green);
+        box-shadow: 0 0 0 10px rgba(0, 122, 255, 0);
+    }
+}
+
+/* Animação de toast */
+.toast {
+    animation: toastEnter 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+@keyframes toastEnter {
+    0% {
+        opacity: 0;
+        transform: translateX(120%) scale(0.8) rotate(10deg);
+    }
+    60% {
+        transform: translateX(-10px) scale(1.05) rotate(-2deg);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(0) scale(1) rotate(0deg);
+    }
+}
+
+/* Efeito de hover no status bar */
+.explorer-statusbar span:hover {
+    animation: statusHover 0.3s ease !important;
+}
+
+@keyframes statusHover {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1) translateY(-2px);
+    }
+    100% {
+        transform: scale(1.05) translateY(-2px);
+    }
+}
+
+/* Animação de loading para refresh */
+.btn-refresh.loading {
+    animation: refreshSpin 1s linear infinite !important;
+}
+
+@keyframes refreshSpin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Efeito de hover nos filtros */
+.filter-group input:hover, .filter-group select:hover {
+    animation: inputHover 0.3s ease !important;
+}
+
+@keyframes inputHover {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.02) translateY(-2px);
+    }
+    100% {
+        transform: scale(1.01) translateY(-1px);
+    }
+}
+
+/* Animação de checkbox */
+input[type="checkbox"]:checked {
+    animation: checkboxCheck 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+@keyframes checkboxCheck {
+    0% {
+        transform: scale(0.8);
+    }
+    50% {
+        transform: scale(1.2);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* Efeito de hover nos properties */
+.property-item:hover {
+    animation: propertyHover 0.3s ease !important;
+}
+
+@keyframes propertyHover {
+    0% {
+        background: transparent;
+    }
+    100% {
+        background: rgba(255, 255, 255, 0.1);
+        transform: translateX(4px);
+    }
+}
+
+/* Garantir que todos os elementos interativos tenham cursor pointer */
+button, .btn-toolbar, .toolbar-btn, .btn-primary, .btn-secondary,
+.btn-back, .btn-forward, .btn-up, .btn-refresh, .btn-search-advanced,
+.btn-sidebar-toggle, .modal-close, .context-menu-item, .address-item,
+.tree-item, .grid-item, .list-table tbody tr, .details-item,
+.btn-icon, .btn-apply-filters, input[type="checkbox"], .list-table th {
+    cursor: pointer !important;
+}
+
+/* Transições suaves para TODOS os elementos */
+*, *::before, *::after {
+    transition-property: transform, opacity, background-color, border-color, box-shadow, color, filter !important;
+    transition-duration: 0.3s !important;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Performance - usar GPU para animações */
+button, .btn-toolbar, .toolbar-btn, .grid-item, .list-table tbody tr,
+.details-item, .tree-item {
+    will-change: transform, opacity !important;
+    transform: translateZ(0) !important;
+    backface-visibility: hidden !important;
+}
+
+/* ================= ANIMAÇÕES ESPECÍFICAS POR TIPO DE BOTÃO ================= */
+
+/* Botões de navegação com animação especial */
+.btn-back:hover i {
+    animation: slideLeft 0.3s ease !important;
+}
+
+.btn-forward:hover i {
+    animation: slideRight 0.3s ease !important;
+}
+
+.btn-up:hover i {
+    animation: slideUp 0.3s ease !important;
+}
+
+@keyframes slideLeft {
+    0% { transform: translateX(0); }
+    50% { transform: translateX(-4px); }
+    100% { transform: translateX(-2px); }
+}
+
+@keyframes slideRight {
+    0% { transform: translateX(0); }
+    50% { transform: translateX(4px); }
+    100% { transform: translateX(2px); }
+}
+
+@keyframes slideUp {
+    0% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+    100% { transform: translateY(-2px); }
+}
+
+/* Botão refresh com rotação contínua no hover */
+.btn-refresh:hover i {
+    animation: iconSpin 1s linear infinite !important;
+}
+
+/* Botão de upload com animação especial */
+.btn-toolbar:has(.fa-upload):hover {
+    background: linear-gradient(135deg, rgba(0, 122, 255, 0.4), rgba(52, 199, 89, 0.4)) !important;
+    animation: uploadGlow 2s ease infinite !important;
+}
+
+@keyframes uploadGlow {
+    0%, 100% {
+        box-shadow: 0 8px 25px rgba(0, 122, 255, 0.5);
+    }
+    50% {
+        box-shadow: 0 8px 35px rgba(52, 199, 89, 0.6);
+    }
+}
+
+/* Botão de nova pasta */
+.btn-toolbar:has(.fa-folder-plus):hover i {
+    animation: folderBounce 0.6s ease infinite !important;
+}
+
+@keyframes folderBounce {
+    0%, 100% {
+        transform: scale(1) rotate(0deg);
+    }
+    25% {
+        transform: scale(1.2) rotate(-5deg);
+    }
+    75% {
+        transform: scale(1.2) rotate(5deg);
+    }
+}
+
+/* Botão de view mode */
+.btn-toolbar:has(#view-icon):hover #view-icon {
+    animation: viewModeRotate 0.6s ease !important;
+}
+
+@keyframes viewModeRotate {
+    0% { transform: rotate(0deg) scale(1); }
+    50% { transform: rotate(180deg) scale(1.3); }
+    100% { transform: rotate(360deg) scale(1); }
+}
+
+/* Toolbar buttons com cores específicas */
+.toolbar-btn:has(.fa-copy):hover {
+    background: linear-gradient(135deg, rgba(52, 199, 89, 0.4), rgba(52, 199, 89, 0.2)) !important;
+    border-color: var(--apple-green) !important;
+}
+
+.toolbar-btn:has(.fa-paste):hover {
+    background: linear-gradient(135deg, rgba(0, 122, 255, 0.4), rgba(0, 122, 255, 0.2)) !important;
+}
+
+.toolbar-btn:has(.fa-cut):hover {
+    background: linear-gradient(135deg, rgba(255, 149, 0, 0.4), rgba(255, 149, 0, 0.2)) !important;
+    border-color: var(--apple-orange) !important;
+}
+
+.toolbar-btn:has(.fa-trash):hover {
+    background: linear-gradient(135deg, rgba(255, 59, 48, 0.4), rgba(255, 59, 48, 0.2)) !important;
+    border-color: var(--apple-red) !important;
+    animation: deletePulse 1s ease infinite !important;
+}
+
+@keyframes deletePulse {
+    0%, 100% {
+        box-shadow: 0 8px 25px rgba(255, 59, 48, 0.5);
+    }
+    50% {
+        box-shadow: 0 8px 35px rgba(255, 59, 48, 0.8);
+    }
+}
+
+.toolbar-btn:has(.fa-edit):hover {
+    background: linear-gradient(135deg, rgba(175, 82, 222, 0.4), rgba(175, 82, 222, 0.2)) !important;
+    border-color: var(--apple-purple) !important;
+}
+
+.toolbar-btn:has(.fa-info-circle):hover {
+    background: linear-gradient(135deg, rgba(0, 122, 255, 0.4), rgba(0, 122, 255, 0.2)) !important;
+}
+
+.toolbar-btn:has(.fa-check-square):hover {
+    background: linear-gradient(135deg, rgba(52, 199, 89, 0.4), rgba(52, 199, 89, 0.2)) !important;
+    border-color: var(--apple-green) !important;
+}
+
+.toolbar-btn:has(.fa-sort):hover {
+    background: linear-gradient(135deg, rgba(0, 122, 255, 0.4), rgba(0, 122, 255, 0.2)) !important;
+}
+
+.toolbar-btn:has(.fa-sort):hover i {
+    animation: sortBounce 0.6s ease !important;
+}
+
+@keyframes sortBounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-5px);
+    }
+}
+
+/* Modal close com rotação */
+.modal-close:hover {
+    animation: closeRotate 0.3s ease !important;
+}
+
+@keyframes closeRotate {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(90deg);
+    }
+}
+
+/* Context menu items com animação escalonada */
+.context-menu-item:nth-child(1) { animation-delay: 0.05s !important; }
+.context-menu-item:nth-child(2) { animation-delay: 0.1s !important; }
+.context-menu-item:nth-child(3) { animation-delay: 0.15s !important; }
+.context-menu-item:nth-child(4) { animation-delay: 0.2s !important; }
+.context-menu-item:nth-child(5) { animation-delay: 0.25s !important; }
+
+/* PDF viewer controls */
+.pdf-viewer-controls .btn-icon:has(.fa-search-plus):hover {
+    background: linear-gradient(135deg, rgba(52, 199, 89, 0.4), rgba(52, 199, 89, 0.2)) !important;
+    border-color: var(--apple-green) !important;
+}
+
+.pdf-viewer-controls .btn-icon:has(.fa-search-minus):hover {
+    background: linear-gradient(135deg, rgba(255, 149, 0, 0.4), rgba(255, 149, 0, 0.2)) !important;
+    border-color: var(--apple-orange) !important;
+}
+
+.pdf-viewer-controls .btn-icon:has(.fa-download):hover {
+    background: linear-gradient(135deg, rgba(0, 122, 255, 0.4), rgba(0, 122, 255, 0.2)) !important;
+}
+
+.pdf-viewer-controls .btn-icon:has(.fa-print):hover {
+    background: linear-gradient(135deg, rgba(175, 82, 222, 0.4), rgba(175, 82, 222, 0.2)) !important;
+    border-color: var(--apple-purple) !important;
+}
+
+/* Sidebar toggle com animação */
+.btn-sidebar-toggle:hover i {
+    animation: chevronSlide 0.3s ease !important;
+}
+
+@keyframes chevronSlide {
+    0% { transform: translateX(0); }
+    50% { transform: translateX(-3px); }
+    100% { transform: translateX(0); }
+}
+
+/* Filters panel button */
+.filters-header button:hover {
+    animation: closeRotate 0.3s ease !important;
+}
+
+/* Properties panel button */
+.properties-header button:hover {
+    animation: closeRotate 0.3s ease !important;
+}
+
+/* Apply filters button */
+.btn-apply-filters:hover {
+    background: linear-gradient(135deg, var(--apple-accent), var(--apple-green)) !important;
+    animation: applyFiltersGlow 1.5s ease infinite !important;
+}
+
+@keyframes applyFiltersGlow {
+    0%, 100% {
+        box-shadow: 0 6px 25px rgba(0, 122, 255, 0.5);
+    }
+    50% {
+        box-shadow: 0 6px 35px rgba(52, 199, 89, 0.6);
+    }
+}
+
+/* Search advanced button */
+.btn-search-advanced:hover {
+    animation: filterSpin 0.6s ease !important;
+}
+
+@keyframes filterSpin {
+    0% { transform: rotate(0deg) scale(1); }
+    50% { transform: rotate(180deg) scale(1.2); }
+    100% { transform: rotate(360deg) scale(1); }
+}
+
+/* Address items com animação de entrada */
+.address-item {
+    animation: addressItemEnter 0.3s ease backwards !important;
+}
+
+.address-item:nth-child(1) { animation-delay: 0.1s !important; }
+.address-item:nth-child(2) { animation-delay: 0.2s !important; }
+.address-item:nth-child(3) { animation-delay: 0.3s !important; }
+
+@keyframes addressItemEnter {
+    from {
+        opacity: 0;
+        transform: scale(0.8) translateY(-5px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* Tree items com animação de entrada */
+.tree-item {
+    animation: treeItemEnter 0.3s ease backwards !important;
+}
+
+.tree-item:nth-child(1) { animation-delay: 0.05s !important; }
+.tree-item:nth-child(2) { animation-delay: 0.1s !important; }
+.tree-item:nth-child(3) { animation-delay: 0.15s !important; }
+.tree-item:nth-child(4) { animation-delay: 0.2s !important; }
+
+@keyframes treeItemEnter {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Toolbar groups com animação */
+.toolbar-group {
+    animation: toolbarGroupEnter 0.4s ease backwards !important;
+}
+
+.toolbar-group:nth-child(1) { animation-delay: 0.1s !important; }
+.toolbar-group:nth-child(2) { animation-delay: 0.2s !important; }
+.toolbar-group:nth-child(3) { animation-delay: 0.3s !important; }
+
+@keyframes toolbarGroupEnter {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Status bar items com animação */
+.explorer-statusbar span {
+    animation: statusItemEnter 0.3s ease backwards !important;
+}
+
+.explorer-statusbar span:nth-child(1) { animation-delay: 0.1s !important; }
+.explorer-statusbar span:nth-child(3) { animation-delay: 0.2s !important; }
+.explorer-statusbar span:nth-child(5) { animation-delay: 0.3s !important; }
+.explorer-statusbar span:nth-child(7) { animation-delay: 0.4s !important; }
+
+@keyframes statusItemEnter {
+    from {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ================= MODAL NOVA PASTA - DESIGNER VIDRO COMPLETO ================= */
+#nova-pasta-modal {
+    background: rgba(0, 0, 0, 0.3) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    pointer-events: auto !important;
+}
+
+#nova-pasta-modal * {
+    pointer-events: auto !important;
+}
+
+#nova-pasta-modal .modal-content {
+    background: rgba(255, 255, 255, 0.75) !important;
+    backdrop-filter: blur(40px) saturate(200%) !important;
+    -webkit-backdrop-filter: blur(40px) saturate(200%) !important;
+    border: 2px solid rgba(255, 255, 255, 0.5) !important;
+    box-shadow: 
+        0 25px 80px rgba(0, 122, 255, 0.2),
+        0 0 0 1px rgba(255, 255, 255, 0.8) inset,
+        0 0 60px rgba(255, 255, 255, 0.3) inset !important;
+    border-radius: 24px !important;
+    max-width: 520px !important;
+    overflow: hidden !important;
+    position: relative !important;
+}
+
+#nova-pasta-modal .modal-content::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    background: linear-gradient(135deg, 
+        rgba(255, 255, 255, 0.4) 0%, 
+        rgba(255, 255, 255, 0.1) 50%,
+        rgba(255, 255, 255, 0.2) 100%) !important;
+    pointer-events: none !important;
+    z-index: 0 !important;
+}
+
+#nova-pasta-modal .modal-content > * {
+    position: relative !important;
+    z-index: 1 !important;
+}
+
+/* Garantir que inputs e botões estejam acima de tudo */
+#nova-pasta-modal input,
+#nova-pasta-modal button {
+    position: relative !important;
+    z-index: 1001 !important;
+    pointer-events: auto !important;
+}
+
+#nova-pasta-modal .modal-header {
+    background: linear-gradient(135deg, 
+        rgba(255, 255, 255, 0.3) 0%, 
+        rgba(0, 122, 255, 0.1) 50%,
+        rgba(52, 199, 89, 0.1) 100%) !important;
+    backdrop-filter: blur(20px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3) !important;
+    padding: 24px 28px !important;
+    border-radius: 24px 24px 0 0 !important;
+    box-shadow: 0 2px 20px rgba(0, 122, 255, 0.1) inset !important;
+}
+
+#nova-pasta-modal .modal-header h3 {
+    color: var(--apple-text) !important;
+    font-weight: 700 !important;
+    font-size: 20px !important;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+#nova-pasta-modal .modal-header h3 i {
+    color: var(--apple-accent) !important;
+    font-size: 24px !important;
+}
+
+#nova-pasta-modal .modal-body {
+    padding: 28px !important;
+    background: rgba(255, 255, 255, 0.2) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+}
+
+.nova-pasta-form {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.nova-pasta-form .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.nova-pasta-form label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--apple-text);
+    margin-bottom: 4px;
+}
+
+.nova-pasta-form input[type="text"],
+.nova-pasta-form input[type="number"],
+.nova-pasta-form input[type="date"] {
+    width: 100% !important;
+    padding: 16px 20px !important;
+    border: 2px solid rgba(255, 255, 255, 0.4) !important;
+    border-radius: 14px !important;
+    background: rgba(255, 255, 255, 0.6) !important;
+    backdrop-filter: blur(30px) saturate(200%) !important;
+    -webkit-backdrop-filter: blur(30px) saturate(200%) !important;
+    color: var(--apple-text) !important;
+    font-size: 16px !important;
+    font-weight: 500 !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: 
+        0 4px 20px rgba(0, 122, 255, 0.1),
+        0 0 0 1px rgba(255, 255, 255, 0.5) inset !important;
+    outline: none !important;
+    pointer-events: auto !important;
+    opacity: 1 !important;
+    z-index: 1000 !important;
+    position: relative !important;
+    cursor: text !important;
+    -webkit-user-select: text !important;
+    user-select: text !important;
+}
+
+/* Garantir que o input nunca seja bloqueado - REGRAS FORTES */
+#nova-pasta-nome {
+    pointer-events: auto !important;
+    opacity: 1 !important;
+    z-index: 10000 !important;
+    position: relative !important;
+    cursor: text !important;
+    -webkit-user-select: text !important;
+    user-select: text !important;
+    background: rgba(255, 255, 255, 0.6) !important;
+    backdrop-filter: blur(30px) saturate(200%) !important;
+    -webkit-backdrop-filter: blur(30px) saturate(200%) !important;
+    display: block !important;
+    visibility: visible !important;
+    -webkit-appearance: textfield !important;
+    appearance: textfield !important;
+}
+
+#nova-pasta-nome:disabled,
+#nova-pasta-nome[readonly],
+#nova-pasta-nome[disabled="true"],
+#nova-pasta-nome[readonly="readonly"] {
+    pointer-events: auto !important;
+    opacity: 1 !important;
+    background: rgba(255, 255, 255, 0.6) !important;
+    -webkit-appearance: textfield !important;
+    appearance: textfield !important;
+}
+
+/* Garantir que nenhum elemento pai bloqueie */
+#nova-pasta-modal .modal-body,
+#nova-pasta-modal .nova-pasta-form,
+#nova-pasta-modal .form-group {
+    pointer-events: auto !important;
+}
+
+#nova-pasta-modal .form-group {
+    position: relative !important;
+    z-index: 100 !important;
+}
+
+.nova-pasta-form input::placeholder {
+    color: rgba(30, 30, 31, 0.4) !important;
+    font-weight: 400 !important;
+}
+
+.nova-pasta-form input:focus {
+    outline: none !important;
+    border-color: rgba(255, 255, 255, 0.8) !important;
+    background: rgba(255, 255, 255, 0.85) !important;
+    box-shadow: 
+        0 0 0 4px rgba(0, 122, 255, 0.2),
+        0 8px 30px rgba(0, 122, 255, 0.3),
+        0 0 0 1px rgba(255, 255, 255, 0.8) inset !important;
+    transform: scale(1.02) translateY(-2px) !important;
+}
+
+.nova-pasta-form input:hover:not(:focus) {
+    border-color: rgba(255, 255, 255, 0.6) !important;
+    background: rgba(255, 255, 255, 0.7) !important;
+    box-shadow: 
+        0 6px 25px rgba(0, 122, 255, 0.15),
+        0 0 0 1px rgba(255, 255, 255, 0.6) inset !important;
+}
+
+.form-hint {
+    font-size: 12px;
+    color: var(--apple-text-secondary);
+    margin-top: 4px;
+}
+
+/* Grid de Meses */
+.meses-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.mes-option {
+    background: rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.mes-option::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    transition: left 0.5s ease;
+}
+
+.mes-option:hover {
+    background: rgba(255, 255, 255, 1) !important;
+    border-color: var(--apple-accent) !important;
+    transform: translateY(-4px) scale(1.05) !important;
+    box-shadow: 0 8px 25px rgba(0, 122, 255, 0.25) !important;
+}
+
+.mes-option:hover::before {
+    left: 100%;
+}
+
+.mes-option.selected {
+    background: linear-gradient(135deg, rgba(0, 122, 255, 0.15), rgba(52, 199, 89, 0.15)) !important;
+    border-color: var(--apple-accent) !important;
+    box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.15), 0 8px 25px rgba(0, 122, 255, 0.3) !important;
+    animation: selectPulse 1s ease infinite;
+}
+
+.mes-emoji {
+    font-size: 32px;
+    margin-bottom: 8px;
+    transition: transform 0.3s ease;
+}
+
+.mes-option:hover .mes-emoji {
+    transform: scale(1.2) rotate(5deg);
+    animation: buttonBounce 0.6s ease infinite;
+}
+
+.mes-nome {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--apple-text);
+}
+
+.mes-option.selected .mes-nome {
+    color: white;
+    font-weight: 600;
+}
+
+.mes-option.selected .mes-emoji {
+    animation: mesSelectedBounce 0.6s ease !important;
+}
+
+@keyframes mesSelectedBounce {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.3) rotate(10deg);
+    }
+}
+
+/* Responsive para grid de meses */
+@media (max-width: 768px) {
+    .meses-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+
+/* Preview do Caminho */
+.nova-pasta-preview {
+    background: rgba(255, 255, 255, 0.5) !important;
+    backdrop-filter: blur(30px) saturate(200%) !important;
+    -webkit-backdrop-filter: blur(30px) saturate(200%) !important;
+    border: 2px solid rgba(255, 255, 255, 0.4) !important;
+    border-radius: 14px;
+    padding: 18px 20px;
+    margin-top: 12px;
+    box-shadow: 
+        0 4px 20px rgba(0, 122, 255, 0.1),
+        0 0 0 1px rgba(255, 255, 255, 0.5) inset !important;
+}
+
+.preview-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--apple-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+}
+
+.preview-path {
+    font-size: 14px;
+    color: var(--apple-text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.preview-path .preview-novo {
+    background: linear-gradient(135deg, 
+        rgba(0, 122, 255, 0.8), 
+        rgba(52, 199, 89, 0.8)) !important;
+    backdrop-filter: blur(20px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.4) !important;
+    color: white;
+    padding: 6px 14px;
+    border-radius: 10px;
+    font-weight: 600;
+    animation: previewPulse 2s ease infinite;
+    box-shadow: 
+        0 4px 15px rgba(0, 122, 255, 0.4),
+        0 0 0 1px rgba(255, 255, 255, 0.3) inset !important;
+}
+
+/* Modal Footer */
+#nova-pasta-modal .modal-footer {
+    background: rgba(255, 255, 255, 0.2) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.3) !important;
+    padding: 20px 28px !important;
+    border-radius: 0 0 24px 24px !important;
+    display: flex !important;
+    gap: 12px !important;
+    justify-content: flex-end !important;
+}
+
+@keyframes previewPulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 
+            0 4px 15px rgba(0, 122, 255, 0.4),
+            0 0 0 1px rgba(255, 255, 255, 0.3) inset;
+    }
+    50% {
+        transform: scale(1.05);
+        box-shadow: 
+            0 6px 25px rgba(0, 122, 255, 0.6),
+            0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+    }
+}
+
+/* Modal Footer - Estilo Vidro */
+#nova-pasta-modal .modal-footer {
+    background: rgba(255, 255, 255, 0.2) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.3) !important;
+    padding: 20px 28px !important;
+    border-radius: 0 0 24px 24px !important;
+    display: flex !important;
+    gap: 12px !important;
+    justify-content: flex-end !important;
+}
+
+/* Garantir que todos os elementos tenham transições suaves */
+* {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Exceções para animações */
+button, .btn-toolbar, .toolbar-btn, .grid-item, .list-table tbody tr,
+.details-item, .tree-item, .address-item {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}

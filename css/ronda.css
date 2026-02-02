@@ -1,0 +1,732 @@
+/* ============================================
+   SISTEMA DE RONDAS - DESIGN GLASS MORPHISM
+   Design extremamente bonito em vidro
+   ============================================ */
+
+:root {
+    --accent-blue: #007aff;
+    --accent-green: #2ecc71;
+    --ronda-glass-bg: rgba(255, 255, 255, 0.35);
+    --ronda-glass-border: rgba(0, 122, 255, 0.15);
+    --ronda-glass-shadow: 0 8px 32px 0 rgba(0, 122, 255, 0.12);
+    --ronda-blur: blur(20px) saturate(180%);
+    --ronda-primary: var(--accent-blue);
+    --ronda-success: var(--accent-green);
+    --ronda-warning: #ff9500;
+    --ronda-danger: #ff3b30;
+    --ronda-text: #1d1d1f;
+    --ronda-text-secondary: #6e6e73;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: linear-gradient(160deg, #e8f4fd 0%, #e3f2fd 40%, #e8f5e9 100%);
+    min-height: 100vh;
+    padding: 0;
+    margin: 0;
+    color: var(--ronda-text);
+    overflow-x: hidden;
+}
+
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(180deg, rgba(0, 122, 255, 0.04) 0%, rgba(46, 204, 113, 0.04) 100%);
+    backdrop-filter: blur(0);
+    -webkit-backdrop-filter: blur(0);
+    z-index: 0;
+    pointer-events: none;
+}
+
+body > * {
+    position: relative;
+    z-index: 1;
+}
+
+/* Barra Voltar (não sai do site) */
+.ronda-topbar {
+    position: sticky;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    padding: 12px 24px;
+    background-color: var(--ronda-glass-bg);
+    background-image: linear-gradient(90deg, var(--accent-blue) 0%, var(--accent-green) 100%);
+    background-size: 100% 3px;
+    background-repeat: no-repeat;
+    background-position: top;
+    backdrop-filter: var(--ronda-blur);
+    -webkit-backdrop-filter: var(--ronda-blur);
+    border-bottom: 1px solid var(--ronda-glass-border);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+.ronda-btn-voltar {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    background: rgba(255, 255, 255, 0.5);
+    border: 1px solid var(--ronda-glass-border);
+    border-radius: 12px;
+    color: var(--accent-blue);
+    font-weight: 600;
+    font-size: 15px;
+    text-decoration: none;
+    transition: all 0.25s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.ronda-btn-voltar:hover {
+    background: rgba(255, 255, 255, 0.9);
+    transform: translateX(-2px);
+    box-shadow: 0 4px 16px rgba(0, 122, 255, 0.2);
+    color: var(--accent-blue);
+}
+
+.ronda-btn-voltar i {
+    font-size: 14px;
+}
+
+/* Menu Hambúrguer */
+.hamburger-menu-container {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 1000;
+}
+
+.hamburger-btn {
+    width: 50px;
+    height: 50px;
+    background: var(--ronda-glass-bg);
+    backdrop-filter: var(--ronda-blur);
+    -webkit-backdrop-filter: var(--ronda-blur);
+    border: 1px solid var(--ronda-glass-border);
+    border-radius: 14px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    padding: 10px;
+    transition: all 0.3s ease;
+    box-shadow: var(--ronda-glass-shadow);
+}
+
+.hamburger-btn:hover {
+    background: rgba(255, 255, 255, 0.4);
+    transform: scale(1.05);
+}
+
+.hamburger-btn span {
+    width: 22px;
+    height: 2px;
+    background: var(--ronda-text);
+    border-radius: 2px;
+    transition: all 0.3s ease;
+}
+
+.hamburger-btn.active span:nth-child(1) {
+    transform: rotate(45deg) translate(6px, 6px);
+}
+
+.hamburger-btn.active span:nth-child(2) {
+    opacity: 0;
+}
+
+.hamburger-btn.active span:nth-child(3) {
+    transform: rotate(-45deg) translate(6px, -6px);
+}
+
+.hamburger-menu {
+    position: absolute;
+    top: 60px;
+    left: 0;
+    background: var(--ronda-glass-bg);
+    backdrop-filter: var(--ronda-blur);
+    -webkit-backdrop-filter: var(--ronda-blur);
+    border: 1px solid var(--ronda-glass-border);
+    border-radius: 20px;
+    padding: 12px;
+    min-width: 280px;
+    box-shadow: var(--ronda-glass-shadow);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px) scale(0.95);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hamburger-menu.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0) scale(1);
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-radius: 10px;
+    text-decoration: none;
+    color: var(--ronda-text);
+    font-size: 15px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.menu-item:hover {
+    background: rgba(0, 122, 255, 0.1);
+    color: var(--ronda-primary);
+}
+
+.menu-item i {
+    width: 20px;
+    text-align: center;
+    font-size: 16px;
+}
+
+/* Container Principal */
+.ronda-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 80px 20px 40px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Header */
+.ronda-header {
+    background: var(--ronda-glass-bg);
+    backdrop-filter: var(--ronda-blur);
+    -webkit-backdrop-filter: var(--ronda-blur);
+    border: 1px solid var(--ronda-glass-border);
+    border-radius: 24px;
+    padding: 30px 40px;
+    margin-bottom: 30px;
+    box-shadow: var(--ronda-glass-shadow);
+    text-align: center;
+}
+
+.ronda-header h1 {
+    font-size: 42px;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--accent-blue), #5AC8FA, var(--accent-green));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 10px;
+    letter-spacing: -1px;
+}
+
+.ronda-header p {
+    color: var(--ronda-text-secondary);
+    font-size: 16px;
+}
+
+/* Formulário */
+.ronda-form {
+    background: var(--ronda-glass-bg);
+    backdrop-filter: var(--ronda-blur);
+    -webkit-backdrop-filter: var(--ronda-blur);
+    border: 1px solid var(--ronda-glass-border);
+    border-radius: 24px;
+    padding: 40px;
+    box-shadow: var(--ronda-glass-shadow);
+    margin-bottom: 30px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.ronda-form-step {
+    display: none;
+    animation: fadeIn 0.4s ease;
+}
+
+.ronda-form-step.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.ronda-step-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.ronda-step-number {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-green));
+    color: white;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    box-shadow: 0 8px 20px rgba(0, 122, 255, 0.35);
+}
+
+.ronda-step-header h3 {
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    color: var(--ronda-text);
+}
+
+.ronda-step-header p {
+    color: var(--ronda-text-secondary);
+    font-size: 16px;
+}
+
+/* Grid de Formulário */
+.ronda-form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 24px;
+    margin-bottom: 30px;
+}
+
+.ronda-form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.ronda-form-group label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ronda-text);
+    margin-bottom: 10px;
+}
+
+.ronda-form-group label i {
+    color: var(--accent-blue);
+    font-size: 16px;
+}
+
+.ronda-form-control {
+    width: 100%;
+    padding: 14px 18px;
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 12px;
+    font-size: 15px;
+    color: var(--ronda-text);
+    transition: all 0.3s ease;
+    font-family: inherit;
+}
+
+.ronda-form-control:focus {
+    outline: none;
+    background: rgba(255, 255, 255, 0.95);
+    border-color: var(--accent-blue);
+    box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.12);
+}
+
+.ronda-form-control::placeholder {
+    color: var(--ronda-text-secondary);
+}
+
+/* Status Options */
+.ronda-status-options {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-top: 10px;
+}
+
+.ronda-status-option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(10px);
+    border: 2px solid transparent;
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.ronda-status-option:hover {
+    background: rgba(255, 255, 255, 0.7);
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.ronda-status-option input[type="radio"] {
+    display: none;
+}
+
+.ronda-status-option input[type="radio"]:checked + .ronda-status-icon {
+    transform: scale(1.1);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+.ronda-status-option input[type="radio"]:checked ~ .ronda-status-text {
+    color: var(--ronda-text);
+    font-weight: 600;
+}
+
+.ronda-status-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 24px;
+    transition: all 0.3s ease;
+}
+
+.ronda-status-text {
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.ronda-status-text strong {
+    display: block;
+    font-size: 16px;
+    margin-bottom: 4px;
+}
+
+.ronda-status-text small {
+    display: block;
+    font-size: 12px;
+    color: var(--ronda-text-secondary);
+}
+
+/* Checklist */
+.checklist-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    margin-bottom: 30px;
+}
+
+.glass-card {
+    background: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 20px;
+    padding: 28px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.glass-card:hover {
+    background: rgba(255, 255, 255, 0.5);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+
+.glass-card h3 {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.txt-green {
+    color: #34c759;
+    border-left: 4px solid #34c759;
+    padding-left: 12px;
+}
+
+.txt-orange {
+    color: #ff9500;
+    border-left: 4px solid #ff9500;
+    padding-left: 12px;
+}
+
+.ios-check {
+    display: flex;
+    align-items: center;
+    padding: 14px;
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 12px;
+    margin-bottom: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.ios-check:hover {
+    background: rgba(255, 255, 255, 0.8);
+    transform: translateX(4px);
+}
+
+.ios-check input[type="checkbox"] {
+    width: 22px;
+    height: 22px;
+    margin-right: 12px;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    background: rgba(255, 255, 255, 0.8);
+    border: 2px solid #d1d5db;
+    border-radius: 6px;
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.ios-check input[type="checkbox"]:checked {
+    background: #34c759;
+    border-color: #34c759;
+}
+
+.ios-check input[type="checkbox"]:checked::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+/* Textarea */
+.ronda-textarea {
+    width: 100%;
+    min-height: 250px;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 16px;
+    font-size: 15px;
+    font-family: inherit;
+    color: var(--ronda-text);
+    resize: vertical;
+    transition: all 0.3s ease;
+}
+
+.ronda-textarea:focus {
+    outline: none;
+    background: rgba(255, 255, 255, 0.95);
+    border-color: var(--accent-blue);
+    box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.12);
+}
+
+.ronda-textarea::placeholder {
+    color: var(--ronda-text-secondary);
+}
+
+.title-gradient {
+    font-weight: 700;
+    font-size: 24px;
+    margin-bottom: 20px;
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-green));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.ronda-form-help {
+    margin-top: 12px;
+    font-size: 13px;
+    color: var(--ronda-text-secondary);
+    text-align: right;
+}
+
+/* Navegação do Formulário */
+.ronda-form-navigation {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    margin-top: 40px;
+    padding-top: 30px;
+    border-top: 1px solid rgba(255, 255, 255, 0.3);
+    flex-wrap: wrap;
+}
+
+.ronda-btn {
+    padding: 14px 28px;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.ronda-btn-primary {
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-green));
+    color: white;
+    box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3);
+}
+
+.ronda-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 122, 255, 0.4);
+}
+
+.ronda-btn-secondary {
+    background: rgba(255, 255, 255, 0.6);
+    color: var(--ronda-text);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.ronda-btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.8);
+    transform: translateY(-2px);
+}
+
+.ronda-btn-success {
+    background: linear-gradient(135deg, var(--ronda-success), #30d158);
+    color: white;
+    box-shadow: 0 4px 15px rgba(52, 199, 89, 0.3);
+}
+
+.ronda-btn-success:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(52, 199, 89, 0.4);
+}
+
+.ronda-step-indicator {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    min-width: 120px;
+}
+
+.ronda-step-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.4);
+    transition: all 0.3s ease;
+}
+
+.ronda-step-dot.active {
+    background: var(--ronda-primary);
+    width: 32px;
+    border-radius: 6px;
+}
+
+/* Resumo */
+.ronda-resumo {
+    background: rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 20px;
+    padding: 30px;
+    margin-bottom: 30px;
+}
+
+.ronda-resumo h4 {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    color: var(--ronda-text);
+}
+
+.ronda-resumo-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.ronda-resumo-item:last-child {
+    border-bottom: none;
+}
+
+.ronda-resumo-item strong {
+    color: var(--ronda-text);
+}
+
+.ronda-resumo-item span {
+    color: var(--ronda-text-secondary);
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+    .ronda-form-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .checklist-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .ronda-status-options {
+        grid-template-columns: 1fr;
+    }
+    
+    .ronda-form-navigation {
+        flex-direction: column;
+        gap: 16px;
+        align-items: stretch;
+    }
+    
+    .ronda-step-indicator {
+        order: 2;
+        flex: none;
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .ronda-btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .ronda-header {
+        padding: 24px 20px;
+    }
+    
+    .ronda-header h1 {
+        font-size: 32px;
+    }
+    
+    .ronda-form {
+        padding: 24px 20px;
+    }
+    
+    .ronda-container {
+        padding: 80px 15px 30px;
+    }
+}
+
+.hidden { display: none !important; }

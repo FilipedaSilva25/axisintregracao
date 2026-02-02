@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<!--
+  REGISTRO DE CHAMADOS (MERCADO LIVRE) - AXIS
+  Página 100% completa. Código blindado.
+  Referência: docs/REGISTRO_CHAMADOS_REFERENCIA.md
+  Não alterar sem documentar.
+-->
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Chamados (Mercado Livre) | AXIS</title>
+    <link rel="stylesheet" href="../css/registro_chamados.css">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="registro-chamados-page">
+    <!-- Top bar -->
+    <header class="rc-top-bar">
+        <h1>REGISTRO DE CHAMADOS (MERCADO LIVRE)</h1>
+        <div class="rc-top-bar-actions">
+            <button type="button" class="rc-theme-toggle" id="rc-theme-toggle" title="Alternar modo escuro" aria-label="Alternar modo escuro">
+                <i class="fas fa-moon" aria-hidden="true"></i>
+            </button>
+            <a href="../index.html#page-home" class="rc-back-btn">
+                <span>Voltar ao Dashboard</span>
+            </a>
+        </div>
+    </header>
+
+    <main class="rc-main">
+        <!-- Painel esquerdo - Entrada -->
+        <section class="rc-glass-card">
+            <h2 class="rc-form-title">
+                <span class="rc-title-green">REGISTRO</span>
+                <span class="rc-title-dark"> DE CHAMADO</span>
+            </h2>
+            <form id="rc-form">
+                <div class="rc-field">
+                    <label for="rc-chave">NÚMERO DE CHAMADO</label>
+                    <input type="text" id="rc-chave" placeholder="IS-910791" maxlength="9" required>
+                </div>
+                <div class="rc-field rc-select-glass-wrap">
+                    <label for="rc-status">STATUS</label>
+                    <div class="rc-select-glass" data-select-id="rc-status">
+                        <select id="rc-status" required class="rc-select-native" aria-hidden="true">
+                            <option value="">Selecione o status</option>
+                            <option value="fechado">Fechado</option>
+                            <option value="aberto">Aberto</option>
+                            <option value="em-andamento">Em Andamento</option>
+                        </select>
+                        <button type="button" class="rc-select-glass-trigger" aria-expanded="false" aria-haspopup="listbox" id="rc-status-trigger">
+                            <span class="rc-select-glass-value">Selecione o status</span>
+                            <i class="fas fa-chevron-down rc-select-glass-chevron"></i>
+                        </button>
+                        <div class="rc-select-glass-dropdown" role="listbox" id="rc-status-dropdown"></div>
+                    </div>
+                </div>
+                <div class="rc-field rc-tipo-tags-wrap">
+                    <label>TIPO DE ATIVIDADE</label>
+                    <div class="rc-tipo-tags-field" id="rc-tipo-tags-field">
+                        <button type="button" class="rc-tipo-tags-trigger" id="rc-tipo-tags-trigger" aria-expanded="false" aria-haspopup="listbox">
+                            <div class="rc-tipo-tags-trigger-content">
+                                <span class="rc-tipo-tags-placeholder" id="rc-tipo-placeholder">Selecione o Tipo de Atividade</span>
+                                <div class="rc-tipo-tags-selected" id="rc-tipo-tags-selected"></div>
+                            </div>
+                            <i class="fas fa-chevron-down rc-tipo-tags-chevron" aria-hidden="true"></i>
+                        </button>
+                        <div class="rc-tipo-tags-dropdown" id="rc-tipo-tags-dropdown" role="listbox"></div>
+                    </div>
+                    <input type="hidden" id="rc-tipos-json" name="tipos" value="[]">
+                </div>
+                <div class="rc-field">
+                    <label for="rc-obs">OBSERVAÇÃO</label>
+                    <textarea id="rc-obs" placeholder="Breve descrição ou contexto..."></textarea>
+                </div>
+                <button type="submit" class="rc-btn-register">
+                    REGISTRAR CHAMADO
+                </button>
+            </form>
+            <!-- Gráficos abaixo do formulário -->
+            <div class="rc-charts-wrap">
+                <div class="rc-chart-card">
+                    <h3 class="rc-chart-title">CHAMADOS POR STATUS</h3>
+                    <div class="rc-chart-container">
+                        <canvas id="rc-chart-status" width="200" height="200"></canvas>
+                    </div>
+                </div>
+                <div class="rc-chart-card">
+                    <h3 class="rc-chart-title">CHAMADOS POR TIPO</h3>
+                    <div class="rc-chart-container">
+                        <canvas id="rc-chart-tipo" width="200" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Painel direito - Saída / Lista -->
+        <section class="rc-glass-card">
+            <div class="rc-table-header">
+                <div class="rc-table-header-row1">
+                    <div>
+                        <h2 class="rc-table-title">REGISTRO DE CHAMADOS (MERCADO LIVRE)</h2>
+                        <span class="rc-count-badge" id="rc-count">0 chamados</span>
+                    </div>
+                    <div class="rc-filters">
+                    <div class="rc-search-wrap">
+                        <input type="search" id="rc-search" placeholder="Buscar chave ou obs." aria-label="Pesquisar">
+                    </div>
+                    <button type="button" class="rc-filter-btn active" data-filter="todos">Todos</button>
+                    <button type="button" class="rc-filter-btn" data-filter="fechado">Fechado</button>
+                    <button type="button" class="rc-filter-btn" data-filter="aberto">Aberto</button>
+                    <button type="button" class="rc-filter-btn" data-filter="em-andamento">Em Andamento</button>
+                    <button type="button" class="rc-filter-btn" id="rc-btn-lixeira" title="Lixeira (recuperar excluídos)">
+                        <i class="fas fa-trash-alt"></i> Lixeira
+                    </button>
+                    <div class="rc-period-wrap">
+                        <button type="button" class="rc-btn-period" id="rc-btn-period" title="Filtrar por período">
+                            <i class="fas fa-calendar-alt"></i> Período
+                        </button>
+                        <div class="rc-period-dropdown" id="rc-period-dropdown">
+                            <div class="rc-period-dropdown-inner">
+                                <label for="rc-ano" class="rc-period-label">Ano</label>
+                                <select id="rc-ano" class="rc-period-select" aria-label="Ano"></select>
+                                <label for="rc-mes" class="rc-period-label">Mês</label>
+                                <select id="rc-mes" class="rc-period-select" aria-label="Mês"></select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="rc-export-wrap">
+                        <button type="button" class="rc-btn-export" id="rc-btn-export" title="Exportar">
+                            <i class="fas fa-download"></i> Exportar
+                        </button>
+                        <div class="rc-export-dropdown" id="rc-export-dropdown">
+                            <button type="button" class="rc-export-option" data-format="pdf"><i class="fas fa-file-pdf"></i> PDF</button>
+                            <button type="button" class="rc-export-option" data-format="excel"><i class="fas fa-file-excel"></i> EXCEL</button>
+                            <button type="button" class="rc-export-option" data-format="csv"><i class="fas fa-file-csv"></i> CSV</button>
+                            <button type="button" class="rc-export-option" data-format="google"><i class="fas fa-table"></i> GOOGLE PLANILHAS</button>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+            </div>
+            <div class="rc-table-wrap">
+                <table class="rc-table" id="rc-table">
+                    <thead>
+                        <tr>
+                            <th>DATA</th>
+                            <th>IS DO CHAMADO</th>
+                            <th>STATUS</th>
+                            <th>TIPO DE ATIVIDADE</th>
+                            <th>OBSERVAÇÃO</th>
+                            <th>AÇÕES</th>
+                        </tr>
+                    </thead>
+                    <tbody id="rc-tbody">
+                    </tbody>
+                </table>
+            </div>
+            <div class="rc-empty" id="rc-empty" style="display: none;">
+                Nenhum chamado registrado. Use o painel ao lado para registrar.
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal de confirmação de exclusão (vidro, estilo Apple) -->
+    <div class="rc-modal-overlay" id="rc-modal-delete-overlay" role="dialog" aria-modal="true" aria-labelledby="rc-modal-delete-title" style="display: none;">
+        <div class="rc-modal-glass">
+            <div class="rc-modal-icon rc-modal-icon-danger">
+                <i class="fas fa-trash-alt"></i>
+            </div>
+            <h3 class="rc-modal-title" id="rc-modal-delete-title">Excluir este registro?</h3>
+            <p class="rc-modal-text">O registro será enviado para a lixeira e poderá ser recuperado em até 30 dias.</p>
+            <div class="rc-modal-actions">
+                <button type="button" class="rc-modal-btn rc-modal-btn-cancel" id="rc-modal-delete-cancel">Cancelar</button>
+                <button type="button" class="rc-modal-btn rc-modal-btn-danger" id="rc-modal-delete-confirm">
+                    <i class="fas fa-trash-alt"></i> Excluir
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de edição -->
+    <div class="rc-modal-overlay" id="rc-modal-edit-overlay" role="dialog" aria-modal="true" aria-labelledby="rc-modal-edit-title" style="display: none;">
+        <div class="rc-modal-glass rc-modal-edit">
+            <h3 class="rc-modal-title" id="rc-modal-edit-title">Editar chamado</h3>
+            <form id="rc-form-edit">
+                <input type="hidden" id="rc-edit-id">
+                <div class="rc-field">
+                    <label for="rc-edit-chave">NÚMERO DE CHAMADO</label>
+                    <input type="text" id="rc-edit-chave" placeholder="IS-910791" maxlength="9" required>
+                </div>
+                <div class="rc-field rc-select-glass-wrap">
+                    <label for="rc-edit-status">STATUS</label>
+                    <div class="rc-select-glass" data-select-id="rc-edit-status">
+                        <select id="rc-edit-status" required class="rc-select-native" aria-hidden="true">
+                            <option value="fechado">Fechado</option>
+                            <option value="aberto">Aberto</option>
+                            <option value="em-andamento">Em Andamento</option>
+                        </select>
+                        <button type="button" class="rc-select-glass-trigger" aria-expanded="false" aria-haspopup="listbox">
+                            <span class="rc-select-glass-value">Fechado</span>
+                            <i class="fas fa-chevron-down rc-select-glass-chevron"></i>
+                        </button>
+                        <div class="rc-select-glass-dropdown" role="listbox"></div>
+                    </div>
+                </div>
+                <div class="rc-field rc-tipo-tags-wrap">
+                    <label>TIPO DE ATIVIDADE</label>
+                    <div class="rc-tipo-tags-field" id="rc-edit-tipo-tags-field">
+                        <button type="button" class="rc-tipo-tags-trigger" id="rc-edit-tipo-tags-trigger" aria-expanded="false" aria-haspopup="listbox">
+                            <div class="rc-tipo-tags-trigger-content">
+                                <span class="rc-tipo-tags-placeholder" id="rc-edit-tipo-placeholder">Selecione o Tipo de Atividade</span>
+                                <div class="rc-tipo-tags-selected" id="rc-edit-tipo-tags-selected"></div>
+                            </div>
+                            <i class="fas fa-chevron-down rc-tipo-tags-chevron" aria-hidden="true"></i>
+                        </button>
+                        <div class="rc-tipo-tags-dropdown" id="rc-edit-tipo-tags-dropdown" role="listbox"></div>
+                    </div>
+                    <input type="hidden" id="rc-edit-tipos-json" name="edit-tipos" value="[]">
+                </div>
+                <div class="rc-field">
+                    <label for="rc-edit-obs">OBSERVAÇÃO</label>
+                    <textarea id="rc-edit-obs"></textarea>
+                </div>
+                <div class="rc-modal-actions">
+                    <button type="button" class="rc-modal-btn rc-modal-btn-cancel" id="rc-modal-edit-cancel">Cancelar</button>
+                    <button type="submit" class="rc-modal-btn rc-modal-btn-primary">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Lixeira -->
+    <div class="rc-modal-overlay" id="rc-modal-lixeira-overlay" role="dialog" aria-modal="true" aria-labelledby="rc-modal-lixeira-title" style="display: none;">
+        <div class="rc-modal-glass rc-modal-lixeira">
+            <h3 class="rc-modal-title" id="rc-modal-lixeira-title"><i class="fas fa-trash-alt"></i> Lixeira</h3>
+            <p class="rc-modal-text">Itens excluídos são removidos automaticamente após 30 dias.</p>
+            <div class="rc-lixeira-list" id="rc-lixeira-list"></div>
+            <div class="rc-modal-actions">
+                <button type="button" class="rc-modal-btn rc-modal-btn-cancel" id="rc-modal-lixeira-close">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Info (vidro estilo Apple) - Google Planilhas e mensagens -->
+    <div class="rc-modal-overlay rc-modal-info-overlay" id="rc-modal-info-overlay" role="dialog" aria-modal="true" style="display: none;">
+        <div class="rc-modal-glass rc-modal-info-glass">
+            <div class="rc-modal-info-icon">
+                <i class="fas fa-file-csv"></i>
+            </div>
+            <h3 class="rc-modal-info-title" id="rc-modal-info-title">Arquivo baixado</h3>
+            <p class="rc-modal-info-text" id="rc-modal-info-text"></p>
+            <div class="rc-modal-actions">
+                <button type="button" class="rc-modal-btn rc-modal-btn-primary" id="rc-modal-info-ok">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/registro_chamados.js"></script>
+</body>
+</html>

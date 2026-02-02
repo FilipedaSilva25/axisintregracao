@@ -1,0 +1,20 @@
+{
+  "name": "projeto-vida",
+  "version": "1.0.0",
+  "description": "Sistema AXIS - Gestão de Inventário de Impressoras Zebra",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "launch": "start.bat",
+    "abrir": "start.bat",
+    "organizar-manutencoes": "node scripts/organizar-manutencoes-por-pasta.js"
+  },
+  "keywords": [
+    "axis",
+    "zebra",
+    "inventario"
+  ],
+  "author": "",
+  "license": "ISC"
+}
