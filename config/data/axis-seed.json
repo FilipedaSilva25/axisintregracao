@@ -1,0 +1,62 @@
+{
+  "version": "1.0",
+  "description": "Dados de demonstração AXIS - Gestão de Inventário",
+  "users": [
+    {
+      "key": "db_admin_filipe_silva",
+      "data": {
+        "name": "Filipe da Silva",
+        "pass": "123456",
+        "dataCadastro": "2025-01-01T00:00:00.000Z",
+        "perfil": "admin",
+        "ultimoAcesso": null,
+        "inventorio": [
+          {
+            "id": "eq-demo-1",
+            "tag": "ZT411-IMP-001",
+            "modelo": "ZT411",
+            "ip": "10.15.20.101",
+            "local": "Almoxarifado Principal",
+            "patrimonio": "123456789",
+            "status": "ativo",
+            "firmware": "V72.20.15Z",
+            "ribbon": 85,
+            "ink": null,
+            "dataCadastro": "2025-01-15T10:00:00.000Z"
+          },
+          {
+            "id": "eq-demo-2",
+            "tag": "ZD421-DSK-002",
+            "modelo": "ZD421",
+            "ip": "10.15.21.102",
+            "local": "Expedição",
+            "patrimonio": "123456790",
+            "status": "ativo",
+            "firmware": "V65.21.10Z",
+            "ribbon": 72,
+            "ink": null,
+            "dataCadastro": "2025-01-15T10:00:00.000Z"
+          },
+          {
+            "id": "eq-demo-3",
+            "tag": "ZQ630-PAG-003",
+            "modelo": "ZQ630",
+            "ip": "10.15.22.103",
+            "local": "Recepção",
+            "patrimonio": "123456791",
+            "status": "ativo",
+            "firmware": "V82.15.20Z",
+            "ribbon": null,
+            "ink": 60,
+            "dataCadastro": "2025-01-15T10:00:00.000Z"
+          }
+        ],
+        "contratos": []
+      }
+    }
+  ],
+  "login": {
+    "usuario": "admin filipe silva",
+    "senha": "123456"
+  }
+}
