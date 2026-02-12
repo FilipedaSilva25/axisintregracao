@@ -155,6 +155,17 @@ body {
 .mp-preview-body { padding: 20px; max-height: calc(90vh - 70px); overflow: auto; }
 .mp-preview-body iframe { width: 100%; height: 560px; border: none; border-radius: 10px; }
 
+.mp-preview-content h4 { margin: 16px 0 8px 0; font-size: 14px; color: var(--axis-text, #1d1d1f); }
+.mp-preview-content h4:first-child { margin-top: 0; }
+.mp-preview-table { width: 100%; border-collapse: collapse; margin-bottom: 16px; font-size: 13px; }
+.mp-preview-table td { padding: 8px 12px; border: 1px solid rgba(0,0,0,0.08); }
+.mp-preview-table tr td:first-child { font-weight: 600; width: 140px; background: rgba(0,0,0,0.03); }
+.mp-preview-checklist { list-style: none; margin: 0; padding: 0; }
+.mp-preview-grupo { font-weight: 600; margin-top: 12px; color: var(--axis-green, #28a745); }
+.mp-preview-item { padding: 4px 0; }
+.mp-preview-item.checked { color: var(--axis-green, #28a745); }
+.mp-preview-obs { white-space: pre-wrap; margin: 0; padding: 12px; background: rgba(0,0,0,0.04); border-radius: 8px; }
+
 /* Export dropdown */
 .mp-export-dropdown { position: relative; }
 .mp-export-menu {

@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bloco de Notas Apple | AXIS Intelligence</title>
-    <link rel="stylesheet" href="bloco_de_notas_apple.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>AXIS | BLOCOS DE NOTAS</title>
+    <link rel="stylesheet" href="../css/bloco_de_notas_apple.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <!-- Bibliotecas Externas -->
@@ -28,9 +28,11 @@
             <h1 class="page-title">AXIS NOTAS</h1>
         </div>
         <div class="header-right">
-            <button class="btn-new-note-header" id="btn-new-note-header" title="Nova Nota (Ctrl+N)">
-                <i class="fas fa-plus"></i>
-                <span>Nova Nota</span>
+            <button class="btn-theme-header" id="btn-theme-toggle-header" title="Alternar tema (claro/escuro)" type="button" aria-label="Alternar tema">
+                <i class="fas fa-moon"></i>
+            </button>
+            <button class="btn-new-note-header" id="btn-new-note-header" title="Nova Nota (Ctrl+N)" onclick="typeof createNewNote==='function'&&createNewNote(); return false;">
+                <span>NOVA NOTA</span>
             </button>
         </div>
         <div class="hamburger-menu" id="hamburger-menu">
@@ -41,7 +43,7 @@
         </div>
     </div>
 
-    <!-- Toolbar Estilo Google Docs -->
+    <!-- Toolbar Estilo Google Docs (centralizada, só aparece com nota aberta) -->
     <div class="google-docs-toolbar" id="google-docs-toolbar">
         <div class="toolbar-left-section">
             <!-- Menus -->
@@ -382,6 +384,22 @@
             <button class="toolbar-btn" id="toolbar-clear-format" title="Limpar formatação">
                 <i class="fas fa-remove-format"></i>
             </button>
+            
+            <div class="toolbar-divider"></div>
+            
+            <!-- Opções do antigo menu pequeno: Tag, Preview, Vincular Notas, Versões, Comentários -->
+            <button class="toolbar-btn" id="toolbar-add-tag" title="Adicionar Tag">
+                <i class="fas fa-tag"></i>
+            </button>
+            <button class="toolbar-btn" id="toolbar-markdown-preview" title="Preview Markdown">
+                <i class="fas fa-eye"></i>
+            </button>
+            <button class="toolbar-btn" id="toolbar-link-notes" title="Vincular Notas">
+                <i class="fas fa-link"></i>
+            </button>
+            <button class="toolbar-btn" id="toolbar-versions" title="Versões">
+                <i class="fas fa-history"></i>
+            </button>
         </div>
     </div>
 
@@ -393,11 +411,11 @@
                     <i class="fas fa-folder"></i>
                     Pastas
                 </h2>
-                <div class="sidebar-header-actions">
-                    <button class="btn-search-icon" id="btn-search-notes" title="Buscar notas" onclick="toggleSearch()">
+                <div class="sidebar-header-actions-row">
+                    <button class="btn-search-icon" id="btn-search-notes" title="Buscar notas" onclick="typeof toggleSearch==='function'&&toggleSearch(); return false;">
                         <i class="fas fa-search"></i>
                     </button>
-                    <button class="btn-new-folder" id="btn-new-folder" title="Nova Pasta">
+                    <button class="btn-new-folder" id="btn-new-folder" title="Nova Pasta" onclick="typeof showModal==='function'&&showModal('modal-new-folder'); return false;">
                         <i class="fas fa-plus"></i>
                     </button>
                 </div>
@@ -413,7 +431,7 @@
 
             <nav class="folder-tree" id="folder-tree">
                 <div class="folder-item root-folder" data-folder-id="root">
-                    <div class="folder-content" onclick="selectFolder('root', this)">
+                    <div class="folder-content" onclick="typeof selectFolder==='function'&&selectFolder('root', this); return false;">
                         <i class="fas fa-folder-open folder-icon"></i>
                         <span class="folder-name">Todas as Notas</span>
                     </div>
@@ -423,17 +441,20 @@
             </nav>
 
             <div class="sidebar-footer">
-                <button class="btn-favorites-icon" onclick="showFavorites()" title="Favoritos">
+                <button class="btn-favorites-icon" onclick="typeof showFavorites==='function'&&showFavorites(); return false;" title="Favoritos">
                     <i class="fas fa-star"></i>
                 </button>
-                <button class="btn-pinned" onclick="showPinned()" title="Fixadas">
+                <button class="btn-pinned" onclick="typeof showPinned==='function'&&showPinned(); return false;" title="Fixadas">
                     <i class="fas fa-thumbtack"></i>
                 </button>
-                <button class="btn-trash" onclick="showTrash()" title="Lixeira">
+                <button class="btn-trash" onclick="typeof showTrash==='function'&&showTrash(); return false;" title="Lixeira">
                     <i class="fas fa-trash-alt"></i>
                 </button>
             </div>
         </aside>
+
+        <!-- Resizer: arrastar para estender/retrair a sidebar -->
+        <div class="sidebar-resizer" id="sidebar-resizer" title="Arrastar para ajustar a largura"></div>
 
         <!-- Área Principal -->
         <main class="notebook-main">
@@ -467,17 +488,17 @@
                 <div class="notes-list-header">
                     <h3 id="current-folder-name">Todas as Notas</h3>
                     <div class="header-actions">
-                        <button class="toolbar-btn" id="btn-advanced-search" title="Busca Avançada">
+                        <button class="toolbar-btn" id="btn-advanced-search" title="Busca Avançada" onclick="typeof showModal==='function'&&showModal('modal-advanced-search'); return false;">
                             <i class="fas fa-filter"></i>
                         </button>
-                        <button class="toolbar-btn" id="btn-voice-search" title="Busca por Voz">
+                        <button class="toolbar-btn" id="btn-voice-search" title="Busca por Voz" onclick="typeof startVoiceSearch==='function'&&startVoiceSearch(); return false;">
                             <i class="fas fa-microphone"></i>
                         </button>
                         <div class="view-toggle">
-                            <button class="view-btn active" data-view="grid" title="Visualização em Grade">
+                            <button class="view-btn active" data-view="grid" title="Visualização em Grade" onclick="typeof setViewMode==='function'&&setViewMode('grid'); return false;">
                                 <i class="fas fa-th"></i>
                             </button>
-                            <button class="view-btn" data-view="list" title="Visualização em Lista">
+                            <button class="view-btn" data-view="list" title="Visualização em Lista" onclick="typeof setViewMode==='function'&&setViewMode('list'); return false;">
                                 <i class="fas fa-list"></i>
                             </button>
                         </div>
@@ -488,21 +509,21 @@
                     <div class="empty-state" id="empty-state">
                         <div class="empty-icon">📝</div>
                         <h3>Nenhuma nota ainda</h3>
-                        <p>Crie sua primeira nota para começar</p>
-                        <button class="btn-primary" onclick="createNewNote()">
-                            <i class="fas fa-plus"></i>
-                            Criar Primeira Nota
-                        </button>
+                        <p>Crie sua primeira nota usando o botão <strong>Nova Nota</strong> no topo.</p>
                     </div>
                 </div>
             </div>
             
-            <!-- Espaço em Branco quando não há nota aberta -->
+            <!-- Espaço em Branco quando não há nota aberta / pasta vazia -->
             <div class="empty-editor-state" id="empty-editor-state">
                 <div class="empty-editor-content">
-                    <div class="empty-editor-icon">✍️</div>
-                    <h2>Selecione uma nota para começar</h2>
-                    <p>Ou crie uma nova nota usando o botão acima</p>
+                    <div class="empty-editor-icon" id="empty-editor-icon">✍️</div>
+                    <h2 id="empty-editor-title">Selecione uma nota para começar</h2>
+                    <p id="empty-editor-subtitle">Ou crie uma nova nota quando quiser</p>
+                    <button type="button" class="btn-apple-primary empty-editor-create-btn" id="empty-editor-create-btn" onclick="typeof createNewNote==='function'&&createNewNote();">
+                        <i class="fas fa-plus"></i>
+                        <span>Criar nota</span>
+                    </button>
                 </div>
             </div>
 
@@ -511,53 +532,97 @@
                 <div class="editor-header">
                     <input type="text" id="note-title" class="note-title-input" placeholder="Título da Nota">
                     <div class="editor-tags" id="editor-tags"></div>
-                    <div class="editor-actions">
-                        <button class="editor-btn" id="btn-add-tag" title="Adicionar Tag">
-                            <i class="fas fa-tag"></i>
+                    <!-- Espaço cinza: menu hambúrguer (abre/fecha todas as opções) + Fechar -->
+                    <div class="editor-header-actions">
+                        <button type="button" class="editor-hamburger-btn" id="editor-toolbar-hamburger" title="Opções de formatação" aria-label="Abrir menu de opções">
+                            <span></span>
+                            <span></span>
+                            <span></span>
                         </button>
-                        <button class="editor-btn" id="btn-markdown-preview" title="Preview Markdown">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                        <button class="editor-btn" id="btn-link-notes" title="Vincular Notas">
-                            <i class="fas fa-link"></i>
-                        </button>
-                        <button class="editor-btn" id="btn-versions" title="Versões">
-                            <i class="fas fa-history"></i>
-                        </button>
-                        <button class="editor-btn" id="btn-comments" title="Comentários">
-                            <i class="fas fa-comment"></i>
-                        </button>
-                        <!-- Botão salvar removido - salvamento automático ativo -->
                         <button class="editor-btn" id="btn-close-editor" title="Fechar (Esc)">
                             <i class="fas fa-times"></i>
                         </button>
                     </div>
                 </div>
 
-                <div class="editor-content">
+                <div class="editor-content" id="editor-content-wrapper">
                     <div class="reading-progress" id="reading-progress"></div>
-                    
-                    
-                    <div class="rich-editor" id="rich-editor" contenteditable="true" spellcheck="true">
-                        <p>Comece a escrever...</p>
+                    <div class="image-layout-toolbar" id="image-layout-toolbar" aria-hidden="true">
+                        <button type="button" class="img-layout-btn" data-layout="block" title="Bloco (centralizado)"><i class="fas fa-align-center"></i> Bloco</button>
+                        <button type="button" class="img-layout-btn" data-layout="right" title="Texto à direita (imagem à esquerda)"><i class="fas fa-align-left"></i> Esquerda</button>
+                        <button type="button" class="img-layout-btn" data-layout="left" title="Texto à esquerda (imagem à direita)"><i class="fas fa-align-right"></i> Direita</button>
+                        <button type="button" class="img-layout-btn" data-layout="caption" title="Legenda abaixo"><i class="fas fa-caption"></i> Legenda</button>
+                    </div>
+                    <div class="editor-writing-area">
+                        <div class="rich-editor-placeholder" id="rich-editor-placeholder" aria-hidden="true">Comece a escrever...</div>
+                        <div class="rich-editor" id="rich-editor" contenteditable="true" spellcheck="true" data-placeholder="Comece a escrever..."><p><br></p></div>
                     </div>
                     <div class="markdown-preview" id="markdown-preview" style="display: none;"></div>
                 </div>
 
                 <div class="editor-footer">
-                    <div class="editor-info">
-                        <span id="word-count">0 palavras</span>
-                        <span id="char-count">0 caracteres</span>
-                        <span id="reading-time">0 min de leitura</span>
-                    </div>
                     <div class="editor-status">
                         <span id="save-status">Salvo</span>
                         <span id="autosave-indicator" class="autosave-indicator"></span>
+                    </div>
+                    <div class="editor-info">
+                        <span id="word-count">0 PALAVRAS</span>
+                        <span class="footer-sep">|</span>
+                        <span id="char-count">0 CARACTERES</span>
+                        <span class="footer-sep">|</span>
+                        <span id="image-count">0 IMAGENS</span>
+                        <span class="footer-sep">|</span>
+                        <span id="reading-time" class="footer-reading-time">0 MIN DE LEITURA</span>
                     </div>
                 </div>
             </div>
         </main>
     </div>
+
+    <!-- Painel de opções: sai do menu hambúrguer (como uma conversa), fica fixo até clicar no hambúrguer de novo -->
+    <aside class="editor-options-panel" id="editor-options-panel" aria-hidden="true">
+        <div class="editor-options-header">
+            <span class="editor-options-title">Opções</span>
+            <button type="button" class="editor-options-close" id="editor-options-close" title="Fechar">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <nav class="editor-options-list" id="editor-options-list">
+            <button type="button" class="editor-option-item" data-action="undo" title="Desfazer"><i class="fas fa-undo"></i><span>Desfazer</span></button>
+            <button type="button" class="editor-option-item" data-action="redo" title="Refazer"><i class="fas fa-redo"></i><span>Refazer</span></button>
+            <button type="button" class="editor-option-item" data-action="print" title="Imprimir"><i class="fas fa-print"></i><span>Imprimir</span></button>
+            <button type="button" class="editor-option-item" data-action="bold" title="Negrito"><i class="fas fa-bold"></i><span>Negrito</span></button>
+            <button type="button" class="editor-option-item" data-action="italic" title="Itálico"><i class="fas fa-italic"></i><span>Itálico</span></button>
+            <button type="button" class="editor-option-item" data-action="underline" title="Sublinhado"><i class="fas fa-underline"></i><span>Sublinhado</span></button>
+            <button type="button" class="editor-option-item" data-action="text-color" title="Cor do texto"><i class="fas fa-palette"></i><span>Cor do texto</span></button>
+            <button type="button" class="editor-option-item" data-action="highlight" title="Marca-texto"><i class="fas fa-highlighter"></i><span>Marca-texto</span></button>
+            <button type="button" class="editor-option-item" data-action="link" title="Inserir link"><i class="fas fa-link"></i><span>Inserir link</span></button>
+            <button type="button" class="editor-option-item" data-action="image" title="Inserir imagem"><i class="fas fa-image"></i><span>Inserir imagem</span></button>
+            <button type="button" class="editor-option-item" data-action="tag" title="Adicionar Tag"><i class="fas fa-tag"></i><span>Tag</span></button>
+            <button type="button" class="editor-option-item" data-action="markdown" title="Preview Markdown"><i class="fas fa-eye"></i><span>Preview Markdown</span></button>
+            <button type="button" class="editor-option-item" data-action="link-notes" title="Vincular Notas"><i class="fas fa-link"></i><span>Vincular Notas</span></button>
+            <button type="button" class="editor-option-item" data-action="versions" title="Versões"><i class="fas fa-history"></i><span>Versões</span></button>
+            <button type="button" class="editor-option-item" data-action="comment" title="Comentários"><i class="fas fa-comment"></i><span>Comentários</span></button>
+            <button type="button" class="editor-option-item" data-action="align-left" title="Alinhar à esquerda"><i class="fas fa-align-left"></i><span>Alinhar à esquerda</span></button>
+            <button type="button" class="editor-option-item" data-action="align-center" title="Centralizar"><i class="fas fa-align-center"></i><span>Centralizar</span></button>
+            <button type="button" class="editor-option-item" data-action="align-right" title="Alinhar à direita"><i class="fas fa-align-right"></i><span>Alinhar à direita</span></button>
+            <button type="button" class="editor-option-item" data-action="list-bullet" title="Lista com marcadores"><i class="fas fa-list-ul"></i><span>Lista com marcadores</span></button>
+            <button type="button" class="editor-option-item" data-action="list-number" title="Lista numerada"><i class="fas fa-list-ol"></i><span>Lista numerada</span></button>
+            <button type="button" class="editor-option-item" data-action="clear-format" title="Limpar formatação"><i class="fas fa-remove-format"></i><span>Limpar formatação</span></button>
+        </nav>
+        <!-- Paleta de cores (cor do texto / marca-texto) -->
+        <div class="editor-options-colors" id="editor-options-colors" style="display: none;">
+            <div class="editor-options-colors-tabs">
+                <button type="button" class="editor-options-color-tab active" data-mode="text">Cor do texto</button>
+                <button type="button" class="editor-options-color-tab" data-mode="highlight">Marca-texto</button>
+            </div>
+            <div class="editor-options-colors-grid" id="editor-options-colors-grid"></div>
+            <div class="editor-options-hex-row">
+                <input type="text" id="editor-options-hex-input" class="editor-options-hex-input" placeholder="#000000" maxlength="7" title="Código da cor (ex: #FF5500)">
+                <button type="button" id="editor-options-hex-apply" class="editor-options-hex-apply">Aplicar</button>
+            </div>
+        </div>
+    </aside>
 
     <!-- Modal de Nova Pasta -->
     <div class="modal" id="modal-new-folder" style="display: none;">
@@ -576,18 +641,49 @@
                 <div class="form-group">
                     <label>Cor da Pasta</label>
                     <div class="folder-colors">
-                        <div class="folder-color-option active" data-color="#007AFF" style="background: #007AFF;"></div>
-                        <div class="folder-color-option" data-color="#34C759" style="background: #34C759;"></div>
-                        <div class="folder-color-option" data-color="#FF9500" style="background: #FF9500;"></div>
-                        <div class="folder-color-option" data-color="#FF3B30" style="background: #FF3B30;"></div>
-                        <div class="folder-color-option" data-color="#AF52DE" style="background: #AF52DE;"></div>
-                        <div class="folder-color-option" data-color="#5AC8FA" style="background: #5AC8FA;"></div>
+                        <div class="folder-color-option active" data-color="#007AFF" style="background: #007AFF;" onclick="typeof selectFolderColor==='function'&&selectFolderColor(this);" title="Azul"></div>
+                        <div class="folder-color-option" data-color="#34C759" style="background: #34C759;" onclick="typeof selectFolderColor==='function'&&selectFolderColor(this);" title="Verde"></div>
+                        <div class="folder-color-option" data-color="#FF9500" style="background: #FF9500;" onclick="typeof selectFolderColor==='function'&&selectFolderColor(this);" title="Laranja"></div>
+                        <div class="folder-color-option" data-color="#FF3B30" style="background: #FF3B30;" onclick="typeof selectFolderColor==='function'&&selectFolderColor(this);" title="Vermelho"></div>
+                        <div class="folder-color-option" data-color="#AF52DE" style="background: #AF52DE;" onclick="typeof selectFolderColor==='function'&&selectFolderColor(this);" title="Roxo"></div>
+                        <div class="folder-color-option" data-color="#5AC8FA" style="background: #5AC8FA;" onclick="typeof selectFolderColor==='function'&&selectFolderColor(this);" title="Azul claro"></div>
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
                 <button class="btn-secondary" onclick="closeModal('modal-new-folder')">Cancelar</button>
                 <button class="btn-primary" onclick="createFolder()">Criar Pasta</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Renomear Pasta/Subpasta (vidro Apple: nome atual + novo nome) -->
+    <div class="modal modal-glass" id="modal-rename-folder" style="display: none;">
+        <div class="modal-content modal-apple modal-rename-folder">
+            <div class="modal-header-apple">
+                <div class="modal-icon-apple"><i class="fas fa-edit"></i></div>
+                <h3>Renomear pasta</h3>
+                <p class="modal-subtitle-apple">Altere o nome da pasta ou subpasta</p>
+                <button type="button" class="modal-close" onclick="closeModal('modal-rename-folder')" aria-label="Fechar">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="rename-folder-id" value="">
+                <div class="form-group">
+                    <label for="rename-folder-current">Nome atual</label>
+                    <input type="text" id="rename-folder-current" class="form-control" readonly placeholder="—">
+                </div>
+                <div class="form-group">
+                    <label for="rename-folder-name">Novo nome</label>
+                    <input type="text" id="rename-folder-name" class="form-control" placeholder="Digite o novo nome" autofocus>
+                </div>
+            </div>
+            <div class="modal-footer modal-footer-apple">
+                <button type="button" class="btn-apple-secondary" onclick="closeModal('modal-rename-folder')">Cancelar</button>
+                <button type="button" class="btn-apple-primary" onclick="typeof confirmRenameFolder==='function'&&confirmRenameFolder();">
+                    <i class="fas fa-check"></i> Confirmar
+                </button>
             </div>
         </div>
     </div>
@@ -629,6 +725,68 @@
             <div class="modal-footer">
                 <button class="btn-secondary" onclick="closeModal('modal-confirm')">Cancelar</button>
                 <button class="btn-primary" id="confirm-ok">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Inserir Link (vidro Apple, bonito e inteligente) -->
+    <div class="modal modal-glass" id="modal-insert-link" style="display: none;">
+        <div class="modal-content modal-apple modal-insert-link">
+            <div class="modal-header-apple">
+                <div class="modal-icon-apple"><i class="fas fa-link"></i></div>
+                <h3>Inserir Link</h3>
+                <p class="modal-subtitle-apple">URL e texto opcional para o link</p>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="insert-link-url">URL *</label>
+                    <input type="url" id="insert-link-url" class="form-control" placeholder="https://exemplo.com">
+                </div>
+                <div class="form-group">
+                    <label for="insert-link-text">Texto do link (opcional)</label>
+                    <input type="text" id="insert-link-text" class="form-control" placeholder="Texto exibido no link">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" onclick="closeModal('modal-insert-link')">Cancelar</button>
+                <button type="button" class="btn-primary" id="btn-insert-link-confirm"><i class="fas fa-link"></i> Inserir</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Inserir Imagem (upload, vidro, bonito) -->
+    <div class="modal modal-glass" id="modal-insert-image" style="display: none;">
+        <div class="modal-content modal-apple modal-insert-image">
+            <div class="modal-header-apple">
+                <div class="modal-icon-apple"><i class="fas fa-image"></i></div>
+                <h3>Inserir Imagem</h3>
+                <p class="modal-subtitle-apple">Envie uma imagem do seu dispositivo</p>
+            </div>
+            <div class="modal-body">
+                <div class="insert-image-zone" id="insert-image-zone">
+                    <input type="file" id="insert-image-file" accept="image/*" hidden>
+                    <div class="insert-image-drop" id="insert-image-drop">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <p>Arraste uma imagem aqui ou clique para selecionar</p>
+                    </div>
+                </div>
+                <div class="insert-image-preview" id="insert-image-preview" style="display: none;">
+                    <img id="insert-image-preview-img" src="" alt="Preview">
+                    <p class="insert-image-filename" id="insert-image-filename"></p>
+                </div>
+                <div class="insert-image-layout" id="insert-image-layout">
+                    <label for="insert-image-pos">Posição da imagem (como no Word)</label>
+                    <select id="insert-image-pos" class="insert-image-pos-select">
+                        <option value="block">Bloco (padrão – centralizado)</option>
+                        <option value="left">Texto à esquerda (imagem à direita)</option>
+                        <option value="right">Texto à direita (imagem à esquerda)</option>
+                        <option value="caption">Legenda abaixo</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" onclick="closeModal('modal-insert-image'); resetInsertImageModal();">Cancelar</button>
+                <button type="button" class="btn-primary" id="btn-insert-image-confirm" disabled><i class="fas fa-image"></i> Inserir na nota</button>
             </div>
         </div>
     </div>
@@ -942,9 +1100,9 @@
     <!-- Toast Container -->
     <div id="toast-container" class="toast-container"></div>
 
-    <script src="bloco_de_notas_apple.js"></script>
-    <script src="bloco_de_notas_apple_fixes.js"></script>
-    <script src="bloco_de_notas_apple_new_functions.js"></script>
+    <script src="../js/bloco_de_notas_apple.js"></script>
+    <script src="../js/bloco_de_notas_apple_fixes.js"></script>
+    <script src="../js/bloco_de_notas_apple_new_functions.js"></script>
     <script>
         // Menu Hambúrguer
         function toggleHamburgerMenu() {

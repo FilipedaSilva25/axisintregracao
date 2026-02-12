@@ -1,6 +1,8 @@
 # Backup – Fim do dia (Projeto Vida / AXIS)
 
-**Já feito hoje:** backup em `backups/Projeto-Vida-BACKUP-*`, commit + tag `backup-fim-do-dia`.  
+**Sessão 11/02/2026:** Status como badge; Bancada e Status com seletores customizados no cadastro; tudo blindado.
+
+**Já feito hoje:** backup em `backups/Projeto-Vida-BACKUP-2026-02-11_*` e em `Downloads\Projeto-Vida-BACKUP-2026-02-11_*`.  
 Para nova cópia, use o script abaixo.
 
 ---
@@ -51,6 +53,14 @@ git checkout -b recuperar-fim-do-dia backup-fim-do-dia
 
 ### 3. O que foi feito hoje (resumo)
 
+- **Inventário – Setores**
+  - Lista completa de setores no filtro e no cadastro (INTERNAL SYSTEMS, LIDERANÇA, MHW, P2M, CHECK-IN, RECIVING, MZ1–MZ3, INVENTÁRIO, CX, RETURNS, PACKING MONO/PTW, SAURON, INSUMOS, DOCAS DE EXPEDIÇÃO, LINHA DE PEIXE 1/2, SORTER, RK, NT RK, QUALIDADE, AQUÁRIO OUTBOUND, ADM, GATE, AMBULATÓRIO INTERNO/EXTERNO, SALA DE EPI, ER, RR, DEPÓSITO DE TREINAMENTO, HV).
+- **Inventário – Modelo ZQ630 PLUS**
+  - "ZQ630" alterado para "ZQ630 PLUS" em todo o projeto.
+- **Inventário – Seletores customizados**
+  - Filtro Modelo e Setor: trigger + lista rolável com destaque azul; apenas um dropdown aberto por vez. Setor no cadastro: mesmo componente.
+- **Blindagem**
+  - `docs/BLINDAGEM_INVENTARIO_FILTROS.md` criado para não perder alterações.
 - **Cadastro de impressora**
   - Avisos removidos (ex.: “Selecione um modelo”).
   - Ao clicar no modelo (ZT411 / ZD421 / ZQ630 PLUS), o prefixo do serial (99J / D6J / XXV) já aparece no campo.
@@ -68,6 +78,17 @@ git checkout -b recuperar-fim-do-dia backup-fim-do-dia
 - **Notas fiscais**
   - Filtros de período e tipo funcionando; menu Exportar na frente dos cards; selects “Este Mês” / “Financeiro” em azul.
   - Relatório gerado ao abrir e ao alterar dados; exportar em PDF, Excel, Google Doc, Planilhas, TXT.
+- **Perfil no Nav (09/02/2026)**
+  - Dropdown do perfil (botão com nome/inicial no header) abre em todas as seções. Dropdown movido para `document.body` ao abrir; blindagem em `docs/BLINDAGEM_PERFIL_NAV.md`.
+- **Inventário – Cards, botões e menu Baixar (09/02/2026)**
+  - Card Impressoras: texto completo sem corte (min-width, sem overflow).
+  - Botões Baixar e Filtrar: setas em SVG (chevron) em vez de ▼.
+  - Menu Baixar: design em vidro fosco com ícones (CSV, Excel, PDF), tema escuro e correção do sumiço ao passar o mouse (padding-bottom no dropdown, margin-top: 0 no menu).
+  - Blindagem em `docs/BLINDAGEM_INVENTARIO_CARDS_BOTOES_MENU.md`.
+- **Inventário – Status como badge; Bancada/Status seletores (11/02/2026)**
+  - Status (EM USO, DEFEITO, BACKUP OPERACIONAL) exibidos como badges estilizados (botão sem ação) na tabela, no passo 3 do cadastro e no modal Ver Detalhes.
+  - Bancada e Status no cadastro: seletores customizados (mesmo design do Setor), dropdown com destaque azul, B01–B200 para Bancada.
+  - Blindagem em `docs/BLINDAGEM_INVENTARIO_STATUS_SELECTORES_CADASTRO.md`.
 
 ---
 
@@ -94,4 +115,4 @@ Servidor em `http://localhost:3006`.
 
 ---
 
-**Última atualização:** fim do dia (backup e blindagem).
+**Última atualização:** 2026-02-11 – Status como badge; Bancada/Status seletores; ver `docs/BLINDAGEM_INVENTARIO_STATUS_SELECTORES_CADASTRO.md`. Para backup físico: `.\scripts\backup-hoje.ps1` ou `.\backup-agora.bat`.

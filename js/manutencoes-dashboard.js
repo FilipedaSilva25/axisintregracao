@@ -192,10 +192,9 @@ function renderizarGrid(manutencoes) {
     const ano = anoSelecionado || '';
     const mes = mesSelecionado?.numero || '';
     grid.innerHTML = manutencoes.map((m) => {
-        const arq = (m.arquivo || '').replace(/'/g, "\\'");
         const id = m.id != null ? String(m.id) : '';
         return `
-        <div class="mp-manut-card" onclick="abrirManutencao('${arq}')" data-id="${esc(id)}" data-ano="${esc(ano)}" data-mes="${esc(mes)}">
+        <div class="mp-manut-card" data-id="${esc(id)}" data-ano="${esc(ano)}" data-mes="${esc(mes)}">
             <div class="mp-manut-header">
                 <span class="mp-manut-title">${esc(m.modelo)} – ${esc(m.serial)}</span>
                 <span class="mp-manut-date">${formatarData(m.data)}</span>
@@ -203,8 +202,8 @@ function renderizarGrid(manutencoes) {
             <div class="mp-manut-info"><i class="fas fa-user"></i> ${esc(m.tecnico) || '-'}</div>
             <div class="mp-manut-info"><i class="fas fa-building"></i> ${esc(m.setor) || '-'}</div>
             <div class="mp-manut-actions">
-                <button class="mp-btn-action" type="button" onclick="event.stopPropagation(); mostrarPreview('${arq}')"><i class="fas fa-eye"></i> Ver</button>
-                <button class="mp-btn-action" type="button" onclick="event.stopPropagation(); baixarManutencao('${arq}')"><i class="fas fa-download"></i> Baixar</button>
+                <button class="mp-btn-action" type="button" onclick="event.stopPropagation(); mostrarPreview(this.closest('.mp-manut-card'))"><i class="fas fa-eye"></i> Ver</button>
+                <button class="mp-btn-action" type="button" onclick="event.stopPropagation(); baixarManutencao(this.closest('.mp-manut-card'))"><i class="fas fa-download"></i> Baixar</button>
                 <button class="mp-btn-action mp-btn-delete" type="button" data-id="${esc(id)}" data-ano="${esc(ano)}" data-mes="${esc(mes)}" onclick="event.stopPropagation(); confirmarExcluir(this)" title="Excluir"><i class="fas fa-trash-alt"></i></button>
             </div>
         </div>`;
@@ -218,35 +217,80 @@ function renderizarLista(manutencoes) {
     const ano = anoSelecionado || '';
     const mes = mesSelecionado?.numero || '';
     tbody.innerHTML = list.map(m => {
-        const arq = (m.arquivo || '').replace(/'/g, "\\'");
         const id = m.id != null ? String(m.id) : '';
         return `
-        <tr onclick="abrirManutencao('${arq}')" data-id="${esc(id)}" data-ano="${esc(ano)}" data-mes="${esc(mes)}">
+        <tr data-id="${esc(id)}" data-ano="${esc(ano)}" data-mes="${esc(mes)}">
             <td>${formatarData(m.data)}</td>
             <td><strong>${esc(m.serial) || '-'}</strong></td>
             <td>${esc(m.modelo) || '-'}</td>
             <td>${esc(m.tecnico) || '-'}</td>
             <td>${esc(m.setor) || '-'}</td>
             <td class="mp-cell-actions">
-                <button class="mp-btn-action" type="button" onclick="event.stopPropagation(); mostrarPreview('${arq}')"><i class="fas fa-eye"></i></button>
-                <button class="mp-btn-action" type="button" onclick="event.stopPropagation(); baixarManutencao('${arq}')"><i class="fas fa-download"></i></button>
+                <button class="mp-btn-action" type="button" onclick="event.stopPropagation(); mostrarPreview(this.closest('tr'))"><i class="fas fa-eye"></i></button>
+                <button class="mp-btn-action" type="button" onclick="event.stopPropagation(); baixarManutencao(this.closest('tr'))"><i class="fas fa-download"></i></button>
                 <button class="mp-btn-action mp-btn-delete" type="button" data-id="${esc(id)}" data-ano="${esc(ano)}" data-mes="${esc(mes)}" onclick="event.stopPropagation(); confirmarExcluir(this)" title="Excluir"><i class="fas fa-trash-alt"></i></button>
             </td>
         </tr>`;
     }).join('');
 }
 
-function mostrarPreview(arquivo, e) {
+function getManutencaoFromCard(cardOrRow) {
+    if (!cardOrRow) return null;
+    const id = cardOrRow.dataset?.id;
+    const ano = cardOrRow.dataset?.ano;
+    const mes = cardOrRow.dataset?.mes;
+    if (!id || !ano || !mes) return null;
+    const bib = getBiblioteca();
+    const arr = (bib[ano] || {})[mes];
+    if (!Array.isArray(arr)) return null;
+    return arr.find(function(x) { return String(x.id) === String(id); }) || null;
+}
+
+function mostrarPreview(cardOrRow) {
     if (previewTimeout) clearTimeout(previewTimeout);
+    const m = getManutencaoFromCard(cardOrRow);
+    if (!m) return;
     previewTimeout = setTimeout(() => {
         const modal = document.getElementById('preview-modal');
         const body = document.getElementById('preview-body');
         if (modal && body) {
-            body.innerHTML = arquivo ? `<iframe src="${arquivo.replace(/"/g, '&quot;')}" style="width:100%;height:560px;border:none;border-radius:10px;"></iframe>` : '<p>Arquivo não disponível.</p>';
+            body.innerHTML = buildPreviewHtml(m);
             modal.classList.add('show');
         }
         previewTimeout = null;
-    }, 400);
+    }, 100);
+}
+
+function buildPreviewHtml(m) {
+    var html = '<div class="mp-preview-content">';
+    html += '<h4>Identificação do Ativo</h4>';
+    html += '<table class="mp-preview-table"><tr><td>Setor</td><td>' + esc(m.setor || '-') + '</td></tr>';
+    html += '<tr><td>Unidade</td><td>' + esc(m.unidade || '-') + '</td></tr>';
+    html += '<tr><td>Técnico</td><td>' + esc(m.tecnico || '-') + '</td></tr>';
+    html += '<tr><td>Data</td><td>' + formatarData(m.data) + '</td></tr>';
+    html += '<tr><td>Serial</td><td>' + esc(m.serial || '-') + '</td></tr>';
+    html += '<tr><td>Modelo</td><td>' + esc(m.modelo || '-') + '</td></tr>';
+    html += '<tr><td>Patrimônio (SELB)</td><td>' + esc(m.selb || '-') + '</td></tr>';
+    html += '<tr><td>IP</td><td>' + esc(m.ip || '-') + '</td></tr>';
+    html += '<tr><td>MAC Rede</td><td>' + esc(m.macRede || '-') + '</td></tr>';
+    html += '<tr><td>MAC Bluetooth</td><td>' + esc(m.macBt || '-') + '</td></tr></table>';
+    if (m.checklist && m.checklist.length) {
+        html += '<h4>Checklist</h4><ul class="mp-preview-checklist">';
+        var grupoAtual = '';
+        m.checklist.forEach(function(c) {
+            if (c.grupo && c.grupo !== grupoAtual) {
+                grupoAtual = c.grupo;
+                html += '<li class="mp-preview-grupo">' + esc(c.grupo) + '</li>';
+            }
+            if (c.checked) html += '<li class="mp-preview-item checked"><i class="fas fa-check"></i> ' + esc(c.item) + '</li>';
+        });
+        html += '</ul>';
+    }
+    if (m.observacoes) {
+        html += '<h4>Observações</h4><p class="mp-preview-obs">' + esc(m.observacoes) + '</p>';
+    }
+    html += '</div>';
+    return html;
 }
 
 function esconderPreview() {
@@ -259,12 +303,59 @@ function abrirManutencao(arquivo) {
     if (arquivo) window.open(arquivo, '_blank');
 }
 
-function baixarManutencao(arquivo) {
-    if (!arquivo) return;
-    const a = document.createElement('a');
-    a.href = arquivo;
-    a.download = arquivo.split('/').pop() || 'manutencao.pdf';
-    a.click();
+function baixarManutencao(cardOrRow) {
+    var m = getManutencaoFromCard(cardOrRow);
+    if (!m) return;
+    if (typeof html2pdf === 'undefined') {
+        alert('Biblioteca de PDF não carregada. Recarregue a página.');
+        return;
+    }
+    var container = document.createElement('div');
+    container.id = 'mp-pdf-temp';
+    container.style.cssText = 'position:absolute;left:-9999px;top:0;width:800px;padding:24px;font-family:Inter,sans-serif;font-size:12px;color:#1d1d1f;background:#fff;';
+    container.innerHTML = buildPdfHtml(m);
+    document.body.appendChild(container);
+    var opt = {
+        margin: 15,
+        filename: (m.arquivo || 'AXIS_Manutencao_' + (m.serial || '') + '_' + formatarData(m.data).replace(/\//g, '-') + '.pdf'),
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, logging: false },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+    html2pdf().set(opt).from(container).save().then(function() {
+        document.body.removeChild(container);
+    }).catch(function() {
+        if (container.parentNode) document.body.removeChild(container);
+    });
+}
+
+function buildPdfHtml(m) {
+    var html = '<h2 style="margin:0 0 16px 0;font-size:18px;">MANUTENÇÃO PREVENTIVA</h2>';
+    html += '<table style="width:100%;border-collapse:collapse;margin-bottom:20px;"><tr style="background:#f5f5f7"><td style="padding:8px;border:1px solid #ddd;font-weight:600">Campo</td><td style="padding:8px;border:1px solid #ddd;font-weight:600">Valor</td></tr>';
+    var campos = [
+        ['Setor', m.setor], ['Unidade', m.unidade], ['Técnico', m.tecnico], ['Data', formatarData(m.data)],
+        ['Serial', m.serial], ['Modelo', m.modelo], ['Patrimônio (SELB)', m.selb],
+        ['IP', m.ip], ['MAC Rede', m.macRede], ['MAC Bluetooth', m.macBt]
+    ];
+    campos.forEach(function(c) {
+        html += '<tr><td style="padding:8px;border:1px solid #ddd">' + esc(c[0]) + '</td><td style="padding:8px;border:1px solid #ddd">' + esc(c[1] || '-') + '</td></tr>';
+    });
+    html += '</table>';
+    if (m.checklist && m.checklist.length) {
+        var marcados = m.checklist.filter(function(c) { return c.checked; });
+        if (marcados.length) {
+            html += '<h3 style="margin:16px 0 8px 0;">Checklist - Itens marcados</h3><ul style="margin:0;padding-left:20px;">';
+            marcados.forEach(function(c) {
+                html += '<li>' + esc(c.item) + (c.grupo ? ' <small>(' + esc(c.grupo) + ')</small>' : '') + '</li>';
+            });
+            html += '</ul>';
+        }
+    }
+    if (m.observacoes) {
+        html += '<h3 style="margin:16px 0 8px 0;">Observações</h3><p style="margin:0;white-space:pre-wrap;">' + esc(m.observacoes) + '</p>';
+    }
+    html += '<p style="margin-top:24px;font-size:10px;color:#6e6e73">Gerado em ' + new Date().toLocaleString('pt-BR') + ' – AXIS Intelligence</p>';
+    return html;
 }
 
 function adicionarManutencao() {
@@ -729,7 +820,7 @@ function gerarRelatorioPDF() {
         list = todosRegistros(bib);
     }
     const html = `
-<!DOCTYPE html><html><head><meta charset="utf-8"><title>${titulo}</title>
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>AXIS | ${titulo.toUpperCase()}</title>
 <style>body{font-family:Inter,sans-serif;padding:24px;color:#1d1d1f}table{width:100%;border-collapse:collapse}th,td{border:1px solid #ddd;padding:10px;text-align:left}th{background:#28a745;color:#fff}h1{font-size:20px;margin-bottom:16px}</style></head>
 <body><h1>${titulo}</h1>
 <table><thead><tr><th>Data</th><th>Serial</th><th>Modelo</th><th>Técnico</th><th>Setor</th></tr></thead><tbody>

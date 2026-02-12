@@ -181,31 +181,13 @@ function copyNoteContent(noteId) {
     });
 }
 
-// 7. CONTAR PALAVRAS E CARACTERES (MELHORADO)
-function updateWordCount() {
+// 7. Estatísticas de palavras (contador e tempo de leitura ficam no bloco_de_notas_apple.js)
+function updateStatisticsFromEditor() {
     const editor = document.getElementById('rich-editor');
-    if (!editor) return;
-    
+    if (!editor || typeof notebookData === 'undefined') return;
     const text = editor.innerText || editor.textContent || '';
     const words = text.trim().split(/\s+/).filter(w => w.length > 0);
-    const characters = text.length;
-    const charactersNoSpaces = text.replace(/\s/g, '').length;
-    
-    // Atualizar estatísticas
-    notebookData.statistics.totalWords = words.length;
-    
-    // Mostrar no footer se existir
-    const footer = document.querySelector('.editor-footer');
-    if (footer) {
-        const countEl = footer.querySelector('.word-count');
-        if (!countEl) {
-            const countDiv = document.createElement('div');
-            countDiv.className = 'word-count';
-            countDiv.style.cssText = 'font-size: 12px; color: #666;';
-            footer.appendChild(countDiv);
-        }
-        footer.querySelector('.word-count').textContent = `${words.length} palavras • ${characters} caracteres`;
-    }
+    if (notebookData.statistics) notebookData.statistics.totalWords = words.length;
 }
 
 // 8. ENCONTRAR E SUBSTITUIR

@@ -10,7 +10,7 @@
     <link rel="icon" type="image/png" href="assets/IMAGENS/Novo_Fivecon_1.2.png">
     <link rel="apple-touch-icon" href="assets/IMAGENS/Novo_Fivecon_1.2.png">
     
-    <title>AXIS - Sistema de Gestão de Inventário</title>
+    <title>AXIS INTEGRAÇÃO</title>
     
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -21,7 +21,7 @@
     <link rel="stylesheet" href="css/style.css">
     
     <!-- WhatsApp Alerts CSS -->
-    <link rel="stylesheet" href="Novos Módulos/whatsapp-alerts/whatsapp-alerts.css">
+    <!-- WhatsApp descontinuado - CSS removido -->
     
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -105,7 +105,7 @@
             width: 200%;
             height: 200%;
             background: radial-gradient(circle, rgba(0, 188, 212, 0.1) 0%, transparent 70%);
-            animation: rotate 12s linear infinite;
+            animation: rotate 10s linear infinite;
         }
 
         .mod-card.inventario-master:hover {
@@ -118,7 +118,7 @@
         .mod-card.inventario-master .mod-icon {
             font-size: 38px;
             margin-bottom: 12px;
-            animation: floatInventario 3s ease-in-out infinite;
+            animation: pulse 2s ease-in-out infinite;
             filter: drop-shadow(0 2px 4px rgba(0, 188, 212, 0.3));
         }
 
@@ -154,7 +154,7 @@
             width: 200%;
             height: 200%;
             background: radial-gradient(circle, rgba(76, 175, 80, 0.1) 0%, transparent 70%);
-            animation: rotate 14s linear infinite;
+            animation: rotate 10s linear infinite;
         }
 
         .mod-card.rondas-master:hover {
@@ -167,7 +167,7 @@
         .mod-card.rondas-master .mod-icon {
             font-size: 38px;
             margin-bottom: 12px;
-            animation: shieldPulse 2.5s ease-in-out infinite;
+            animation: pulse 2s ease-in-out infinite;
             filter: drop-shadow(0 2px 4px rgba(76, 175, 80, 0.3));
         }
 
@@ -203,7 +203,7 @@
             width: 200%;
             height: 200%;
             background: radial-gradient(circle, rgba(233, 30, 99, 0.1) 0%, transparent 70%);
-            animation: rotate 11s linear infinite;
+            animation: rotate 10s linear infinite;
         }
 
         .mod-card.suporte-master:hover {
@@ -216,7 +216,7 @@
         .mod-card.suporte-master .mod-icon {
             font-size: 38px;
             margin-bottom: 12px;
-            animation: bounceSuporte 2s ease-in-out infinite;
+            animation: pulse 2s ease-in-out infinite;
             filter: drop-shadow(0 2px 4px rgba(233, 30, 99, 0.3));
         }
 
@@ -250,7 +250,7 @@
             width: 200%;
             height: 200%;
             background: radial-gradient(circle, rgba(156, 39, 176, 0.1) 0%, transparent 70%);
-            animation: rotate 13s linear infinite;
+            animation: rotate 10s linear infinite;
         }
 
         .mod-card.notas-master:hover {
@@ -263,7 +263,7 @@
         .mod-card.notas-master .mod-icon {
             font-size: 38px;
             margin-bottom: 12px;
-            animation: waveNotas 2.8s ease-in-out infinite;
+            animation: pulse 2s ease-in-out infinite;
             filter: drop-shadow(0 2px 4px rgba(156, 39, 176, 0.3));
         }
 
@@ -299,7 +299,7 @@
             width: 200%;
             height: 200%;
             background: radial-gradient(circle, rgba(255, 193, 7, 0.1) 0%, transparent 70%);
-            animation: rotate 15s linear infinite;
+            animation: rotate 10s linear infinite;
         }
 
         .mod-card.bloco-master:hover {
@@ -312,7 +312,7 @@
         .mod-card.bloco-master .mod-icon {
             font-size: 38px;
             margin-bottom: 12px;
-            animation: glowBloco 2.2s ease-in-out infinite;
+            animation: pulse 2s ease-in-out infinite;
             filter: drop-shadow(0 2px 4px rgba(255, 193, 7, 0.3));
         }
 
@@ -327,6 +327,80 @@
             font-size: 14px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+        }
+
+        /* Card Registro de Chamados - Vidro + cores do site (azul/verde) */
+        .mod-card.chamados-master {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.85) 0%, rgba(0, 122, 255, 0.08) 50%, rgba(46, 204, 113, 0.06) 100%) !important;
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(0, 122, 255, 0.2) !important;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .mod-card.chamados-master::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(0, 122, 255, 0.08) 0%, rgba(46, 204, 113, 0.05) 40%, transparent 70%);
+            animation: rotate 10s linear infinite;
+        }
+
+        .mod-card.chamados-master:hover {
+            border-color: rgba(0, 122, 255, 0.4) !important;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.92) 0%, rgba(0, 122, 255, 0.12) 50%, rgba(46, 204, 113, 0.08) 100%) !important;
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0, 122, 255, 0.2);
+        }
+
+        .mod-card.chamados-master .mod-icon {
+            font-size: 38px;
+            margin-bottom: 12px;
+            animation: pulse 2s ease-in-out infinite;
+            filter: drop-shadow(0 2px 4px rgba(0, 122, 255, 0.25));
+        }
+
+        .mod-card.chamados-master .mod-desc {
+            font-size: 12px;
+            color: var(--text-secondary, #86868b);
+            margin-top: 6px;
+            font-weight: 400;
+        }
+
+        /* Card Peças - Vidro estilo Apple, destaque laranja */
+        .mod-card.pecas-master {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.85) 0%, rgba(253, 126, 20, 0.08) 50%, rgba(0, 188, 212, 0.06) 100%) !important;
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(253, 126, 20, 0.25) !important;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .mod-card.pecas-master::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(253, 126, 20, 0.08) 0%, rgba(0, 188, 212, 0.05) 40%, transparent 70%);
+            animation: rotate 10s linear infinite;
+        }
+        .mod-card.pecas-master:hover {
+            border-color: rgba(253, 126, 20, 0.4) !important;
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(253, 126, 20, 0.2);
+        }
+        .mod-card.pecas-master .mod-icon {
+            font-size: 38px;
+            margin-bottom: 12px;
+            filter: drop-shadow(0 2px 4px rgba(253, 126, 20, 0.3));
         }
 
         /* Card Configurações - Cinza/Prata com Gradiente */
@@ -346,7 +420,7 @@
             width: 200%;
             height: 200%;
             background: radial-gradient(circle, rgba(96, 125, 139, 0.1) 0%, transparent 70%);
-            animation: rotate 16s linear infinite;
+            animation: rotate 10s linear infinite;
         }
 
         .mod-card.config-master:hover {
@@ -359,7 +433,7 @@
         .mod-card.config-master .mod-icon {
             font-size: 38px;
             margin-bottom: 12px;
-            animation: spinConfig 3s linear infinite;
+            animation: pulse 2s ease-in-out infinite;
             filter: drop-shadow(0 2px 4px rgba(96, 125, 139, 0.3));
         }
 
@@ -518,26 +592,27 @@
             outline-offset: 2px;
         }
 
-        /* Toast notifications melhorado */
+        /* Toast – notificação pequena no topo, abaixo do seletor de tema (lua) */
         .toast {
             position: fixed;
-            bottom: 30px;
-            right: 30px;
+            top: 72px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-80px);
             background: white;
-            padding: 16px 20px;
+            padding: 10px 16px;
             border-radius: 12px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
             display: flex;
             align-items: center;
             gap: 12px;
             z-index: 10000;
-            transform: translateX(400px);
             opacity: 0;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+            max-width: 360px;
         }
 
         .toast.show {
-            transform: translateX(0);
+            transform: translateX(-50%) translateY(0);
             opacity: 1;
         }
 
@@ -1135,6 +1210,68 @@
     </div>
 
     <!-- ============================================
+         INTRODUÇÃO - APRESENTAÇÃO PRIMEIRA VISITA (Estilo Apple Vidro)
+         ============================================ -->
+    <link rel="stylesheet" href="css/intro-axis.css">
+    <div id="intro-axis-overlay" style="display: none;">
+        <div class="intro-axis-container">
+            <!-- Slide 1 -->
+            <div class="intro-slide active" data-slide="1">
+                <div class="intro-slide-img-wrap">
+                    <img src="assets/IMAGENS/Nova_Logo_Sem_Fundo_1.2.png" alt="AXIS">
+                </div>
+                <h2>Bem-vindo ao AXIS</h2>
+                <p>Sistema de Gestão de Inventário de Impressoras Zebra. Controle centralizado, relatórios e muito mais.</p>
+                <div class="intro-slide-buttons">
+                    <button type="button" class="intro-btn intro-btn-primary" onclick="introProximoSlide()">Próximo</button>
+                </div>
+            </div>
+            <!-- Slide 2 -->
+            <div class="intro-slide" data-slide="2">
+                <div class="intro-slide-img-wrap">
+                    <img src="assets/IMAGENS/Novo_Fivecon_1.2.png" alt="Inventário">
+                </div>
+                <h2>Inventário Inteligente</h2>
+                <p>Cadastre impressoras, acompanhe status, consumíveis e localização em tempo real.</p>
+                <div class="intro-slide-buttons">
+                    <button type="button" class="intro-btn intro-btn-secondary" onclick="introSlideAnterior()">Voltar</button>
+                    <button type="button" class="intro-btn intro-btn-primary" onclick="introProximoSlide()">Próximo</button>
+                </div>
+            </div>
+            <!-- Slide 3 -->
+            <div class="intro-slide" data-slide="3">
+                <div class="intro-slide-img-wrap">
+                    <span style="font-size: 64px;">🛡️</span>
+                </div>
+                <h2>Rondas e Manutenções</h2>
+                <p>Planeje rondas de vistoria, manutenções preventivas e registre chamados de forma organizada.</p>
+                <div class="intro-slide-buttons">
+                    <button type="button" class="intro-btn intro-btn-secondary" onclick="introSlideAnterior()">Voltar</button>
+                    <button type="button" class="intro-btn intro-btn-primary" onclick="introProximoSlide()">Próximo</button>
+                </div>
+            </div>
+            <!-- Slide 4 - Final -->
+            <div class="intro-slide" data-slide="4">
+                <div class="intro-slide-img-wrap">
+                    <span style="font-size: 64px;">✨</span>
+                </div>
+                <h2>Pronto para começar</h2>
+                <p>Faça login e acesse todas as funcionalidades do sistema.</p>
+                <div class="intro-slide-buttons">
+                    <button type="button" class="intro-btn intro-btn-secondary" onclick="introSlideAnterior()">Voltar</button>
+                    <button type="button" class="intro-btn intro-btn-primary" onclick="introIrParaLogin()">Acessar AXIS</button>
+                </div>
+            </div>
+            <div class="intro-dots" id="intro-dots">
+                <span class="intro-dot active" data-dot="1"></span>
+                <span class="intro-dot" data-dot="2"></span>
+                <span class="intro-dot" data-dot="3"></span>
+                <span class="intro-dot" data-dot="4"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================
          TELA DE AUTENTICAÇÃO
          ============================================ -->
     <div id="auth-screen">
@@ -1150,7 +1287,7 @@
                 <label for="username">Usuário</label>
                 <input type="text" 
                        id="username" 
-                       placeholder="Digite seu usuário"
+                       placeholder="Ex: joao.silva (login do cadastro)"
                        autocomplete="username"
                        aria-required="true"
                        onkeypress="if(event.key === 'Enter') document.getElementById('password').focus()">
@@ -1195,6 +1332,28 @@
         </div>
     </div>
 
+    <!-- Modal Erro Login (vidro) – substitui alert nativo -->
+    <div id="modal-erro-login" class="modal-glass-wrap" style="display: none;" role="alertdialog">
+        <div class="modal-glass-overlay" onclick="fecharModalErroLogin()"></div>
+        <div class="modal-glass-box">
+            <p id="modal-erro-login-titulo" class="modal-glass-title">Usuário não encontrado</p>
+            <p id="modal-erro-login-mensagem" class="modal-glass-message">Verifique se o usuário foi criado corretamente.</p>
+            <button type="button" class="modal-glass-btn" id="modal-erro-login-ok" onclick="fecharModalErroLogin()">OK</button>
+        </div>
+    </div>
+
+    <!-- Modal Sair (vidro, fino e elegante) – substitui confirm nativo -->
+    <div id="modal-sair" class="modal-sair-wrap" style="display: none;" role="dialog" aria-labelledby="modal-sair-title" aria-modal="true">
+        <div class="modal-sair-overlay"></div>
+        <div class="modal-sair-glass">
+            <p id="modal-sair-title" class="modal-sair-title">Deseja realmente sair do sistema AXIS?</p>
+            <div class="modal-sair-actions">
+                <button type="button" class="modal-sair-btn modal-sair-ok" id="modal-sair-ok">OK</button>
+                <button type="button" class="modal-sair-btn modal-sair-cancel" id="modal-sair-cancel">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
     <!-- ============================================
          CONTEÚDO PRINCIPAL DO SISTEMA
          ============================================ -->
@@ -1215,11 +1374,56 @@
                     <img src="assets/IMAGENS/Novo_Fivecon_1.2.png" alt="AXIS Logo" class="brand-logo-ios">
                 </div>
 
-                <div class="nav-welcome-text" id="nav-welcome-text" style="display: none;">
+                <div class="nav-welcome-text" id="nav-welcome-text" style="display: none;" onclick="if(window.abrirPerfilNav) window.abrirPerfilNav();" role="button" tabindex="0" aria-label="Abrir meu perfil" title="Clique para abrir seu perfil">
                     BEM-VINDO AO AXIS, <span id="user-display-name">USUÁRIO</span>
                 </div>
 
                 <div class="nav-actions">
+                    <div class="axis-profile-wrap" id="axis-profile-wrap" style="display: none;">
+                        <button type="button" class="axis-profile-trigger" id="axis-profile-trigger" aria-expanded="false" aria-haspopup="true" onclick="try{ var d=document.getElementById('axis-profile-dropdown'); if(d&&d.classList.contains('open')){ if(window.fecharPerfilNav) window.fecharPerfilNav(); } else { if(window.abrirPerfilNav) window.abrirPerfilNav(); } } catch(err){ if(window.abrirPerfilNav) window.abrirPerfilNav(); } return false;" title="Clique para abrir seu perfil">
+                            <span class="axis-profile-avatar-wrap">
+                                <img src="" alt="" class="axis-profile-avatar" id="axis-profile-avatar">
+                                <span class="axis-profile-initial" id="axis-profile-initial">U</span>
+                            </span>
+                            <span class="axis-profile-name-short" id="axis-profile-name-short">Usuário</span>
+                        </button>
+                        <div class="axis-profile-dropdown wa-profile" id="axis-profile-dropdown" aria-hidden="true">
+                            <div class="wa-profile-header">
+                                <label for="axis-profile-photo-input" class="wa-profile-photo-wrap" title="Clique para alterar sua foto">
+                                    <span class="wa-profile-photo" id="axis-profile-upload-preview">
+                                        <img src="" alt="" class="wa-profile-photo-img" id="axis-profile-dropdown-avatar">
+                                        <span class="wa-profile-initial" id="axis-profile-dropdown-initial">U</span>
+                                    </span>
+                                    <span class="wa-profile-camera-hint">📷</span>
+                                </label>
+                                <input type="file" id="axis-profile-photo-input" accept="image/*" class="axis-profile-photo-input">
+                                <h2 class="wa-profile-name" id="axis-profile-dropdown-name">Nome</h2>
+                                <p class="wa-profile-about" id="axis-profile-dropdown-setor">Toque para adicionar setor</p>
+                            </div>
+                            <div class="wa-profile-body">
+                                <div class="wa-profile-row">
+                                    <span class="wa-profile-label">Nome completo</span>
+                                    <input type="text" id="axis-profile-mini-nome" class="wa-profile-input" placeholder="Seu nome">
+                                </div>
+                                <div class="wa-profile-row wa-profile-row-readonly">
+                                    <span class="wa-profile-label">Usuário</span>
+                                    <span class="wa-profile-value" id="axis-profile-dropdown-login">—</span>
+                                </div>
+                                <div class="wa-profile-row">
+                                    <span class="wa-profile-label">Setor</span>
+                                    <input type="text" id="axis-profile-mini-setor" class="wa-profile-input" placeholder="Ex: TI, Suporte">
+                                </div>
+                                <div class="wa-profile-row wa-profile-row-readonly">
+                                    <span class="wa-profile-label">Expiração da Senha</span>
+                                    <span class="wa-profile-value wa-profile-dias" id="axis-profile-dropdown-dias">—</span>
+                                </div>
+                                <div class="wa-profile-actions">
+                                    <button type="button" class="wa-profile-btn wa-profile-cancel" id="axis-profile-mini-cancel">Fechar</button>
+                                    <button type="button" class="wa-profile-btn wa-profile-save" id="axis-profile-mini-save">Salvar</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <button class="theme-toggle" onclick="if(typeof toggleTheme === 'function') { toggleTheme(); } else { console.error('toggleTheme não encontrada'); } return false;" id="theme-toggle" aria-label="Alternar tema">
                         <span id="theme-icon">🌙</span>
                     </button>
@@ -1234,27 +1438,17 @@
             </div>
 
             <nav class="side-nav-links">
-                <button onclick="if(typeof navigate === 'function') { navigate('page-home'); } else { console.error('navigate não encontrada'); } return false;" class="side-item active">
-                    📊 Início
-                </button>
-                <button onclick="if(typeof navigate === 'function') { navigate('page-inventario'); } else { console.error('navigate não encontrada'); } return false;" class="side-item">
-                    📦 Inventário
-                </button>
-                <button onclick="if(typeof navigate === 'function') { navigate('page-rondas'); } else { console.error('navigate não encontrada'); } return false;" class="side-item">
-                    🛡️ Rondas
-                </button>
-                <button onclick="window.location.href='pages/manutenção_preventiva.html'" class="side-item">
-                    ⚙️ Manutenções Preventivas
-                </button>
-                <button onclick="if(typeof navigate === 'function') { navigate('page-suporte'); } else { console.error('navigate não encontrada'); } return false;" class="side-item">
-                    💬 Suporte
-                </button>
-                <button onclick="if(typeof navigate === 'function') { navigate('page-configuracoes'); } else { console.error('navigate não encontrada'); } return false;" class="side-item">
-                    ⚙️ Configurações
-                </button>
-                <button onclick="if(typeof navigate === 'function') { navigate('page-administracao'); } else { console.error('navigate não encontrada'); } return false;" class="side-item" id="menu-admin" style="display: none;">
-                    👤 Administração
-                </button>
+                <button data-nav-page="page-home" onclick="if(typeof navigate === 'function') { navigate('page-home'); } return false;" class="side-item active">📊 Início</button>
+                <button data-nav-page="page-inventario" onclick="if(typeof navigate === 'function') { navigate('page-inventario'); } return false;" class="side-item">📦 Inventário</button>
+                <button data-nav-page="page-rondas" onclick="if(typeof navigate === 'function') { navigate('page-rondas'); } return false;" class="side-item">🛡️ Rondas</button>
+                <button data-nav-page="manutencao" onclick="window.location.href='pages/manutenção_preventiva.html'" class="side-item">🖨️ Manutenções Preventivas</button>
+                <button data-nav-page="page-suporte" onclick="if(typeof navigate === 'function') { navigate('page-suporte'); } return false;" class="side-item">💬 Suporte</button>
+                <button data-nav-page="bloco" onclick="window.location.href='pages/bloco_de_notas_apple.html'" class="side-item">📝 Bloco de Notas</button>
+                <button data-nav-page="registro" onclick="window.location.href='pages/registro_chamados.html'" class="side-item">📋 Registro de Chamados</button>
+                <button data-nav-page="pecas" onclick="window.location.href='pages/pecas.html'" class="side-item">🔧 Peças</button>
+                <button data-nav-page="notas" onclick="window.location.href='pages/notas_fiscais.html'" class="side-item">📄 Notas Fiscais</button>
+                <button data-nav-page="page-configuracoes" onclick="if(typeof navigate === 'function') { navigate('page-configuracoes'); } return false;" class="side-item">⚙️ Configurações</button>
+                <button data-nav-page="page-administracao" onclick="if(typeof navigate === 'function') { navigate('page-administracao'); } return false;" class="side-item" id="menu-admin" style="display: none;">👤 Administração</button>
                 <hr class="nav-divider">
                 <button onclick="if(typeof logout === 'function') { logout(); } else { console.error('logout não encontrada'); } return false;" class="side-item logout">
                     🚪 Sair do AXIS
@@ -1279,34 +1473,21 @@
                     </div>
                 </div>
 
-                <!-- Busca Global -->
-                <div class="quick-search-container">
-                    <input type="search" 
-                           id="global-search" 
-                           placeholder="🔍 Buscar TAG, IP, Serial ou Equipamento..." 
-                           onkeyup="handleGlobalSearch()"
-                           aria-label="Busca global no sistema">
-                </div>
-
                 <!-- Grid de Módulos -->
                 <div class="dashboard-grid">
                     <!-- Card Inventário -->
                     <div class="mod-card inventario-master" onclick="if(typeof navigate === 'function') { navigate('page-inventario'); } else { console.error('navigate não encontrada'); alert('Erro: Função de navegação não encontrada. Recarregue a página.'); } return false;" tabindex="0" role="button" style="cursor: pointer;">
-                        <div class="mod-icon">📦✨</div>
+                        <div class="mod-icon">📦</div>
                         <div class="mod-content">
                             <h3 class="txt-axis-gradient">Inventário</h3>
-                            <p>Controle completo de impressoras ZT411, ZD421 e ZQ630.</p>
-                            <span class="mod-link-inventario">Acessar Frota →</span>
                         </div>
                     </div>
 
                     <!-- Card Rondas -->
                     <div class="mod-card rondas-master" onclick="if(typeof navigate === 'function') { navigate('page-rondas'); } else { console.error('navigate não encontrada'); alert('Erro: Função de navegação não encontrada. Recarregue a página.'); } return false;" tabindex="0" role="button" style="cursor: pointer;">
-                        <div class="mod-icon">🛡️⚡</div>
+                        <div class="mod-icon">🛡️</div>
                         <div class="mod-content">
                             <h3 class="txt-axis-gradient">Rondas</h3>
-                            <p>Checklists e vistorias preventivas diárias.</p>
-                            <span class="mod-link-rondas">Ver Relatórios →</span>
                         </div>
                     </div>
 
@@ -1315,51 +1496,57 @@
                          onclick="window.location.href='pages/manutenção_preventiva.html'" 
                          tabindex="0" 
                          role="button">
-                        <div class="mod-icon">⚙️🔥</div>
+                        <div class="mod-icon">🖨️</div>
                         <div class="mod-content">
                             <h3 class="txt-axis-gradient">Manutenção Preventiva</h3>
-                            <p>Módulo avançado de checklist e laudos técnicos especializados.</p>
-                            <span class="mod-link-preventiva">Iniciar Vistoria →</span>
                         </div>
                     </div>
 
                     <!-- Card Suporte -->
                     <div class="mod-card suporte-master" onclick="if(typeof navigate === 'function') { navigate('page-suporte'); } else { console.error('navigate não encontrada'); alert('Erro: Função de navegação não encontrada. Recarregue a página.'); } return false;" tabindex="0" role="button" style="cursor: pointer;">
-                        <div class="mod-icon">💬💖</div>
+                        <div class="mod-icon">💬</div>
                         <div class="mod-content">
                             <h3 class="txt-axis-gradient">Suporte Técnico</h3>
-                            <p>Central de ajuda e documentação do sistema.</p>
-                            <span class="mod-link-suporte">Abrir Ticket →</span>
                         </div>
                     </div>
 
                     <!-- Card Notas Fiscais -->
                     <div class="mod-card notas-master" onclick="window.location.href='pages/notas_fiscais.html'" tabindex="0" role="button">
-                        <div class="mod-icon">📄💜</div>
+                        <div class="mod-icon">📄</div>
                         <div class="mod-content">
                             <h3 class="txt-axis-gradient">Notas Fiscais</h3>
-                            <p>Sistema inteligente de gestão e organização de notas fiscais.</p>
-                            <span class="mod-link-notas">Acessar Biblioteca →</span>
                         </div>
                     </div>
 
                     <!-- Card Bloco de Notas -->
                     <div class="mod-card bloco-master" onclick="window.location.href='pages/bloco_de_notas_apple.html'" tabindex="0" role="button">
-                        <div class="mod-icon">📝⭐</div>
+                        <div class="mod-icon">📝</div>
                         <div class="mod-content">
                             <h3 class="txt-axis-gradient">Bloco de Notas</h3>
-                            <p>Editor de notas estilo Apple com recursos avançados de formatação.</p>
-                            <span class="mod-link-bloco">Abrir Editor →</span>
+                        </div>
+                    </div>
+
+                    <!-- Card Registro de Chamados (design vidro, cores do site) -->
+                    <div class="mod-card chamados-master" onclick="window.location.href='pages/registro_chamados.html'" tabindex="0" role="button">
+                        <div class="mod-icon">📋</div>
+                        <div class="mod-content">
+                            <h3 class="txt-axis-gradient">Registro de Chamados</h3>
+                        </div>
+                    </div>
+
+                    <!-- Card Peças -->
+                    <div class="mod-card pecas-master" onclick="window.location.href='pages/pecas.html'" tabindex="0" role="button">
+                        <div class="mod-icon">🔧</div>
+                        <div class="mod-content">
+                            <h3 class="txt-axis-gradient">Peças</h3>
                         </div>
                     </div>
 
                     <!-- Card Configurações -->
                     <div class="mod-card config-master" onclick="if(typeof navigate === 'function') { navigate('page-configuracoes'); } else { console.error('navigate não encontrada'); alert('Erro: Função de navegação não encontrada. Recarregue a página.'); } return false;" tabindex="0" role="button" style="cursor: pointer;">
-                        <div class="mod-icon">⚙️💎</div>
+                        <div class="mod-icon">⚙️</div>
                         <div class="mod-content">
                             <h3 class="txt-axis-gradient">Configurações</h3>
-                            <p>Personalize sua experiência e ajuste as preferências do sistema.</p>
-                            <span class="mod-link-config">Abrir Configurações →</span>
                         </div>
                     </div>
                 </div>
@@ -1369,69 +1556,186 @@
                  PÁGINA DE INVENTÁRIO
                  ============================================ -->
             <section id="page-inventario" class="main-section ucs-inventory-section">
-                <!-- Card de Busca -->
-                <div class="ucs-search-card">
-                    <div class="ucs-search-header">
-                        <span class="ucs-search-icon">🔍</span>
-                        <h3 class="ucs-search-title">Buscar Dispositivos</h3>
-                    </div>
-                    <div class="ucs-search-fields">
-                        <div class="ucs-field-group">
-                            <label class="ucs-field-label">País</label>
-                            <select id="ucs-filtro-pais" class="ucs-field-select">
-                                <option value="">Selecione um país</option>
-                                <option value="brasil" selected>Brasil</option>
-                            </select>
-                        </div>
-                        <div class="ucs-field-group">
-                            <label class="ucs-field-label">
-                                Centro Logístico
-                                <span class="ucs-info-icon" title="Informações sobre o centro logístico">ℹ️</span>
-                            </label>
-                            <select id="ucs-filtro-nodo" class="ucs-field-select">
-                                <option value="">Selecione um nodo</option>
-                                <option value="brsc02">(BRSC02) Cad Floripa</option>
-                            </select>
-                        </div>
-                        <div class="ucs-field-group">
-                            <label class="ucs-field-label">Dispositivo</label>
-                            <select id="ucs-filtro-dispositivo" class="ucs-field-select">
-                                <option value="">Selecione um dispositivo</option>
-                                <option value="printer" selected>Printer</option>
-                            </select>
-                        </div>
-                        <div class="ucs-search-actions">
-                            <button class="ucs-btn-reset" onclick="resetarFiltrosInventario()">Reset</button>
-                            <button class="ucs-btn-search" onclick="if(typeof filtrarInventario === 'function') { filtrarInventario(); } else { console.error('filtrarInventario não encontrada'); alert('Erro: Função de filtro não encontrada. Recarregue a página.'); } return false;">Buscar</button>
-                        </div>
-                    </div>
+                <!-- Título da página de inventário -->
+                <div class="ucs-inventory-page-title">
+                    <h1 class="ucs-inventory-page-title-main">INVENTÁRIO DE IMPRESSORAS</h1>
+                    <p class="ucs-inventory-page-title-sub">UNIDADE DE BRSC02 (GOVERNADOR CELSO RAMOS)</p>
                 </div>
-
-                <!-- Cabeçalho do Inventário -->
-                <div class="ucs-inventory-header">
-                    <h2 class="ucs-inventory-title">Impressoras</h2>
-                    <span class="ucs-inventory-count" id="ucs-total-count">0 EM TOTAL</span>
-                </div>
-
-                <!-- Ações do Inventário -->
-                <div class="ucs-inventory-actions">
+                <!-- Cabeçalho do Inventário - Cards em vidro com cores -->
+                <div class="ucs-inventory-header ucs-inventory-cards-row">
+                    <div class="ucs-inv-card ucs-inv-card-total">
+                        <span class="ucs-inv-card-number" id="ucs-total-count">0</span>
+                        <span class="ucs-inv-card-label-small">Total</span>
+                    </div>
+                    <div class="ucs-inv-card ucs-inv-card-modelo ucs-inv-card-zt411">
+                        <span class="ucs-inv-card-number" id="ucs-count-zt411">0</span>
+                        <span class="ucs-inv-card-label-small">ZT411</span>
+                    </div>
+                    <div class="ucs-inv-card ucs-inv-card-modelo ucs-inv-card-zd421">
+                        <span class="ucs-inv-card-number" id="ucs-count-zd421">0</span>
+                        <span class="ucs-inv-card-label-small">ZD421</span>
+                    </div>
+                    <div class="ucs-inv-card ucs-inv-card-modelo ucs-inv-card-zq630">
+                        <span class="ucs-inv-card-number" id="ucs-count-zq630">0</span>
+                        <span class="ucs-inv-card-label-small">ZQ630 PLUS</span>
+                    </div>
+                    <div class="ucs-inv-card ucs-inv-card-status ucs-inv-card-defeito">
+                        <span class="ucs-inv-card-number" id="ucs-count-defeito">0</span>
+                        <span class="ucs-inv-card-label-small">Defeito</span>
+                    </div>
+                    <div class="ucs-inv-status-pair">
+                        <div class="ucs-inv-card ucs-inv-card-status ucs-inv-card-em-uso">
+                            <span class="ucs-inv-card-number" id="ucs-count-em-uso">0</span>
+                            <span class="ucs-inv-card-label-small">Em uso</span>
+                        </div>
+                        <div class="ucs-inv-card ucs-inv-card-status ucs-inv-card-backup">
+                            <span class="ucs-inv-card-number" id="ucs-count-backup">0</span>
+                            <span class="ucs-inv-card-label-small ucs-inv-backup-label">
+                                <span class="ucs-inv-backup-line1">BACKUP</span>
+                                <span class="ucs-inv-backup-line2">OPERACIONAL</span>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="ucs-inventory-actions-spacer"></div>
+                    <div class="ucs-inventory-actions">
                     <div class="ucs-download-dropdown">
                         <button class="ucs-btn-download">
                             Baixar
-                            <span class="ucs-dropdown-arrow">▼</span>
+                            <span class="ucs-dropdown-arrow">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                            </span>
                         </button>
                         <div class="ucs-download-menu">
-                            <button class="ucs-download-option" onclick="exportarDados('csv')">CSV</button>
-                            <button class="ucs-download-option" onclick="exportarDados('excel')">Excel</button>
-                            <button class="ucs-download-option" onclick="exportarDados('pdf')">PDF</button>
+                            <button class="ucs-download-option" onclick="exportarDados('csv')">
+                                <span class="ucs-download-option-icon">📊</span>
+                                <span>CSV</span>
+                            </button>
+                            <button class="ucs-download-option" onclick="exportarDados('excel')">
+                                <span class="ucs-download-option-icon">📗</span>
+                                <span>Excel</span>
+                            </button>
+                            <button class="ucs-download-option" onclick="exportarDados('pdf')">
+                                <span class="ucs-download-option-icon">📄</span>
+                                <span>PDF</span>
+                            </button>
                         </div>
                     </div>
-                    <button class="ucs-btn-filter" onclick="if(typeof filtrarInventario === 'function') { filtrarInventario(); } else { console.error('filtrarInventario não encontrada'); alert('Erro: Função de filtro não encontrada. Recarregue a página.'); } return false;">
-                        Filtrar
-                    </button>
+                    <div class="ucs-filter-dropdown" id="ucs-filter-dropdown">
+                        <button type="button" class="ucs-btn-filter" id="ucs-btn-filter" aria-expanded="false" aria-haspopup="true">
+                            Filtrar
+                            <span class="ucs-filter-arrow">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                            </span>
+                        </button>
+                        <div class="ucs-filter-panel" id="ucs-filter-panel" role="dialog" aria-label="Painel de filtros">
+                            <div class="ucs-filter-panel-header">
+                                <span class="ucs-filter-panel-title">Filtros</span>
+                                <button type="button" class="ucs-filter-panel-close" id="ucs-filter-close" aria-label="Fechar">&times;</button>
+                            </div>
+                            <div class="ucs-filter-panel-body">
+                                <label class="ucs-filter-label">Modelo</label>
+                                <div class="setor-selector setor-selector-filter" id="modelo-selector-filter-wrap">
+                                    <select id="ucs-filtro-panel-modelo" class="setor-selector-native-hidden" aria-hidden="true">
+                                        <option value="">Todos</option>
+                                        <option value="ZT411">ZT411</option>
+                                        <option value="ZD421">ZD421</option>
+                                        <option value="ZQ630 PLUS">ZQ630 PLUS</option>
+                                    </select>
+                                    <button type="button" class="setor-selector-trigger" id="ucs-filtro-panel-modelo-trigger" aria-haspopup="listbox" aria-expanded="false">Todos</button>
+                                    <div class="setor-selector-dropdown" id="ucs-filtro-panel-modelo-dropdown" role="listbox" aria-hidden="true">
+                                        <div class="setor-selector-option" data-value="" role="option">Todos</div>
+                                        <div class="setor-selector-option" data-value="ZT411" role="option">ZT411</div>
+                                        <div class="setor-selector-option" data-value="ZD421" role="option">ZD421</div>
+                                        <div class="setor-selector-option" data-value="ZQ630 PLUS" role="option">ZQ630 PLUS</div>
+                                    </div>
+                                </div>
+                                <label class="ucs-filter-label">Setor</label>
+                                <div class="setor-selector setor-selector-filter" id="setor-selector-filter-wrap">
+                                    <select id="ucs-filtro-panel-setor" class="setor-selector-native-hidden" aria-hidden="true">
+                                        <option value="">Todos</option>
+                                        <option value="internal-systems">INTERNAL SYSTEMS</option>
+                                        <option value="lideranca">LIDERANÇA</option>
+                                        <option value="mhw">MHW</option>
+                                        <option value="p2m">P2M</option>
+                                        <option value="check-in">CHECK-IN</option>
+                                        <option value="reciving">RECIVING</option>
+                                        <option value="mz1">MZ1</option>
+                                        <option value="mz2">MZ2</option>
+                                        <option value="mz3">MZ3</option>
+                                        <option value="inventario">INVENTÁRIO</option>
+                                        <option value="cx">CX</option>
+                                        <option value="returns">RETURNS</option>
+                                        <option value="packing-mono">PACKING MONO</option>
+                                        <option value="packing-ptw">PACKING PTW</option>
+                                        <option value="sauron">SAURON</option>
+                                        <option value="insumos">INSUMOS</option>
+                                        <option value="docas-de-expedicao">DOCAS DE EXPEDIÇÃO</option>
+                                        <option value="linha-de-peixe-1">LINHA DE PEIXE 1</option>
+                                        <option value="sorter">SORTER</option>
+                                        <option value="linha-de-peixe-2">LINHA DE PEIXE 2</option>
+                                        <option value="rk">RK</option>
+                                        <option value="nt-rk">NT RK</option>
+                                        <option value="qualidade">QUALIDADE</option>
+                                        <option value="aquario-outbound">AQUÁRIO OUTBOUND</option>
+                                        <option value="adm">ADM</option>
+                                        <option value="gate">GATE</option>
+                                        <option value="ambulatorio-interno">AMBULATÓRIO INTERNO</option>
+                                        <option value="ambulatorio-externo">AMBULATÓRIO EXTERNO</option>
+                                        <option value="sala-de-epi">SALA DE EPI</option>
+                                        <option value="er">ER</option>
+                                        <option value="rr">RR</option>
+                                        <option value="deposito-de-treinamento">DEPÓSITO DE TREINAMENTO</option>
+                                        <option value="hv">HV</option>
+                                    </select>
+                                    <button type="button" class="setor-selector-trigger" id="ucs-filtro-panel-setor-trigger" aria-haspopup="listbox" aria-expanded="false">Todos</button>
+                                    <div class="setor-selector-dropdown" id="ucs-filtro-panel-setor-dropdown" role="listbox" aria-hidden="true">
+                                        <div class="setor-selector-option" data-value="" role="option">Todos</div>
+                                        <div class="setor-selector-option" data-value="internal-systems" role="option">INTERNAL SYSTEMS</div>
+                                        <div class="setor-selector-option" data-value="lideranca" role="option">LIDERANÇA</div>
+                                        <div class="setor-selector-option" data-value="mhw" role="option">MHW</div>
+                                        <div class="setor-selector-option" data-value="p2m" role="option">P2M</div>
+                                        <div class="setor-selector-option" data-value="check-in" role="option">CHECK-IN</div>
+                                        <div class="setor-selector-option" data-value="reciving" role="option">RECIVING</div>
+                                        <div class="setor-selector-option" data-value="mz1" role="option">MZ1</div>
+                                        <div class="setor-selector-option" data-value="mz2" role="option">MZ2</div>
+                                        <div class="setor-selector-option" data-value="mz3" role="option">MZ3</div>
+                                        <div class="setor-selector-option" data-value="inventario" role="option">INVENTÁRIO</div>
+                                        <div class="setor-selector-option" data-value="cx" role="option">CX</div>
+                                        <div class="setor-selector-option" data-value="returns" role="option">RETURNS</div>
+                                        <div class="setor-selector-option" data-value="packing-mono" role="option">PACKING MONO</div>
+                                        <div class="setor-selector-option" data-value="packing-ptw" role="option">PACKING PTW</div>
+                                        <div class="setor-selector-option" data-value="sauron" role="option">SAURON</div>
+                                        <div class="setor-selector-option" data-value="insumos" role="option">INSUMOS</div>
+                                        <div class="setor-selector-option" data-value="docas-de-expedicao" role="option">DOCAS DE EXPEDIÇÃO</div>
+                                        <div class="setor-selector-option" data-value="linha-de-peixe-1" role="option">LINHA DE PEIXE 1</div>
+                                        <div class="setor-selector-option" data-value="sorter" role="option">SORTER</div>
+                                        <div class="setor-selector-option" data-value="linha-de-peixe-2" role="option">LINHA DE PEIXE 2</div>
+                                        <div class="setor-selector-option" data-value="rk" role="option">RK</div>
+                                        <div class="setor-selector-option" data-value="nt-rk" role="option">NT RK</div>
+                                        <div class="setor-selector-option" data-value="qualidade" role="option">QUALIDADE</div>
+                                        <div class="setor-selector-option" data-value="aquario-outbound" role="option">AQUÁRIO OUTBOUND</div>
+                                        <div class="setor-selector-option" data-value="adm" role="option">ADM</div>
+                                        <div class="setor-selector-option" data-value="gate" role="option">GATE</div>
+                                        <div class="setor-selector-option" data-value="ambulatorio-interno" role="option">AMBULATÓRIO INTERNO</div>
+                                        <div class="setor-selector-option" data-value="ambulatorio-externo" role="option">AMBULATÓRIO EXTERNO</div>
+                                        <div class="setor-selector-option" data-value="sala-de-epi" role="option">SALA DE EPI</div>
+                                        <div class="setor-selector-option" data-value="er" role="option">ER</div>
+                                        <div class="setor-selector-option" data-value="rr" role="option">RR</div>
+                                        <div class="setor-selector-option" data-value="deposito-de-treinamento" role="option">DEPÓSITO DE TREINAMENTO</div>
+                                        <div class="setor-selector-option" data-value="hv" role="option">HV</div>
+                                    </div>
+                                </div>
+                                <div class="ucs-filter-panel-actions">
+                                    <button type="button" class="ucs-filter-btn-aplicar" id="ucs-filter-aplicar">Aplicar</button>
+                                    <button type="button" class="ucs-filter-btn-limpar" id="ucs-filter-limpar">Limpar</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <button class="ucs-btn-create" id="btn-criar-dispositivo" onclick="if(typeof window.abrirCadastroRapido === 'function') { window.abrirCadastroRapido(); } else { console.error('abrirCadastroRapido não encontrada'); alert('Erro: Função de cadastro não encontrada. Recarregue a página.'); } return false;">
                         Criar Dispositivo
                     </button>
+                    </div>
                 </div>
 
                 <!-- Tabela de Dispositivos -->
@@ -1439,13 +1743,13 @@
                     <table class="ucs-table" id="ucs-inventory-table">
                         <thead>
                             <tr>
-                                <th>ID</th>
-                                <th>Nome</th>
+                                <th>SERIAL NUMBER</th>
                                 <th>IP</th>
-                                <th>Modelo</th>
-                                <th>Descrição</th>
-                                <th>Gestão</th>
-                                <th>Controles</th>
+                                <th>MODELO</th>
+                                <th>SETOR</th>
+                                <th>ALOCAÇÃO</th>
+                                <th>STATUS</th>
+                                <th>CONTROLES</th>
                             </tr>
                         </thead>
                         <tbody id="ucs-inventory-data">
@@ -1476,7 +1780,7 @@
                         <div class="mod-content">
                             <h3>Nova Ronda</h3>
                             <p>Iniciar uma nova vistoria técnica.</p>
-                            <span class="mod-link">Criar Ronda →</span>
+                            <span class="mod-link">Criar Ronda</span>
                         </div>
                     </div>
 
@@ -1485,7 +1789,7 @@
                         <div class="mod-content">
                             <h3>Rondas Pendentes</h3>
                             <p>Visualizar rondas aguardando conclusão.</p>
-                            <span class="mod-link">Ver Pendentes →</span>
+                            <span class="mod-link">Ver Pendentes</span>
                         </div>
                     </div>
 
@@ -1494,7 +1798,7 @@
                         <div class="mod-content">
                             <h3>Histórico</h3>
                             <p>Consultar todas as rondas realizadas.</p>
-                            <span class="mod-link">Ver Histórico →</span>
+                            <span class="mod-link">Ver Histórico</span>
                         </div>
                     </div>
                 </div>
@@ -1547,7 +1851,7 @@
                         <div class="mod-content">
                             <h3>Abrir Ticket</h3>
                             <p>Criar um novo chamado de suporte.</p>
-                            <span class="mod-link">Novo Ticket →</span>
+                            <span class="mod-link">Novo Ticket</span>
                         </div>
                     </div>
 
@@ -1565,7 +1869,7 @@
                         <div class="mod-content">
                             <h3>Documentação</h3>
                             <p>Acessar guias e tutoriais do sistema.</p>
-                            <span class="mod-link">Ver Docs →</span>
+                            <span class="mod-link">Ver Docs</span>
                         </div>
                     </div>
 
@@ -1574,7 +1878,7 @@
                         <div class="mod-content">
                             <h3>FAQ</h3>
                             <p>Perguntas frequentes e soluções.</p>
-                            <span class="mod-link">Ver FAQ →</span>
+                            <span class="mod-link">Ver FAQ</span>
                         </div>
                     </div>
                 </div>
@@ -1644,15 +1948,13 @@
                 
                 <!-- Grid de Cards de Administração -->
                 <div class="admin-dashboard-grid">
-                    <!-- Card 1: Gerenciar Usuários -->
+                    <!-- Card 1: Gerenciar Usuários (só lista) -->
                     <div class="admin-dashboard-card admin-card-users" onclick="abrirGerenciarUsuarios()">
                         <div class="admin-card-icon-wrapper">
                             <div class="admin-card-icon users-icon">
                                 <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <!-- Pessoa 1 (Roxo) -->
                                     <circle cx="20" cy="18" r="8" fill="#8A2BE2" opacity="0.9"/>
                                     <ellipse cx="20" cy="35" rx="10" ry="12" fill="#8A2BE2" opacity="0.9"/>
-                                    <!-- Pessoa 2 (Azul) -->
                                     <circle cx="44" cy="18" r="8" fill="#4169E1" opacity="0.9"/>
                                     <ellipse cx="44" cy="35" rx="10" ry="12" fill="#4169E1" opacity="0.9"/>
                                 </svg>
@@ -1660,18 +1962,30 @@
                         </div>
                         <div class="admin-card-content">
                             <h3>Gerenciar Usuários</h3>
-                            <p>Crie, edite e gerencie contas de usuários do sistema.</p>
+                            <p>Visualize e gerencie usuários cadastrados.</p>
                             <div class="admin-stats">
                                 <div class="admin-stat-item">
                                     <span class="admin-stat-number" id="total-usuarios">0</span>
-                                    <span class="admin-stat-label">TOTAL DE USUÁRIOS</span>
+                                    <span class="admin-stat-label">TOTAL</span>
                                 </div>
                                 <div class="admin-stat-item">
                                     <span class="admin-stat-number" id="usuarios-ativos">0</span>
-                                    <span class="admin-stat-label">USUÁRIOS ATIVOS</span>
+                                    <span class="admin-stat-label">ATIVOS</span>
                                 </div>
                             </div>
-                            <button type="button" class="admin-card-btn" onclick="event.stopPropagation(); abrirGerenciarUsuarios();">Gerenciar Usuários</button>
+                            <button type="button" class="admin-card-btn" onclick="event.stopPropagation(); abrirGerenciarUsuarios();">Usuários Cadastrados</button>
+                        </div>
+                    </div>
+
+                    <!-- Card 2: Cadastrar Novo Usuário -->
+                    <div class="admin-dashboard-card admin-card-cadastro" onclick="abrirCadastrarUsuario()">
+                        <div class="admin-card-icon-wrapper">
+                            <div class="admin-card-icon" style="font-size: 36px;">➕</div>
+                        </div>
+                        <div class="admin-card-content">
+                            <h3>Cadastrar Novo Usuário</h3>
+                            <p>Crie novas contas de acesso ao sistema.</p>
+                            <button type="button" class="admin-card-btn" onclick="event.stopPropagation(); abrirCadastrarUsuario();">Cadastrar Usuário</button>
                         </div>
                     </div>
 
@@ -1695,16 +2009,6 @@
                         <div class="admin-card-content">
                             <h3>Estatísticas do Sistema</h3>
                             <p>Visualize métricas e estatísticas gerais do sistema.</p>
-                            <div class="admin-stats">
-                                <div class="admin-stat-item">
-                                    <span class="admin-stat-number" id="total-equipamentos">0</span>
-                                    <span class="admin-stat-label">EQUIPAMENTOS</span>
-                                </div>
-                                <div class="admin-stat-item">
-                                    <span class="admin-stat-number" id="rondas-realizadas">0</span>
-                                    <span class="admin-stat-label">RONDAS REALIZADAS</span>
-                                </div>
-                            </div>
                             <button type="button" class="admin-card-btn" onclick="event.stopPropagation(); abrirEstatisticasSistema();">Ver Estatísticas</button>
                         </div>
                     </div>
@@ -1754,18 +2058,45 @@
                     </div>
                 </div>
 
-                <!-- Modal de Gerenciar Usuários -->
+                <!-- Modal Gerenciar - APENAS Usuários Cadastrados -->
                 <div id="modal-gerenciar-usuarios" class="admin-modal" style="display: none;">
-                    <div class="admin-modal-content">
+                    <div class="admin-modal-content admin-modal-content-wide">
                         <div class="admin-modal-header">
-                            <h3>👥 Gerenciar Usuários</h3>
+                            <h3>👥 Usuários Cadastrados</h3>
                             <button class="admin-modal-close" onclick="fecharModalUsuarios()">×</button>
                         </div>
                         <div class="admin-modal-body">
-                            <!-- Card de Cadastro de Usuário -->
-                            <div class="admin-card">
-                                <h3>➕ Cadastrar Novo Usuário</h3>
-                                <form id="cadastro-usuario-form" class="admin-form" onsubmit="cadastrarUsuario(event)">
+                            <div class="admin-search" style="margin-bottom: 16px;">
+                                <input type="text" id="buscar-usuario" placeholder="🔍 Buscar usuário..." onkeyup="filtrarUsuarios()">
+                            </div>
+                            <div class="usuarios-table-container">
+                                <table class="usuarios-table" id="tabela-usuarios">
+                                    <thead>
+                                        <tr>
+                                            <th>Nome</th>
+                                            <th>Login</th>
+                                            <th>Perfil</th>
+                                            <th>Data Cadastro</th>
+                                            <th>Último Acesso</th>
+                                            <th>Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="usuarios-tbody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal Cadastrar Novo Usuário -->
+                <div id="modal-cadastrar-usuario" class="admin-modal" style="display: none;">
+                    <div class="admin-modal-content">
+                        <div class="admin-modal-header">
+                            <h3>➕ Cadastrar Novo Usuário</h3>
+                            <button class="admin-modal-close" onclick="fecharModalCadastrarUsuario()">×</button>
+                        </div>
+                        <div class="admin-modal-body">
+                            <form id="cadastro-usuario-form" class="admin-form" onsubmit="cadastrarUsuario(event)">
                                     <div class="form-row">
                                         <div class="input-group">
                                             <label for="novo-usuario-nome">Nome Completo *</label>
@@ -1784,7 +2115,7 @@
                                         </div>
                                         <div class="input-group">
                                             <label for="novo-usuario-perfil">Perfil *</label>
-                                            <select id="novo-usuario-perfil" required>
+                                            <select id="novo-usuario-perfil" required class="select-glass">
                                                 <option value="">Selecione um perfil</option>
                                                 <option value="admin">Administrador</option>
                                                 <option value="tecnico">Técnico</option>
@@ -1799,35 +2130,97 @@
                                         <button type="submit" class="btn-primary">Cadastrar Usuário</button>
                                     </div>
                                 </form>
-                            </div>
-                            
-                            <!-- Lista de Usuários -->
-                            <div class="admin-card">
-                                <div class="admin-card-header">
-                                    <h3>👥 Usuários Cadastrados</h3>
-                                    <div class="admin-search">
-                                        <input type="text" id="buscar-usuario" placeholder="🔍 Buscar usuário..." onkeyup="filtrarUsuarios()">
+                                <div id="cadastro-senha-expiracao" class="cadastro-senha-expiracao" style="display: none;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal Editar Usuário -->
+                <div id="modal-editar-usuario" class="admin-modal admin-modal-editar" style="display: none;">
+                    <div class="admin-modal-content admin-modal-editar-content">
+                        <div class="admin-modal-header">
+                            <h3>✏️ Editar Usuário</h3>
+                            <button class="admin-modal-close" onclick="fecharModalEditarUsuario()">×</button>
+                        </div>
+                        <div class="admin-modal-body">
+                            <form id="editar-usuario-form" class="admin-form" onsubmit="salvarUsuarioEditado(event)">
+                                <input type="hidden" id="editar-usuario-login">
+                                <input type="hidden" id="editar-usuario-original-key">
+                                <div class="form-row">
+                                    <div class="input-group">
+                                        <label for="editar-usuario-nome">Nome Completo *</label>
+                                        <input type="text" id="editar-usuario-nome" required placeholder="Ex: João Silva">
+                                    </div>
+                                    <div class="input-group">
+                                        <label for="editar-usuario-login-display">Login</label>
+                                        <input type="text" id="editar-usuario-login-display" readonly class="input-readonly" placeholder="Login (não editável)">
                                     </div>
                                 </div>
-                                
-                                <div class="usuarios-table-container">
-                                    <table class="usuarios-table" id="tabela-usuarios">
-                                        <thead>
-                                            <tr>
-                                                <th>Nome</th>
-                                                <th>Login</th>
-                                                <th>Perfil</th>
-                                                <th>Data Cadastro</th>
-                                                <th>Último Acesso</th>
-                                                <th>Ações</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="usuarios-tbody">
-                                            <!-- Será preenchido via JavaScript -->
-                                        </tbody>
-                                    </table>
+                                <div class="form-row">
+                                    <div class="input-group">
+                                        <label for="editar-usuario-perfil">Perfil *</label>
+                                        <div class="perfil-select-wrap" id="perfil-select-wrap-editar">
+                                            <select id="editar-usuario-perfil" required class="select-glass perfil-select-native" aria-hidden="true">
+                                                <option value="">Selecione um perfil</option>
+                                                <option value="admin">Administrador</option>
+                                                <option value="tecnico">Técnico</option>
+                                                <option value="operador">Operador</option>
+                                                <option value="visualizador">Visualizador</option>
+                                            </select>
+                                            <button type="button" class="perfil-select-trigger" id="perfil-select-trigger-editar" aria-expanded="false" aria-haspopup="listbox">
+                                                <span class="perfil-select-value" id="perfil-select-value-editar">Selecione um perfil</span>
+                                                <span class="perfil-select-arrow" aria-hidden="true">
+                                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                                                </span>
+                                            </button>
+                                            <div class="perfil-select-dropdown" id="perfil-select-dropdown-editar" role="listbox" aria-hidden="true">
+                                                <div class="perfil-select-option" data-value="" role="option">Selecione um perfil</div>
+                                                <div class="perfil-select-option" data-value="admin" role="option"><span class="perfil-option-icon perfil-admin">👑</span>Administrador</div>
+                                                <div class="perfil-select-option" data-value="tecnico" role="option"><span class="perfil-option-icon perfil-tecnico">🔧</span>Técnico</div>
+                                                <div class="perfil-select-option" data-value="operador" role="option"><span class="perfil-option-icon perfil-operador">👤</span>Operador</div>
+                                                <div class="perfil-select-option" data-value="visualizador" role="option"><span class="perfil-option-icon perfil-visualizador">👁️</span>Visualizador</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="input-group">
+                                        <label for="editar-usuario-setor">Setor</label>
+                                        <input type="text" id="editar-usuario-setor" placeholder="Ex: TI, Suporte">
+                                    </div>
                                 </div>
-                            </div>
+                                <div class="editar-senha-section">
+                                    <h4>🔐 Alterar Senha</h4>
+                                    <p class="editar-senha-hint">Deixe em branco para manter a senha atual. Ao alterar, será definida expiração aleatória (30, 60, 80 ou 120 dias).</p>
+                                    <div class="form-row">
+                                        <div class="input-group">
+                                            <label for="editar-usuario-nova-senha">Nova Senha</label>
+                                            <input type="password" id="editar-usuario-nova-senha" placeholder="Mínimo 6 caracteres" minlength="6" autocomplete="new-password">
+                                        </div>
+                                        <div class="input-group">
+                                            <label for="editar-usuario-confirmar-senha">Confirmar Nova Senha</label>
+                                            <input type="password" id="editar-usuario-confirmar-senha" placeholder="Repita a senha" autocomplete="new-password">
+                                        </div>
+                                    </div>
+                                    <div id="editar-senha-expiracao-info" class="senha-expiracao-info" style="display: none;"></div>
+                                </div>
+                                <div class="form-actions">
+                                    <button type="button" class="btn-secondary" onclick="fecharModalEditarUsuario()">Cancelar</button>
+                                    <button type="submit" class="btn-primary">Salvar Alterações</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal Permissões por Perfil -->
+                <div id="modal-permissoes" class="admin-modal" style="display: none;">
+                    <div class="admin-modal-content admin-modal-permissoes-estreito">
+                        <div class="admin-modal-header">
+                            <h3>⚙️ Permissões por Perfil</h3>
+                            <button class="admin-modal-close" onclick="fecharModalPermissoes()">×</button>
+                        </div>
+                        <div class="admin-modal-body">
+                            <p class="admin-permissoes-desc">Defina quais módulos cada perfil terá acesso. Marque os checkboxes para permitir.</p>
+                            <div id="permissoes-perfil-grid" class="permissoes-perfil-grid"></div>
                         </div>
                     </div>
                 </div>
@@ -2032,9 +2425,8 @@
                             <label for="cad-serial">Número de Série *</label>
                             <div class="serial-input-wrapper" id="cad-serial-wrapper">
                                 <span class="serial-prefix" id="cad-serial-prefix"></span>
-                                <input type="text" id="cad-serial" placeholder="Selecione o modelo e digite o resto do número de série" autocomplete="off" />
+                                <input type="text" id="cad-serial" placeholder="Selecione o modelo e digite o resto do número de série" autocomplete="off" maxlength="9" />
                             </div>
-                            <div class="serial-suggestions" id="cad-serial-suggestions"></div>
                         </div>
                     </div>
                     
@@ -2047,7 +2439,7 @@
                                     <label for="cad-ip">Endereço IP *</label>
                                     <div class="ip-input-wrapper serial-input-wrapper" id="cad-ip-wrapper">
                                         <span class="serial-prefix" id="cad-ip-prefix">10.201.</span>
-                                        <input type="text" id="cad-ip" required placeholder="Ex: 131.25 ou 131.8" autocomplete="off" maxlength="7" inputmode="numeric">
+                                        <input type="text" id="cad-ip" required placeholder="131.222" autocomplete="off" maxlength="7" inputmode="numeric">
                                     </div>
                                 </div>
                                 
@@ -2058,22 +2450,112 @@
                                 
                                 <div class="input-group">
                                     <label for="cad-setor">Setor *</label>
-                                    <select id="cad-setor" class="cadastro-select" required>
-                                        <option value="">Selecione um setor</option>
-                                        <option value="packing-mono">PACKING MONO</option>
-                                        <option value="packing-ptw">PACKING PTW</option>
-                                        <option value="rk">RK</option>
-                                        <option value="check-in">CHECK-IN</option>
-                                        <option value="returns">RETURNS</option>
-                                        <option value="insumos">INSUMOS</option>
-                                    </select>
+                                    <div class="setor-selector setor-selector-cadastro" id="setor-selector-cadastro-wrap">
+                                        <select id="cad-setor" class="setor-selector-native-hidden" required aria-hidden="true">
+                                            <option value="">Selecione um setor</option>
+                                            <option value="internal-systems">INTERNAL SYSTEMS</option>
+                                            <option value="lideranca">LIDERANÇA</option>
+                                            <option value="mhw">MHW</option>
+                                            <option value="p2m">P2M</option>
+                                            <option value="check-in">CHECK-IN</option>
+                                            <option value="reciving">RECIVING</option>
+                                            <option value="mz1">MZ1</option>
+                                            <option value="mz2">MZ2</option>
+                                            <option value="mz3">MZ3</option>
+                                            <option value="inventario">INVENTÁRIO</option>
+                                            <option value="cx">CX</option>
+                                            <option value="returns">RETURNS</option>
+                                            <option value="packing-mono">PACKING MONO</option>
+                                            <option value="packing-ptw">PACKING PTW</option>
+                                            <option value="sauron">SAURON</option>
+                                            <option value="insumos">INSUMOS</option>
+                                            <option value="docas-de-expedicao">DOCAS DE EXPEDIÇÃO</option>
+                                            <option value="linha-de-peixe-1">LINHA DE PEIXE 1</option>
+                                            <option value="sorter">SORTER</option>
+                                            <option value="linha-de-peixe-2">LINHA DE PEIXE 2</option>
+                                            <option value="rk">RK</option>
+                                            <option value="nt-rk">NT RK</option>
+                                            <option value="qualidade">QUALIDADE</option>
+                                            <option value="aquario-outbound">AQUÁRIO OUTBOUND</option>
+                                            <option value="adm">ADM</option>
+                                            <option value="gate">GATE</option>
+                                            <option value="ambulatorio-interno">AMBULATÓRIO INTERNO</option>
+                                            <option value="ambulatorio-externo">AMBULATÓRIO EXTERNO</option>
+                                            <option value="sala-de-epi">SALA DE EPI</option>
+                                            <option value="er">ER</option>
+                                            <option value="rr">RR</option>
+                                            <option value="deposito-de-treinamento">DEPÓSITO DE TREINAMENTO</option>
+                                            <option value="hv">HV</option>
+                                        </select>
+                                        <button type="button" class="setor-selector-trigger setor-selector-trigger-cadastro" id="cad-setor-trigger" aria-haspopup="listbox" aria-expanded="false">Selecione um setor</button>
+                                        <div class="setor-selector-dropdown" id="cad-setor-dropdown" role="listbox" aria-hidden="true">
+                                            <div class="setor-selector-option" data-value="" role="option">Selecione um setor</div>
+                                            <div class="setor-selector-option" data-value="internal-systems" role="option">INTERNAL SYSTEMS</div>
+                                            <div class="setor-selector-option" data-value="lideranca" role="option">LIDERANÇA</div>
+                                            <div class="setor-selector-option" data-value="mhw" role="option">MHW</div>
+                                            <div class="setor-selector-option" data-value="p2m" role="option">P2M</div>
+                                            <div class="setor-selector-option" data-value="check-in" role="option">CHECK-IN</div>
+                                            <div class="setor-selector-option" data-value="reciving" role="option">RECIVING</div>
+                                            <div class="setor-selector-option" data-value="mz1" role="option">MZ1</div>
+                                            <div class="setor-selector-option" data-value="mz2" role="option">MZ2</div>
+                                            <div class="setor-selector-option" data-value="mz3" role="option">MZ3</div>
+                                            <div class="setor-selector-option" data-value="inventario" role="option">INVENTÁRIO</div>
+                                            <div class="setor-selector-option" data-value="cx" role="option">CX</div>
+                                            <div class="setor-selector-option" data-value="returns" role="option">RETURNS</div>
+                                            <div class="setor-selector-option" data-value="packing-mono" role="option">PACKING MONO</div>
+                                            <div class="setor-selector-option" data-value="packing-ptw" role="option">PACKING PTW</div>
+                                            <div class="setor-selector-option" data-value="sauron" role="option">SAURON</div>
+                                            <div class="setor-selector-option" data-value="insumos" role="option">INSUMOS</div>
+                                            <div class="setor-selector-option" data-value="docas-de-expedicao" role="option">DOCAS DE EXPEDIÇÃO</div>
+                                            <div class="setor-selector-option" data-value="linha-de-peixe-1" role="option">LINHA DE PEIXE 1</div>
+                                            <div class="setor-selector-option" data-value="sorter" role="option">SORTER</div>
+                                            <div class="setor-selector-option" data-value="linha-de-peixe-2" role="option">LINHA DE PEIXE 2</div>
+                                            <div class="setor-selector-option" data-value="rk" role="option">RK</div>
+                                            <div class="setor-selector-option" data-value="nt-rk" role="option">NT RK</div>
+                                            <div class="setor-selector-option" data-value="qualidade" role="option">QUALIDADE</div>
+                                            <div class="setor-selector-option" data-value="aquario-outbound" role="option">AQUÁRIO OUTBOUND</div>
+                                            <div class="setor-selector-option" data-value="adm" role="option">ADM</div>
+                                            <div class="setor-selector-option" data-value="gate" role="option">GATE</div>
+                                            <div class="setor-selector-option" data-value="ambulatorio-interno" role="option">AMBULATÓRIO INTERNO</div>
+                                            <div class="setor-selector-option" data-value="ambulatorio-externo" role="option">AMBULATÓRIO EXTERNO</div>
+                                            <div class="setor-selector-option" data-value="sala-de-epi" role="option">SALA DE EPI</div>
+                                            <div class="setor-selector-option" data-value="er" role="option">ER</div>
+                                            <div class="setor-selector-option" data-value="rr" role="option">RR</div>
+                                            <div class="setor-selector-option" data-value="deposito-de-treinamento" role="option">DEPÓSITO DE TREINAMENTO</div>
+                                            <div class="setor-selector-option" data-value="hv" role="option">HV</div>
+                                        </div>
+                                    </div>
                                 </div>
                                 
-                                <div class="input-group">
-                                    <label for="cad-bancada">Bancada</label>
-                                    <select id="cad-bancada" class="cadastro-select">
-                                        <option value="">Selecione uma bancada</option>
-                                    </select>
+                                <div class="form-row-bancada-status">
+                                    <div class="input-group input-group-half">
+                                        <label for="cad-bancada">Bancada</label>
+                                        <div class="setor-selector setor-selector-cadastro" id="bancada-selector-wrap">
+                                            <select id="cad-bancada" class="setor-selector-native-hidden" aria-hidden="true">
+                                                <option value="">Selecione uma bancada</option>
+                                            </select>
+                                            <button type="button" class="setor-selector-trigger setor-selector-trigger-cadastro" id="cad-bancada-trigger" aria-haspopup="listbox" aria-expanded="false">Selecione uma bancada</button>
+                                            <div class="setor-selector-dropdown" id="cad-bancada-dropdown" role="listbox" aria-hidden="true">
+                                                <div class="setor-selector-option" data-value="" role="option">Selecione uma bancada</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="input-group input-group-half">
+                                        <label for="cad-status">Status</label>
+                                        <div class="setor-selector setor-selector-cadastro" id="status-selector-wrap">
+                                            <select id="cad-status" class="setor-selector-native-hidden" aria-hidden="true">
+                                                <option value="EM USO">EM USO</option>
+                                                <option value="DEFEITO">DEFEITO</option>
+                                                <option value="BACKUP OPERACIONAL">BACKUP OPERACIONAL</option>
+                                            </select>
+                                            <button type="button" class="setor-selector-trigger setor-selector-trigger-cadastro" id="cad-status-trigger" aria-haspopup="listbox" aria-expanded="false">EM USO</button>
+                                            <div class="setor-selector-dropdown" id="cad-status-dropdown" role="listbox" aria-hidden="true">
+                                                <div class="setor-selector-option selected" data-value="EM USO" role="option">EM USO</div>
+                                                <div class="setor-selector-option" data-value="DEFEITO" role="option">DEFEITO</div>
+                                                <div class="setor-selector-option" data-value="BACKUP OPERACIONAL" role="option">BACKUP OPERACIONAL</div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             
@@ -2091,7 +2573,7 @@
                                 
                                 <div class="input-group">
                                     <label for="cad-patrimonio">Número do Patrimônio</label>
-                                    <input type="text" id="cad-patrimonio" placeholder="Ex: 123456789">
+                                    <input type="text" id="cad-patrimonio" placeholder="Ex: 123456789" maxlength="24">
                                 </div>
                             </div>
                         </div>
@@ -2118,7 +2600,7 @@
                             </div>
                             <div class="detail-row">
                                 <span>Status:</span>
-                                <strong>🟢 Online</strong>
+                                <strong id="confirm-status">-</strong>
                             </div>
                         </div>
                         
@@ -2131,7 +2613,7 @@
                 
                 <div class="form-actions">
                     <button type="button" class="btn-back" onclick="if(typeof passoAnteriorCadastro === 'function') { passoAnteriorCadastro(); } else { console.error('passoAnteriorCadastro não encontrada'); } return false;" id="btn-back" style="display: none;">
-                        ← Voltar
+                        Voltar
                     </button>
                     <button type="button" class="btn-next" onclick="if(typeof proximoPassoCadastro === 'function') { proximoPassoCadastro(); } else { console.error('proximoPassoCadastro não encontrada'); alert('Erro: Função de navegação não encontrada. Recarregue a página.'); } return false;" id="btn-next">
                         Próximo
@@ -2144,24 +2626,15 @@
         </div>
     </div>
 
-    <!-- Modal de Detalhes do Equipamento - CORRIGIDO -->
+    <!-- Modal de Detalhes do Equipamento - título = Serial Number da impressora -->
     <div id="detalhes-modal" class="modal-equipamento">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 id="detail-tag">🔍 Detalhes do Equipamento</h3>
+                <h3 id="detail-titulo-serial">—</h3>
                 <button type="button" class="close-modal" onclick="fecharDetalhes()" aria-label="Fechar">×</button>
             </div>
             <div class="modal-body">
-                <div class="detalhe-header">
-                    <h4 id="detail-tag-label">ZT411-IND-001</h4>
-                    <span class="status-online" id="detail-status">● Online</span>
-                </div>
-                
                 <div class="detalhe-info">
-                    <div class="info-row">
-                        <span class="info-label">Número de Série:</span>
-                        <span class="info-value" id="detail-serial">18J194501111</span>
-                    </div>
                     <div class="info-row">
                         <span class="info-label">Modelo:</span>
                         <span class="info-value" id="detail-modelo">ZT411</span>
@@ -2195,6 +2668,10 @@
                         <span class="info-value" id="detail-bancada">-</span>
                     </div>
                     <div class="info-row">
+                        <span class="info-label">Status:</span>
+                        <span class="info-value" id="detail-status">-</span>
+                    </div>
+                    <div class="info-row">
                         <span class="info-label">Última Checagem:</span>
                         <span class="info-value" id="detail-ultima-checagem">15/01/2024 14:30</span>
                     </div>
@@ -2214,54 +2691,126 @@
                         <span class="info-label">Contador:</span>
                         <span class="info-value" id="detail-contador">12,543</span>
                     </div>
-                    <div class="info-row">
-                        <span class="info-label">Garantia até:</span>
-                        <span class="info-value" id="detail-garantia">10/01/2025</span>
-                    </div>
                 </div>
                 
-                <!-- Status de Consumíveis -->
+                <!-- Ações: apenas Histórico (ver quem alterou por último) -->
                 <div class="detalhe-acoes">
-                    <h4>Status dos Consumíveis</h4>
-                    <div id="detail-consumiveis">
-                        <div class="consumivel">
-                            <span class="consumivel-label">Toner:</span>
-                            <div class="progress-bar">
-                                <div class="progress-fill" style="width: 85%"></div>
-                            </div>
-                            <span class="consumivel-value">85%</span>
-                        </div>
-                        <div class="consumivel">
-                            <span class="consumivel-label">Ribbon:</span>
-                            <div class="progress-bar">
-                                <div class="progress-fill" style="width: 60%"></div>
-                            </div>
-                            <span class="consumivel-value">60%</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Observações -->
-                <div class="obs-container">
-                    <h4>Observações</h4>
-                    <p id="detail-observacoes">Impressora nova, calibração realizada em 10/01/2024</p>
-                </div>
-                
-                <!-- Ações -->
-                <div class="detalhe-acoes">
-                    <button class="btn-action btn-detalhes" id="detail-ping-btn">
-                        <span class="btn-icon">📶</span>
-                        <span class="btn-text">Testar Conexão</span>
-                    </button>
-                    <button class="btn-action btn-detalhes" id="detail-edit-btn">
-                        <span class="btn-icon">✏️</span>
-                        <span class="btn-text">Editar</span>
-                    </button>
                     <button class="btn-action btn-detalhes" id="detail-history-btn">
                         <span class="btn-icon">📊</span>
                         <span class="btn-text">Histórico</span>
                     </button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Editar – mesma lista de dados que Ver Dados, com campos editáveis -->
+    <div id="editar-modal" class="modal-equipamento" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="editar-titulo-serial">—</h3>
+                <button type="button" class="close-modal" onclick="fecharModalEditar()" aria-label="Fechar">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="detalhe-info editar-info">
+                    <div class="info-row edit-row">
+                        <span class="info-label">Modelo:</span>
+                        <input type="text" id="edit-modelo" class="info-edit-input" readonly>
+                    </div>
+                    <div class="info-row edit-row">
+                        <span class="info-label">Endereço IP:</span>
+                        <input type="text" id="edit-ip" class="info-edit-input" placeholder="Ex: 10.201.130.255">
+                    </div>
+                    <div class="info-row edit-row">
+                        <span class="info-label">MAC Rede:</span>
+                        <input type="text" id="edit-mac-rede" class="info-edit-input" placeholder="00:00:00:00:00:00">
+                    </div>
+                    <div class="info-row edit-row">
+                        <span class="info-label">MAC Bluetooth:</span>
+                        <input type="text" id="edit-mac-bluetooth" class="info-edit-input" placeholder="00:00:00:00:00:00">
+                    </div>
+                    <div class="info-row edit-row">
+                        <span class="info-label">SELB:</span>
+                        <input type="text" id="edit-selb" class="info-edit-input" placeholder="Ex: 6025" maxlength="4">
+                    </div>
+                    <div class="info-row edit-row">
+                        <span class="info-label">Patrimônio:</span>
+                        <input type="text" id="edit-patrimonio" class="info-edit-input" placeholder="Número do patrimônio" maxlength="24">
+                    </div>
+                    <div class="info-row edit-row">
+                        <span class="info-label">Setor:</span>
+                        <div class="setor-selector setor-selector-editar" id="edit-setor-wrap">
+                            <select id="edit-setor" class="setor-selector-native-hidden" aria-hidden="true"></select>
+                            <button type="button" class="setor-selector-trigger setor-selector-trigger-editar" id="edit-setor-trigger" aria-haspopup="listbox" aria-expanded="false">—</button>
+                            <div class="setor-selector-dropdown setor-selector-dropdown-editar" id="edit-setor-dropdown" role="listbox" aria-hidden="true"></div>
+                        </div>
+                    </div>
+                    <div class="info-row edit-row">
+                        <span class="info-label">Bancada:</span>
+                        <div class="setor-selector setor-selector-editar" id="edit-bancada-wrap">
+                            <select id="edit-bancada" class="setor-selector-native-hidden" aria-hidden="true"></select>
+                            <button type="button" class="setor-selector-trigger setor-selector-trigger-editar" id="edit-bancada-trigger" aria-haspopup="listbox" aria-expanded="false">—</button>
+                            <div class="setor-selector-dropdown setor-selector-dropdown-editar" id="edit-bancada-dropdown" role="listbox" aria-hidden="true"></div>
+                        </div>
+                    </div>
+                    <div class="info-row edit-row">
+                        <span class="info-label">Status:</span>
+                        <div class="setor-selector setor-selector-editar" id="edit-status-wrap">
+                            <select id="edit-status" class="setor-selector-native-hidden" aria-hidden="true">
+                                <option value="EM USO">EM USO</option>
+                                <option value="DEFEITO">DEFEITO</option>
+                                <option value="BACKUP OPERACIONAL">BACKUP OPERACIONAL</option>
+                            </select>
+                            <button type="button" class="setor-selector-trigger setor-selector-trigger-editar" id="edit-status-trigger" aria-haspopup="listbox" aria-expanded="false">EM USO</button>
+                            <div class="setor-selector-dropdown setor-selector-dropdown-editar" id="edit-status-dropdown" role="listbox" aria-hidden="true">
+                                <div class="setor-selector-option" data-value="EM USO" role="option">EM USO</div>
+                                <div class="setor-selector-option" data-value="DEFEITO" role="option">DEFEITO</div>
+                                <div class="setor-selector-option" data-value="BACKUP OPERACIONAL" role="option">BACKUP OPERACIONAL</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="info-row edit-row">
+                        <span class="info-label">Última Checagem:</span>
+                        <input type="text" id="edit-ultima-checagem" class="info-edit-input" readonly>
+                    </div>
+                    <div class="info-row edit-row">
+                        <span class="info-label">Responsável:</span>
+                        <input type="text" id="edit-responsavel" class="info-edit-input" readonly title="Preenchido automaticamente com o usuário logado">
+                    </div>
+                    <div class="info-row edit-row">
+                        <span class="info-label">Fabricante:</span>
+                        <input type="text" id="edit-fabricante" class="info-edit-input" readonly title="Zebra Technologies">
+                    </div>
+                    <div class="info-row edit-row">
+                        <span class="info-label">Firmware:</span>
+                        <input type="text" id="edit-firmware" class="info-edit-input">
+                    </div>
+                    <div class="info-row edit-row">
+                        <span class="info-label">Contador:</span>
+                        <input type="number" id="edit-contador" class="info-edit-input" min="0" placeholder="0">
+                    </div>
+                </div>
+                <div class="detalhe-acoes">
+                    <button type="button" class="btn-action btn-detalhes" id="editar-btn-salvar" onclick="salvarEdicaoEquipamento()">
+                        <span class="btn-icon">💾</span>
+                        <span class="btn-text">Salvar</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de confirmação (vidro estilo Apple, centralizado) -->
+    <div id="confirm-excluir-overlay" class="confirm-overlay confirm-apple-glass" style="display: none;">
+        <div class="confirm-glass-box confirm-apple-box" onclick="event.stopPropagation()">
+            <div class="confirm-glass-header">
+                <span class="confirm-glass-icon confirm-apple-icon">🗑️</span>
+                <h4 class="confirm-glass-title" id="confirm-excluir-title">Excluir</h4>
+            </div>
+            <p class="confirm-glass-message" id="confirm-excluir-message">Tem certeza que deseja excluir?</p>
+            <div class="confirm-glass-actions">
+                <button type="button" class="confirm-btn confirm-btn-cancelar" id="confirm-excluir-cancelar">Cancelar</button>
+                <button type="button" class="confirm-btn confirm-btn-excluir" id="confirm-excluir-ok">Excluir</button>
             </div>
         </div>
     </div>
@@ -2275,7 +2824,9 @@
     <!-- ============================================
          SCRIPTS - ORDEM CORRETA DE CARREGAMENTO
          ============================================ -->
-    
+    <!-- jsPDF + autoTable para exportar inventário em PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
     <!-- Script principal PRIMEIRO: define navigate, filtrarInventario, etc. -->
     <script src="js/script.js"></script>
     
@@ -2409,10 +2960,11 @@
                             const userDisplay = document.getElementById('user-display-name');
                             if (userDisplay) userDisplay.innerText = db.name || userInput;
                             
-                            // Mostra menu admin se for admin
+                            // Mostra menu admin e inicia atualização automática de stats se for admin
                             const menuAdmin = document.getElementById('menu-admin');
                             if (menuAdmin && db.perfil === 'admin') {
                                 menuAdmin.style.display = 'block';
+                                if (typeof iniciarAtualizacaoAdminStats === 'function') iniciarAtualizacaoAdminStats();
                             }
                             
                             // Ao fazer login: sempre vai para Início (Home), nunca para página salva
@@ -2450,15 +3002,15 @@
                     } else {
                         passField.classList.add('shake-animation');
                         setTimeout(() => passField.classList.remove('shake-animation'), 500);
-                        alert('Senha incorreta.');
+                        if (typeof showModalErroLogin === 'function') showModalErroLogin('Senha incorreta', 'Verifique a senha e tente novamente.'); else alert('Senha incorreta.');
                     }
                 } catch (error) {
-                    alert('Erro ao processar dados do usuário.');
+                    if (typeof showModalErroLogin === 'function') showModalErroLogin('Erro', 'Erro ao processar dados do usuário.'); else alert('Erro ao processar dados do usuário.');
                 }
             } else {
                 userField.classList.add('shake-animation');
                 setTimeout(() => userField.classList.remove('shake-animation'), 500);
-                alert('Usuário não encontrado. Verifique se o usuário foi criado corretamente.');
+                if (typeof showModalErroLogin === 'function') showModalErroLogin('Usuário não encontrado', 'Verifique se o usuário foi criado corretamente.'); else alert('Usuário não encontrado. Verifique se o usuário foi criado corretamente.');
             }
         }
         
@@ -3071,29 +3623,29 @@
             const protectedCardsConfig = {
                 'inventario-master': {
                     classes: ['mod-card', 'inventario-master'],
-                    icon: '📦✨',
+                    icon: '📦',
                     linkClass: 'mod-link-inventario',
-                    linkText: 'Acessar Frota →',
+                    linkText: 'Acessar Frota',
                     linkColor: '#00bcd4',
                     bgGradient: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(0, 188, 212, 0.1) 100%)',
                     borderColor: 'rgba(0, 188, 212, 0.3)',
-                    animation: 'floatInventario 3s ease-in-out infinite'
+                    animation: 'pulse 2s ease-in-out infinite'
                 },
                 'rondas-master': {
                     classes: ['mod-card', 'rondas-master'],
-                    icon: '🛡️⚡',
+                    icon: '🛡️',
                     linkClass: 'mod-link-rondas',
-                    linkText: 'Ver Relatórios →',
+                    linkText: 'Ver Relatórios',
                     linkColor: '#4caf50',
                     bgGradient: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(76, 175, 80, 0.1) 100%)',
                     borderColor: 'rgba(76, 175, 80, 0.3)',
-                    animation: 'shieldPulse 2.5s ease-in-out infinite'
+                    animation: 'pulse 2s ease-in-out infinite'
                 },
                 'preventiva-master': {
                     classes: ['mod-card', 'preventiva-master'],
-                    icon: '⚙️🔥',
+                    icon: '🖨️',
                     linkClass: 'mod-link-preventiva',
-                    linkText: 'Iniciar Vistoria →',
+                    linkText: 'Iniciar Vistoria',
                     linkColor: '#fd7e14',
                     bgGradient: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(253, 126, 20, 0.1) 100%)',
                     borderColor: 'rgba(253, 126, 20, 0.3)',
@@ -3101,43 +3653,43 @@
                 },
                 'suporte-master': {
                     classes: ['mod-card', 'suporte-master'],
-                    icon: '💬💖',
+                    icon: '💬',
                     linkClass: 'mod-link-suporte',
-                    linkText: 'Abrir Ticket →',
+                    linkText: 'Abrir Ticket',
                     linkColor: '#e91e63',
                     bgGradient: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(233, 30, 99, 0.1) 100%)',
                     borderColor: 'rgba(233, 30, 99, 0.3)',
-                    animation: 'bounceSuporte 2s ease-in-out infinite'
+                    animation: 'pulse 2s ease-in-out infinite'
                 },
                 'notas-master': {
                     classes: ['mod-card', 'notas-master'],
-                    icon: '📄💜',
+                    icon: '📄',
                     linkClass: 'mod-link-notas',
-                    linkText: 'Acessar Biblioteca →',
+                    linkText: 'Acessar Biblioteca',
                     linkColor: '#9c27b0',
                     bgGradient: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(156, 39, 176, 0.1) 100%)',
                     borderColor: 'rgba(156, 39, 176, 0.3)',
-                    animation: 'waveNotas 2.8s ease-in-out infinite'
+                    animation: 'pulse 2s ease-in-out infinite'
                 },
                 'bloco-master': {
                     classes: ['mod-card', 'bloco-master'],
-                    icon: '📝⭐',
+                    icon: '📝',
                     linkClass: 'mod-link-bloco',
-                    linkText: 'Abrir Editor →',
+                    linkText: 'Abrir Editor',
                     linkColor: '#ffc107',
                     bgGradient: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 193, 7, 0.1) 100%)',
                     borderColor: 'rgba(255, 193, 7, 0.3)',
-                    animation: 'glowBloco 2.2s ease-in-out infinite'
+                    animation: 'pulse 2s ease-in-out infinite'
                 },
                 'config-master': {
                     classes: ['mod-card', 'config-master'],
-                    icon: '⚙️💎',
+                    icon: '⚙️',
                     linkClass: 'mod-link-config',
-                    linkText: 'Abrir Configurações →',
+                    linkText: 'Abrir Configurações',
                     linkColor: '#607d8b',
                     bgGradient: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(96, 125, 139, 0.1) 100%)',
                     borderColor: 'rgba(96, 125, 139, 0.3)',
-                    animation: 'spinConfig 3s linear infinite'
+                    animation: 'pulse 2s ease-in-out infinite'
                 }
             };
             
@@ -3333,7 +3885,7 @@
     </script>
     
     <!-- WhatsApp Alerts System -->
-    <script src="Novos Módulos/whatsapp-alerts/whatsapp-alerts.js"></script>
+    <!-- WhatsApp descontinuado - script removido -->
 
     <!-- Script para garantir que botões do modal funcionem -->
     <script>
@@ -3527,10 +4079,53 @@
             setTimeout(setupLoginButton, 500);
         })();
         
-        // Remove loading screen quando tudo estiver carregado
+        // ========== INTRO AXIS - Funções da apresentação ==========
+        function introProximoSlide() {
+            var slides = document.querySelectorAll('.intro-slide');
+            var dots = document.querySelectorAll('.intro-dot');
+            var current = 0;
+            slides.forEach(function(s, i) { if (s.classList.contains('active')) current = i; });
+            if (current >= slides.length - 1) return;
+            slides[current].classList.remove('active');
+            slides[current + 1].classList.add('active');
+            dots.forEach(function(d, i) { d.classList.toggle('active', i === current + 1); });
+        }
+        function introSlideAnterior() {
+            var slides = document.querySelectorAll('.intro-slide');
+            var dots = document.querySelectorAll('.intro-dot');
+            var current = 0;
+            slides.forEach(function(s, i) { if (s.classList.contains('active')) current = i; });
+            if (current <= 0) return;
+            slides[current].classList.remove('active');
+            slides[current - 1].classList.add('active');
+            dots.forEach(function(d, i) { d.classList.toggle('active', i === current - 1); });
+        }
+        function introIrParaLogin() {
+            localStorage.setItem('axis_intro_seen', 'true');
+            var overlay = document.getElementById('intro-axis-overlay');
+            var authScreen = document.getElementById('auth-screen');
+            var authCard = authScreen ? authScreen.querySelector('.auth-card') : null;
+            if (overlay) overlay.classList.add('intro-fade-out');
+            setTimeout(function() {
+                if (overlay) overlay.style.display = 'none';
+                if (authScreen) {
+                    authScreen.style.display = 'flex';
+                    authScreen.classList.add('auth-screen-transition-in');
+                    if (authCard) authCard.classList.add('auth-card-transition');
+                }
+            }, 800);
+        }
+        window.introProximoSlide = introProximoSlide;
+        window.introSlideAnterior = introSlideAnterior;
+        window.introIrParaLogin = introIrParaLogin;
+
+        // Remove loading screen e controla Intro (primeira visita)
         window.addEventListener('load', function() {
             setTimeout(function() {
                 const loadingScreen = document.getElementById('loading-screen');
+                const introOverlay = document.getElementById('intro-axis-overlay');
+                const authScreen = document.getElementById('auth-screen');
+                
                 if (loadingScreen) {
                     loadingScreen.classList.add('hidden');
                     setTimeout(function() {
@@ -3541,8 +4136,17 @@
                 // Inicializa tema
                 const savedTheme = localStorage.getItem('axis-theme') || 'light';
                 document.body.setAttribute('data-theme', savedTheme);
-                document.getElementById('theme-icon').textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+                var themeIcon = document.getElementById('theme-icon');
+                if (themeIcon) themeIcon.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
                 
+                // Intro: mostra apenas na primeira visita
+                var introJaVisto = localStorage.getItem('axis_intro_seen') === 'true';
+                var userLogado = localStorage.getItem('current_user') && (localStorage.getItem('user_logged_in') === 'true');
+                
+                if (!introJaVisto && !userLogado && introOverlay && authScreen) {
+                    authScreen.style.display = 'none';
+                    introOverlay.style.display = 'flex';
+                }
             }, 800);
         });
 
@@ -3723,3 +4327,8 @@
 
 </body>
 </html>
+</html>
+
+
+
+

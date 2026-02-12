@@ -9,6 +9,7 @@ let notebookData = {
     notes: {},
     currentFolder: 'root',
     currentNote: null,
+    folderExpanded: {}, // id da pasta -> true/false (subpastas expandidas)
     viewMode: 'grid',
     tags: {},
     templates: {},
@@ -35,56 +36,80 @@ let notebookData = {
 document.addEventListener('DOMContentLoaded', function() {
     console.log('📝 Bloco de Notas Apple inicializado');
     
-    // Carregar dados
-    loadData();
+    try {
+        loadData();
+    } catch (e) {
+        console.warn('loadData:', e);
+    }
     
-    // Setup event listeners
-    setupEventListeners();
+    try {
+        setupEventListeners();
+    } catch (e) {
+        console.warn('setupEventListeners:', e);
+    }
     
-    // Renderizar interface
-    renderFolders();
-    renderNotes();
+    try {
+        renderFolders();
+        renderNotes();
+    } catch (e) {
+        console.warn('renderFolders/renderNotes:', e);
+    }
+
+    try {
+        setupSidebarResizer();
+    } catch (e) {
+        console.warn('setupSidebarResizer:', e);
+    }
     
-    // No modo Google Docs, criar uma nota automaticamente se não houver nota atual
-    // Não mostrar espaço em branco - editor sempre visível
+    // Ao recarregar: nunca abrir o editor por padrão; só ao criar nova nota ou abrir uma existente
+    notebookData.currentNote = null;
     const editorContainer = document.getElementById('note-editor-container');
+    const emptyState = document.getElementById('empty-editor-state');
+    const notesListContainer = document.getElementById('notes-list-container');
+    const main = document.querySelector('.notebook-main');
     if (editorContainer) {
-        editorContainer.style.display = 'flex';
-        editorContainer.classList.add('active');
+        editorContainer.style.display = 'none';
+        editorContainer.classList.remove('active');
     }
-    
-    // Não criar nota automaticamente - deixar o usuário escolher
-    // Mostrar toolbar apenas se houver nota aberta
-    if (notebookData.currentNote) {
-        showGoogleDocsToolbar();
+    if (emptyState) {
+        emptyState.style.display = 'flex';
+        emptyState.classList.add('show');
     }
+    if (notesListContainer) {
+        notesListContainer.style.display = 'flex';
+        notesListContainer.classList.remove('hidden');
+    }
+    if (main) main.classList.remove('editor-open');
+    hideGoogleDocsToolbar();
+    closeEditorOptionsPanel();
     
-    // Atalhos de teclado
-    setupKeyboardShortcuts();
-    
-    // Inicializar funcionalidades avançadas
-    initializeAdvancedFeatures();
-    
-    // Inicializar partículas
-    initializeParticles();
-    
-    // Inicializar drag & drop
-    initializeDragAndDrop();
-    
-    // Inicializar service worker para modo offline
-    initializeServiceWorker();
-    
-    // Inicializar notificações
-    initializeNotifications();
-    
-    // Iniciar autosave inteligente
-    startIntelligentAutosave();
-    
-    // Iniciar backup automático
-    startAutoBackup();
-    
-    // Iniciar tracking de estatísticas
-    startStatisticsTracking();
+    try {
+        setupKeyboardShortcuts();
+    } catch (e) { console.warn('setupKeyboardShortcuts:', e); }
+    try {
+        initializeAdvancedFeatures();
+    } catch (e) { console.warn('initializeAdvancedFeatures:', e); }
+    try {
+        initializeParticles();
+    } catch (e) { console.warn('initializeParticles:', e); }
+    try {
+        initializeDragAndDrop();
+    } catch (e) { console.warn('initializeDragAndDrop:', e); }
+    try {
+        initializeServiceWorker();
+    } catch (e) { console.warn('initializeServiceWorker:', e); }
+    try {
+        initializeNotifications();
+    } catch (e) { console.warn('initializeNotifications:', e); }
+    try {
+        startIntelligentAutosave();
+    } catch (e) { console.warn('startIntelligentAutosave:', e); }
+    try {
+        startAutoBackup();
+    } catch (e) { console.warn('startAutoBackup:', e); }
+    try {
+        startStatisticsTracking();
+    } catch (e) { console.warn('startStatisticsTracking:', e); }
     
     // Garantir que os botões de pesquisa e + estejam visíveis
     setTimeout(() => {
@@ -137,6 +162,7 @@ function loadData() {
         usageTime: 0,
         lastBackup: null
     };
+    if (!notebookData.folderExpanded) notebookData.folderExpanded = {};
     
     // Corrigir estrutura de pastas (garantir que pastas principais não sejam subpastas)
     fixFolderStructure();
@@ -151,6 +177,9 @@ function loadData() {
     if (notebookData.settings.darkModeAuto) {
         checkAutoDarkMode();
     }
+    
+    // Ao recarregar a página, nunca abrir o editor por padrão: só ao criar nova nota ou clicar numa nota
+    notebookData.currentNote = null;
 }
 
 // Salvar dados no localStorage
@@ -218,47 +247,39 @@ function setupEventListeners() {
     // Editor de conteúdo
     const editor = document.getElementById('rich-editor');
     if (editor) {
-        // Mostrar toolbar quando focar no editor
         editor.addEventListener('focus', function() {
             const toolbar = document.getElementById('editor-format-toolbar');
-            if (toolbar && notebookData.currentNote) {
-                toolbar.style.display = 'block';
-            }
+            if (toolbar && notebookData.currentNote) toolbar.style.display = 'block';
+            updatePlaceholderVisibility();
         });
-        
-        // Esconder toolbar quando não houver conteúdo ou perder foco
         editor.addEventListener('blur', function() {
             const toolbar = document.getElementById('editor-format-toolbar');
             if (toolbar) {
-                const hasContent = editor.innerHTML.trim() && editor.innerHTML.trim() !== '<p>Comece a escrever...</p>';
-                if (!hasContent) {
-                    setTimeout(() => {
-                        if (document.activeElement !== editor) {
-                            toolbar.style.display = 'none';
-                        }
+                if (isEditorEmpty(editor)) {
+                    setTimeout(function() {
+                        if (document.activeElement !== editor) toolbar.style.display = 'none';
                     }, 200);
                 }
             }
+            updatePlaceholderVisibility();
         });
-        
-        editor.addEventListener('input', debounce(function() {
-            if (notebookData.currentNote) {
-                notebookData.notes[notebookData.currentNote].content = editor.innerHTML;
-                updateWordCount();
-                saveData();
-                
-                // Mostrar toolbar quando começar a escrever
-                const toolbar = document.getElementById('editor-format-toolbar');
-                if (toolbar) {
-                    const hasContent = editor.innerHTML.trim() && editor.innerHTML.trim() !== '<p>Comece a escrever...</p>';
-                    if (hasContent) {
-                        toolbar.style.display = 'block';
-                    }
+        editor.addEventListener('input', (function() {
+            var saveTimeout;
+            return function() {
+                updatePlaceholderVisibility();
+                if (notebookData.currentNote) {
+                    notebookData.notes[notebookData.currentNote].content = isEditorEmpty(editor) ? '' : editor.innerHTML;
+                    updateWordCount();
+                    clearTimeout(saveTimeout);
+                    saveTimeout = setTimeout(saveData, 500);
+                    var toolbar = document.getElementById('editor-format-toolbar');
+                    if (toolbar && !isEditorEmpty(editor)) toolbar.style.display = 'block';
                 }
-            }
-        }, 500));
-        
+            };
+        })());
         editor.addEventListener('paste', handlePaste);
+        initImageLayoutToolbar(editor);
+        updatePlaceholderVisibility();
     }
     
     // Busca
@@ -286,6 +307,7 @@ function setupEventListeners() {
     document.getElementById('btn-statistics')?.addEventListener('click', () => showModal('modal-statistics'));
     document.getElementById('btn-shortcuts')?.addEventListener('click', () => showModal('modal-shortcuts'));
     document.getElementById('btn-theme-toggle')?.addEventListener('click', toggleTheme);
+    document.getElementById('btn-theme-toggle-header')?.addEventListener('click', toggleTheme);
     document.getElementById('btn-pin-note')?.addEventListener('click', togglePin);
     document.getElementById('btn-advanced-search')?.addEventListener('click', () => showModal('modal-advanced-search'));
     document.getElementById('btn-voice-search')?.addEventListener('click', startVoiceSearch);
@@ -294,6 +316,106 @@ function setupEventListeners() {
     document.getElementById('btn-link-notes')?.addEventListener('click', showLinkNotesModal);
     document.getElementById('btn-versions')?.addEventListener('click', () => showModal('modal-versions'));
     document.getElementById('btn-comments')?.addEventListener('click', () => showModal('modal-comments'));
+    /* Toolbar grande: mesmas ações do antigo menu pequeno */
+    document.getElementById('toolbar-add-tag')?.addEventListener('click', () => showModal('modal-tags'));
+    document.getElementById('toolbar-markdown-preview')?.addEventListener('click', toggleMarkdownPreview);
+    document.getElementById('toolbar-link-notes')?.addEventListener('click', showLinkNotesModal);
+    document.getElementById('toolbar-versions')?.addEventListener('click', () => showModal('modal-versions'));
+    
+    /* Menu hambúrguer ao lado do título: abre/fecha o painel de opções na área ao lado das pastas */
+    document.getElementById('editor-toolbar-hamburger')?.addEventListener('click', toggleEditorToolbar);
+    
+    /* Botão fechar do painel de opções */
+    document.getElementById('editor-options-close')?.addEventListener('click', closeEditorOptionsPanel);
+    
+    /* Itens do painel de opções (ação conforme data-action) */
+    document.getElementById('editor-options-list')?.addEventListener('click', function (e) {
+        const item = e.target.closest('.editor-option-item');
+        if (!item) return;
+        const action = item.getAttribute('data-action');
+        if (!action) return;
+        if (action === 'undo') document.getElementById('toolbar-undo')?.click();
+        else if (action === 'redo') document.getElementById('toolbar-redo')?.click();
+        else if (action === 'print') document.getElementById('toolbar-print')?.click();
+        else if (action === 'bold') applyFormat('bold');
+        else if (action === 'italic') applyFormat('italic');
+        else if (action === 'underline') applyFormat('underline');
+        else if (action === 'text-color') showEditorOptionsColors('text');
+        else if (action === 'highlight') showEditorOptionsColors('highlight');
+        else if (action === 'link') showModal('modal-insert-link');
+        else if (action === 'image') showModal('modal-insert-image');
+        else if (action === 'tag') showModal('modal-tags');
+        else if (action === 'markdown') toggleMarkdownPreview();
+        else if (action === 'link-notes') showLinkNotesModal();
+        else if (action === 'versions') showModal('modal-versions');
+        else if (action === 'comment') document.getElementById('toolbar-comment')?.click();
+        else if (action === 'align-left') applyFormat('alignLeft');
+        else if (action === 'align-center') applyFormat('alignCenter');
+        else if (action === 'align-right') applyFormat('alignRight');
+        else if (action === 'list-bullet') document.getElementById('toolbar-list-bullet')?.click();
+        else if (action === 'list-number') document.getElementById('toolbar-list-number')?.click();
+        else if (action === 'clear-format') document.getElementById('toolbar-clear-format')?.click();
+    });
+    
+    /* Abas e paleta de cores no painel (cor do texto / marca-texto) */
+    document.querySelectorAll('.editor-options-color-tab').forEach(function (tab) {
+        tab.addEventListener('click', function () {
+            document.querySelectorAll('.editor-options-color-tab').forEach(function (t) { t.classList.remove('active'); });
+            this.classList.add('active');
+            fillEditorOptionsColorsGrid(this.getAttribute('data-mode'));
+        });
+    });
+    document.getElementById('editor-options-colors-grid')?.addEventListener('click', function (e) {
+        var swatch = e.target.closest('.editor-options-color-swatch');
+        if (!swatch) return;
+        var color = swatch.getAttribute('data-color');
+        var mode = document.querySelector('.editor-options-color-tab.active')?.getAttribute('data-mode') || 'text';
+        applyEditorOptionColor(color, mode);
+    });
+    document.getElementById('editor-options-hex-apply')?.addEventListener('click', function() {
+        var input = document.getElementById('editor-options-hex-input');
+        if (!input) return;
+        var hex = (input.value || '').trim();
+        if (hex.indexOf('#') !== 0) hex = '#' + hex;
+        if (!/^#[0-9A-Fa-f]{6}$/.test(hex)) {
+            showToast('Digite um código válido (ex: #FF5500)', 'info');
+            return;
+        }
+        var mode = document.querySelector('.editor-options-color-tab.active')?.getAttribute('data-mode') || 'text';
+        applyEditorOptionColor(hex, mode);
+    });
+    document.getElementById('editor-options-hex-input')?.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') document.getElementById('editor-options-hex-apply')?.click();
+    });
+    
+    /* Modal Inserir Link: confirmar */
+    document.getElementById('btn-insert-link-confirm')?.addEventListener('click', confirmInsertLink);
+    
+    /* Modal Inserir Imagem: zona de upload (clique + arrastar e soltar) e confirmar */
+    var dropZone = document.getElementById('insert-image-drop');
+    var fileInput = document.getElementById('insert-image-file');
+    if (dropZone && fileInput) {
+        dropZone.addEventListener('click', function () { fileInput.click(); });
+        fileInput.addEventListener('change', onInsertImageFileSelected);
+        dropZone.addEventListener('dragover', function (e) { e.preventDefault(); dropZone.classList.add('drag-over'); });
+        dropZone.addEventListener('dragleave', function () { dropZone.classList.remove('drag-over'); });
+        dropZone.addEventListener('drop', function (e) {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+            var files = e.dataTransfer && e.dataTransfer.files;
+            if (files && files[0] && files[0].type.indexOf('image/') === 0) {
+                try {
+                    var dt = new DataTransfer();
+                    dt.items.add(files[0]);
+                    fileInput.files = dt.files;
+                } catch (err) {
+                    fileInput.files = files;
+                }
+                onInsertImageFileSelected({ target: fileInput });
+            }
+        });
+    }
+    document.getElementById('btn-insert-image-confirm')?.addEventListener('click', confirmInsertImage);
     
     // Setup Toolbar Google Docs
     setupGoogleDocsToolbar();
@@ -456,12 +578,15 @@ function renderFolders() {
     const folderTree = document.getElementById('folder-tree');
     if (!folderTree) return;
     
-    // Limpar (exceto root)
-    const rootFolder = folderTree.querySelector('.root-folder');
-    folderTree.innerHTML = '';
-    if (rootFolder) {
-        folderTree.appendChild(rootFolder);
+    // Remover só os grupos dinâmicos, preservar "Todas as Notas" (root)
+    const toRemove = [];
+    for (var i = 0; i < folderTree.children.length; i++) {
+        var child = folderTree.children[i];
+        if (child.classList && child.classList.contains('folder-group')) {
+            toRemove.push(child);
+        }
     }
+    toRemove.forEach(function (el) { folderTree.removeChild(el); });
     
     // Separar pastas raiz e subpastas
     // Primeiro, garantir que pastas principais não sejam subpastas
@@ -478,31 +603,64 @@ function renderFolders() {
     // Ordenar pastas raiz por nome
     rootFolders.sort((a, b) => a.name.localeCompare(b.name));
     
-    // Renderizar pastas raiz e suas subpastas
+    if (!notebookData.folderExpanded) notebookData.folderExpanded = {};
+    
+    // Renderizar pastas raiz e suas subpastas (cada grupo com seta para expandir/recolher)
     rootFolders.forEach(folder => {
-        // Renderizar pasta principal
-        const folderItem = createFolderElement(folder);
-        folderTree.appendChild(folderItem);
+        const hasSubfolders = subfolders.some(sf => sf.parent === folder.id);
+        const isExpanded = hasSubfolders && (notebookData.folderExpanded[folder.id] !== false);
         
-        // Renderizar subpastas desta pasta (logo abaixo, com indentação)
+        const group = document.createElement('div');
+        group.className = 'folder-group' + (hasSubfolders && !isExpanded ? ' collapsed' : '');
+        group.dataset.folderId = folder.id;
+        
+        // Pasta principal (com seta se tiver subpastas)
+        const folderItem = createFolderElement(folder, false, isExpanded);
+        group.appendChild(folderItem);
+        
+        // Subpastas (visíveis só quando expandido) + notas sob a seta de cada uma
         const childFolders = subfolders.filter(sf => sf.parent === folder.id);
         if (childFolders.length > 0) {
-            // Ordenar subpastas por nome
             childFolders.sort((a, b) => a.name.localeCompare(b.name));
-            
             childFolders.forEach(subfolder => {
-                const subfolderItem = createFolderElement(subfolder, true); // true = é subpasta
-                folderTree.appendChild(subfolderItem);
+                const subfolderNotes = getNotesInFolder(subfolder.id);
+                const subfolderExpanded = subfolderNotes.length > 0 && (notebookData.folderExpanded[subfolder.id] !== false);
+                const subfolderItem = createFolderElement(subfolder, true, subfolderExpanded);
+                group.appendChild(subfolderItem);
+                // Notas desta subpasta (sob a seta, visíveis quando expandido)
+                if (subfolderNotes.length > 0) {
+                    const notesContainer = document.createElement('div');
+                    notesContainer.className = 'folder-notes-list' + (!subfolderExpanded ? ' collapsed' : '');
+                    notesContainer.dataset.folderId = subfolder.id;
+                    subfolderNotes.sort((a, b) => new Date(b.updated || b.created) - new Date(a.updated || a.created));
+                    subfolderNotes.forEach(note => {
+                        notesContainer.appendChild(createSidebarNoteRow(note));
+                    });
+                    group.appendChild(notesContainer);
+                }
             });
         }
+        
+        folderTree.appendChild(group);
     });
     
-    // Atualizar contagem (mantida para compatibilidade)
     updateFolderCounts();
 }
 
-// Criar elemento de pasta
-function createFolderElement(folder, isSubfolder = false) {
+// Alternar expandir/recolher subpastas
+function toggleFolderExpand(folderId) {
+    if (!notebookData.folderExpanded) notebookData.folderExpanded = {};
+    notebookData.folderExpanded[folderId] = !notebookData.folderExpanded[folderId];
+    renderFolders();
+}
+
+// Contar notas numa pasta (não trashed)
+function getNotesInFolder(folderId) {
+    return Object.values(notebookData.notes).filter(n => !n.trashed && n.folder === folderId);
+}
+
+// Criar elemento de pasta (isSubfolder, isExpanded para pasta raiz com subpastas ou subpasta com notas)
+function createFolderElement(folder, isSubfolder = false, isExpanded = true) {
     const div = document.createElement('div');
     div.className = 'folder-item';
     if (isSubfolder) {
@@ -510,17 +668,25 @@ function createFolderElement(folder, isSubfolder = false) {
     }
     div.dataset.folderId = folder.id;
     
-    // Verificar se tem subpastas
     const hasSubfolders = Object.values(notebookData.folders).some(f => f.parent === folder.id);
     const subfolderCount = Object.values(notebookData.folders).filter(f => f.parent === folder.id).length;
+    const notesInFolder = getNotesInFolder(folder.id);
+    const hasNotes = notesInFolder.length > 0;
     
-    // Menu diferente para subpastas (apenas excluir)
     const menuItems = isSubfolder 
-        ? `<button class="folder-menu-item folder-menu-item-danger" onclick="event.stopPropagation(); deleteSubfolder('${folder.id}')">
+        ? `<button class="folder-menu-item folder-menu-item-rename" onclick="event.stopPropagation(); typeof openRenameFolderModal==='function'&&openRenameFolderModal('${folder.id}')">
+            <i class="fas fa-pen"></i>
+            <span>Renomear</span>
+          </button>
+          <button class="folder-menu-item folder-menu-item-danger" onclick="event.stopPropagation(); deleteSubfolder('${folder.id}')">
             <i class="fas fa-trash"></i>
             <span>Excluir subpasta</span>
           </button>`
-        : `<button class="folder-menu-item" onclick="event.stopPropagation(); createSubfolder('${folder.id}')">
+        : `<button class="folder-menu-item folder-menu-item-rename" onclick="event.stopPropagation(); typeof openRenameFolderModal==='function'&&openRenameFolderModal('${folder.id}')">
+            <i class="fas fa-pen"></i>
+            <span>Renomear</span>
+          </button>
+          <button class="folder-menu-item" onclick="event.stopPropagation(); createSubfolder('${folder.id}')">
             <i class="fas fa-folder-plus"></i>
             <span>Criar subpasta</span>
           </button>
@@ -529,18 +695,30 @@ function createFolderElement(folder, isSubfolder = false) {
             <span>Excluir pasta</span>
           </button>`;
     
+    // Seta: pastas raiz com subpastas; subpastas com notas
+    const showChevron = (!isSubfolder && hasSubfolders) || (isSubfolder && hasNotes);
+    const chevronHtml = showChevron
+        ? `<button type="button" class="folder-chevron" onclick="event.stopPropagation(); typeof toggleFolderExpand==='function'&&toggleFolderExpand('${folder.id}');" title="${isExpanded ? 'Recolher' : 'Expandir'}" aria-expanded="${isExpanded}">
+            <i class="fas fa-chevron-${isExpanded ? 'down' : 'right'}"></i>
+          </button>`
+        : !isSubfolder ? '<span class="folder-chevron-placeholder"></span>' : (isSubfolder ? '<span class="folder-chevron-placeholder"></span>' : '');
+    
+    const notesBadge = !isSubfolder && hasSubfolders ? `<span class="subfolder-count-badge">${subfolderCount}</span>` : '';
+    const notesCountBadge = isSubfolder && hasNotes ? `<span class="subfolder-count-badge">${notesInFolder.length}</span>` : '';
+    
     div.innerHTML = `
         <div class="folder-content ${isSubfolder ? 'subfolder-content' : ''}" 
              onclick="selectFolder('${folder.id}', this)"
              onmouseenter="${!isSubfolder && hasSubfolders ? `showSubfoldersPreview('${folder.id}')` : ''}"
              onmouseleave="${!isSubfolder && hasSubfolders ? `hideSubfoldersPreview('${folder.id}')` : ''}">
-            ${isSubfolder ? '<span class="subfolder-indicator"></span>' : ''}
+            ${chevronHtml}
             <i class="fas fa-folder folder-icon" style="color: ${folder.color}"></i>
             <span class="folder-name">${escapeHtml(folder.name)}</span>
-            ${!isSubfolder && hasSubfolders ? `<span class="subfolder-count-badge">${subfolderCount}</span>` : ''}
+            ${notesBadge}
+            ${notesCountBadge}
         </div>
         <div class="folder-menu-container">
-            <button class="folder-menu-btn" onclick="event.stopPropagation(); toggleFolderMenu('${folder.id}')" title="Opções da pasta">
+            <button class="folder-menu-btn" onclick="event.stopPropagation(); toggleFolderMenu('${folder.id}')" title="${isSubfolder ? 'Opções da subpasta' : 'Opções da pasta'}">
                 <i class="fas fa-ellipsis-v"></i>
             </button>
             <div class="folder-menu" id="folder-menu-${folder.id}" style="display: none;">
@@ -550,6 +728,23 @@ function createFolderElement(folder, isSubfolder = false) {
         ${!isSubfolder && hasSubfolders ? `<div class="subfolders-preview" id="subfolders-preview-${folder.id}" style="display: none;"></div>` : ''}
     `;
     
+    return div;
+}
+
+// Criar linha de nota na sidebar (sob a seta da subpasta)
+function createSidebarNoteRow(note) {
+    const div = document.createElement('div');
+    div.className = 'sidebar-note-item' + (notebookData.currentNote === note.id ? ' active' : '');
+    div.dataset.noteId = note.id;
+    div.innerHTML = `
+        <span class="sidebar-note-icon"><i class="fas fa-file-alt"></i></span>
+        <span class="sidebar-note-title">${escapeHtml(note.title || 'Sem título')}</span>
+    `;
+    div.addEventListener('click', (e) => {
+        e.stopPropagation();
+        selectFolder(note.folder, null);
+        openNote(note.id);
+    });
     return div;
 }
 
@@ -619,6 +814,11 @@ function renderNotes() {
         return;
     }
     
+    const notesListContainer = document.getElementById('notes-list-container');
+    if (notesListContainer && notebookData.currentFolder !== 'trash') {
+        notesListContainer.classList.remove('view-trash');
+    }
+    
     notesGrid.innerHTML = '';
     
     // Filtrar notas (excluir apenas as que estão explicitamente trashed)
@@ -637,18 +837,14 @@ function renderNotes() {
     
     if (notes.length === 0) {
         notesGrid.innerHTML = `
-            <div class="empty-state">
+            <div class="empty-state" id="empty-state">
                 <div class="empty-icon">📝</div>
-                <h3>Nenhuma nota ainda</h3>
-                <p>Crie sua primeira nota para começar</p>
-                <button class="btn-primary" onclick="createNewNote()">
-                    <i class="fas fa-plus"></i>
-                    Criar Primeira Nota
-                </button>
+                <h3>Nenhuma nota nesta pasta</h3>
+                <p>Crie uma nota quando quiser usando o botão <strong>Criar nota</strong> ao lado.</p>
             </div>
         `;
         
-        // Se não houver nota aberta, mostrar espaço em branco
+        // Se não houver nota aberta, mostrar painel direito com opção de criar nota (pasta fica vazia até o usuário criar)
         if (!notebookData.currentNote) {
             const emptyState = document.getElementById('empty-editor-state');
             const notesList = document.getElementById('notes-list-container');
@@ -657,6 +853,7 @@ function renderNotes() {
                 emptyState.style.display = 'flex';
                 emptyState.classList.add('show');
             }
+            updateEmptyEditorState(true); // pasta vazia
         }
         return;
     }
@@ -704,12 +901,7 @@ function renderNotes() {
     // Adicionar todos os cards de uma vez ao DOM (muito mais rápido)
     notesGrid.appendChild(fragment);
     
-    // Garantir que a lista de notas está visível se houver notas
-    const notesListContainer = document.getElementById('notes-list-container');
-    const emptyState = document.getElementById('empty-editor-state');
-    const editorContainer = document.getElementById('note-editor-container');
-    
-    // Se não há nota aberta no editor, mostrar lista de notas
+    // Garantir que a lista de notas está visível se houver notas (usa notesListContainer já declarado no início da função)
     if (!notebookData.currentNote && notesListContainer) {
         if (notes.length > 0) {
             // Há notas - mostrar lista
@@ -731,6 +923,9 @@ function renderNotes() {
             }
         }
     }
+    
+    // Atualizar árvore de pastas (contagem e notas sob cada subpasta)
+    renderFolders();
     
     console.log(`✅ ${notes.length} notas renderizadas na pasta "${notebookData.currentFolder === 'root' ? 'Todas as Notas' : notebookData.folders[notebookData.currentFolder]?.name || 'Pasta'}"`);
 }
@@ -779,6 +974,9 @@ function createNoteCard(note) {
                 <i class="fas fa-star note-card-star ${note.starred ? 'active' : ''}" 
                    onclick="event.stopPropagation(); toggleNoteStar('${note.id}')" 
                    title="${note.starred ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}"></i>
+                <i class="fas fa-thumbtack note-card-pin ${note.pinned ? 'active' : ''}" 
+                   onclick="event.stopPropagation(); toggleNotePin('${note.id}')" 
+                   title="${note.pinned ? 'Desfixar nota' : 'Fixar nota'}"></i>
                 <i class="fas fa-trash note-card-delete" 
                    onclick="event.stopPropagation(); deleteNote('${note.id}')" 
                    title="Excluir nota"></i>
@@ -800,19 +998,27 @@ function createNoteCard(note) {
     return div;
 }
 
+// Evitar duplicar nota por duplo clique
+let _createNewNoteLock = false;
+
 // Criar nova nota
 function createNewNote() {
+    if (_createNewNoteLock) return;
+    _createNewNoteLock = true;
+    setTimeout(function () { _createNewNoteLock = false; }, 800);
+
     const noteId = 'note-' + Date.now();
     const note = {
         id: noteId,
         title: 'Nova Nota',
-        content: '<p>Comece a escrever...</p>',
+        content: '',
         folder: notebookData.currentFolder,
         starred: false,
+        pinned: false,
         created: new Date().toISOString(),
         updated: new Date().toISOString()
     };
-    
+
     notebookData.notes[noteId] = note;
     saveData();
     renderNotes();
@@ -840,10 +1046,7 @@ function openNote(noteId) {
     
     notebookData.currentNote = noteId;
     
-    // Mostrar toolbar Google Docs
-    showGoogleDocsToolbar();
-    
-    // Mostrar editor e esconder espaço em branco
+    // Mostrar editor; menu de opções abre na área ao lado das pastas ao clicar no hambúrguer
     const editorContainer = document.getElementById('note-editor-container');
     const notesList = document.getElementById('notes-list-container');
     const emptyState = document.getElementById('empty-editor-state');
@@ -862,8 +1065,11 @@ function openNote(noteId) {
     
     if (notesList) {
         notesList.style.display = 'none';
+        notesList.classList.add('hidden');
     }
-    
+    var main = document.querySelector('.notebook-main');
+    if (main) main.classList.add('editor-open');
+
     // Preencher dados
     const titleInput = document.getElementById('note-title');
     const richEditor = document.getElementById('rich-editor');
@@ -874,21 +1080,16 @@ function openNote(noteId) {
     }
     
     if (richEditor) {
-        richEditor.innerHTML = note.content || '<p>Comece a escrever...</p>';
+        var content = note.content && note.content.trim();
+        var isEmpty = !content || content === '<p></p>' || content === '<p><br></p>' || content === '<p>Comece a escrever...</p>';
+        richEditor.innerHTML = isEmpty ? (typeof EMPTY_EDITOR_HTML !== 'undefined' ? EMPTY_EDITOR_HTML : '<p><br></p>') : note.content;
         richEditor.contentEditable = 'true';
+        updatePlaceholderVisibility();
     }
     
-    // Mostrar toolbar de formatação quando focar no editor
     const toolbar = document.getElementById('editor-format-toolbar');
     if (toolbar && richEditor) {
-        // Mostrar toolbar quando houver conteúdo ou quando focar
-        const hasContent = richEditor.innerHTML.trim() && richEditor.innerHTML.trim() !== '<p>Comece a escrever...</p>';
-        if (hasContent) {
-            toolbar.style.display = 'block';
-        } else {
-            // Esconder inicialmente, mas mostrar ao focar
-            toolbar.style.display = 'none';
-        }
+        toolbar.style.display = isEditorEmpty(richEditor) ? 'none' : 'block';
     }
     
     // Atualizar favorito
@@ -949,8 +1150,9 @@ function closeEditor() {
     
     notebookData.currentNote = null;
     
-    // Esconder toolbar Google Docs
+    // Esconder toolbar Google Docs e painel de opções (menu ao lado das pastas)
     hideGoogleDocsToolbar();
+    closeEditorOptionsPanel();
     
     const editorContainer = document.getElementById('note-editor-container');
     const notesList = document.getElementById('notes-list-container');
@@ -960,25 +1162,46 @@ function closeEditor() {
         editorContainer.style.display = 'none';
         editorContainer.classList.remove('active');
     }
-    if (notesList) notesList.style.display = 'block';
-    // Mostrar espaço em branco apenas se não houver notas
-    const hasNotes = Object.keys(notebookData.notes).length > 0;
-    if (emptyState) {
-        if (!hasNotes) {
-            emptyState.style.display = 'flex';
-            emptyState.classList.add('show');
-            if (notesList) notesList.style.display = 'none';
-        } else {
-            emptyState.style.display = 'none';
-            emptyState.classList.remove('show');
-        }
+    if (notesList) {
+        notesList.style.display = 'flex';
+        notesList.classList.remove('hidden');
     }
-    
-    // Esconder toolbar
-    document.getElementById('editor-format-toolbar').style.display = 'none';
+    var main = document.querySelector('.notebook-main');
+    if (main) main.classList.remove('editor-open');
+    // Estilo Apple: sempre mostrar estado vazio no painel direito ao fechar a nota (nunca criar nota automaticamente)
+    if (emptyState) {
+        emptyState.style.display = 'flex';
+        emptyState.classList.add('show');
+        const notesInFolder = notebookData.currentFolder === 'root'
+            ? Object.values(notebookData.notes).filter(n => !n.trashed && (!n.folder || n.folder === 'root'))
+            : Object.values(notebookData.notes).filter(n => !n.trashed && n.folder === notebookData.currentFolder);
+        updateEmptyEditorState(notesInFolder.length === 0);
+    }
+    if (notesList && !Object.values(notebookData.notes).some(n => !n.trashed)) notesList.style.display = 'none';
+
+    // Esconder toolbar de formatação (se existir)
+    const formatToolbar = document.getElementById('editor-format-toolbar');
+    if (formatToolbar) formatToolbar.style.display = 'none';
     
     notebookData.currentNote = null;
     renderNotes();
+}
+
+// Atualizar texto e ícone do painel vazio (pasta vazia vs. nenhuma nota selecionada)
+function updateEmptyEditorState(isFolderEmpty) {
+    const titleEl = document.getElementById('empty-editor-title');
+    const subtitleEl = document.getElementById('empty-editor-subtitle');
+    const iconEl = document.getElementById('empty-editor-icon');
+    if (!titleEl || !subtitleEl) return;
+    if (isFolderEmpty) {
+        titleEl.textContent = 'Esta pasta está vazia';
+        if (subtitleEl) subtitleEl.textContent = 'Crie uma nota quando quiser. A pasta permanece vazia até você criar.';
+        if (iconEl) iconEl.textContent = '📁';
+    } else {
+        titleEl.textContent = 'Selecione uma nota para começar';
+        if (subtitleEl) subtitleEl.textContent = 'Ou crie uma nova nota usando o botão abaixo';
+        if (iconEl) iconEl.textContent = '✍️';
+    }
 }
 
 // Salvar nota atual
@@ -988,8 +1211,9 @@ function saveCurrentNote() {
     const note = notebookData.notes[notebookData.currentNote];
     if (!note) return;
     
+    var editor = document.getElementById('rich-editor');
     note.title = document.getElementById('note-title').value || 'Sem título';
-    note.content = document.getElementById('rich-editor').innerHTML;
+    note.content = (editor && isEditorEmpty(editor)) ? '' : (editor ? editor.innerHTML : '');
     note.updated = new Date().toISOString();
     
     saveData();
@@ -1019,6 +1243,24 @@ function applyFormat(format) {
     updateFormatButtons();
     // Salvar automaticamente após formatação
     saveCurrentNote();
+}
+
+// Placeholder "Comece a escrever...": visível só quando o editor está vazio
+var EMPTY_EDITOR_HTML = '<p><br></p>';
+function isEditorEmpty(editor) {
+    if (!editor) return true;
+    var html = editor.innerHTML.trim();
+    if (!html) return true;
+    if (html === '<p></p>' || html === '<p><br></p>' || html === '<p><br/></p>') return true;
+    if (html === '<p>Comece a escrever...</p>') return true;
+    return false;
+}
+function updatePlaceholderVisibility() {
+    var editor = document.getElementById('rich-editor');
+    var placeholder = document.getElementById('rich-editor-placeholder');
+    if (!editor || !placeholder) return;
+    var empty = isEditorEmpty(editor);
+    placeholder.setAttribute('aria-hidden', empty ? 'false' : 'true');
 }
 
 // Helper para escape HTML
@@ -1135,50 +1377,312 @@ function toggleFormatToolbar() {
     }
 }
 
-// Inserir imagem
-function insertImage() {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.onchange = function(e) {
-        const file = e.target.files[0];
-        if (!file) return;
-        
-        const reader = new FileReader();
-        reader.onload = function(event) {
-            const img = document.createElement('img');
-            img.src = event.target.result;
-            img.style.maxWidth = '100%';
-            img.style.height = 'auto';
-            img.style.borderRadius = '12px';
-            img.style.margin = '16px 0';
-            
-            const editor = document.getElementById('rich-editor');
-            const selection = window.getSelection();
-            if (selection.rangeCount > 0) {
-                const range = selection.getRangeAt(0);
-                range.insertNode(img);
-            } else {
-                editor.appendChild(img);
-            }
-            
-            editor.focus();
-            saveCurrentNote();
-        };
-        reader.readAsDataURL(file);
-    };
-    input.click();
+// Cores para o painel de opções (cor do texto e marca-texto)
+var EDITOR_TEXT_COLORS = ['#000000', '#434343', '#666666', '#FFFFFF', '#FF0000', '#E74C3C', '#C0392B', '#FF9900', '#F39C12', '#D35400', '#FFFF00', '#F1C40F', '#F7DC6F', '#00FF00', '#27AE60', '#2ECC71', '#1ABC9C', '#4A86E8', '#3498DB', '#2980B9', '#9B59B6', '#8E44AD', '#9900FF', '#FF00FF', '#E91E63', '#EA9999', '#D5A6BD', '#F4CCCC', '#FADBD8', '#FDEBD0'];
+var EDITOR_HIGHLIGHT_COLORS = ['#FFFF00', '#FFD966', '#FFF2CC', '#F9CB9C', '#F7DC6F', '#F1C40F', '#FF9900', '#F5B041', '#FADBD8', '#E06666', '#EC7063', '#00FF00', '#93C47D', '#B6D7A8', '#D9EAD3', '#ABEBC6', '#6D9EEB', '#4A86E8', '#A4C2F4', '#CFE2F3', '#AED6F1', '#9900FF', '#BB8FCE', '#D7BDE2', '#EA9999', '#F4CCCC', '#FADBD8', '#FDEBD0', '#FCF3CF', '#FEF9E7'];
+
+function showEditorOptionsColors(mode) {
+    var panel = document.getElementById('editor-options-colors');
+    var tabs = document.querySelectorAll('.editor-options-color-tab');
+    if (!panel) return;
+    panel.style.display = 'block';
+    tabs.forEach(function (t) { t.classList.toggle('active', t.getAttribute('data-mode') === mode); });
+    fillEditorOptionsColorsGrid(mode);
 }
 
-// Inserir link
-function insertLink() {
-    const url = prompt('Digite a URL:');
-    if (!url) return;
-    
-    const editor = document.getElementById('rich-editor');
+function fillEditorOptionsColorsGrid(mode) {
+    var grid = document.getElementById('editor-options-colors-grid');
+    if (!grid) return;
+    var colors = mode === 'highlight' ? EDITOR_HIGHLIGHT_COLORS : EDITOR_TEXT_COLORS;
+    grid.innerHTML = '';
+    colors.forEach(function (hex) {
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'editor-options-color-swatch';
+        btn.setAttribute('data-color', hex);
+        btn.style.background = hex;
+        if (hex === '#FFFFFF' || hex === '#FFF2CC') btn.style.border = '1px solid #ddd';
+        grid.appendChild(btn);
+    });
+}
+
+function applyEditorOptionColor(color, mode) {
+    var editor = document.getElementById('rich-editor');
+    if (!editor) return;
     editor.focus();
-    document.execCommand('createLink', false, url);
+    if (mode === 'highlight') {
+        document.execCommand('hiliteColor', false, color);
+    } else {
+        document.execCommand('foreColor', false, color);
+    }
     saveCurrentNote();
+}
+
+// Inserir imagem: abre modal de upload (vidro, bonito)
+function insertImage() {
+    resetInsertImageModal();
+    showModal('modal-insert-image');
+}
+
+var _insertImageDataUrl = null;
+var _insertImageFile = null;
+
+function onInsertImageFileSelected(e) {
+    var file = e.target.files && e.target.files[0];
+    if (!file) return;
+    _insertImageFile = file;
+    var reader = new FileReader();
+    reader.onload = function (ev) {
+        _insertImageDataUrl = ev.target.result;
+        var preview = document.getElementById('insert-image-preview');
+        var previewImg = document.getElementById('insert-image-preview-img');
+        var filenameEl = document.getElementById('insert-image-filename');
+        var zone = document.getElementById('insert-image-zone');
+        var btn = document.getElementById('btn-insert-image-confirm');
+        if (preview && previewImg && filenameEl) {
+            zone.style.display = 'none';
+            preview.style.display = 'block';
+            previewImg.src = _insertImageDataUrl;
+            filenameEl.textContent = file.name;
+        }
+        if (btn) btn.disabled = false;
+    };
+    reader.readAsDataURL(file);
+}
+
+function wrapImageWithLayout(img, layout) {
+    layout = layout || 'block';
+    var wrapper = null;
+    if (layout === 'caption') {
+        var figure = document.createElement('figure');
+        figure.className = 'img-wrap img-wrap-caption';
+        figure.setAttribute('data-image-layout', 'caption');
+        var figcap = document.createElement('figcaption');
+        figcap.contentEditable = 'true';
+        figcap.className = 'img-figcaption';
+        figcap.textContent = 'Digite a legenda aqui...';
+        figure.appendChild(img);
+        figure.appendChild(figcap);
+        wrapper = figure;
+    } else {
+        var div = document.createElement('div');
+        div.className = 'img-wrap img-wrap-' + layout;
+        div.setAttribute('data-image-layout', layout);
+        div.appendChild(img);
+        wrapper = div;
+    }
+    img.style.maxWidth = '100%';
+    img.style.height = 'auto';
+    img.style.borderRadius = '12px';
+    img.setAttribute('alt', 'Imagem da nota');
+    if (layout === 'block') {
+        img.style.margin = '16px 0';
+    } else {
+        img.style.margin = '0';
+    }
+    return wrapper;
+}
+
+function applyImageLayoutToElement(wrapOrImg, layout) {
+    var img = wrapOrImg.tagName === 'IMG' ? wrapOrImg : wrapOrImg.querySelector('img');
+    if (!img) return null;
+    var parent = wrapOrImg.parentNode;
+    var ref = wrapOrImg.nextSibling;
+    var newWrap = wrapImageWithLayout(img, layout);
+    if (wrapOrImg.tagName === 'FIGURE') {
+        var cap = wrapOrImg.querySelector('figcaption');
+        if (cap && layout === 'caption') {
+            var newCap = newWrap.querySelector('figcaption');
+            if (newCap && cap.textContent && cap.textContent.trim() !== 'Digite a legenda aqui...') newCap.textContent = cap.textContent;
+        }
+    }
+    if (wrapOrImg.tagName === 'IMG') {
+        if (ref) parent.insertBefore(newWrap, ref);
+        else parent.appendChild(newWrap);
+    } else {
+        parent.replaceChild(newWrap, wrapOrImg);
+    }
+    return newWrap;
+}
+
+function confirmInsertImage() {
+    if (!_insertImageDataUrl) return;
+    var editor = document.getElementById('rich-editor');
+    if (!editor) return;
+    var posSelect = document.getElementById('insert-image-pos');
+    var layout = (posSelect && posSelect.value) ? posSelect.value : 'block';
+    var sel = window.getSelection();
+    var rangeInEditor = sel.rangeCount > 0 && editor.contains(sel.getRangeAt(0).commonAncestorContainer);
+    if (!rangeInEditor) setEditorCaretToEnd(editor);
+    var img = document.createElement('img');
+    img.src = _insertImageDataUrl;
+    var wrapper = wrapImageWithLayout(img, layout);
+    try {
+        sel = window.getSelection();
+        if (sel.rangeCount > 0) {
+            var range = sel.getRangeAt(0);
+            if (editor.contains(range.commonAncestorContainer)) {
+                range.insertNode(wrapper);
+                range.collapse(false);
+                range.setStartAfter(wrapper);
+                range.setEndAfter(wrapper);
+                sel.removeAllRanges();
+                sel.addRange(range);
+            } else {
+                editor.appendChild(wrapper);
+            }
+        } else {
+            editor.appendChild(wrapper);
+        }
+    } catch (e) {
+        editor.appendChild(wrapper);
+    }
+    editor.focus();
+    updateWordCount();
+    saveCurrentNote();
+    closeModal('modal-insert-image');
+    resetInsertImageModal();
+}
+
+function resetInsertImageModal() {
+    _insertImageDataUrl = null;
+    _insertImageFile = null;
+    var fileInput = document.getElementById('insert-image-file');
+    if (fileInput) fileInput.value = '';
+    var zone = document.getElementById('insert-image-zone');
+    var preview = document.getElementById('insert-image-preview');
+    var previewImg = document.getElementById('insert-image-preview-img');
+    var filenameEl = document.getElementById('insert-image-filename');
+    var btn = document.getElementById('btn-insert-image-confirm');
+    var posSelect = document.getElementById('insert-image-pos');
+    if (zone) zone.style.display = '';
+    if (preview) preview.style.display = 'none';
+    if (previewImg) previewImg.src = '';
+    if (filenameEl) filenameEl.textContent = '';
+    if (btn) btn.disabled = true;
+    if (posSelect) posSelect.value = 'block';
+}
+
+// Colocar cursor no final do editor (útil após abrir modal e perder a seleção)
+function setEditorCaretToEnd(editor) {
+    if (!editor) return;
+    editor.focus();
+    try {
+        var sel = window.getSelection();
+        var range = document.createRange();
+        range.selectNodeContents(editor);
+        range.collapse(false);
+        sel.removeAllRanges();
+        sel.addRange(range);
+    } catch (e) { console.warn('setEditorCaretToEnd:', e); }
+}
+
+var _selectedImageWrap = null;
+
+function initImageLayoutToolbar(editor) {
+    var toolbar = document.getElementById('image-layout-toolbar');
+    if (!toolbar || !editor) return;
+    var editorContent = document.getElementById('editor-content-wrapper');
+
+    function getWrapOrImgFromTarget(target) {
+        if (!target || !editor.contains(target)) return null;
+        if (target.tagName === 'IMG') return target.closest('.img-wrap') || target;
+        if (target.closest('.img-wrap')) return target.closest('.img-wrap');
+        return null;
+    }
+
+    function clearSelectionHighlight() {
+        if (_selectedImageWrap) {
+            _selectedImageWrap.classList.remove('selected-image-wrap');
+            if (_selectedImageWrap.tagName === 'IMG') _selectedImageWrap.classList.remove('selected-image-img');
+            _selectedImageWrap = null;
+        }
+    }
+
+    function showImageToolbar(el) {
+        clearSelectionHighlight();
+        _selectedImageWrap = el;
+        if (el.classList) {
+            if (el.classList.contains('img-wrap')) el.classList.add('selected-image-wrap');
+            else if (el.tagName === 'IMG') el.classList.add('selected-image-img');
+        }
+        var rect = el.getBoundingClientRect();
+        toolbar.classList.add('visible');
+        toolbar.setAttribute('aria-hidden', 'false');
+        toolbar.style.position = 'fixed';
+        toolbar.style.left = Math.max(8, rect.left + (rect.width / 2) - (toolbar.offsetWidth / 2)) + 'px';
+        toolbar.style.top = (rect.top - toolbar.offsetHeight - 10) + 'px';
+        var currentLayout = (el.getAttribute && el.getAttribute('data-image-layout')) || (el.closest && el.closest('.img-wrap') && el.closest('.img-wrap').getAttribute('data-image-layout')) || 'block';
+        toolbar.querySelectorAll('.img-layout-btn').forEach(function(btn) {
+            btn.classList.toggle('active', btn.dataset.layout === currentLayout);
+        });
+    }
+
+    function hideImageToolbar() {
+        clearSelectionHighlight();
+        toolbar.classList.remove('visible');
+        toolbar.setAttribute('aria-hidden', 'true');
+    }
+
+    editor.addEventListener('click', function(e) {
+        var el = getWrapOrImgFromTarget(e.target);
+        if (el) {
+            e.preventDefault();
+            showImageToolbar(el);
+        }
+    });
+
+    document.addEventListener('selectionchange', function() {
+        var sel = window.getSelection();
+        if (sel.rangeCount === 0) return;
+        var node = sel.anchorNode;
+        var el = node && (node.nodeType === 1 ? node : node.parentElement);
+        var wrap = el && getWrapOrImgFromTarget(el);
+        if (!wrap) hideImageToolbar();
+    });
+
+    document.addEventListener('click', function(e) {
+        if (toolbar.contains(e.target)) return;
+        var wrap = getWrapOrImgFromTarget(e.target);
+        if (!wrap) hideImageToolbar();
+    });
+
+    toolbar.querySelectorAll('.img-layout-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            if (!_selectedImageWrap) return;
+            var layout = this.dataset.layout;
+            var newWrap = applyImageLayoutToElement(_selectedImageWrap, layout);
+            toolbar.querySelectorAll('.img-layout-btn').forEach(function(b) { b.classList.toggle('active', b.dataset.layout === layout); });
+            _selectedImageWrap = newWrap;
+            newWrap.classList.add('selected-image-wrap');
+            saveCurrentNote();
+            updateWordCount();
+        });
+    });
+}
+
+// Inserir link: abre modal (vidro Apple, bonito e inteligente)
+function insertLink() {
+    document.getElementById('insert-link-url').value = '';
+    document.getElementById('insert-link-text').value = '';
+    showModal('modal-insert-link');
+}
+
+function confirmInsertLink() {
+    var urlInput = document.getElementById('insert-link-url');
+    var textInput = document.getElementById('insert-link-text');
+    var url = urlInput && urlInput.value.trim();
+    if (!url) return;
+    var editor = document.getElementById('rich-editor');
+    if (!editor) return;
+    var text = textInput && textInput.value.trim();
+    var sel = window.getSelection();
+    var rangeInEditor = sel.rangeCount > 0 && editor.contains(sel.getRangeAt(0).commonAncestorContainer);
+    if (!rangeInEditor) setEditorCaretToEnd(editor);
+    var htmlToInsert = '<a href="' + escapeHtml(url) + '" target="_blank" rel="noopener">' + (text ? escapeHtml(text) : escapeHtml(url)) + '</a>';
+    document.execCommand('insertHTML', false, htmlToInsert);
+    saveCurrentNote();
+    closeModal('modal-insert-link');
 }
 
 // Inserir tabela
@@ -1279,6 +1783,16 @@ function exportNote() {
     URL.revokeObjectURL(url);
 }
 
+// Selecionar cor da pasta no modal Nova Pasta (todas as cores clicáveis)
+function selectFolderColor(el) {
+    if (!el || !el.classList || !el.classList.contains('folder-color-option')) return;
+    document.querySelectorAll('.folder-color-option').forEach(function (opt) {
+        opt.classList.remove('active');
+    });
+    el.classList.add('active');
+}
+window.selectFolderColor = selectFolderColor;
+
 // Criar pasta
 function createFolder() {
     const name = document.getElementById('new-folder-name').value.trim();
@@ -1286,7 +1800,7 @@ function createFolder() {
         alert('Digite um nome para a pasta');
         return;
     }
-    
+
     const colorOption = document.querySelector('.folder-color-option.active');
     const color = colorOption ? colorOption.dataset.color : '#007AFF';
     
@@ -1358,17 +1872,47 @@ function setViewMode(mode) {
     renderNotes();
 }
 
-// Atualizar contagem de palavras
+// Atualizar contagem de palavras, caracteres, imagens e tempo de leitura
 function updateWordCount() {
+    const footer = document.querySelector('.editor-footer');
+    if (footer) {
+        footer.querySelectorAll('.word-count').forEach(el => { if (!el.id) el.remove(); });
+    }
     const editor = document.getElementById('rich-editor');
     if (!editor) return;
     
     const text = editor.innerText || editor.textContent || '';
     const words = text.trim().split(/\s+/).filter(w => w.length > 0);
     const chars = text.length;
+    const images = editor.querySelectorAll('img').length;
     
-    document.getElementById('word-count').textContent = `${words.length} palavras`;
-    document.getElementById('char-count').textContent = `${chars} caracteres`;
+    if (typeof notebookData !== 'undefined' && notebookData.statistics) {
+        notebookData.statistics.totalWords = words.length;
+    }
+    
+    const wordEl = document.getElementById('word-count');
+    const charEl = document.getElementById('char-count');
+    const imageEl = document.getElementById('image-count');
+    const readingEl = document.getElementById('reading-time');
+    if (wordEl) wordEl.textContent = `${words.length} PALAVRAS`;
+    if (charEl) charEl.textContent = `${chars} CARACTERES`;
+    if (imageEl) imageEl.textContent = `${images} IMAGENS`;
+    
+    // Tempo de leitura: ~200 palavras/min → segundos = (palavras/200)*60
+    const readingSeconds = Math.ceil((words.length / 200) * 60);
+    let readingLabel = '0 MIN DE LEITURA';
+    if (readingSeconds > 0) {
+        if (readingSeconds < 60) {
+            readingLabel = `${readingSeconds} SEG DE LEITURA`;
+        } else if (readingSeconds < 3600) {
+            const min = Math.ceil(readingSeconds / 60);
+            readingLabel = `${min} MIN DE LEITURA`;
+        } else {
+            const h = (readingSeconds / 3600).toFixed(1).replace('.', ',');
+            readingLabel = `${h} H DE LEITURA`;
+        }
+    }
+    if (readingEl) readingEl.textContent = readingLabel;
 }
 
 // Atualizar status de salvamento
@@ -1648,6 +2192,48 @@ function deleteSubfolder(subfolderId) {
     showModal('modal-delete-subfolder');
 }
 
+// Abrir modal Renomear (vidro Apple: nome atual + novo nome) — pastas e subpastas
+function openRenameFolderModal(folderId) {
+    var folder = notebookData.folders[folderId];
+    if (!folder) {
+        if (typeof showToast === 'function') showToast('Pasta não encontrada.', 'error');
+        return;
+    }
+    var menu = document.getElementById('folder-menu-' + folderId);
+    if (menu) menu.style.display = 'none';
+
+    document.getElementById('rename-folder-id').value = folderId;
+    document.getElementById('rename-folder-current').value = folder.name || '';
+    document.getElementById('rename-folder-name').value = '';
+    document.getElementById('rename-folder-name').placeholder = 'Digite o novo nome';
+    document.getElementById('rename-folder-name').focus();
+
+    showModal('modal-rename-folder');
+}
+
+// Confirmar renomear pasta/subpasta
+function confirmRenameFolder() {
+    var folderId = document.getElementById('rename-folder-id').value;
+    var newName = (document.getElementById('rename-folder-name').value || '').trim();
+    if (!folderId) return;
+    var folder = notebookData.folders[folderId];
+    if (!folder) {
+        if (typeof showToast === 'function') showToast('Pasta não encontrada.', 'error');
+        closeModal('modal-rename-folder');
+        return;
+    }
+    if (!newName) {
+        if (typeof showToast === 'function') showToast('Digite o novo nome.', 'error');
+        document.getElementById('rename-folder-name').focus();
+        return;
+    }
+    folder.name = newName;
+    saveData();
+    renderFolders();
+    closeModal('modal-rename-folder');
+    if (typeof showToast === 'function') showToast('Pasta renomeada com sucesso!', 'success');
+}
+
 // Mostrar preview de subpastas ao passar o mouse
 function showSubfoldersPreview(folderId) {
     const preview = document.getElementById(`subfolders-preview-${folderId}`);
@@ -1688,6 +2274,54 @@ document.addEventListener('click', function(e) {
         });
     }
 });
+
+// Sidebar resizer: arrastar para estender/retrair
+var SIDEBAR_WIDTH_KEY = 'axis_notes_sidebar_width';
+var SIDEBAR_MIN = 220;
+var SIDEBAR_MAX = 480;
+
+function setupSidebarResizer() {
+    var sidebar = document.querySelector('.notebook-sidebar');
+    var resizer = document.getElementById('sidebar-resizer');
+    if (!sidebar || !resizer) return;
+
+    var saved = localStorage.getItem(SIDEBAR_WIDTH_KEY);
+    var w = saved ? parseInt(saved, 10) : 300;
+    if (w >= SIDEBAR_MIN && w <= SIDEBAR_MAX) {
+        document.documentElement.style.setProperty('--apple-sidebar-width', w + 'px');
+    }
+
+    var resizing = false;
+    var startX = 0;
+    var startWidth = 0;
+
+    resizer.addEventListener('mousedown', function (e) {
+        e.preventDefault();
+        resizing = true;
+        startX = e.clientX;
+        startWidth = sidebar.getBoundingClientRect().width;
+        resizer.classList.add('resizing');
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
+    });
+
+    document.addEventListener('mousemove', function (e) {
+        if (!resizing) return;
+        var dx = e.clientX - startX;
+        var newWidth = Math.max(SIDEBAR_MIN, Math.min(SIDEBAR_MAX, startWidth + dx));
+        document.documentElement.style.setProperty('--apple-sidebar-width', newWidth + 'px');
+    });
+
+    document.addEventListener('mouseup', function () {
+        if (!resizing) return;
+        resizing = false;
+        resizer.classList.remove('resizing');
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+        var w = sidebar.getBoundingClientRect().width;
+        localStorage.setItem(SIDEBAR_WIDTH_KEY, Math.round(w).toString());
+    });
+}
 
 // Modal functions
 function showModal(modalId) {
@@ -1810,6 +2444,8 @@ function escapeHtml(text) {
 function showFavorites() {
     notebookData.currentFolder = 'favorites';
     document.getElementById('current-folder-name').textContent = 'Favoritos';
+    const notesListContainer = document.getElementById('notes-list-container');
+    if (notesListContainer) notesListContainer.classList.remove('view-trash');
     
     const notesGrid = document.getElementById('notes-grid');
     notesGrid.innerHTML = '';
@@ -1832,7 +2468,7 @@ function showFavorites() {
     });
 }
 
-// Lixeira (completa com opções)
+// Lixeira (só título e risco — sem botões de filtro/microfone/grade)
 function showTrash() {
     notebookData.currentFolder = 'trash';
     document.getElementById('current-folder-name').textContent = 'Lixeira';
@@ -1846,7 +2482,10 @@ function showTrash() {
         editorContainer.style.display = 'none';
         editorContainer.classList.remove('active');
     }
-    if (notesList) notesList.style.display = 'block';
+    if (notesList) {
+        notesList.style.display = 'block';
+        notesList.classList.add('view-trash');
+    }
     if (emptyState) {
         emptyState.style.display = 'none';
         emptyState.classList.remove('show');
@@ -1966,10 +2605,7 @@ function openTrashedNote(noteId) {
     
     notebookData.currentNote = noteId;
     
-    // Mostrar toolbar Google Docs
-    showGoogleDocsToolbar();
-    
-    // Mostrar editor e esconder espaço em branco
+    // Mostrar editor; menu de opções abre na área ao lado das pastas ao clicar no hambúrguer
     const editorContainer = document.getElementById('note-editor-container');
     const notesList = document.getElementById('notes-list-container');
     const emptyState = document.getElementById('empty-editor-state');
@@ -1990,8 +2626,9 @@ function openTrashedNote(noteId) {
     document.getElementById('rich-editor').innerHTML = note.content || '<p>Sem conteúdo...</p>';
     document.getElementById('rich-editor').contentEditable = 'false';
     
-    // Esconder toolbar de formatação
-    document.getElementById('editor-format-toolbar').style.display = 'none';
+    // Esconder toolbar de formatação (se existir)
+    const fmtToolbar = document.getElementById('editor-format-toolbar');
+    if (fmtToolbar) fmtToolbar.style.display = 'none';
     
     updateWordCount();
 }
@@ -2446,9 +3083,9 @@ function initializeDragAndDrop() {
 function toggleMarkdownPreview() {
     const editor = document.getElementById('rich-editor');
     const preview = document.getElementById('markdown-preview');
-    const btn = document.getElementById('btn-markdown-preview');
+    const btn = document.getElementById('toolbar-markdown-preview') || document.getElementById('btn-markdown-preview');
     
-    if (!editor || !preview || !btn) return;
+    if (!editor || !preview) return;
     
     if (preview.style.display === 'none') {
         const markdown = htmlToMarkdown(editor.innerHTML);
@@ -2459,11 +3096,17 @@ function toggleMarkdownPreview() {
         }
         preview.style.display = 'block';
         editor.style.display = 'none';
-        btn.querySelector('i').className = 'fas fa-edit';
+        if (btn) {
+            const icon = btn.querySelector('i');
+            if (icon) icon.className = 'fas fa-edit';
+        }
     } else {
         preview.style.display = 'none';
         editor.style.display = 'block';
-        btn.querySelector('i').className = 'fas fa-eye';
+        if (btn) {
+            const icon = btn.querySelector('i');
+            if (icon) icon.className = 'fas fa-eye';
+        }
     }
 }
 
@@ -2530,18 +3173,20 @@ function renderProperties(noteId) {
 // 14. SISTEMA DE PINS
 function togglePin() {
     if (!notebookData.currentNote) return;
-    
     const note = notebookData.notes[notebookData.currentNote];
     if (!note) return;
-    
     note.pinned = !note.pinned;
     saveData();
-    
-    const btn = document.getElementById('btn-pin-note');
-    if (btn) {
-        btn.querySelector('i').className = note.pinned ? 'fas fa-thumbtack' : 'far fa-thumbtack';
-    }
-    
+    var btn = document.getElementById('btn-pin-note');
+    if (btn) btn.querySelector('i').className = note.pinned ? 'fas fa-thumbtack' : 'far fa-thumbtack';
+    renderNotes();
+    showToast(note.pinned ? 'Nota fixada!' : 'Nota desfixada!', 'success');
+}
+function toggleNotePin(noteId) {
+    var note = notebookData.notes[noteId];
+    if (!note) return;
+    note.pinned = !note.pinned;
+    saveData();
     renderNotes();
     showToast(note.pinned ? 'Nota fixada!' : 'Nota desfixada!', 'success');
 }
@@ -2549,6 +3194,8 @@ function togglePin() {
 function showPinned() {
     notebookData.currentFolder = 'pinned';
     document.getElementById('current-folder-name').textContent = 'Notas Fixadas';
+    const notesListContainer = document.getElementById('notes-list-container');
+    if (notesListContainer) notesListContainer.classList.remove('view-trash');
     
     const notesGrid = document.getElementById('notes-grid');
     notesGrid.innerHTML = '';
@@ -2592,10 +3239,13 @@ function applyTheme(theme) {
     notebookData.settings.theme = theme;
     document.body.setAttribute('data-theme', theme);
     
-    const btn = document.getElementById('btn-theme-toggle');
-    if (btn) {
-        btn.querySelector('i').className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
-    }
+    const iconClass = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+    document.querySelectorAll('#btn-theme-toggle, #btn-theme-toggle-header').forEach(function(btn) {
+        if (btn) {
+            var icon = btn.querySelector('i');
+            if (icon) icon.className = iconClass;
+        }
+    });
     
     saveData();
 }
@@ -2910,11 +3560,12 @@ function initializeParticles() {
 }
 
 function initializeServiceWorker() {
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/sw.js').catch(() => {
-            // Service worker não disponível
-        });
-    }
+    if (!('serviceWorker' in navigator)) return;
+    try {
+        navigator.serviceWorker.register('/sw.js', { scope: '/' })
+            .then(() => {})
+            .catch(() => {});
+    } catch (e) {}
 }
 
 function initializeNotifications() {
@@ -3054,16 +3705,22 @@ window.selectFolder = selectFolder;
 window.createFolder = createFolder;
 window.toggleNoteStar = toggleNoteStar;
 window.closeModal = closeModal;
+window.showModal = showModal;
 window.toggleFolderMenu = toggleFolderMenu;
 window.createSubfolder = createSubfolder;
 window.deleteFolder = deleteFolder;
+window.toggleFolderExpand = toggleFolderExpand;
 window.deleteSubfolder = deleteSubfolder;
+window.openRenameFolderModal = openRenameFolderModal;
+window.confirmRenameFolder = confirmRenameFolder;
 window.showSubfoldersPreview = showSubfoldersPreview;
 window.hideSubfoldersPreview = hideSubfoldersPreview;
 window.restoreNoteFromTrash = restoreNoteFromTrash;
 window.deleteNotePermanent = deleteNotePermanent;
 window.deleteNote = deleteNote;
 window.toggleFormatToolbar = toggleFormatToolbar;
+window.setViewMode = setViewMode;
+window.renderNotes = renderNotes;
 
 // ============================================
 // TOOLBAR GOOGLE DOCS - FUNCIONALIDADES
@@ -3073,11 +3730,15 @@ window.toggleFormatToolbar = toggleFormatToolbar;
 function showGoogleDocsToolbar() {
     const toolbar = document.getElementById('google-docs-toolbar');
     const container = document.querySelector('.notebook-container');
+    const hamburger = document.getElementById('editor-toolbar-hamburger');
     if (toolbar) {
         toolbar.classList.add('show');
     }
     if (container) {
         container.classList.add('toolbar-active');
+    }
+    if (hamburger) {
+        hamburger.classList.add('active');
     }
 }
 
@@ -3085,13 +3746,83 @@ function showGoogleDocsToolbar() {
 function hideGoogleDocsToolbar() {
     const toolbar = document.getElementById('google-docs-toolbar');
     const container = document.querySelector('.notebook-container');
+    const hamburger = document.getElementById('editor-toolbar-hamburger');
     if (toolbar) {
         toolbar.classList.remove('show');
     }
     if (container) {
         container.classList.remove('toolbar-active');
     }
+    if (hamburger) {
+        hamburger.classList.remove('active');
+    }
 }
+
+// Toggle do painel de opções: sai do menu hambúrguer (como uma conversa), fica fixo; fecha só ao clicar no hambúrguer de novo
+function toggleEditorToolbar() {
+    if (!notebookData.currentNote) return;
+    var panel = document.getElementById('editor-options-panel');
+    var hamburger = document.getElementById('editor-toolbar-hamburger');
+    if (!panel || !hamburger) return;
+    var isOpen = panel.classList.toggle('open');
+    hamburger.classList.toggle('active', isOpen);
+    panel.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+    if (isOpen) positionEditorOptionsPanelFromHamburger();
+}
+
+function positionEditorOptionsPanelFromHamburger() {
+    var panel = document.getElementById('editor-options-panel');
+    var hamburger = document.getElementById('editor-toolbar-hamburger');
+    if (!panel || !hamburger) return;
+    var rect = hamburger.getBoundingClientRect();
+    var gap = 8;
+    var maxH = Math.min(window.innerHeight - rect.top - 24, 520);
+    panel.style.left = (rect.right + gap) + 'px';
+    panel.style.top = rect.top + 'px';
+    panel.style.height = maxH + 'px';
+    panel.style.maxHeight = maxH + 'px';
+    // Se o painel sair da tela à direita, abre à esquerda do hambúrguer
+    if (rect.right + gap + 280 > window.innerWidth - 16) {
+        panel.style.left = (rect.left - 280 - gap) + 'px';
+        panel.style.transformOrigin = 'top right';
+    } else {
+        panel.style.transformOrigin = 'top left';
+    }
+}
+
+function openEditorOptionsPanel() {
+    var panel = document.getElementById('editor-options-panel');
+    var hamburger = document.getElementById('editor-toolbar-hamburger');
+    if (panel) {
+        panel.classList.add('open');
+        panel.setAttribute('aria-hidden', 'false');
+        positionEditorOptionsPanelFromHamburger();
+    }
+    if (hamburger) hamburger.classList.add('active');
+}
+
+function closeEditorOptionsPanel() {
+    var panel = document.getElementById('editor-options-panel');
+    var hamburger = document.getElementById('editor-toolbar-hamburger');
+    if (panel) {
+        panel.classList.remove('open');
+        panel.setAttribute('aria-hidden', 'true');
+    }
+    if (hamburger) hamburger.classList.remove('active');
+}
+
+window.toggleEditorToolbar = toggleEditorToolbar;
+window.openEditorOptionsPanel = openEditorOptionsPanel;
+window.closeEditorOptionsPanel = closeEditorOptionsPanel;
+window.toggleNotePin = toggleNotePin;
+
+document.addEventListener('click', function(e) {
+    var panel = document.getElementById('editor-options-panel');
+    var hamburger = document.getElementById('editor-toolbar-hamburger');
+    if (panel && panel.classList.contains('open') && !panel.contains(e.target) && !(hamburger && hamburger.contains(e.target))) {
+        closeEditorOptionsPanel();
+    }
+});
 
 // Helper para mostrar toast (se não existir)
 function showToast(message, type = 'info') {

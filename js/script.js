@@ -27,227 +27,24 @@ let sortDirection = 'asc';
 let modeloAtual = 'todos';
 let cadastroStep = 1;
 
-// ================= DADOS DE EXEMPLO COMPLETOS =================
-const equipamentosExemplo = [
-    // ZT411 - Impressora Industrial
-    {
-        serial: "18J194501111",
-        tag: "ZT411-IND-001",
-        modelo: "ZT411",
-        ip: "10.15.20.101",
-        macRede: "00:1B:44:11:3A:B7",
-        macBluetooth: "00:1B:44:11:3A:B8",
-        selb: "SELB-2024-001",
-        patrimonio: "123456789",
-        setor: "packing-mono",
-        localizacao: "Setor A, Posição 1, Corredor Principal",
-        status: "online",
-        ultimaChecagem: "2024-01-15 14:30",
-        dataCadastro: "2024-01-10T08:00:00Z",
-        observacoes: "Impressora nova, calibração realizada em 10/01/2024",
-        fabricante: "Zebra Technologies",
-        firmware: "V72.20.15Z",
-        contador: 12543,
-        toner: 85,
-        ribbon: 60,
-        responsavel: "Filipe da Silva",
-        garantia: "2025-01-10"
-    },
-    {
-        serial: "18J194502222",
-        tag: "ZT411-IND-002",
-        modelo: "ZT411",
-        ip: "10.15.20.102",
-        macRede: "00:1B:44:11:3A:B9",
-        macBluetooth: "00:1B:44:11:3A:BA",
-        selb: "SELB-2024-002",
-        patrimonio: "123456790",
-        setor: "packing-ptw",
-        localizacao: "Setor B, Posição 2, Área de Expedição",
-        status: "online",
-        ultimaChecagem: "2024-01-15 14:28",
-        dataCadastro: "2024-01-10T09:30:00Z",
-        observacoes: "Instalada com rede cabeada, estabilidade excelente",
-        fabricante: "Zebra Technologies",
-        firmware: "V72.20.15Z",
-        contador: 8921,
-        toner: 90,
-        ribbon: 75,
-        responsavel: "João Oliveira",
-        garantia: "2025-01-10"
-    },
-    {
-        serial: "18J194503333",
-        tag: "ZT411-IND-003",
-        modelo: "ZT411",
-        ip: "10.15.20.103",
-        macRede: "00:1B:44:11:3A:BB",
-        macBluetooth: "00:1B:44:11:3A:BC",
-        selb: "SELB-2024-003",
-        patrimonio: "123456791",
-        setor: "rk",
-        localizacao: "Setor C, Posição 3, Recebimento",
-        status: "offline",
-        ultimaChecagem: "2024-01-14 09:15",
-        dataCadastro: "2024-01-11T10:15:00Z",
-        observacoes: "Apresentando falhas intermitentes na conexão",
-        fabricante: "Zebra Technologies",
-        firmware: "V72.19.14Z",
-        contador: 21567,
-        toner: 45,
-        ribbon: 30,
-        responsavel: "Carlos Mendes",
-        garantia: "2025-01-11"
-    },
-    // ZD421 - Impressora Desktop
-    {
-        serial: "21D194504444",
-        tag: "ZD421-DSK-001",
-        modelo: "ZD421",
-        ip: "10.15.21.101",
-        macRede: "00:1B:44:11:3A:BD",
-        macBluetooth: "00:1B:44:11:3A:BE",
-        selb: "SELB-2024-004",
-        patrimonio: "123456792",
-        setor: "check-in",
-        localizacao: "Setor D, Posição 4, Balcão Atendimento",
-        status: "online",
-        ultimaChecagem: "2024-01-15 14:20",
-        dataCadastro: "2024-01-12T14:00:00Z",
-        observacoes: "Configurada para etiquetas 4x6, funcionamento perfeito",
-        fabricante: "Zebra Technologies",
-        firmware: "V65.21.10Z",
-        contador: 5432,
-        toner: 95,
-        ribbon: null,
-        responsavel: "Ana Paula",
-        garantia: "2025-01-12"
-    },
-    {
-        serial: "21D194505555",
-        tag: "ZD421-DSK-002",
-        modelo: "ZD421",
-        ip: "10.15.21.102",
-        macRede: "00:1B:44:11:3A:BF",
-        macBluetooth: "00:1B:44:11:3A:C0",
-        selb: "SELB-2024-005",
-        patrimonio: "123456793",
-        setor: "retiros",
-        localizacao: "Setor E, Posição 5, Área Administrativa",
-        status: "online",
-        ultimaChecagem: "2024-01-15 14:22",
-        dataCadastro: "2024-01-12T15:30:00Z",
-        observacoes: "Uso intensivo, requer limpeza semanal",
-        fabricante: "Zebra Technologies",
-        firmware: "V65.21.10Z",
-        contador: 12876,
-        toner: 70,
-        ribbon: null,
-        responsavel: "Mariana Costa",
-        garantia: "2025-01-12"
-    },
-    // ZQ630 - Impressora Pagewide
-    {
-        serial: "30Q194506666",
-        tag: "ZQ630-PAG-001",
-        modelo: "ZQ630",
-        ip: "10.15.22.101",
-        macRede: "00:1B:44:11:3A:C1",
-        macBluetooth: "00:1B:44:11:3A:C2",
-        selb: "SELB-2024-006",
-        patrimonio: "123456794",
-        setor: "returns",
-        localizacao: "Setor F, Posição 1, Devoluções",
-        status: "online",
-        ultimaChecagem: "2024-01-15 14:10",
-        dataCadastro: "2024-01-13T08:45:00Z",
-        observacoes: "Impressora de alta velocidade, ótimo desempenho",
-        fabricante: "Zebra Technologies",
-        firmware: "V82.15.20Z",
-        contador: 8765,
-        toner: 80,
-        ink: 75,
-        responsavel: "Roberto Alves",
-        garantia: "2025-01-13"
-    },
-    {
-        serial: "30Q194507777",
-        tag: "ZQ630-PAG-002",
-        modelo: "ZQ630",
-        ip: "10.15.22.102",
-        macRede: "00:1B:44:11:3A:C3",
-        macBluetooth: "00:1B:44:11:3A:C4",
-        selb: "SELB-2024-007",
-        patrimonio: "123456795",
-        setor: "insumos",
-        localizacao: "Setor G, Posição 2, Almoxarifado",
-        status: "manutencao",
-        ultimaChecagem: "2024-01-12 10:20",
-        dataCadastro: "2024-01-13T10:20:00Z",
-        observacoes: "Problema no cabeçote de impressão, aguardando peça",
-        fabricante: "Zebra Technologies",
-        firmware: "V82.15.20Z",
-        contador: 15432,
-        toner: 50,
-        ink: 40,
-        responsavel: "Pedro Santos",
-        garantia: "2025-01-13"
-    }
-];
+// ================= DADOS DO INVENTÁRIO - Persistidos em localStorage =================
+let equipamentosExemplo = [];
+(function() {
+    try {
+        var s = localStorage.getItem('axis_inventario_equipamentos');
+        if (s) {
+            var arr = JSON.parse(s);
+            if (Array.isArray(arr)) equipamentosExemplo = arr;
+        }
+    } catch (e) {}
+})();
 
-// ================= GERAR MAIS EQUIPAMENTOS =================
-for (let i = 8; i <= 50; i++) {
-    const modelos = ['ZT411', 'ZD421', 'ZQ630'];
-    const setores = [
-        'packing-mono', 'packing-ptw', 'rk', 'rk-in', 'check-in', 'retiros', 'returns',
-        'insumos', 'docas-expedicao', 'reciving', 'mhw', 'mz1', 'mz2', 'mz3',
-        'qualidade', 'rr', 'aquario-adm', 'administracao', 'lideranca', 'ambulatorio-externo',
-        'hv', 'gate', 'linha-peixe-1', 'linha-peixe-2', 'sorter', 'deposito-systems'
-    ];
-    const statuses = ['online', 'online', 'online', 'offline', 'manutencao'];
-    const responsaveis = ['Filipe da Silva', 'João Oliveira', 'Carlos Mendes', 'Ana Paula', 'Mariana Costa', 'Roberto Alves', 'Pedro Santos'];
-    
-    const modelo = modelos[Math.floor(Math.random() * modelos.length)];
-    const setor = setores[Math.floor(Math.random() * setores.length)];
-    const status = statuses[Math.floor(Math.random() * statuses.length)];
-    const responsavel = responsaveis[Math.floor(Math.random() * responsaveis.length)];
-    
-    let prefixo = 'IND';
-    if (modelo === 'ZD421') prefixo = 'DSK';
-    if (modelo === 'ZQ630') prefixo = 'PAG';
-    
-    const serialBase = modelo === 'ZT411' ? '18J' : modelo === 'ZD421' ? '21D' : '30Q';
-    const serialNum = 194500000 + i;
-    
-    const letraSetor = String.fromCharCode(65 + (i % 26));
-    const numeroPosicao = (i % 10) + 1;
-    
-    const equipamento = {
-        serial: `${serialBase}${serialNum}`,
-        tag: `${modelo}-${prefixo}-${i.toString().padStart(3, '0')}`,
-        modelo: modelo,
-        ip: `10.15.${modelo === 'ZT411' ? '20' : modelo === 'ZD421' ? '21' : '22'}.${100 + i}`,
-        macRede: `00:1B:44:11:3A:${(0xC0 + i).toString(16).toUpperCase().padStart(2, '0')}`,
-        macBluetooth: `00:1B:44:11:3B:${(0xC0 + i).toString(16).toUpperCase().padStart(2, '0')}`,
-        selb: `SELB-2024-${i.toString().padStart(3, '0')}`,
-        patrimonio: (123456796 + i).toString(),
-        setor: setor,
-        localizacao: `Setor ${letraSetor}, Posição ${numeroPosicao}, ${['Corredor Principal', 'Área de Expedição', 'Recebimento', 'Balcão Atendimento', 'Área Administrativa', 'Devoluções', 'Almoxarifado'][i % 7]}`,
-        status: status,
-        ultimaChecagem: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString().replace('T', ' ').substring(0, 16),
-        dataCadastro: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
-        observacoes: ['Funcionamento normal', 'Requer calibração', 'Nova instalação', 'Manutenção preventiva agendada', 'Alta performance'][i % 5],
-        fabricante: 'Zebra Technologies',
-        firmware: modelo === 'ZT411' ? 'V72.20.15Z' : modelo === 'ZD421' ? 'V65.21.10Z' : 'V82.15.20Z',
-        contador: Math.floor(Math.random() * 30000) + 1000,
-        toner: Math.floor(Math.random() * 100),
-        ribbon: modelo === 'ZQ630' ? null : Math.floor(Math.random() * 100),
-        ink: modelo === 'ZQ630' ? Math.floor(Math.random() * 100) : null,
-        responsavel: responsavel,
-        garantia: new Date(Date.now() + Math.random() * 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-    };
-    
-    equipamentosExemplo.push(equipamento);
+function salvarInventarioLocalStorage() {
+    try {
+        localStorage.setItem('axis_inventario_equipamentos', JSON.stringify(equipamentosExemplo));
+    } catch (e) {
+        console.error('Erro ao salvar inventário:', e);
+    }
 }
 
 // ================= NOTIFICAÇÕES INICIAIS =================
@@ -359,11 +156,16 @@ document.addEventListener('DOMContentLoaded', () => {
             userDisplay.innerText = currentUser;
         }
         
-        // Mostra menu de administração se for admin
+        // Mostra menu de administração e inicia atualização automática de stats se for admin
         const menuAdmin = document.getElementById('menu-admin');
         if (menuAdmin) {
             if (currentUserProfile === 'admin') {
                 menuAdmin.style.display = 'block';
+                if (!window._axisAdminStatsInterval) {
+                    window._axisAdminStatsInterval = setInterval(function() {
+                        if (typeof atualizarEstatisticasAdmin === 'function') atualizarEstatisticasAdmin();
+                    }, 25000);
+                }
             } else {
                 menuAdmin.style.display = 'none';
             }
@@ -474,6 +276,7 @@ document.addEventListener('DOMContentLoaded', () => {
         currentUser = localStorage.getItem('current_user');
         var ud = document.getElementById('user-display-name');
         if (ud) ud.innerText = currentUser;
+        if (typeof atualizarPerfilNav === 'function') atualizarPerfilNav();
         var ma = document.getElementById('menu-admin');
         if (ma) {
             var login = localStorage.getItem('current_user_login');
@@ -564,6 +367,7 @@ function toggleSidebar() {
         // Fecha o menu
         sidebar.classList.remove('open');
         overlay.classList.remove('active');
+        document.body.classList.remove('menu-open');
         if (menuBtn) menuBtn.classList.remove('active');
         overlay.style.opacity = '0';
         setTimeout(() => {
@@ -571,7 +375,8 @@ function toggleSidebar() {
         }, 300);
         console.log('✅ Menu fechado');
     } else {
-        // Abre o menu
+        // Abre o menu (classe no body remove linha em L)
+        document.body.classList.add('menu-open');
         overlay.style.opacity = '1';
         overlay.style.display = 'block';
         overlay.classList.add('active');
@@ -684,6 +489,9 @@ function navigate(pageId) {
         console.log(`⚠️ Página não salva (não é página interna): ${pageId}`);
     }
     
+    // 0. Fecha o dropdown do perfil ao trocar de página (estado limpo em qualquer seção)
+    if (typeof fecharPerfilNav === 'function') fecharPerfilNav();
+
     // 1. Oculta todas as seções
     const sections = document.querySelectorAll('.main-section');
     sections.forEach(s => {
@@ -717,12 +525,12 @@ function navigate(pageId) {
         }
     }
 
-    // 3. Atualiza o estado visual dos botões no menu
-    const menuItems = document.querySelectorAll('.side-item');
+    // 3. Atualiza o estado visual dos botões no menu (destaque animado acompanha a página atual)
+    const menuItems = document.querySelectorAll('.side-item[data-nav-page]');
     menuItems.forEach(item => {
         item.classList.remove(CSSClasses.active);
-        const onclickAttr = item.getAttribute('onclick');
-        if (onclickAttr && onclickAttr.includes(pageId)) {
+        const navPage = item.getAttribute('data-nav-page');
+        if (navPage === pageId) {
             item.classList.add(CSSClasses.active);
         }
     });
@@ -733,34 +541,26 @@ function navigate(pageId) {
         toggleSidebar();
     }
 
-    // 5. Mostrar/esconder elementos apenas na home
+    // 5. Mostrar/esconder elementos apenas na home + garantir perfil visível em TODAS as seções
     const navWelcomeText = document.getElementById('nav-welcome-text');
     const fabContainer = document.getElementById('fab-container');
     const whatsappButton = document.getElementById('whatsapp-float-button');
     
     if (pageId === 'page-home') {
-        // Mostra "BEM-VINDO AO AXIS" e bola do WhatsApp apenas na home
-        if (navWelcomeText) {
-            navWelcomeText.style.display = 'block';
-        }
-        if (fabContainer) {
-            fabContainer.style.display = 'block';
-        }
-        if (whatsappButton) {
-            whatsappButton.style.display = 'block';
-        }
+        if (navWelcomeText) navWelcomeText.style.display = 'block';
     } else {
-        // Esconde em outras páginas
-        if (navWelcomeText) {
-            navWelcomeText.style.display = 'none';
-        }
-        if (fabContainer) {
-            fabContainer.style.display = 'none';
-        }
-        if (whatsappButton) {
-            whatsappButton.style.display = 'none';
-        }
+        if (navWelcomeText) navWelcomeText.style.display = 'none';
     }
+    // Perfil deve funcionar em qualquer seção (Início, Inventário, Suporte, Configurações, etc.)
+    if (typeof atualizarPerfilNav === 'function') atualizarPerfilNav();
+    var profileWrap = document.getElementById('axis-profile-wrap');
+    if (profileWrap && localStorage.getItem('current_user_login')) {
+        profileWrap.style.display = 'flex';
+        profileWrap.style.visibility = 'visible';
+    }
+    // FAB e WhatsApp removidos - funções descontinuadas
+    if (fabContainer) fabContainer.style.display = 'none';
+    if (whatsappButton) whatsappButton.style.display = 'none';
 
     // 6. Ações específicas por página
     switch(pageId) {
@@ -769,6 +569,7 @@ function navigate(pageId) {
             break;
         case 'page-home':
             loadDashboardData();
+            if (typeof aplicarPermissoesModulos === 'function') aplicarPermissoesModulos();
             break;
         case 'page-rondas':
             carregarRondas();
@@ -786,8 +587,14 @@ function navigate(pageId) {
                 navigate('page-home');
                 return;
             }
-            atualizarEstatisticasAdmin();
-            showToast('Página de administração carregada', 'info');
+            // Atualiza estatísticas ao entrar (sem precisar recarregar)
+            function atualizarStatsAdmin() {
+                if (typeof atualizarEstatisticasAdmin === 'function') atualizarEstatisticasAdmin();
+            }
+            atualizarStatsAdmin();
+            requestAnimationFrame(function() { requestAnimationFrame(atualizarStatsAdmin); });
+            setTimeout(atualizarStatsAdmin, 150);
+            setTimeout(atualizarStatsAdmin, 500);
             break;
     }
 
@@ -1048,7 +855,16 @@ function handleAuth() {
     const allKeys = Object.keys(localStorage).filter(k => k.startsWith('db_'));
     console.log('📋 Todas as chaves db_ no localStorage:', allKeys);
     
-    const dbRaw = localStorage.getItem(dbKey);
+    let dbRaw = localStorage.getItem(dbKey);
+    let chaveAntiga = null; // Para migrar usuários com chave em formato antigo
+    // Fallback: busca case-insensitive (usuários criados antes da correção podem ter chave em maiúsculas)
+    if (!dbRaw) {
+        chaveAntiga = allKeys.find(k => k.replace('db_', '').toLowerCase() === loginNormalizado);
+        if (chaveAntiga) {
+            dbRaw = localStorage.getItem(chaveAntiga);
+            console.log('📦 Usuário encontrado por busca case-insensitive:', chaveAntiga);
+        }
+    }
     console.log('📦 Dados encontrados no localStorage:', dbRaw ? 'Sim' : 'Não');
     
     if (dbRaw) {
@@ -1125,6 +941,11 @@ function handleAuth() {
             // Atualiza último acesso do usuário
             db.ultimoAcesso = new Date().toISOString();
             localStorage.setItem('db_' + loginNormalizado, JSON.stringify(db));
+            // Migra: remove chave antiga (ex: db_JOAO.SILVA) para evitar duplicata
+            if (chaveAntiga && chaveAntiga !== dbKey) {
+                localStorage.removeItem(chaveAntiga);
+                console.log('✅ Usuário migrado para chave normalizada');
+            }
             
             // Registra login
             const loginData = {
@@ -1148,7 +969,9 @@ function handleAuth() {
                 if (typeof navigate === 'function') {
                     navigate('page-home');
                 }
-                
+                if (typeof atualizarPerfilNav === 'function') atualizarPerfilNav();
+                if (typeof aplicarPermissoesModulos === 'function') aplicarPermissoesModulos();
+
             } else {
                 console.log('❌ Senha incorreta');
                 // Animação de erro
@@ -1176,7 +999,7 @@ function handleAuth() {
         if (typeof showToast === 'function') {
             showToast('Usuário não encontrado.', 'warning');
         } else {
-            alert('Usuário não encontrado. Verifique se o usuário foi criado corretamente.');
+            if (typeof showModalErroLogin === 'function') showModalErroLogin('Usuário não encontrado', 'Use o login exatamente como cadastrado (ex: joao.silva, em minúsculas). O sistema aceita login com maiúsculas ou minúsculas.'); else alert('Usuário não encontrado. Verifique se o usuário foi criado corretamente.');
         }
     }
 }
@@ -1211,64 +1034,133 @@ function togglePassword() {
     }
 }
 
-function logout() {
-    if(confirm("Deseja realmente sair do sistema AXIS?")) {
-        console.log('👋 Usuário deslogado');
+function fecharModalSair() {
+    const wrap = document.getElementById('modal-sair');
+    if (wrap) {
+        wrap.style.display = 'none';
+    }
+    document.body.classList.remove('modal-sair-open');
+}
+
+function execLogout() {
+    console.log('👋 Usuário deslogado');
+    
+    // Animação de saída
+    const mainContent = document.getElementById('main-content');
+    if (mainContent) {
+        mainContent.style.opacity = '0';
+        mainContent.style.transform = 'translateY(20px)';
+    }
+    
+    setTimeout(() => {
+        // Registra logout
+        const logoutData = {
+            usuario: currentUser,
+            data: new Date().toISOString()
+        };
+        localStorage.setItem('last_logout', JSON.stringify(logoutData));
+        try {
+            const audit = JSON.parse(localStorage.getItem('axis_audit_log') || '[]');
+            audit.push({ type: 'logout', user: currentUser || '-', date: logoutData.data });
+            localStorage.setItem('axis_audit_log', JSON.stringify(audit.slice(-100)));
+        } catch (_) {}
         
-        // Animação de saída
-        const mainContent = document.getElementById('main-content');
-        if (mainContent) {
-            mainContent.style.opacity = '0';
-            mainContent.style.transform = 'translateY(20px)';
+        // Para atualização automática de stats de admin
+        if (window._axisAdminStatsInterval) {
+            clearInterval(window._axisAdminStatsInterval);
+            window._axisAdminStatsInterval = null;
+        }
+        // Limpa dados do usuário
+        currentUser = null;
+        currentUserProfile = 'operador';
+        localStorage.removeItem('current_user');
+        localStorage.removeItem('current_user_login');
+        localStorage.removeItem('user_logged_in');
+        localStorage.removeItem('axis-current-page'); // Limpa também a página salva
+        sessionStorage.removeItem('just_logged_in');
+        
+        // Mostra tela de login e esconde conteúdo principal
+        const authScreen = document.getElementById('auth-screen');
+        const mainContentEl = document.getElementById('main-content');
+        
+        if (authScreen) {
+            authScreen.style.display = 'flex';
+        }
+        if (mainContentEl) {
+            mainContentEl.style.display = 'none';
         }
         
-        setTimeout(() => {
-            // Registra logout
-            const logoutData = {
-                usuario: currentUser,
-                data: new Date().toISOString()
-            };
-            localStorage.setItem('last_logout', JSON.stringify(logoutData));
-            try {
-                const audit = JSON.parse(localStorage.getItem('axis_audit_log') || '[]');
-                audit.push({ type: 'logout', user: currentUser || '-', date: logoutData.data });
-                localStorage.setItem('axis_audit_log', JSON.stringify(audit.slice(-100)));
-            } catch (_) {}
-            
-            // Limpa dados do usuário
-            currentUser = null;
-            currentUserProfile = 'operador';
-            localStorage.removeItem('current_user');
-            localStorage.removeItem('current_user_login');
-            localStorage.removeItem('user_logged_in');
-            localStorage.removeItem('axis-current-page'); // Limpa também a página salva
-            sessionStorage.removeItem('just_logged_in');
-            
-            // Mostra tela de login e esconde conteúdo principal
-            const authScreen = document.getElementById('auth-screen');
-            const mainContentEl = document.getElementById('main-content');
-            
-            if (authScreen) {
-                authScreen.style.display = 'flex';
-            }
-            if (mainContentEl) {
-                mainContentEl.style.display = 'none';
-            }
-            
-            // Limpa campos do formulário
-            const usernameInput = document.getElementById('username');
-            const passwordInput = document.getElementById('password');
-            if (usernameInput) usernameInput.value = '';
-            if (passwordInput) passwordInput.value = '';
-            
-            // Foca no campo de usuário
-            if (usernameInput) {
-                setTimeout(() => {
-                    usernameInput.focus();
-                }, 100);
-            }
-        }, 300);
+        // Limpa campos do formulário
+        const usernameInput = document.getElementById('username');
+        const passwordInput = document.getElementById('password');
+        if (usernameInput) usernameInput.value = '';
+        if (passwordInput) passwordInput.value = '';
+        
+        // Foca no campo de usuário
+        if (usernameInput) {
+            setTimeout(() => {
+                usernameInput.focus();
+            }, 100);
+        }
+    }, 300);
+}
+
+function logout() {
+    const wrap = document.getElementById('modal-sair');
+    if (!wrap) {
+        if (typeof confirm !== 'undefined' && confirm('Deseja realmente sair do sistema AXIS?')) {
+            execLogout();
+        }
+        return;
     }
+    wrap.style.display = 'flex';
+    document.body.classList.add('modal-sair-open');
+}
+
+function showModalErroLogin(titulo, mensagem) {
+    const wrap = document.getElementById('modal-erro-login');
+    const elTitulo = document.getElementById('modal-erro-login-titulo');
+    const elMensagem = document.getElementById('modal-erro-login-mensagem');
+    if (wrap && elTitulo && elMensagem) {
+        elTitulo.textContent = titulo || 'Erro';
+        elMensagem.textContent = mensagem || 'Ocorreu um erro.';
+        wrap.style.display = 'flex';
+    }
+}
+function fecharModalErroLogin() {
+    const wrap = document.getElementById('modal-erro-login');
+    if (wrap) wrap.style.display = 'none';
+}
+function iniciarAtualizacaoAdminStats() {
+    if (currentUserProfile !== 'admin') return;
+    if (window._axisAdminStatsInterval) return;
+    window._axisAdminStatsInterval = setInterval(function() {
+        if (typeof atualizarEstatisticasAdmin === 'function') atualizarEstatisticasAdmin();
+    }, 25000);
+}
+window.showModalErroLogin = showModalErroLogin;
+window.fecharModalErroLogin = fecharModalErroLogin;
+window.iniciarAtualizacaoAdminStats = iniciarAtualizacaoAdminStats;
+
+function setupModalSair() {
+    const wrap = document.getElementById('modal-sair');
+    if (!wrap) return;
+    const overlay = wrap.querySelector('.modal-sair-overlay');
+    const btnOk = document.getElementById('modal-sair-ok');
+    const btnCancel = document.getElementById('modal-sair-cancel');
+    const glass = wrap.querySelector('.modal-sair-glass');
+    if (overlay) overlay.addEventListener('click', fecharModalSair);
+    if (btnOk) btnOk.addEventListener('click', function () {
+        fecharModalSair();
+        execLogout();
+    });
+    if (btnCancel) btnCancel.addEventListener('click', fecharModalSair);
+    if (glass) glass.addEventListener('click', function (e) { e.stopPropagation(); });
+}
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupModalSair);
+} else {
+    setupModalSair();
 }
 
 function handleGlobalSearch() {
@@ -1347,30 +1239,41 @@ function initFormEvents() {
 // ================= INICIALIZAÇÃO DO INVENTÁRIO =================
 function inicializarInventario() {
     console.log('📦 Inicializando inventário...');
-    
-    // Exporta IMEDIATAMENTE (sempre)
     window.inicializarInventario = inicializarInventario;
-    
-    // Carrega dados
-    inventarioData = [...equipamentosExemplo];
-    
-    // Renderiza tabela
-    renderizarTabela();
-    
-    // Inicializa export dropdown
+
+    // Garante que ao entrar no inventário os dados apareçam imediatamente (sem precisar aplicar "Todos" no filtro)
+    // Reseta os filtros do painel Filtrar (Modelo e Setor) para "Todos" - NÃO altera Buscar dispositivos
+    const panelModelo = document.getElementById('ucs-filtro-panel-modelo');
+    const panelSetor = document.getElementById('ucs-filtro-panel-setor');
+    if (panelModelo) panelModelo.value = '';
+    if (panelSetor) panelSetor.value = '';
+    if (typeof syncSetorSelectorFromSelect === 'function') {
+        syncSetorSelectorFromSelect('ucs-filtro-panel-modelo', 'ucs-filtro-panel-modelo-trigger', 'ucs-filtro-panel-modelo-dropdown', 'Todos');
+        syncSetorSelectorFromSelect('ucs-filtro-panel-setor', 'ucs-filtro-panel-setor-trigger', 'ucs-filtro-panel-setor-dropdown', 'Todos');
+    }
+
+    // Aplica filtro "Todos" para exibir todos os dados imediatamente (mesmo fluxo de clicar em Aplicar com Todos)
+    if (typeof filtrarInventario === 'function') {
+        filtrarInventario();
+    } else {
+        const base = Array.isArray(equipamentosExemplo) && equipamentosExemplo.length > 0
+            ? equipamentosExemplo
+            : [];
+        inventarioData = [...base];
+        renderizarTabela();
+    }
+
     initExportDropdown();
-    
-    // Inicializa gráfico
     inicializarGrafico();
-    
-    console.log(`✅ Inventário inicializado com ${equipamentosExemplo.length} equipamentos`);
+
+    console.log(`✅ Inventário inicializado com ${inventarioData.length} equipamentos`);
 }
 
 function atualizarContadoresModelo() {
     const total = equipamentosExemplo.length;
     const zt411 = equipamentosExemplo.filter(e => e.modelo === 'ZT411').length;
     const zd421 = equipamentosExemplo.filter(e => e.modelo === 'ZD421').length;
-    const zq630 = equipamentosExemplo.filter(e => e.modelo === 'ZQ630').length;
+    const zq630 = equipamentosExemplo.filter(e => e.modelo === 'ZQ630 PLUS').length;
     
     const elements = {
         'count-todos': total,
@@ -1416,19 +1319,16 @@ function filtrarPorModelo(modelo) {
 // ================= FUNÇÃO PRINCIPAL DE FILTRO =================
 function filtrarInventario() {
     console.log('⚙️ Aplicando filtros...');
-    
-    // Exporta IMEDIATAMENTE para garantir disponibilidade
     window.filtrarInventario = filtrarInventario;
-    
+
     const paisFiltro = document.getElementById('ucs-filtro-pais')?.value || '';
     const nodoFiltro = document.getElementById('ucs-filtro-nodo')?.value || '';
     const dispositivoFiltro = document.getElementById('ucs-filtro-dispositivo')?.value || '';
-    const busca = ''; // Busca será implementada depois se necessário
-    
-    console.log(`Filtros: País=${paisFiltro}, Nodo=${nodoFiltro}, Dispositivo=${dispositivoFiltro}`);
-    
+    const modeloPanel = document.getElementById('ucs-filtro-panel-modelo')?.value || '';
+    const setorPanel = document.getElementById('ucs-filtro-panel-setor')?.value || '';
+    const busca = '';
+
     let filtrados = equipamentosExemplo.filter(eqp => {
-        // Filtro por busca (serial, tag, IP, nome)
         if (busca) {
             const camposBusca = [
                 eqp.serial?.toLowerCase(),
@@ -1436,28 +1336,19 @@ function filtrarInventario() {
                 eqp.nome?.toLowerCase(),
                 eqp.nombre?.toLowerCase(),
                 eqp.ip?.toLowerCase(),
-                eqp.macBluetooth?.toLowerCase(),
-                eqp.selb?.toLowerCase(),
-                eqp.patrimonio?.toLowerCase(),
                 eqp.setor?.toLowerCase(),
-                eqp.localizacao?.toLowerCase(),
-                eqp.responsavel?.toLowerCase(),
-                eqp.observacoes?.toLowerCase()
+                eqp.localizacao?.toLowerCase()
             ];
-            
-            if (!camposBusca.some(campo => campo && campo.includes(busca))) {
-                return false;
-            }
+            if (!camposBusca.some(campo => campo && campo.includes(busca))) return false;
         }
-        
+        if (modeloPanel && (eqp.modelo || '').toLowerCase() !== modeloPanel.toLowerCase()) return false;
+        if (setorPanel && (eqp.setor || '').toLowerCase() !== setorPanel.toLowerCase()) return false;
         return true;
     });
-    
-    console.log(`✅ ${filtrados.length} equipamentos encontrados`);
-    
+
+    console.log(`✅ ${filtrados.length} equipamentos (modelo=${modeloPanel || 'todos'}, setor=${setorPanel || 'todos'})`);
     inventarioData = filtrados;
     currentPage = 1;
-    
     renderizarTabela();
 }
 
@@ -1484,6 +1375,239 @@ function resetarFiltrosInventario() {
     }
     
     console.log('✅ Filtros resetados');
+}
+
+// ================= PAINEL FILTRAR (abre para baixo, acima do conteúdo) =================
+function toggleFiltroPanel() {
+    const wrap = document.getElementById('ucs-filter-dropdown');
+    if (!wrap) return;
+    const isOpen = wrap.classList.toggle('is-open');
+    wrap.querySelector('#ucs-btn-filter')?.setAttribute('aria-expanded', isOpen);
+    if (isOpen) {
+        setTimeout(() => document.addEventListener('click', fecharFiltroPanelAoClicarFora), 0);
+    } else {
+        document.removeEventListener('click', fecharFiltroPanelAoClicarFora);
+    }
+}
+
+function fecharFiltroPanel() {
+    const wrap = document.getElementById('ucs-filter-dropdown');
+    if (wrap) {
+        wrap.classList.remove('is-open');
+        wrap.querySelector('#ucs-btn-filter')?.setAttribute('aria-expanded', 'false');
+    }
+    document.removeEventListener('click', fecharFiltroPanelAoClicarFora);
+}
+
+function fecharFiltroPanelAoClicarFora(e) {
+    const wrap = document.getElementById('ucs-filter-dropdown');
+    if (!wrap || wrap.contains(e.target)) return;
+    fecharFiltroPanel();
+}
+
+function initFiltroPanel() {
+    const btnFiltrar = document.getElementById('ucs-btn-filter');
+    const btnClose = document.getElementById('ucs-filter-close');
+    const btnAplicar = document.getElementById('ucs-filter-aplicar');
+    const btnLimpar = document.getElementById('ucs-filter-limpar');
+    if (!btnFiltrar) return;
+
+    btnFiltrar.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleFiltroPanel();
+    });
+    if (btnClose) btnClose.addEventListener('click', () => fecharFiltroPanel());
+    if (btnAplicar) {
+        btnAplicar.addEventListener('click', () => {
+            if (typeof filtrarInventario === 'function') filtrarInventario();
+            fecharFiltroPanel();
+        });
+    }
+    if (btnLimpar) {
+        btnLimpar.addEventListener('click', () => {
+            if (typeof resetarFiltrosInventario === 'function') resetarFiltrosInventario();
+            const modelo = document.getElementById('ucs-filtro-panel-modelo');
+            const setor = document.getElementById('ucs-filtro-panel-setor');
+            if (modelo) modelo.value = '';
+            if (setor) setor.value = '';
+            syncSetorSelectorFromSelect('ucs-filtro-panel-modelo', 'ucs-filtro-panel-modelo-trigger', 'ucs-filtro-panel-modelo-dropdown', 'Todos');
+            syncSetorSelectorFromSelect('ucs-filtro-panel-setor', 'ucs-filtro-panel-setor-trigger', 'ucs-filtro-panel-setor-dropdown');
+            fecharFiltroPanel();
+        });
+    }
+}
+
+// ================= SELETORES CUSTOMIZADOS (Setor e Modelo - mesmo design) =================
+function syncSetorSelectorFromSelect(selectId, triggerId, dropdownId, defaultLabel) {
+    const select = document.getElementById(selectId);
+    const trigger = document.getElementById(triggerId);
+    const dropdown = document.getElementById(dropdownId);
+    if (!select || !trigger || !dropdown) return;
+    const val = select.value || '';
+    const opt = select.querySelector(`option[value="${val}"]`);
+    const fallback = defaultLabel !== undefined ? defaultLabel : (selectId === 'cad-setor' ? 'Selecione um setor' : 'Todos');
+    trigger.textContent = opt ? opt.textContent.trim() : fallback;
+    trigger.setAttribute('aria-expanded', 'false');
+    dropdown.classList.remove('is-open');
+    dropdown.setAttribute('aria-hidden', 'true');
+    dropdown.querySelectorAll('.setor-selector-option').forEach(function (o) {
+        o.classList.toggle('selected', (o.getAttribute('data-value') || '') === val);
+    });
+}
+
+function closeOtherFilterDropdowns(exceptDropdown) {
+    const panel = exceptDropdown.closest('#ucs-filter-panel') || exceptDropdown.closest('#cadastro-modal') || exceptDropdown.closest('#editar-modal');
+    if (panel) {
+        panel.querySelectorAll('.setor-selector-dropdown.is-open').forEach(function (d) {
+            if (d === exceptDropdown) return;
+            d.classList.remove('is-open');
+            d.setAttribute('aria-hidden', 'true');
+            const triggerId = d.id.replace('-dropdown', '-trigger');
+            const t = document.getElementById(triggerId);
+            if (t) t.setAttribute('aria-expanded', 'false');
+        });
+    }
+}
+
+function initSetorSelector(selectId, triggerId, dropdownId, placeholderTodos) {
+    const select = document.getElementById(selectId);
+    const trigger = document.getElementById(triggerId);
+    const dropdown = document.getElementById(dropdownId);
+    if (!select || !trigger || !dropdown) return;
+
+    function open() {
+        closeOtherFilterDropdowns(dropdown);
+        dropdown.classList.add('is-open');
+        dropdown.setAttribute('aria-hidden', 'false');
+        trigger.setAttribute('aria-expanded', 'true');
+        const val = select.value || '';
+        dropdown.querySelectorAll('.setor-selector-option').forEach(function (o) {
+            o.classList.toggle('selected', (o.getAttribute('data-value') || '') === val);
+        });
+    }
+    function close() {
+        dropdown.classList.remove('is-open');
+        dropdown.setAttribute('aria-hidden', 'true');
+        trigger.setAttribute('aria-expanded', 'false');
+    }
+
+    trigger.addEventListener('click', function (e) {
+        e.stopPropagation();
+        if (dropdown.classList.contains('is-open')) close(); else open();
+    });
+
+    dropdown.querySelectorAll('.setor-selector-option').forEach(function (opt) {
+        opt.addEventListener('click', function () {
+            const value = opt.getAttribute('data-value') || '';
+            select.value = value;
+            trigger.textContent = opt.textContent.trim();
+            dropdown.querySelectorAll('.setor-selector-option').forEach(function (o) { o.classList.remove('selected'); });
+            opt.classList.add('selected');
+            close();
+            select.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+    });
+
+    document.addEventListener('click', function closeOnOutside(e) {
+        if (!dropdown.contains(e.target) && e.target !== trigger) close();
+    });
+
+    syncSetorSelectorFromSelect(selectId, triggerId, dropdownId, placeholderTodos);
+}
+
+function populateBancadaDropdown() {
+    const dropdown = document.getElementById('cad-bancada-dropdown');
+    const select = document.getElementById('cad-bancada');
+    if (!dropdown || !select) return;
+    while (dropdown.children.length > 1) dropdown.removeChild(dropdown.lastChild);
+    for (let i = 1; i <= 200; i++) {
+        const valor = 'B' + String(i).padStart(2, '0');
+        const opt = document.createElement('div');
+        opt.className = 'setor-selector-option';
+        opt.setAttribute('data-value', valor);
+        opt.setAttribute('role', 'option');
+        opt.textContent = valor;
+        dropdown.appendChild(opt);
+        const selOpt = document.createElement('option');
+        selOpt.value = valor;
+        selOpt.textContent = valor;
+        select.appendChild(selOpt);
+    }
+}
+
+function populateEditSetorDropdown() {
+    const dropdown = document.getElementById('edit-setor-dropdown');
+    const select = document.getElementById('edit-setor');
+    if (!dropdown || !select) return;
+    dropdown.innerHTML = '';
+    select.innerHTML = '';
+    const emptyOpt = document.createElement('div');
+    emptyOpt.className = 'setor-selector-option';
+    emptyOpt.setAttribute('data-value', '');
+    emptyOpt.setAttribute('role', 'option');
+    emptyOpt.textContent = '—';
+    dropdown.appendChild(emptyOpt);
+    const emptySel = document.createElement('option');
+    emptySel.value = '';
+    emptySel.textContent = '—';
+    select.appendChild(emptySel);
+    (typeof SETORES_EDIT !== 'undefined' ? SETORES_EDIT : []).forEach(function (s) {
+        const opt = document.createElement('div');
+        opt.className = 'setor-selector-option';
+        opt.setAttribute('data-value', s.v);
+        opt.setAttribute('role', 'option');
+        opt.textContent = s.l;
+        dropdown.appendChild(opt);
+        const selOpt = document.createElement('option');
+        selOpt.value = s.v;
+        selOpt.textContent = s.l;
+        select.appendChild(selOpt);
+    });
+}
+
+function populateEditBancadaDropdown() {
+    const dropdown = document.getElementById('edit-bancada-dropdown');
+    const select = document.getElementById('edit-bancada');
+    if (!dropdown || !select) return;
+    dropdown.innerHTML = '';
+    select.innerHTML = '<option value="">—</option>';
+    for (let i = 1; i <= 200; i++) {
+        const valor = 'B' + String(i).padStart(2, '0');
+        const opt = document.createElement('div');
+        opt.className = 'setor-selector-option';
+        opt.setAttribute('data-value', valor);
+        opt.setAttribute('role', 'option');
+        opt.textContent = valor;
+        dropdown.appendChild(opt);
+        const selOpt = document.createElement('option');
+        selOpt.value = valor;
+        selOpt.textContent = valor;
+        select.appendChild(selOpt);
+    }
+}
+
+function initSetorSelectors() {
+    populateBancadaDropdown();
+    populateEditSetorDropdown();
+    populateEditBancadaDropdown();
+    initSetorSelector('ucs-filtro-panel-setor', 'ucs-filtro-panel-setor-trigger', 'ucs-filtro-panel-setor-dropdown', 'Todos');
+    initSetorSelector('cad-setor', 'cad-setor-trigger', 'cad-setor-dropdown', 'Selecione um setor');
+    initSetorSelector('ucs-filtro-panel-modelo', 'ucs-filtro-panel-modelo-trigger', 'ucs-filtro-panel-modelo-dropdown', 'Todos');
+    initSetorSelector('cad-bancada', 'cad-bancada-trigger', 'cad-bancada-dropdown', 'Selecione uma bancada');
+    initSetorSelector('cad-status', 'cad-status-trigger', 'cad-status-dropdown', 'EM USO');
+    initSetorSelector('edit-setor', 'edit-setor-trigger', 'edit-setor-dropdown', '—');
+    initSetorSelector('edit-bancada', 'edit-bancada-trigger', 'edit-bancada-dropdown', '—');
+    initSetorSelector('edit-status', 'edit-status-trigger', 'edit-status-dropdown', 'EM USO');
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function () {
+        initFiltroPanel();
+        initSetorSelectors();
+    });
+} else {
+    initFiltroPanel();
+    initSetorSelectors();
 }
 
 // ================= ORDENAÇÃO DA TABELA =================
@@ -1539,6 +1663,39 @@ function ordenarTabela(coluna) {
     showToast(`Ordenado por ${coluna} (${sortDirection === 'asc' ? 'crescente' : 'decrescente'})`, 'info');
 }
 
+function atualizarCardsInventario() {
+    const base = (typeof equipamentosExemplo !== 'undefined' && Array.isArray(equipamentosExemplo)) ? equipamentosExemplo : [];
+    const total = base.length;
+    const zt411 = base.filter(e => (e.modelo || '').trim() === 'ZT411').length;
+    const zd421 = base.filter(e => (e.modelo || '').trim() === 'ZD421').length;
+    const zq630 = base.filter(e => (e.modelo || '').trim() === 'ZQ630 PLUS').length;
+    const statusNorm = (s) => (s || '').toUpperCase().replace(/\s+/g, ' ').trim();
+    const defeito = base.filter(e => statusNorm(e.status) === 'DEFEITO').length;
+    const emUso = base.filter(e => statusNorm(e.status) === 'EM USO' || !e.status || e.status === 'online').length;
+    const backup = base.filter(e => statusNorm(e.status) === 'BACKUP OPERACIONAL').length;
+    const elTotal = document.getElementById('ucs-total-count');
+    const elZt = document.getElementById('ucs-count-zt411');
+    const elZd = document.getElementById('ucs-count-zd421');
+    const elZq = document.getElementById('ucs-count-zq630');
+    const elDefeito = document.getElementById('ucs-count-defeito');
+    const elEmUso = document.getElementById('ucs-count-em-uso');
+    const elBackup = document.getElementById('ucs-count-backup');
+    if (elTotal) elTotal.textContent = total;
+    if (elZt) elZt.textContent = zt411;
+    if (elZd) elZd.textContent = zd421;
+    if (elZq) elZq.textContent = zq630;
+    if (elDefeito) elDefeito.textContent = defeito;
+    if (elEmUso) elEmUso.textContent = emUso;
+    if (elBackup) elBackup.textContent = backup;
+}
+
+/** Retorna HTML do badge de status (EM USO, DEFEITO, BACKUP OPERACIONAL) – botão sem ação */
+function renderizarStatusBadge(status) {
+    const s = (status && status !== 'online') ? String(status).trim() : 'EM USO';
+    const cls = s === 'DEFEITO' ? 'defeito' : s === 'BACKUP OPERACIONAL' ? 'backup-operacional' : 'em-uso';
+    return `<span class="ucs-status-badge ucs-status-${cls}">${s}</span>`;
+}
+
 // ================= RENDERIZAÇÃO DA TABELA =================
 function renderizarTabela() {
     console.log('🔄 Renderizando tabela...');
@@ -1546,11 +1703,7 @@ function renderizarTabela() {
     // Exporta IMEDIATAMENTE (sempre)
     window.renderizarTabela = renderizarTabela;
     
-    // Atualiza contador total
-    const totalCount = document.getElementById('ucs-total-count');
-    if (totalCount) {
-        totalCount.textContent = `${inventarioData.length} EM TOTAL`;
-    }
+    atualizarCardsInventario();
     
     let tbody = document.getElementById('ucs-inventory-data');
     if (!tbody) {
@@ -1572,7 +1725,7 @@ function renderizarTabela() {
     if (inventarioData.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="7" style="text-align: center; padding: 40px;">
+                <td colspan="8" style="text-align: center; padding: 40px;">
                     <div style="font-size: 48px; margin-bottom: 16px;">📦</div>
                     <h4 style="margin: 0 0 8px 0; color: var(--text-main);">Nenhum equipamento encontrado</h4>
                     <p style="color: var(--text-secondary); margin-bottom: 20px;">Tente ajustar os filtros ou cadastrar um novo equipamento</p>
@@ -1596,45 +1749,23 @@ function renderizarTabela() {
     let html = '';
     
     pageItems.forEach((eqp, index) => {
-        // Formata descrição incluindo bancada
-        const descricao = eqp.descricao || eqp.descripcion || 
-                         (eqp.bancada ? `${eqp.modelo} - Bancada ${eqp.bancada}` : eqp.modelo);
-        
-        // Nome do equipamento
-        const nome = eqp.nome || eqp.nombre || eqp.tag || eqp.serial;
+        const setorExibido = eqp.setor ? (typeof formatarSetor === 'function' ? formatarSetor(eqp.setor) : eqp.setor) : '-';
+        const alocacao = eqp.localizacao || eqp.local || eqp.descricao || eqp.descripcion || (eqp.bancada ? `Bancada ${eqp.bancada}` : '-');
+        const statusExibido = (eqp.status && eqp.status !== 'online') ? eqp.status : 'EM USO';
         
         html += `
             <tr data-serial="${eqp.serial}" data-tag="${eqp.tag}">
                 <td>${eqp.serial || eqp.id || '-'}</td>
-                <td>${nome}</td>
                 <td>${eqp.ip || '-'}</td>
                 <td>${eqp.modelo || '-'}</td>
-                <td>${descricao}</td>
+                <td>${setorExibido}</td>
+                <td>${alocacao}</td>
+                <td>${typeof renderizarStatusBadge === 'function' ? renderizarStatusBadge(statusExibido) : statusExibido}</td>
                 <td>
-                    <button class="ucs-action-btn" onclick="editarEquipamento('${eqp.tag}')" title="Editar">
-                        ✏️ Editar
-                    </button>
-                </td>
-                <td>
-                    <div class="ucs-controls-dropdown">
-                        <button class="ucs-action-btn">
-                            ⚙️ Controles
-                            <span class="ucs-dropdown-arrow">▼</span>
-                        </button>
-                        <div class="ucs-controls-menu">
-                            <button class="ucs-controls-option" onclick="editarEquipamento('${eqp.tag}')">
-                                ✏️ Editar
-                            </button>
-                            <button class="ucs-controls-option" onclick="verDetalhes('${eqp.tag}')">
-                                👁️ Ver Detalhes
-                            </button>
-                            <button class="ucs-controls-option" onclick="pingEquipamento('${eqp.ip}', '${eqp.tag}')">
-                                📶 Testar Conexão
-                            </button>
-                            <button class="ucs-controls-option" onclick="excluirEquipamento('${eqp.tag}')" style="color: #ff3b30;">
-                                🗑️ Excluir
-                            </button>
-                        </div>
+                    <div class="ucs-controls-inline">
+                        <button type="button" class="ucs-btn-inline ucs-btn-editar" onclick="editarEquipamento('${(eqp.tag || '').replace(/'/g, "\\'")}')" title="Editar">✏️ Editar</button>
+                        <button type="button" class="ucs-btn-inline ucs-btn-detalhes" onclick="verDetalhes('${(eqp.tag || '').replace(/'/g, "\\'")}')" title="Ver Detalhes">👁️ Ver Detalhes</button>
+                        <button type="button" class="ucs-btn-inline ucs-btn-excluir" onclick="excluirEquipamento('${(eqp.tag || '').replace(/'/g, "\\'")}')" title="Excluir">🗑️ Excluir</button>
                     </div>
                 </td>
             </tr>
@@ -1649,46 +1780,92 @@ function renderizarTabela() {
 
 // Funções auxiliares para ações da tabela
 function editarEquipamento(tag) {
-    verDetalhes(tag);
+    abrirModalEditar(tag);
+}
+
+function showConfirmExcluirModal(opts) {
+    const { title = 'Excluir', message = 'Tem certeza?', onConfirm, icon = '🗑️' } = opts || {};
+    const overlay = document.getElementById('confirm-excluir-overlay');
+    const titleEl = document.getElementById('confirm-excluir-title');
+    const msg = document.getElementById('confirm-excluir-message');
+    const iconEl = overlay ? overlay.querySelector('.confirm-glass-icon') : null;
+    const btnCancelar = document.getElementById('confirm-excluir-cancelar');
+    const btnExcluir = document.getElementById('confirm-excluir-ok');
+    if (!overlay || !btnExcluir || !btnCancelar) return;
+
+    if (titleEl) titleEl.textContent = title;
+    if (msg) msg.textContent = message;
+    if (iconEl) iconEl.textContent = icon;
+    overlay.style.display = 'flex';
+
+    const fecharConfirm = () => {
+        overlay.style.display = 'none';
+        btnCancelar.onclick = null;
+        btnExcluir.onclick = null;
+        overlay.onclick = null;
+    };
+
+    overlay.onclick = (e) => { if (e.target === overlay) fecharConfirm(); };
+    btnCancelar.onclick = () => fecharConfirm();
+    btnExcluir.onclick = () => {
+        fecharConfirm();
+        if (typeof onConfirm === 'function') onConfirm();
+    };
 }
 
 function excluirEquipamento(tag) {
-    if (confirm('Tem certeza que deseja excluir este equipamento?')) {
-        inventarioData = inventarioData.filter(eqp => eqp.tag !== tag);
-        renderizarTabela();
-        showToast('Equipamento excluído com sucesso', 'success');
-    }
+    showConfirmExcluirModal({
+        title: 'Excluir equipamento',
+        message: 'Tem certeza que deseja excluir este equipamento?',
+        onConfirm: () => {
+            inventarioData = inventarioData.filter(eqp => eqp.tag !== tag);
+            const idx = equipamentosExemplo.findIndex(e => e.tag === tag);
+            if (idx !== -1) {
+                equipamentosExemplo.splice(idx, 1);
+                salvarInventarioLocalStorage();
+            }
+            renderizarTabela();
+            if (typeof showToast === 'function') showToast('Equipamento excluído com sucesso', 'success');
+        }
+    });
 }
 
 // ================= FUNÇÕES UTILITÁRIAS DO INVENTÁRIO =================
 function formatarSetor(setor) {
     const setores = {
-        'packing-mono': 'PACKING MONO',
-        'packing-ptw': 'PACKING PTW',
-        'rk': 'RK',
-        'rk-in': 'RK IN',
-        'check-in': 'CHECK-IN',
-        'retiros': 'RETIROS',
-        'returns': 'RETURNS',
-        'insumos': 'INSUMOS',
-        'docas-expedicao': 'DOCAS DE EXPEDIÇÃO',
-        'reciving': 'RECIVING',
+        'internal-systems': 'INTERNAL SYSTEMS',
+        'lideranca': 'LIDERANÇA',
         'mhw': 'MHW',
+        'p2m': 'P2M',
+        'check-in': 'CHECK-IN',
+        'reciving': 'RECIVING',
         'mz1': 'MZ1',
         'mz2': 'MZ2',
         'mz3': 'MZ3',
-        'qualidade': 'QUALIDADE',
-        'rr': 'RR',
-        'aquario-adm': 'AQUÁRIO ADMINISTRATIVO',
-        'administracao': 'ADMINISTRAÇÃO',
-        'lideranca': 'LIDERANÇA',
-        'ambulatorio-externo': 'AMBULATÓRIO EXTERNO',
-        'hv': 'HV',
-        'gate': 'GATE',
-        'linha-peixe-1': 'LINHA DE PEIXE 1',
-        'linha-peixe-2': 'LINHA DE PEIXE 2',
+        'inventario': 'INVENTÁRIO',
+        'cx': 'CX',
+        'returns': 'RETURNS',
+        'packing-mono': 'PACKING MONO',
+        'packing-ptw': 'PACKING PTW',
+        'sauron': 'SAURON',
+        'insumos': 'INSUMOS',
+        'docas-de-expedicao': 'DOCAS DE EXPEDIÇÃO',
+        'linha-de-peixe-1': 'LINHA DE PEIXE 1',
         'sorter': 'SORTER',
-        'deposito-systems': 'DEPÓSITO DE INTERNAL SYSTEMS'
+        'linha-de-peixe-2': 'LINHA DE PEIXE 2',
+        'rk': 'RK',
+        'nt-rk': 'NT RK',
+        'qualidade': 'QUALIDADE',
+        'aquario-outbound': 'AQUÁRIO OUTBOUND',
+        'adm': 'ADM',
+        'gate': 'GATE',
+        'ambulatorio-interno': 'AMBULATÓRIO INTERNO',
+        'ambulatorio-externo': 'AMBULATÓRIO EXTERNO',
+        'sala-de-epi': 'SALA DE EPI',
+        'er': 'ER',
+        'rr': 'RR',
+        'deposito-de-treinamento': 'DEPÓSITO DE TREINAMENTO',
+        'hv': 'HV'
     };
     return setores[setor] || setor;
 }
@@ -1843,85 +2020,66 @@ function hideTooltip() {
 }
 
 // ================= PAGINAÇÃO =================
+// Total de páginas dinâmico: aumenta conforme mais equipamentos são adicionados
 function atualizarPaginacao() {
-    const totalPaginas = Math.ceil(inventarioData.length / itemsPerPage);
-    // Tenta ambos os IDs possíveis
+    const totalItens = inventarioData.length;
+    const totalPaginas = Math.max(1, Math.ceil(totalItens / itemsPerPage));
+    if (currentPage > totalPaginas) currentPage = totalPaginas;
+    const mostrandoNestaPagina = totalItens === 0 ? 0 : Math.min(itemsPerPage, totalItens - (currentPage - 1) * itemsPerPage);
+
     let paginacaoContainer = document.getElementById('ucs-pagination');
     if (!paginacaoContainer) {
         paginacaoContainer = document.getElementById('pagination-controls');
     }
-    
     if (!paginacaoContainer) return;
-    
-    if (totalPaginas <= 1) {
-        paginacaoContainer.innerHTML = `
-            <div class="pagination-info">
-                Mostrando ${inventarioData.length} de ${equipamentosExemplo.length} equipamentos
-            </div>
-        `;
-        return;
-    }
-    
+
+    // Texto: PÁGINA 1 DE 4 | MOSTRANDO 15 DE 47 EQUIPAMENTOS (adaptável ao adicionar equipamentos)
     let paginacaoHTML = `
         <div class="pagination-info">
-            Página ${currentPage} de ${totalPaginas} • 
-            Mostrando ${Math.min(itemsPerPage, inventarioData.length - (currentPage - 1) * itemsPerPage)} de ${inventarioData.length} equipamentos
+            PÁGINA ${currentPage} DE ${totalPaginas} | MOSTRANDO ${mostrandoNestaPagina} DE ${totalItens} EQUIPAMENTOS
         </div>
         <div class="pagination-buttons">
-            <button onclick="mudarPagina(1)" class="pagination-btn" ${currentPage === 1 ? 'disabled' : ''} data-tooltip="Primeira página">
-                ❮❮
-            </button>
-            <button onclick="mudarPagina(${currentPage - 1})" class="pagination-btn" ${currentPage === 1 ? 'disabled' : ''} data-tooltip="Página anterior">
-                ❮
-            </button>
+            <button type="button" onclick="mudarPagina(1)" class="pagination-btn" ${currentPage === 1 ? 'disabled' : ''} data-tooltip="Primeira página" title="Primeira">&#10094;&#10094;</button>
+            <button type="button" onclick="mudarPagina(${Math.max(1, currentPage - 1)})" class="pagination-btn" ${currentPage === 1 ? 'disabled' : ''} data-tooltip="Anterior" title="Anterior">&#10094;</button>
     `;
-    
-    // Calcula faixa de páginas para mostrar
-    const maxPaginasVisiveis = 5;
-    let inicio = Math.max(1, currentPage - Math.floor(maxPaginasVisiveis / 2));
-    let fim = Math.min(totalPaginas, inicio + maxPaginasVisiveis - 1);
-    
-    // Ajusta se não couber no início
-    if (fim - inicio + 1 < maxPaginasVisiveis) {
-        inicio = Math.max(1, fim - maxPaginasVisiveis + 1);
+
+    // Botões numéricos: todas as páginas (ou até 9 visíveis para não quebrar layout)
+    const maxBotoes = 9;
+    let inicio = 1;
+    let fim = totalPaginas;
+    if (totalPaginas > maxBotoes) {
+        inicio = Math.max(1, currentPage - Math.floor(maxBotoes / 2));
+        fim = Math.min(totalPaginas, inicio + maxBotoes - 1);
+        if (fim - inicio + 1 < maxBotoes) inicio = Math.max(1, fim - maxBotoes + 1);
     }
-    
-    // Botões numéricos
     for (let i = inicio; i <= fim; i++) {
         paginacaoHTML += `
-            <button onclick="mudarPagina(${i})" class="pagination-btn ${i === currentPage ? 'active' : ''}" data-tooltip="Página ${i}">
-                ${i}
-            </button>
+            <button type="button" onclick="mudarPagina(${i})" class="pagination-btn ${i === currentPage ? 'active' : ''}" data-tooltip="Página ${i}" title="Página ${i}">${i}</button>
         `;
     }
-    
+
     paginacaoHTML += `
-            <button onclick="mudarPagina(${currentPage + 1})" class="pagination-btn" ${currentPage === totalPaginas ? 'disabled' : ''} data-tooltip="Próxima página">
-                ❯
-            </button>
-            <button onclick="mudarPagina(${totalPaginas})" class="pagination-btn" ${currentPage === totalPaginas ? 'disabled' : ''} data-tooltip="Última página">
-                ❯❯
-            </button>
+            <button type="button" onclick="mudarPagina(${Math.min(totalPaginas, currentPage + 1)})" class="pagination-btn" ${currentPage === totalPaginas ? 'disabled' : ''} data-tooltip="Próxima" title="Próxima">&#10095;</button>
+            <button type="button" onclick="mudarPagina(${totalPaginas})" class="pagination-btn" ${currentPage === totalPaginas ? 'disabled' : ''} data-tooltip="Última página" title="Última">&#10095;&#10095;</button>
         </div>
     `;
-    
+
     paginacaoContainer.innerHTML = paginacaoHTML;
 }
 
 function mudarPagina(pagina) {
-    const totalPaginas = Math.ceil(inventarioData.length / itemsPerPage);
-    
-    if (pagina < 1 || pagina > totalPaginas || pagina === currentPage) {
-        return;
-    }
-    
+    const totalPaginas = Math.max(1, Math.ceil(inventarioData.length / itemsPerPage));
+    const paginaValida = Math.max(1, Math.min(pagina, totalPaginas));
+
+    if (paginaValida === currentPage) return;
+
     // Animação de transição de página
-    const tbody = document.getElementById('inventory-data');
+    const tbody = document.getElementById('ucs-inventory-data') || document.getElementById('inventory-data');
     tbody.style.opacity = '0.5';
     tbody.style.transform = 'translateX(' + (pagina > currentPage ? '20px' : '-20px') + ')';
     
     setTimeout(() => {
-        currentPage = pagina;
+        currentPage = paginaValida;
         renderizarTabela();
         
         // Scroll suave para o topo da tabela
@@ -2223,7 +2381,7 @@ function exportarCSV(dados) {
         `"${eqp.selb}"`,
         `"${eqp.patrimonio || 'N/A'}"`,
         `"${formatarSetor(eqp.setor)}"`,
-        `"${eqp.status}"`,
+        `"${(eqp.status && eqp.status !== 'online') ? eqp.status : 'EM USO'}"`,
         `"${formatarDataBonita(eqp.ultimaChecagem)}"`,
         `"${eqp.responsavel}"`
     ]);
@@ -2240,18 +2398,82 @@ function exportarCSV(dados) {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    
-    showToast('CSV exportado com sucesso!', 'success');
+    URL.revokeObjectURL(url);
+    if (typeof showToast === 'function') showToast('CSV exportado com sucesso!', 'success');
 }
 
 function exportarExcel(dados) {
-    showToast('Funcionalidade Excel em desenvolvimento', 'info');
-    // Implementação futura com SheetJS ou similar
+    const cabecalhos = ['Serial', 'Tag', 'Modelo', 'IP', 'MAC Rede', 'MAC Bluetooth', 'SELB', 'Patrimônio', 'Setor', 'Status', 'Última Checagem', 'Responsável'];
+    const linhas = dados.map(eqp => [
+        `"${(eqp.serial || '').replace(/"/g, '""')}"`,
+        `"${(eqp.tag || '').replace(/"/g, '""')}"`,
+        `"${(eqp.modelo || '').replace(/"/g, '""')}"`,
+        `"${(eqp.ip || '').replace(/"/g, '""')}"`,
+        `"${(eqp.macRede || '').replace(/"/g, '""')}"`,
+        `"${(eqp.macBluetooth || 'N/A').replace(/"/g, '""')}"`,
+        `"${(eqp.selb || '').replace(/"/g, '""')}"`,
+        `"${(eqp.patrimonio || 'N/A').replace(/"/g, '""')}"`,
+        `"${(formatarSetor(eqp.setor) || '').replace(/"/g, '""')}"`,
+        `"${(eqp.status || '').replace(/"/g, '""')}"`,
+        `"${(formatarDataBonita(eqp.ultimaChecagem) || '').replace(/"/g, '""')}"`,
+        `"${(eqp.responsavel || '').replace(/"/g, '""')}"`
+    ]);
+    const csvContent = [cabecalhos.join(','), ...linhas.map(linha => linha.join(','))].join('\n');
+    const BOM = '\uFEFF';
+    const blob = new Blob([BOM + csvContent], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const timestamp = new Date().toISOString().split('T')[0];
+    link.setAttribute('href', url);
+    link.setAttribute('download', `inventario_impressoras_${timestamp}.xls`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    if (typeof showToast === 'function') showToast('Excel exportado com sucesso!', 'success');
 }
 
 function exportarPDF(dados) {
-    showToast('Funcionalidade PDF em desenvolvimento', 'info');
-    // Implementação futura com jsPDF ou similar
+    try {
+        const { jsPDF } = window.jspdf;
+        if (!jsPDF) {
+            if (typeof showToast === 'function') showToast('Biblioteca de PDF não carregada. Recarregue a página.', 'error');
+            return;
+        }
+        const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+        const cabecalhos = ['Serial', 'Tag', 'Modelo', 'IP', 'MAC Rede', 'SELB', 'Setor', 'Status', 'Última Checagem', 'Responsável'];
+        const linhas = dados.map(eqp => [
+            eqp.serial || '',
+            eqp.tag || '',
+            eqp.modelo || '',
+            eqp.ip || '',
+            eqp.macRede || '',
+            eqp.selb || '',
+            formatarSetor(eqp.setor) || '',
+            eqp.status || '',
+            formatarDataBonita(eqp.ultimaChecagem) || '',
+            eqp.responsavel || ''
+        ]);
+        doc.setFontSize(14);
+        doc.text('AXIS | INVENTÁRIO DE IMPRESSORAS', 14, 15);
+        doc.setFontSize(10);
+        doc.text('Gerado em ' + new Date().toLocaleString('pt-BR') + ' | Total: ' + dados.length + ' equipamento(s)', 14, 22);
+        doc.autoTable({
+            head: [cabecalhos],
+            body: linhas,
+            startY: 28,
+            styles: { fontSize: 8 },
+            headStyles: { fillColor: [52, 152, 219] },
+            margin: { left: 14 }
+        });
+        const timestamp = new Date().toISOString().split('T')[0];
+        doc.save('inventario_impressoras_' + timestamp + '.pdf');
+        if (typeof showToast === 'function') showToast('PDF exportado com sucesso!', 'success');
+    } catch (e) {
+        console.error('Erro ao exportar PDF:', e);
+        if (typeof showToast === 'function') showToast('Erro ao gerar PDF. Tente novamente.', 'error');
+    }
 }
 
 function imprimirInventario() {
@@ -2263,7 +2485,7 @@ function imprimirInventario() {
         <!DOCTYPE html>
         <html>
         <head>
-            <title>AXIS - Inventário de Impressoras</title>
+            <title>AXIS | INVENTÁRIO DE IMPRESSORAS</title>
             <style>
                 body {
                     font-family: Arial, sans-serif;
@@ -2448,25 +2670,133 @@ function abrirCadastroRapido() {
     if (typeof initIpMask === 'function') initIpMask();
     if (typeof initSelbMask === 'function') initSelbMask();
 
-    // Popula select de bancada (B01 até B200)
-    const selectBancada = document.getElementById('cad-bancada');
-    if (selectBancada) {
-        // Limpa opções existentes (exceto a primeira "Selecione")
-        while (selectBancada.options.length > 1) {
-            selectBancada.remove(1);
-        }
-        
-        // Adiciona opções B01 até B200
-        for (let i = 1; i <= 200; i++) {
-            const option = document.createElement('option');
-            const valor = `B${String(i).padStart(2, '0')}`;
-            option.value = valor;
-            option.textContent = valor;
-            selectBancada.appendChild(option);
-        }
+    // Bancada e Status já populados em populateBancadaDropdown/HTML; sincroniza triggers
+    if (typeof syncSetorSelectorFromSelect === 'function') {
+        syncSetorSelectorFromSelect('cad-bancada', 'cad-bancada-trigger', 'cad-bancada-dropdown', 'Selecione uma bancada');
+        syncSetorSelectorFromSelect('cad-status', 'cad-status-trigger', 'cad-status-dropdown', 'EM USO');
     }
     
     // Foca no primeiro campo (serial)
+    const serialInput = document.getElementById('cad-serial');
+    if (serialInput) serialInput.focus();
+}
+
+/** Abre o modal de cadastro em modo EDIÇÃO: formulário preenchido com os dados do equipamento.
+ *  Ao salvar (finalizarCadastro), o item é atualizado em vez de criar novo; Ver Detalhes mostrará os dados atualizados. */
+function abrirCadastroParaEditar(tag) {
+    const equipamento = (typeof inventarioData !== 'undefined' && inventarioData.length > 0)
+        ? inventarioData.find(e => e.tag === tag)
+        : null;
+    const eq = equipamento || (typeof equipamentosExemplo !== 'undefined' && equipamentosExemplo.find(e => e.tag === tag));
+    if (!eq) {
+        if (typeof showToast === 'function') showToast('Equipamento não encontrado', 'warning');
+        return;
+    }
+
+    window.cadastroEditandoTag = tag;
+
+    const modal = document.getElementById('cadastro-modal');
+    if (!modal) {
+        if (typeof showToast === 'function') showToast('Modal de cadastro não encontrado', 'error');
+        return;
+    }
+
+    const headerTitle = modal.querySelector('.modal-header h3');
+    if (headerTitle) headerTitle.textContent = '✏️ Editar Impressora';
+
+    modal.style.display = 'flex';
+    modal.style.visibility = 'visible';
+    setTimeout(() => {
+        modal.style.opacity = '1';
+        const modalContent = modal.querySelector('.modal-content');
+        if (modalContent) modalContent.style.transform = 'translateY(0) scale(1)';
+    }, 10);
+
+    if (typeof window.cadastroStep === 'undefined') window.cadastroStep = 1;
+    cadastroStep = 1;
+    window.cadastroStep = 1;
+
+    document.querySelectorAll('.cadastro-steps .step').forEach(step => step.classList.remove('active'));
+    const step1 = document.getElementById('step-1');
+    if (step1) step1.classList.add('active');
+    document.querySelectorAll('[id^="step-"][id$="-content"]').forEach(content => {
+        content.classList.remove('active');
+        content.style.display = 'none';
+        content.style.opacity = '0';
+    });
+    const step1Content = document.getElementById('step-1-content');
+    if (step1Content) {
+        step1Content.classList.add('active');
+        step1Content.style.display = 'block';
+        step1Content.style.opacity = '1';
+    }
+
+    const btnBack = document.getElementById('btn-back');
+    const btnNext = document.getElementById('btn-next');
+    const btnSubmit = document.getElementById('btn-submit');
+    if (btnBack) btnBack.style.display = 'none';
+    if (btnNext) btnNext.style.display = 'block';
+    if (btnSubmit) btnSubmit.style.display = 'none';
+
+    const modelo = eq.modelo || 'ZT411';
+    const modeloId = modelo === 'ZT411' ? 'cad-modelo-zt411' : modelo === 'ZD421' ? 'cad-modelo-zd421' : 'cad-modelo-zq630';
+    const modeloRadio = document.getElementById(modeloId);
+    if (modeloRadio) {
+        modeloRadio.checked = true;
+    }
+    const prefixo = SERIAL_PREFIXOS_MODELO[modelo] || '';
+    const serialFull = eq.serial || eq.id || '';
+    const serialSuffix = prefixo && serialFull.startsWith(prefixo) ? serialFull.slice(prefixo.length) : serialFull;
+    const prefixSpan = document.getElementById('cad-serial-prefix');
+    const suffixInput = document.getElementById('cad-serial');
+    if (prefixSpan) prefixSpan.textContent = prefixo;
+    if (suffixInput) {
+        suffixInput.maxLength = typeof getSerialSuffixMaxLength === 'function' ? getSerialSuffixMaxLength(prefixo) : 9;
+        suffixInput.value = serialSuffix;
+    }
+
+    const ipFull = eq.ip || '';
+    const ipSuffix = ipFull.startsWith('10.201.') ? ipFull.slice(7) : ipFull.replace(/^\d{1,3}\.\d{1,3}\./, '');
+    const ipInput = document.getElementById('cad-ip');
+    if (ipInput) ipInput.value = ipSuffix;
+
+    const macRede = document.getElementById('cad-mac-rede');
+    if (macRede) macRede.value = eq.macRede || '';
+    const macBluetooth = document.getElementById('cad-mac-bluetooth');
+    if (macBluetooth) macBluetooth.value = eq.macBluetooth || '';
+    const selb = document.getElementById('cad-selb');
+    if (selb) selb.value = eq.selb || '';
+    const setorSelect = document.getElementById('cad-setor');
+    if (setorSelect) setorSelect.value = eq.setor || '';
+    const setorTrigger = document.getElementById('cad-setor-trigger');
+    if (setorTrigger && eq.setor) {
+        const opt = setorSelect.querySelector('option[value="' + eq.setor + '"]');
+        setorTrigger.textContent = opt ? opt.textContent : eq.setor;
+    }
+    const patrimonio = document.getElementById('cad-patrimonio');
+    if (patrimonio) patrimonio.value = eq.patrimonio || '';
+
+    const selectBancada = document.getElementById('cad-bancada');
+    if (selectBancada) selectBancada.value = eq.bancada || '';
+
+    const cadStatus = document.getElementById('cad-status');
+    if (cadStatus) {
+        const s = (eq.status && eq.status !== 'online') ? eq.status : 'EM USO';
+        cadStatus.value = (s === 'DEFEITO' || s === 'BACKUP OPERACIONAL') ? s : 'EM USO';
+    }
+
+    if (typeof syncSetorSelectorFromSelect === 'function') {
+        syncSetorSelectorFromSelect('cad-bancada', 'cad-bancada-trigger', 'cad-bancada-dropdown', 'Selecione uma bancada');
+        syncSetorSelectorFromSelect('cad-status', 'cad-status-trigger', 'cad-status-dropdown', 'EM USO');
+    }
+
+    const obsEl = document.getElementById('cad-observacoes');
+    if (obsEl) obsEl.value = eq.observacoes || '';
+
+    if (typeof initSerialSugestoes === 'function') initSerialSugestoes();
+    if (typeof initIpMask === 'function') initIpMask();
+    if (typeof initSelbMask === 'function') initSelbMask();
+
     const serialInput = document.getElementById('cad-serial');
     if (serialInput) serialInput.focus();
 }
@@ -2475,8 +2805,12 @@ function abrirCadastroRapido() {
 const SERIAL_PREFIXOS_MODELO = {
     'ZT411': '99J',
     'ZD421': 'D6J',
-    'ZQ630 PLUS': 'XXV'
+    'ZQ630 PLUS': 'XXZ'
 };
+// Limite de caracteres do sufixo (após o prefixo): ZQ630 PLUS = 11, demais = 9
+function getSerialSuffixMaxLength(prefixo) {
+    return (prefixo === 'XXZ') ? 11 : 9;
+}
 
 function getSerialCompleto() {
     const prefixSpan = document.getElementById('cad-serial-prefix');
@@ -2548,6 +2882,7 @@ function aplicarPrefixoEscolhido(prefixo) {
     const eraMesmo = (prefixSpan && prefixSpan.textContent.trim() === prefixo);
     if (prefixSpan) prefixSpan.textContent = prefixo;
     if (suffixInput) {
+        suffixInput.maxLength = typeof getSerialSuffixMaxLength === 'function' ? getSerialSuffixMaxLength(prefixo) : 9;
         if (!eraMesmo) suffixInput.value = '';
         suffixInput.focus();
     }
@@ -2559,7 +2894,7 @@ function initSerialSugestoes() {
     const suffixInput = document.getElementById('cad-serial');
 
     function onSerialClick() {
-        mostrarSugestoesSerial();
+        /* Sugestão 99J-ZT411 removida: prefixo já definido ao selecionar o modelo no passo 1 */
     }
 
     function closeSuggestions(e) {
@@ -2639,9 +2974,15 @@ function fecharCadastro() {
     // Exporta IMEDIATAMENTE (sempre)
     window.fecharCadastro = fecharCadastro;
 
+    window.cadastroEditandoTag = null;
+    const modal = document.getElementById('cadastro-modal');
+    if (modal) {
+        const headerTitle = modal.querySelector('.modal-header h3');
+        if (headerTitle) headerTitle.textContent = '➕ Cadastrar Nova Impressora';
+    }
+
     if (typeof hideSerialSuggestionsPortal === 'function') hideSerialSuggestionsPortal();
     
-    const modal = document.getElementById('cadastro-modal');
     if (!modal) return;
     
     modal.style.opacity = '0';
@@ -2680,7 +3021,8 @@ function proximoPassoCadastro() {
 
         if (!serial) return;
         if (!prefixoEsperado || !serial.startsWith(prefixoEsperado)) return;
-        if (equipamentosExemplo && equipamentosExemplo.some(function (e) { return e.serial === serial; })) return;
+        var editandoTag = window.cadastroEditandoTag;
+        if (equipamentosExemplo && equipamentosExemplo.some(function (e) { return e.serial === serial && e.tag !== editandoTag; })) return;
 
         const confirmModelo = document.getElementById('confirm-modelo');
         const confirmSerial = document.getElementById('confirm-serial');
@@ -2725,10 +3067,16 @@ function proximoPassoCadastro() {
         
         var confirmIp = document.getElementById('confirm-ip');
         var confirmSetor = document.getElementById('confirm-setor');
+        var confirmStatus = document.getElementById('confirm-status');
+        var statusSelect = document.getElementById('cad-status');
         if (confirmIp) confirmIp.textContent = ip;
         if (confirmSetor) {
             const setorText = setorSelect.options[setorSelect.selectedIndex]?.text || setor;
             confirmSetor.textContent = setorText;
+        }
+        if (confirmStatus && statusSelect) {
+            const statusVal = statusSelect.value || 'EM USO';
+            confirmStatus.innerHTML = typeof renderizarStatusBadge === 'function' ? renderizarStatusBadge(statusVal) : statusVal;
         }
         
         console.log('✅ Passo 2 validado:', { ip, macRede, setor });
@@ -2926,17 +3274,20 @@ function finalizarCadastro() {
     const setor = document.getElementById('cad-setor')?.value || '';
     const patrimonio = document.getElementById('cad-patrimonio')?.value.trim() || '';
     const bancada = document.getElementById('cad-bancada')?.value || '';
+    const statusCadastro = document.getElementById('cad-status')?.value || 'EM USO';
     const observacoes = document.getElementById('cad-observacoes')?.value.trim() || '';
     
     // Validações finais (silenciosas - sem avisos)
     if (!serial || !modelo || !ip || !macRede) {
         return;
     }
-    
-    // Cria novo equipamento
-    const novoEquipamento = {
+
+    const editandoTag = window.cadastroEditandoTag;
+    const dataCadastroIso = editandoTag ? (equipamentosExemplo.find(e => e.tag === editandoTag) || {}).dataCadastro || new Date().toISOString() : new Date().toISOString();
+    const nomeResponsavel = (typeof currentUser === 'object' && currentUser && (currentUser.name || (currentUser && currentUser.data && currentUser.data.name))) ? (currentUser.name || (currentUser.data && currentUser.data.name)) : (currentUser || 'Sistema');
+    const equipamentoAtualizado = {
         serial: serial,
-        tag: `${modelo}-${modelo === 'ZD421' ? 'DSK' : (modelo || '').indexOf('ZQ630') >= 0 ? 'PAG' : 'IND'}-${String(equipamentosExemplo.length + 1).padStart(3, '0')}`,
+        tag: editandoTag || `${modelo}-${modelo === 'ZD421' ? 'DSK' : (modelo || '').indexOf('ZQ630 PLUS') >= 0 ? 'PAG' : 'IND'}-${String(equipamentosExemplo.length + 1).padStart(3, '0')}`,
         modelo: modelo,
         ip: ip,
         macRede: macRede.toUpperCase(),
@@ -2945,22 +3296,38 @@ function finalizarCadastro() {
         patrimonio: patrimonio || null,
         setor: setor,
         bancada: bancada || null,
-        status: 'online',
+        status: (statusCadastro === 'DEFEITO' || statusCadastro === 'EM USO' || statusCadastro === 'BACKUP OPERACIONAL') ? statusCadastro : 'EM USO',
         ultimaChecagem: new Date().toISOString().replace('T', ' ').substring(0, 16),
-        dataCadastro: new Date().toISOString(),
-        observacoes: observacoes || 'Novo equipamento cadastrado',
+        dataCadastro: dataCadastroIso,
+        observacoes: observacoes || (editandoTag ? 'Equipamento atualizado' : 'Novo equipamento cadastrado'),
         fabricante: 'Zebra Technologies',
         firmware: modelo === 'ZT411' ? 'V72.20.15Z' : modelo === 'ZD421' ? 'V65.21.10Z' : 'V82.15.20Z',
-        contador: 0,
-        toner: 100,
-        ribbon: (modelo || '').indexOf('ZQ630') >= 0 ? null : 100,
-        ink: (modelo || '').indexOf('ZQ630') >= 0 ? 100 : null,
+        contador: editandoTag ? (equipamentosExemplo.find(e => e.tag === editandoTag) || {}).contador : 0,
+        toner: editandoTag ? (equipamentosExemplo.find(e => e.tag === editandoTag) || {}).toner : 100,
+        ribbon: (modelo || '').indexOf('ZQ630 PLUS') >= 0 ? null : (editandoTag ? (equipamentosExemplo.find(e => e.tag === editandoTag) || {}).ribbon : 100),
+        ink: (modelo || '').indexOf('ZQ630 PLUS') >= 0 ? (editandoTag ? (equipamentosExemplo.find(e => e.tag === editandoTag) || {}).ink : 100) : null,
         responsavel: currentUser || 'Sistema',
-        garantia: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+        garantia: editandoTag ? (equipamentosExemplo.find(e => e.tag === editandoTag) || {}).garantia : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
     };
-    
-    // Adiciona ao inventário
-    equipamentosExemplo.unshift(novoEquipamento);
+    // Histórico: ao CRIAR (não editar pelo cadastro), registra "Cadastro"
+    if (!editandoTag) {
+        equipamentoAtualizado.historicoEdicoes = [{ acao: 'Cadastro', por: nomeResponsavel, em: dataCadastroIso }];
+    } else {
+        const antigo = equipamentosExemplo.find(e => e.tag === editandoTag);
+        if (antigo && Array.isArray(antigo.historicoEdicoes) && antigo.historicoEdicoes.length > 0) {
+            equipamentoAtualizado.historicoEdicoes = antigo.historicoEdicoes.slice();
+        }
+    }
+
+    if (editandoTag) {
+        const idx = equipamentosExemplo.findIndex(e => e.tag === editandoTag);
+        if (idx !== -1) {
+            equipamentosExemplo[idx] = equipamentoAtualizado;
+        }
+        window.cadastroEditandoTag = null;
+    } else {
+        equipamentosExemplo.unshift(equipamentoAtualizado);
+    }
     
     // Animação de confirmação
     const modalContent = document.querySelector('#cadastro-modal .modal-content');
@@ -2968,7 +3335,8 @@ function finalizarCadastro() {
         modalContent.classList.add('success-animation');
     }
     
-    setTimeout(() => {
+        salvarInventarioLocalStorage();
+        setTimeout(() => {
         // Atualiza interface
         atualizarContadoresModelo();
         filtrarInventario();
@@ -3075,103 +3443,73 @@ function pingEquipamento(ip, tag) {
 function verDetalhes(tag) {
     console.log(`🔍 Exibindo detalhes de ${tag}`);
     
-    const equipamento = equipamentosExemplo.find(e => e.tag === tag);
-    if (!equipamento) {
+    const equipamento = (typeof inventarioData !== 'undefined' && inventarioData.length > 0)
+        ? inventarioData.find(e => e.tag === tag)
+        : null;
+    const eq = equipamento || equipamentosExemplo.find(e => e.tag === tag);
+    if (!eq) {
         showToast('Equipamento não encontrado', 'warning');
         return;
     }
     
-    // Preenche modal de detalhes
+    // Última Checagem: automático em horário do Brasil (data/hora atual ou armazenada, sempre em pt-BR)
+    const opcoesBR = { timeZone: 'America/Sao_Paulo', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' };
+    const ultimaChecagemBR = eq.ultimaChecagem
+        ? new Date(eq.ultimaChecagem).toLocaleString('pt-BR', opcoesBR)
+        : new Date().toLocaleString('pt-BR', opcoesBR);
+    
+    // Responsável: usuário logado no momento (fixo, não editável)
+    const usuarioLogado = (typeof currentUser !== 'undefined' && currentUser !== null)
+        ? (typeof currentUser === 'object' ? (currentUser.name || currentUser.data?.name) : currentUser)
+        : (window.currentUser || null);
+    const responsavelExibir = usuarioLogado || eq.responsavel || '—';
+    
+    // Fabricante e Modelo: fixos (não editáveis) – modelo vem do cadastro
+    const fabricanteExibir = eq.fabricante || 'Zebra Technologies';
+    const modeloExibir = eq.modelo || '—';
+    
+    // Título do modal = Serial Number da impressora (automático ao abrir Ver Dados)
+    const tituloSerial = document.getElementById('detail-titulo-serial');
+    if (tituloSerial) tituloSerial.textContent = eq.serial || eq.id || '—';
+    
     const detailElements = {
-        'detail-tag': equipamento.tag,
-        'detail-serial': equipamento.serial,
-        'detail-modelo': equipamento.modelo,
-        'detail-ip': equipamento.ip,
-        'detail-mac-rede': equipamento.macRede,
-        'detail-mac-bluetooth': equipamento.macBluetooth || 'N/A',
-        'detail-selb': equipamento.selb,
-        'detail-patrimonio': equipamento.patrimonio || 'N/A',
-        'detail-setor': formatarSetor(equipamento.setor),
-        'detail-bancada': equipamento.bancada || '-',
-        'detail-ultima-checagem': formatarDataBonita(equipamento.ultimaChecagem),
-        'detail-responsavel': equipamento.responsavel,
-        'detail-fabricante': equipamento.fabricante,
-        'detail-firmware': equipamento.firmware,
-        'detail-contador': equipamento.contador.toLocaleString(),
-        'detail-garantia': new Date(equipamento.garantia).toLocaleDateString('pt-BR'),
-        'detail-observacoes': equipamento.observacoes
+        'detail-modelo': modeloExibir,
+        'detail-ip': eq.ip || '—',
+        'detail-mac-rede': eq.macRede || 'N/A',
+        'detail-mac-bluetooth': eq.macBluetooth || 'N/A',
+        'detail-selb': eq.selb || 'N/A',
+        'detail-patrimonio': eq.patrimonio || 'N/A',
+        'detail-setor': eq.setor ? (typeof formatarSetor === 'function' ? formatarSetor(eq.setor) : eq.setor) : '—',
+        'detail-bancada': eq.bancada || '—',
+        'detail-status': (eq.status && eq.status !== 'online') ? eq.status : 'EM USO',
+        'detail-ultima-checagem': ultimaChecagemBR,
+        'detail-responsavel': responsavelExibir,
+        'detail-fabricante': fabricanteExibir,
+        'detail-firmware': eq.firmware || '—',
+        'detail-contador': (eq.contador != null && eq.contador !== '') ? Number(eq.contador).toLocaleString() : '—'
     };
     
     Object.entries(detailElements).forEach(([id, value]) => {
         const element = document.getElementById(id);
         if (element) {
-            element.textContent = value;
+            if (id === 'detail-status' && typeof renderizarStatusBadge === 'function') {
+                element.innerHTML = renderizarStatusBadge(value);
+            } else {
+                element.textContent = value;
+            }
         }
     });
     
-    // Atualiza status
-    const statusElement = document.getElementById('detail-status');
-    if (statusElement) {
-        statusElement.textContent = equipamento.status === 'online' ? '● Online' : 
-                                  equipamento.status === 'offline' ? '● Offline' : '● Em Manutenção';
-        statusElement.className = equipamento.status === 'online' ? 'status-online' : 
-                                 equipamento.status === 'offline' ? 'status-offline' : 'status-manutencao';
-    }
-    
-    // Status de consumíveis
-    const consumiveisHTML = `
-        <div class="consumivel ${equipamento.toner < 20 ? 'baixo' : ''}">
-            <span class="consumivel-label">Toner:</span>
-            <div class="progress-bar">
-                <div class="progress-fill" style="width: ${equipamento.toner}%"></div>
-            </div>
-            <span class="consumivel-value">${equipamento.toner}%</span>
-        </div>
-        ${equipamento.ribbon !== null ? `
-            <div class="consumivel ${equipamento.ribbon < 15 ? 'baixo' : ''}">
-                <span class="consumivel-label">Ribbon:</span>
-                <div class="progress-bar">
-                    <div class="progress-fill" style="width: ${equipamento.ribbon}%"></div>
-                </div>
-                <span class="consumivel-value">${equipamento.ribbon}%</span>
-            </div>
-        ` : ''}
-        ${equipamento.ink !== null ? `
-            <div class="consumivel ${equipamento.ink < 25 ? 'baixo' : ''}">
-                <span class="consumivel-label">Tinta:</span>
-                <div class="progress-bar">
-                    <div class="progress-fill" style="width: ${equipamento.ink}%"></div>
-                </div>
-                <span class="consumivel-value">${equipamento.ink}%</span>
-            </div>
-        ` : ''}
-    `;
-    const consumiveisContainer = document.getElementById('detail-consumiveis');
-    if (consumiveisContainer) {
-        consumiveisContainer.innerHTML = consumiveisHTML;
-    }
-    
-    // Atualiza botões de ação
-    const pingBtn = document.getElementById('detail-ping-btn');
-    const editBtn = document.getElementById('detail-edit-btn');
+    // Botão Histórico: ver quem foi o último que alterou algo
     const historyBtn = document.getElementById('detail-history-btn');
+    if (historyBtn) {
+        historyBtn.onclick = () => mostrarHistóricoEquipamento(eq);
+    }
     
-    if (pingBtn) pingBtn.onclick = () => {
-        fecharDetalhes();
-        pingEquipamento(equipamento.ip, equipamento.tag);
-    };
-    
-    if (editBtn) editBtn.onclick = () => {
-        showToast('Edição em desenvolvimento', 'info');
-    };
-    
-    if (historyBtn) historyBtn.onclick = () => {
-        showToast('Histórico em desenvolvimento', 'info');
-    };
-    
-    // Mostra modal com animação
+    // Mostra modal com animação (sem rolamento: conteúdo fixo, único)
     const modal = document.getElementById('detalhes-modal');
     if (modal) {
+        document.body.style.overflow = 'hidden';
         modal.style.display = 'flex';
         
         setTimeout(() => {
@@ -3188,6 +3526,7 @@ function fecharDetalhes() {
     const modal = document.getElementById('detalhes-modal');
     if (!modal) return;
     
+    document.body.style.overflow = '';
     modal.style.opacity = '0';
     const modalContent = modal.querySelector('.modal-content');
     if (modalContent) {
@@ -3197,6 +3536,231 @@ function fecharDetalhes() {
     setTimeout(() => {
         modal.style.display = 'none';
     }, 300);
+}
+
+/** Lista de setores para o select do modal Editar (mesmo do cadastro). */
+var SETORES_EDIT = [
+    { v: 'internal-systems', l: 'INTERNAL SYSTEMS' }, { v: 'lideranca', l: 'LIDERANÇA' }, { v: 'mhw', l: 'MHW' }, { v: 'p2m', l: 'P2M' },
+    { v: 'check-in', l: 'CHECK-IN' }, { v: 'reciving', l: 'RECIVING' }, { v: 'mz1', l: 'MZ1' }, { v: 'mz2', l: 'MZ2' }, { v: 'mz3', l: 'MZ3' },
+    { v: 'inventario', l: 'INVENTÁRIO' }, { v: 'cx', l: 'CX' }, { v: 'returns', l: 'RETURNS' }, { v: 'packing-mono', l: 'PACKING MONO' },
+    { v: 'packing-ptw', l: 'PACKING PTW' }, { v: 'sauron', l: 'SAURON' }, { v: 'insumos', l: 'INSUMOS' }, { v: 'docas-de-expedicao', l: 'DOCAS DE EXPEDIÇÃO' },
+    { v: 'linha-de-peixe-1', l: 'LINHA DE PEIXE 1' }, { v: 'sorter', l: 'SORTER' }, { v: 'linha-de-peixe-2', l: 'LINHA DE PEIXE 2' },
+    { v: 'rk', l: 'RK' }, { v: 'nt-rk', l: 'NT RK' }, { v: 'qualidade', l: 'QUALIDADE' }, { v: 'aquario-outbound', l: 'AQUÁRIO OUTBOUND' },
+    { v: 'adm', l: 'ADM' }, { v: 'gate', l: 'GATE' }, { v: 'ambulatorio-interno', l: 'AMBULATÓRIO INTERNO' }, { v: 'ambulatorio-externo', l: 'AMBULATÓRIO EXTERNO' },
+    { v: 'sala-de-epi', l: 'SALA DE EPI' }, { v: 'er', l: 'ER' }, { v: 'rr', l: 'RR' }, { v: 'deposito-de-treinamento', l: 'DEPÓSITO DE TREINAMENTO' }, { v: 'hv', l: 'HV' }
+];
+
+function abrirModalEditar(tag) {
+    const equipamento = (typeof inventarioData !== 'undefined' && inventarioData.length > 0)
+        ? inventarioData.find(e => e.tag === tag)
+        : null;
+    const eq = equipamento || (typeof equipamentosExemplo !== 'undefined' && equipamentosExemplo.find(e => e.tag === tag));
+    if (!eq) {
+        if (typeof showToast === 'function') showToast('Equipamento não encontrado', 'warning');
+        return;
+    }
+
+    window.editarEquipamentoTag = tag;
+
+    const opcoesBR = { timeZone: 'America/Sao_Paulo', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' };
+    const ultimaChecagemBR = eq.ultimaChecagem
+        ? new Date(eq.ultimaChecagem).toLocaleString('pt-BR', opcoesBR)
+        : new Date().toLocaleString('pt-BR', opcoesBR);
+
+    const titulo = document.getElementById('editar-titulo-serial');
+    if (titulo) titulo.textContent = eq.serial || eq.id || '—';
+
+    const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val != null && val !== '' ? String(val) : ''; };
+    setVal('edit-modelo', eq.modelo || '');
+    setVal('edit-ip', eq.ip || '');
+    setVal('edit-mac-rede', eq.macRede || '');
+    setVal('edit-mac-bluetooth', eq.macBluetooth || '');
+    setVal('edit-selb', eq.selb || '');
+    setVal('edit-patrimonio', eq.patrimonio || '');
+    setVal('edit-ultima-checagem', ultimaChecagemBR);
+    var usuarioLogado = (typeof currentUser !== 'undefined' && currentUser !== null)
+        ? (typeof currentUser === 'object' ? (currentUser.name || currentUser.data && currentUser.data.name) : currentUser)
+        : (window.currentUser || null);
+    setVal('edit-responsavel', usuarioLogado || eq.responsavel || '—');
+    setVal('edit-fabricante', 'Zebra Technologies');
+    setVal('edit-contador', (eq.contador != null && eq.contador !== '') ? Number(eq.contador) : '');
+
+    const setorSelect = document.getElementById('edit-setor');
+    if (setorSelect) setorSelect.value = eq.setor || '';
+
+    const bancadaSelect = document.getElementById('edit-bancada');
+    if (bancadaSelect) bancadaSelect.value = eq.bancada || '';
+
+    const statusSelect = document.getElementById('edit-status');
+    if (statusSelect) {
+        const s = (eq.status && eq.status !== 'online') ? eq.status : 'EM USO';
+        statusSelect.value = (s === 'DEFEITO' || s === 'BACKUP OPERACIONAL') ? s : 'EM USO';
+    }
+
+    if (typeof syncSetorSelectorFromSelect === 'function') {
+        syncSetorSelectorFromSelect('edit-setor', 'edit-setor-trigger', 'edit-setor-dropdown', '—');
+        syncSetorSelectorFromSelect('edit-bancada', 'edit-bancada-trigger', 'edit-bancada-dropdown', '—');
+        syncSetorSelectorFromSelect('edit-status', 'edit-status-trigger', 'edit-status-dropdown', 'EM USO');
+    }
+
+    const modal = document.getElementById('editar-modal');
+    if (modal) {
+        document.body.style.overflow = 'hidden';
+        modal.style.display = 'flex';
+        modal.style.opacity = '1';
+        const modalContent = modal.querySelector('.modal-content');
+        if (modalContent) modalContent.style.transform = 'translateY(0) scale(1)';
+    }
+}
+
+function fecharModalEditar() {
+    const modal = document.getElementById('editar-modal');
+    if (!modal) return;
+    document.body.style.overflow = '';
+    modal.style.opacity = '0';
+    const modalContent = modal.querySelector('.modal-content');
+    if (modalContent) modalContent.style.transform = 'translateY(20px) scale(0.95)';
+    setTimeout(function () { modal.style.display = 'none'; }, 300);
+    window.editarEquipamentoTag = null;
+}
+
+function salvarEdicaoEquipamento() {
+    const tag = window.editarEquipamentoTag;
+    if (!tag) return;
+    const idx = (typeof equipamentosExemplo !== 'undefined') ? equipamentosExemplo.findIndex(e => e.tag === tag) : -1;
+    if (idx === -1) {
+        if (typeof showToast === 'function') showToast('Equipamento não encontrado', 'warning');
+        return;
+    }
+
+    const getVal = (id) => { const el = document.getElementById(id); return el ? (el.value || '').trim() : ''; };
+    const contadorVal = document.getElementById('edit-contador');
+    let contadorNum = (contadorVal && contadorVal.value !== '') ? parseInt(contadorVal.value, 10) : (equipamentosExemplo[idx].contador != null ? equipamentosExemplo[idx].contador : 0);
+    if (isNaN(contadorNum)) contadorNum = 0;
+
+    const responsavelEdicao = (typeof currentUser !== 'undefined' && currentUser !== null)
+        ? (typeof currentUser === 'object' ? (currentUser.name || (currentUser.data && currentUser.data.name)) : currentUser)
+        : (window.currentUser || equipamentosExemplo[idx].responsavel);
+    const agoraIso = new Date().toISOString();
+    const eqAntigo = equipamentosExemplo[idx];
+    let historicoEdicoes = Array.isArray(eqAntigo.historicoEdicoes) && eqAntigo.historicoEdicoes.length > 0
+        ? eqAntigo.historicoEdicoes.slice()
+        : (eqAntigo.dataCadastro ? [{ acao: 'Cadastro', por: eqAntigo.responsavel || '—', em: eqAntigo.dataCadastro }] : []);
+    historicoEdicoes.push({ acao: 'Edição', por: responsavelEdicao || '—', em: agoraIso });
+
+    const atualizado = {
+        serial: equipamentosExemplo[idx].serial,
+        tag: tag,
+        modelo: getVal('edit-modelo') || equipamentosExemplo[idx].modelo,
+        ip: getVal('edit-ip') || equipamentosExemplo[idx].ip,
+        macRede: (getVal('edit-mac-rede') || '').toUpperCase() || equipamentosExemplo[idx].macRede,
+        macBluetooth: getVal('edit-mac-bluetooth') ? getVal('edit-mac-bluetooth').toUpperCase() : equipamentosExemplo[idx].macBluetooth,
+        selb: getVal('edit-selb') || equipamentosExemplo[idx].selb,
+        patrimonio: getVal('edit-patrimonio') || equipamentosExemplo[idx].patrimonio,
+        setor: getVal('edit-setor') || equipamentosExemplo[idx].setor,
+        bancada: getVal('edit-bancada') || equipamentosExemplo[idx].bancada,
+        status: (getVal('edit-status') === 'DEFEITO' || getVal('edit-status') === 'BACKUP OPERACIONAL') ? getVal('edit-status') : (getVal('edit-status') || 'EM USO'),
+        ultimaChecagem: new Date().toISOString().replace('T', ' ').substring(0, 16),
+        dataCadastro: equipamentosExemplo[idx].dataCadastro,
+        observacoes: equipamentosExemplo[idx].observacoes || 'Equipamento atualizado',
+        fabricante: 'Zebra Technologies',
+        firmware: getVal('edit-firmware') || equipamentosExemplo[idx].firmware,
+        contador: contadorNum,
+        toner: equipamentosExemplo[idx].toner,
+        ribbon: equipamentosExemplo[idx].ribbon,
+        ink: equipamentosExemplo[idx].ink,
+        responsavel: responsavelEdicao,
+        garantia: equipamentosExemplo[idx].garantia,
+        historicoEdicoes: historicoEdicoes
+    };
+
+    equipamentosExemplo[idx] = atualizado;
+    salvarInventarioLocalStorage();
+    if (typeof atualizarContadoresModelo === 'function') atualizarContadoresModelo();
+    if (typeof filtrarInventario === 'function') filtrarInventario();
+    if (typeof atualizarEstatisticas === 'function') atualizarEstatisticas();
+    if (typeof inicializarGrafico === 'function') inicializarGrafico();
+    fecharModalEditar();
+    if (typeof showToast === 'function') showToast('Dados atualizados. Ver Detalhes mostrará as alterações.', 'success');
+}
+
+/**
+ * Monta a lista de edições do equipamento (dados automáticos).
+ * Usa eq.historicoEdicoes se existir; senão gera a partir de ultimaAlteracaoPor/Em e responsavel/ultimaChecagem.
+ */
+function obterHistoricoEdicoes(eq) {
+    const opcoesBR = { timeZone: 'America/Sao_Paulo', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' };
+    const formatarQuando = (d) => d ? new Date(d).toLocaleString('pt-BR', opcoesBR) : '—';
+
+    if (eq.historicoEdicoes && Array.isArray(eq.historicoEdicoes) && eq.historicoEdicoes.length > 0) {
+        return eq.historicoEdicoes.map(entrada => ({
+            por: entrada.por || entrada.responsavel || '—',
+            em: formatarQuando(entrada.em || entrada.data),
+            acao: entrada.acao || 'Alteração'
+        }));
+    }
+
+    const entradas = [];
+    const ultimaPor = eq.ultimaAlteracaoPor || eq.responsavel;
+    const ultimaEm = eq.ultimaAlteracaoEm || eq.ultimaChecagem || eq.dataCadastro;
+    if (ultimaPor || ultimaEm) {
+        entradas.push({ por: ultimaPor || '—', em: formatarQuando(ultimaEm), acao: 'Última alteração' });
+    }
+    if (eq.dataCadastro && ultimaEm !== eq.dataCadastro) {
+        entradas.push({ por: eq.responsavel || ultimaPor || '—', em: formatarQuando(eq.dataCadastro), acao: 'Cadastro' });
+    }
+    if (entradas.length === 0) {
+        entradas.push({ por: '—', em: '—', acao: 'Nenhuma edição registrada' });
+    }
+    return entradas;
+}
+
+/**
+ * Mostra o histórico de edições do equipamento (design com timeline, dados automáticos).
+ */
+function mostrarHistóricoEquipamento(eq) {
+    const serialMaquina = eq.serial || eq.id || '—';
+    const edicoes = obterHistoricoEdicoes(eq);
+
+    let el = document.getElementById('historico-modal');
+    if (!el) {
+        el = document.createElement('div');
+        el.id = 'historico-modal';
+        el.className = 'modal-overlay historico-overlay';
+        document.body.appendChild(el);
+    }
+
+    const itensHTML = edicoes.map((item, i) => `
+        <li class="historico-item">
+            <span class="historico-item-marker"></span>
+            <div class="historico-item-content">
+                <span class="historico-item-acao">${item.acao}</span>
+                <span class="historico-item-por">Por: <strong>${item.por}</strong></span>
+                <span class="historico-item-em">Em: ${item.em}</span>
+            </div>
+        </li>
+    `).join('');
+
+    el.innerHTML = `
+        <div class="historico-modal-box" onclick="event.stopPropagation()">
+            <div class="historico-modal-header">
+                <h4 class="historico-modal-title">HISTÓRICO DE EDIÇÕES | ${serialMaquina}</h4>
+                <button type="button" class="historico-modal-close" onclick="fecharHistórico()" aria-label="Fechar">×</button>
+            </div>
+            <div class="historico-modal-body">
+                <ul class="historico-timeline">
+                    ${itensHTML}
+                </ul>
+            </div>
+        </div>
+    `;
+    el.onclick = () => fecharHistórico();
+    el.style.display = 'flex';
+}
+
+function fecharHistórico() {
+    const el = document.getElementById('historico-modal');
+    if (el) el.style.display = 'none';
 }
 
 // ================= SISTEMA DE NOTIFICAÇÕES =================
@@ -3482,6 +4046,7 @@ function initKeyboardShortcuts() {
             modais.forEach(modal => {
                 if (modal.id === 'cadastro-modal') fecharCadastro();
                 if (modal.id === 'detalhes-modal') fecharDetalhes();
+                if (modal.id === 'editar-modal') fecharModalEditar();
             });
             
             const fab = document.querySelector('.fab-container');
@@ -3566,20 +4131,18 @@ function startRealTimeSimulation() {
 
 // ================= ADMINISTRAÇÃO DE USUÁRIOS =================
 function atualizarEstatisticasAdmin() {
-    // Atualiza estatísticas de usuários
+    // Atualiza estatísticas de usuários (exclui ADMIN_FILIPE_SILVA - duplicata)
     const usuarios = [];
     for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
-        if (key.startsWith('db_')) {
-            try {
-                const userData = JSON.parse(localStorage.getItem(key));
-                usuarios.push({
-                    login: key.replace('db_', ''),
-                    ...userData
-                });
-            } catch (e) {
-                console.error('Erro ao carregar usuário:', key, e);
-            }
+        if (!key || !key.startsWith('db_')) continue;
+        const login = key.replace('db_', '');
+        if (login === 'ADMIN_FILIPE_SILVA') continue;
+        try {
+            const userData = JSON.parse(localStorage.getItem(key));
+            usuarios.push({ login, ...userData });
+        } catch (e) {
+            console.error('Erro ao carregar usuário:', key, e);
         }
     }
     
@@ -3591,19 +4154,6 @@ function atualizarEstatisticasAdmin() {
     
     if (totalUsuariosEl) totalUsuariosEl.textContent = totalUsuarios;
     if (usuariosAtivosEl) usuariosAtivosEl.textContent = usuariosAtivos;
-    
-    // Atualiza estatísticas de equipamentos
-    const totalEquipamentosEl = document.getElementById('total-equipamentos');
-    if (totalEquipamentosEl) {
-        totalEquipamentosEl.textContent = equipamentosExemplo.length;
-    }
-    
-    // Atualiza rondas realizadas (simulado - pode ser ajustado depois)
-    const rondasRealizadasEl = document.getElementById('rondas-realizadas');
-    if (rondasRealizadasEl) {
-        const rondas = JSON.parse(localStorage.getItem('rondas') || '[]');
-        rondasRealizadasEl.textContent = rondas.length || 0;
-    }
 }
 
 function abrirGerenciarUsuarios() {
@@ -3612,21 +4162,181 @@ function abrirGerenciarUsuarios() {
         modal.style.display = 'flex';
         carregarUsuarios();
         atualizarEstatisticasAdmin();
-        
-        // Fecha modal ao clicar fora
-        modal.onclick = function(e) {
-            if (e.target === modal) {
-                fecharModalUsuarios();
-            }
-        };
+        modal.onclick = function(e) { if (e.target === modal) fecharModalUsuarios(); };
     }
 }
 
 function fecharModalUsuarios() {
-    const modal = document.getElementById('modal-gerenciar-usuarios');
+    const m = document.getElementById('modal-gerenciar-usuarios');
+    if (m) m.style.display = 'none';
+}
+
+var cadastroDiasExpiracao = 60;
+
+function gerarSenhaAutomatica() {
+    var base = 'Axis';
+    var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    for (var i = 0; i < 6; i++) base += chars.charAt(Math.floor(Math.random() * chars.length));
+    return base;
+}
+
+function abrirCadastrarUsuario() {
+    const modal = document.getElementById('modal-cadastrar-usuario');
     if (modal) {
-        modal.style.display = 'none';
+        limparFormularioUsuario();
+        var senhaEl = document.getElementById('novo-usuario-senha');
+        var expEl = document.getElementById('cadastro-senha-expiracao');
+        cadastroDiasExpiracao = [30, 60, 80, 120][Math.floor(Math.random() * 4)];
+        var dias = cadastroDiasExpiracao;
+        if (senhaEl) {
+            senhaEl.value = gerarSenhaAutomatica();
+            senhaEl.type = 'text';
+            setTimeout(function() { if (senhaEl) senhaEl.type = 'password'; }, 800);
+        }
+        if (expEl) {
+            expEl.textContent = 'Senha gerada automaticamente. Expira em ' + dias + ' dias.';
+            expEl.style.display = 'block';
+        }
+        modal.style.display = 'flex';
+        modal.onclick = function(e) { if (e.target === modal) fecharModalCadastrarUsuario(); };
     }
+}
+
+function fecharModalCadastrarUsuario() {
+    const m = document.getElementById('modal-cadastrar-usuario');
+    if (m) m.style.display = 'none';
+}
+
+// Módulos da home para permissões
+const MODULOS_PERMISSOES = [
+    { id: 'page-inventario', nome: 'Inventário', icon: '📦' },
+    { id: 'page-rondas', nome: 'Rondas', icon: '🛡️' },
+    { id: 'manutencao', nome: 'Manutenção Preventiva', icon: '🖨️' },
+    { id: 'page-suporte', nome: 'Suporte Técnico', icon: '💬' },
+    { id: 'notas', nome: 'Notas Fiscais', icon: '📄' },
+    { id: 'bloco', nome: 'Bloco de Notas', icon: '📝' },
+    { id: 'registro', nome: 'Registro de Chamados', icon: '📋' },
+    { id: 'pecas', nome: 'Peças', icon: '🔧' },
+    { id: 'page-configuracoes', nome: 'Configurações', icon: '⚙️' }
+];
+
+// Mapeamento: classe do card na home -> id do módulo em MODULOS_PERMISSOES
+const CARD_TO_MODULO = {
+    'inventario-master': 'page-inventario',
+    'rondas-master': 'page-rondas',
+    'preventiva-master': 'manutencao',
+    'suporte-master': 'page-suporte',
+    'notas-master': 'notas',
+    'bloco-master': 'bloco',
+    'chamados-master': 'registro',
+    'pecas-master': 'pecas',
+    'config-master': 'page-configuracoes'
+};
+
+function aplicarPermissoesModulos() {
+    const login = (localStorage.getItem('current_user_login') || '').trim().toLowerCase().replace(/\s+/g, '_');
+    if (!login) return;
+    let userPerm = {};
+    try {
+        const permUsers = JSON.parse(localStorage.getItem('axis_permissoes_usuario') || '{}');
+        userPerm = permUsers[login] || permUsers[Object.keys(permUsers || {}).find(k => (k || '').toLowerCase().replace(/\s+/g, '_') === login)] || {};
+    } catch (_) {}
+    const isAdmin = login === 'admin_filipe_silva';
+    Object.keys(CARD_TO_MODULO).forEach(cls => {
+        const card = document.querySelector('.mod-card.' + cls);
+        if (!card) return;
+        const modId = CARD_TO_MODULO[cls];
+        const temPermissao = isAdmin ? true : (userPerm[modId] !== false);
+        card.style.display = temPermissao ? '' : 'none';
+    });
+    document.querySelectorAll('.side-item[data-nav-page]').forEach(el => {
+        const modId = el.getAttribute('data-nav-page');
+        if (!modId || modId === 'page-home' || modId === 'page-administracao') return;
+        const temPermissao = isAdmin ? true : (userPerm[modId] !== false);
+        el.style.display = temPermissao ? '' : 'none';
+    });
+}
+
+const PERFIS_LABEL = {
+    admin: '👑 Administrador',
+    tecnico: '🔧 Técnico',
+    operador: '👤 Operador',
+    visualizador: '👁️ Visualizador'
+};
+
+// Permissões por USUÁRIO (não por perfil) - aberto ao lado de Editar
+function abrirModalPermissoesUsuario(login) {
+    const modal = document.getElementById('modal-permissoes');
+    const grid = document.getElementById('permissoes-perfil-grid');
+    const titulo = document.querySelector('#modal-permissoes .admin-modal-header h3');
+    const desc = document.querySelector('.admin-permissoes-desc');
+    if (!modal || !grid) return;
+    
+    const userKey = 'db_' + login;
+    const userData = JSON.parse(localStorage.getItem(userKey) || '{}');
+    const perfil = userData.perfil || 'operador';
+    const nomeUser = userData.name || login;
+    
+    if (titulo) titulo.textContent = nomeUser;
+    if (desc) desc.style.display = 'none';
+    
+    let permUsers = {};
+    try {
+        permUsers = JSON.parse(localStorage.getItem('axis_permissoes_usuario') || '{}');
+    } catch (_) {}
+    const loginNorm = (login || '').trim().toLowerCase().replace(/\s+/g, '_');
+    const userPerm = permUsers[loginNorm] || permUsers[login] || permUsers[Object.keys(permUsers || {}).find(k => (k || '').toLowerCase().replace(/\s+/g, '_') === loginNorm)] || {};
+    
+    // Módulos disponíveis conforme perfil (admin vê todos, visualizador vê menos)
+    const modulosPorPerfil = {
+        admin: MODULOS_PERMISSOES,
+        tecnico: MODULOS_PERMISSOES,
+        operador: MODULOS_PERMISSOES.filter(m => !['page-configuracoes'].includes(m.id)),
+        visualizador: MODULOS_PERMISSOES.filter(m => ['page-inventario', 'page-rondas', 'page-suporte', 'notas', 'bloco', 'registro', 'pecas'].includes(m.id))
+    };
+    const modulos = modulosPorPerfil[perfil] || MODULOS_PERMISSOES;
+    
+    let html = `<div class="permissoes-perfil-card permissoes-usuario-unico">
+        <h4>${PERFIS_LABEL[perfil] || perfil}</h4>
+        <div class="permissoes-checkboxes">`;
+    modulos.forEach(mod => {
+        const checked = userPerm[mod.id] !== false;
+        html += `<label class="perm-check-label"><input type="checkbox" data-login="${login}" data-modulo="${mod.id}" ${checked ? 'checked' : ''}> ${mod.icon} ${mod.nome}</label>`;
+    });
+    html += `</div></div>`;
+    grid.innerHTML = html;
+    
+    grid.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+        cb.addEventListener('change', () => salvarPermissaoUsuario(login));
+    });
+    
+    modal.style.display = 'flex';
+    modal.onclick = function(e) { if (e.target === modal) fecharModalPermissoes(); };
+}
+
+function salvarPermissaoUsuario(login) {
+    const loginNorm = (login || '').trim().toLowerCase().replace(/\s+/g, '_');
+    let permUsers = {};
+    try {
+        permUsers = JSON.parse(localStorage.getItem('axis_permissoes_usuario') || '{}');
+    } catch (_) {}
+    const oldKey = Object.keys(permUsers || {}).find(k => (k || '').toLowerCase().replace(/\s+/g, '_') === loginNorm);
+    if (oldKey && oldKey !== loginNorm) {
+        permUsers[loginNorm] = permUsers[oldKey] || {};
+        delete permUsers[oldKey];
+    }
+    if (!permUsers[loginNorm]) permUsers[loginNorm] = {};
+    document.querySelectorAll('#permissoes-perfil-grid input[type="checkbox"]').forEach(cb => {
+        const m = cb.getAttribute('data-modulo');
+        permUsers[loginNorm][m] = cb.checked;
+    });
+    localStorage.setItem('axis_permissoes_usuario', JSON.stringify(permUsers));
+    showToast('Permissões salvas para o usuário', 'success');
+}
+
+function fecharModalPermissoes() {
+    const m = document.getElementById('modal-permissoes');
+    if (m) m.style.display = 'none';
 }
 
 function abrirEstatisticasSistema() {
@@ -3645,18 +4355,29 @@ function fecharModalEstatisticas() {
 }
 
 function preencherModalEstatisticas() {
-    let totalUsuarios = 0;
-    let totalEquipamentos = 0;
+    // Usa a mesma lógica de atualizarEstatisticasAdmin - só conta usuários que existem
+    const usuarios = [];
     for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
         if (!key || !key.startsWith('db_')) continue;
-        totalUsuarios++;
+        const login = key.replace('db_', '');
+        if (login === 'ADMIN_FILIPE_SILVA') continue; // duplicata
         try {
-            const db = JSON.parse(localStorage.getItem(key) || '{}');
-            const inv = db.inventorio || [];
-            totalEquipamentos += Array.isArray(inv) ? inv.length : 0;
+            const userData = JSON.parse(localStorage.getItem(key));
+            if (userData && (userData.name || userData.login)) usuarios.push({ login, ...userData });
         } catch (_) {}
     }
+    // Inclui admin_filipe_silva se existir (uma única vez)
+    const adminData = JSON.parse(localStorage.getItem('db_admin_filipe_silva') || '{}');
+    if (adminData.name && !usuarios.some(u => (u.login || '').toLowerCase() === 'admin_filipe_silva')) {
+        usuarios.unshift({ login: 'admin_filipe_silva', ...adminData });
+    }
+    const totalUsuarios = usuarios.length;
+    let totalEquipamentos = 0;
+    try {
+        const inv = JSON.parse(localStorage.getItem('axis_inventario_equipamentos') || '[]');
+        totalEquipamentos = Array.isArray(inv) ? inv.length : 0;
+    } catch (_) {}
     const rondas = JSON.parse(localStorage.getItem('rondas') || '[]');
     const rondasCount = Array.isArray(rondas) ? rondas.length : 0;
     const el = (id) => document.getElementById(id);
@@ -3730,23 +4451,22 @@ function carregarUsuarios() {
     
     const usuarios = [];
     
-    // Busca todos os usuários no localStorage
+    // Busca todos os usuários no localStorage (exceto ADMIN_FILIPE_SILVA - duplicata/typo)
     for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
-        if (key.startsWith('db_') && key !== 'db_admin_filipe_silva') {
-            try {
-                const userData = JSON.parse(localStorage.getItem(key));
-                usuarios.push({
-                    login: key.replace('db_', ''),
-                    ...userData
-                });
-            } catch (e) {
-                console.error('Erro ao carregar usuário:', key, e);
-            }
+        if (!key || !key.startsWith('db_')) continue;
+        const login = key.replace('db_', '');
+        if (login.toLowerCase() === 'admin_filipe_silva') continue; // Será adicionado separadamente
+        if (login === 'ADMIN_FILIPE_SILVA') continue; // Excluir duplicata - apenas admin_filipe_silva
+        try {
+            const userData = JSON.parse(localStorage.getItem(key));
+            usuarios.push({ login, ...userData });
+        } catch (e) {
+            console.error('Erro ao carregar usuário:', key, e);
         }
     }
     
-    // Adiciona o admin também
+    // Adiciona admin_filipe_silva com todas as permissões
     const adminData = JSON.parse(localStorage.getItem('db_admin_filipe_silva') || '{}');
     if (adminData.name) {
         usuarios.unshift({
@@ -3769,6 +4489,10 @@ function carregarUsuarios() {
             'visualizador': '👁️ Visualizador'
         }[user.perfil] || user.perfil || 'Operador';
         
+        // admin_filipe_silva: sem Permissões (tem tudo liberado) e sem Excluir
+        const isAdminMax = (user.login || '').toLowerCase() === 'admin_filipe_silva';
+        const podeExcluir = !isAdminMax;
+        
         return `
             <tr>
                 <td>${user.name || '-'}</td>
@@ -3777,14 +4501,9 @@ function carregarUsuarios() {
                 <td>${dataCadastro}</td>
                 <td>${ultimoAcesso}</td>
                 <td class="acoes-usuario">
-                    ${user.login !== 'admin_filipe_silva' ? `
-                        <button class="btn-icon-small" onclick="editarUsuario('${user.login}')" title="Editar">
-                            ✏️
-                        </button>
-                        <button class="btn-icon-small btn-danger" onclick="excluirUsuario('${user.login}')" title="Excluir">
-                            🗑️
-                        </button>
-                    ` : '<span class="text-muted">Protegido</span>'}
+                    <button class="btn-icon-small" onclick="editarUsuario('${user.login}')" title="Editar">✏️</button>
+                    ${!isAdminMax ? `<button class="btn-icon-small btn-permissoes" onclick="abrirModalPermissoesUsuario('${user.login}')" title="Permissões">⚙️</button>` : ''}
+                    ${podeExcluir ? `<button class="btn-icon-small btn-danger" onclick="excluirUsuario('${user.login}')" title="Excluir">🗑️</button>` : '<span class="text-muted" title="Usuário administrador principal">—</span>'}
                 </td>
             </tr>
         `;
@@ -3806,6 +4525,20 @@ function filtrarUsuarios() {
 
 function limparFormularioUsuario() {
     document.getElementById('cadastro-usuario-form').reset();
+    var expEl = document.getElementById('cadastro-senha-expiracao');
+    if (expEl) expEl.style.display = 'none';
+}
+
+function initCadastroUsuarioLoginAuto() {
+    var nomeEl = document.getElementById('novo-usuario-nome');
+    var loginEl = document.getElementById('novo-usuario-login');
+    if (!nomeEl || !loginEl) return;
+    nomeEl.addEventListener('input', function() {
+        var nome = nomeEl.value.trim();
+        if (!nome) { loginEl.value = ''; return; }
+        var login = nome.toUpperCase().replace(/\s+/g, '.').replace(/[^A-Z0-9.]/g, '');
+        loginEl.value = login;
+    });
 }
 
 function cadastrarUsuario(event) {
@@ -3831,72 +4564,259 @@ function cadastrarUsuario(event) {
         return;
     }
     
-    const userKey = 'db_' + login;
+    // Normaliza login IGUAL ao handleAuth: minúsculas, espaços → underscore (garante que cadastro e login usem a mesma chave)
+    const loginNorm = login.trim().toLowerCase().replace(/\s+/g, '_');
+    const userKey = 'db_' + loginNorm;
     
-    // Verifica se usuário já existe
-    if (localStorage.getItem(userKey)) {
+    // Verifica se usuário já existe (busca case-insensitive para evitar duplicatas)
+    const existe = Object.keys(localStorage).some(k => k.startsWith('db_') && k.replace('db_', '').toLowerCase() === loginNorm);
+    if (existe || localStorage.getItem(userKey)) {
         showToast('Usuário já existe! Escolha outro login.', 'warning');
         return;
     }
     
-    // Cria novo usuário
+    // Expiração definida ao abrir o modal (30, 60, 80 ou 120 dias)
+    const diasExpiracao = cadastroDiasExpiracao || [30, 60, 80, 120][Math.floor(Math.random() * 4)];
+    const dataExpiracao = new Date();
+    dataExpiracao.setDate(dataExpiracao.getDate() + diasExpiracao);
+    
     const novoUsuario = {
         name: nome,
         pass: senha,
         perfil: perfil,
+        setor: '',
+        foto: '',
         dataCadastro: new Date().toISOString(),
-        ultimoAcesso: null
+        ultimoAcesso: null,
+        senhaExpiracao: dataExpiracao.toISOString()
     };
     
     localStorage.setItem(userKey, JSON.stringify(novoUsuario));
     
-    showToast(`Usuário ${nome} cadastrado com sucesso!`, 'success');
+    showToast(`Usuário ${nome} cadastrado! Login: ${loginNorm}`, 'success');
     limparFormularioUsuario();
+    fecharModalCadastrarUsuario();
     carregarUsuarios();
     atualizarEstatisticasAdmin();
 }
 
 function editarUsuario(login) {
-    const userKey = 'db_' + login;
-    const userData = JSON.parse(localStorage.getItem(userKey) || '{}');
-    
+    abrirModalEditarUsuario(login);
+}
+
+function abrirModalEditarUsuario(login) {
+    fecharModalUsuarios();
+    const loginNorm = (login || '').trim().toLowerCase().replace(/\s+/g, '_');
+    let userKey = 'db_' + loginNorm;
+    let userData = JSON.parse(localStorage.getItem(userKey) || '{}');
+    if (!userData.name) {
+        const chave = Object.keys(localStorage).find(k => k.startsWith('db_') && k.replace('db_', '').toLowerCase() === loginNorm);
+        if (chave) {
+            userKey = chave;
+            userData = JSON.parse(localStorage.getItem(chave) || '{}');
+        }
+    }
     if (!userData.name) {
         showToast('Usuário não encontrado', 'error');
         return;
     }
     
-    const novoNome = prompt('Novo nome completo:', userData.name);
-    if (!novoNome || novoNome.trim() === '') return;
+    const modal = document.getElementById('modal-editar-usuario');
+    document.getElementById('editar-usuario-login').value = login;
+    document.getElementById('editar-usuario-original-key').value = userKey;
+    document.getElementById('editar-usuario-nome').value = userData.name || '';
+    document.getElementById('editar-usuario-login-display').value = login;
+    const perfilSelect = document.getElementById('editar-usuario-perfil');
+    perfilSelect.value = userData.perfil || 'operador';
+    var setorEl = document.getElementById('editar-usuario-setor');
+    if (setorEl) setorEl.value = userData.setor || '';
+    document.getElementById('editar-usuario-nova-senha').value = '';
+    document.getElementById('editar-usuario-confirmar-senha').value = '';
+    document.getElementById('editar-senha-expiracao-info').style.display = 'none';
     
-    const novoPerfil = prompt('Novo perfil (admin/tecnico/operador/visualizador):', userData.perfil || 'operador');
-    if (!novoPerfil) return;
+    atualizarPerfilSelectEditar();
+    modal.style.display = 'flex';
+    modal.onclick = function(e) { if (e.target === modal) fecharModalEditarUsuario(); };
+    document.body.classList.add('modal-editar-usuario-open');
+}
+
+function atualizarPerfilSelectEditar() {
+    const select = document.getElementById('editar-usuario-perfil');
+    const valueEl = document.getElementById('perfil-select-value-editar');
+    const opt = select.options[select.selectedIndex];
+    valueEl.textContent = opt ? opt.textContent : 'Selecione um perfil';
+    valueEl.classList.toggle('placeholder', !select.value);
+    document.querySelectorAll('#perfil-select-dropdown-editar .perfil-select-option').forEach(o => {
+        o.classList.toggle('selected', o.getAttribute('data-value') === select.value);
+    });
+}
+
+function initPerfilSelectEditar() {
+    const wrap = document.getElementById('perfil-select-wrap-editar');
+    if (!wrap) return;
+    const select = document.getElementById('editar-usuario-perfil');
+    const trigger = document.getElementById('perfil-select-trigger-editar');
+    const dropdown = document.getElementById('perfil-select-dropdown-editar');
+    const valueEl = document.getElementById('perfil-select-value-editar');
+    if (!select || !trigger || !dropdown) return;
+
+    trigger.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        const isOpen = dropdown.classList.contains('open');
+        if (isOpen) {
+            dropdown.classList.remove('open');
+            dropdown.style.position = '';
+            dropdown.style.top = '';
+            dropdown.style.left = '';
+            dropdown.style.width = '';
+            trigger.setAttribute('aria-expanded', 'false');
+            dropdown.setAttribute('aria-hidden', 'true');
+        } else {
+            var rect = trigger.getBoundingClientRect();
+            dropdown.style.position = 'fixed';
+            dropdown.style.top = (rect.bottom + 8) + 'px';
+            dropdown.style.left = rect.left + 'px';
+            dropdown.style.width = Math.max(rect.width, 280) + 'px';
+            dropdown.classList.add('open');
+            trigger.setAttribute('aria-expanded', 'true');
+            dropdown.setAttribute('aria-hidden', 'false');
+        }
+    });
+
+    dropdown.querySelectorAll('.perfil-select-option').forEach(function(opt) {
+        opt.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const val = this.getAttribute('data-value');
+            select.value = val;
+            atualizarPerfilSelectEditar();
+            dropdown.classList.remove('open');
+            dropdown.style.position = '';
+            dropdown.style.top = '';
+            dropdown.style.left = '';
+            dropdown.style.width = '';
+            trigger.setAttribute('aria-expanded', 'false');
+            dropdown.setAttribute('aria-hidden', 'true');
+        });
+    });
+
+    document.addEventListener('click', function fecharPerfilDropdown(e) {
+        if (!wrap.contains(e.target) && !dropdown.contains(e.target)) {
+            dropdown.classList.remove('open');
+            dropdown.style.position = '';
+            dropdown.style.top = '';
+            dropdown.style.left = '';
+            dropdown.style.width = '';
+            trigger.setAttribute('aria-expanded', 'false');
+            dropdown.setAttribute('aria-hidden', 'true');
+        }
+    });
+}
+
+function fecharModalEditarUsuario() {
+    const m = document.getElementById('modal-editar-usuario');
+    if (m) m.style.display = 'none';
+    document.body.classList.remove('modal-editar-usuario-open');
+    abrirGerenciarUsuarios();
+}
+
+function obterExpiracaoSenhaAleatoria() {
+    const dias = [30, 60, 80, 120];
+    return dias[Math.floor(Math.random() * dias.length)];
+}
+
+function salvarUsuarioEditado(event) {
+    if (event) event.preventDefault();
+    
+    const login = document.getElementById('editar-usuario-login').value;
+    const loginNorm = (login || '').trim().toLowerCase().replace(/\s+/g, '_');
+    const originalKey = document.getElementById('editar-usuario-original-key').value || ('db_' + login);
+    const nome = document.getElementById('editar-usuario-nome').value.trim();
+    const perfil = document.getElementById('editar-usuario-perfil').value;
+    const setor = (document.getElementById('editar-usuario-setor') && document.getElementById('editar-usuario-setor').value) ? document.getElementById('editar-usuario-setor').value.trim() : '';
+    const novaSenha = document.getElementById('editar-usuario-nova-senha').value;
+    const confirmarSenha = document.getElementById('editar-usuario-confirmar-senha').value;
+    
+    if (!nome) {
+        showToast('Nome é obrigatório', 'warning');
+        return;
+    }
     
     const perfisValidos = ['admin', 'tecnico', 'operador', 'visualizador'];
-    if (!perfisValidos.includes(novoPerfil)) {
+    if (!perfisValidos.includes(perfil)) {
         showToast('Perfil inválido', 'error');
         return;
     }
     
-    userData.name = novoNome.trim();
-    userData.perfil = novoPerfil;
+    if (novaSenha || confirmarSenha) {
+        if (novaSenha.length < 6) {
+            showToast('A senha deve ter no mínimo 6 caracteres', 'warning');
+            return;
+        }
+        if (novaSenha !== confirmarSenha) {
+            showToast('As senhas não coincidem', 'warning');
+            return;
+        }
+    }
+    
+    const userKey = 'db_' + loginNorm;
+    let userData = JSON.parse(localStorage.getItem(originalKey) || localStorage.getItem(userKey) || '{}');
+    
+    userData.name = nome;
+    userData.perfil = perfil;
+    userData.setor = setor;
+    
+    let diasExpiracao = null;
+    if (novaSenha) {
+        userData.pass = novaSenha;
+        diasExpiracao = obterExpiracaoSenhaAleatoria();
+        const dataExpiracao = new Date();
+        dataExpiracao.setDate(dataExpiracao.getDate() + diasExpiracao);
+        userData.senhaExpiracao = dataExpiracao.toISOString();
+    }
     
     localStorage.setItem(userKey, JSON.stringify(userData));
-    showToast('Usuário atualizado com sucesso!', 'success');
+    if (originalKey && originalKey !== userKey) localStorage.removeItem(originalKey);
+    
+    if (novaSenha) {
+        const info = document.getElementById('editar-senha-expiracao-info');
+        info.textContent = `Senha alterada. Expiração definida aleatoriamente em ${diasExpiracao} dias.`;
+        info.style.display = 'block';
+        showToast(`Usuário atualizado. Senha expira em ${diasExpiracao} dias.`, 'success');
+    } else {
+        showToast('Usuário atualizado com sucesso!', 'success');
+    }
+    
+    fecharModalEditarUsuario();
     carregarUsuarios();
     atualizarEstatisticasAdmin();
+    if (localStorage.getItem('current_user_login') === loginNorm || localStorage.getItem('current_user_login') === login) {
+        if (typeof atualizarPerfilNav === 'function') atualizarPerfilNav();
+    }
 }
 
 function excluirUsuario(login) {
-    if (login === 'admin_filipe_silva' || login === 'ADMIN_FILIPE_SILVA') {
-        showToast('Não é possível excluir o usuário administrador padrão', 'error');
+    if (!login) return;
+    const loginNorm = (login || '').trim().toLowerCase().replace(/\s+/g, '_');
+    if (loginNorm === 'admin_filipe_silva') {
+        showToast('Não é possível excluir o usuário administrador principal', 'error');
         return;
     }
     
-    if (!confirm(`Tem certeza que deseja excluir o usuário ${login}?`)) {
-        return;
+    showConfirmExcluirModal({
+        title: 'Excluir usuário',
+        message: `Tem certeza que deseja excluir o usuário ${login}?`,
+        icon: '👤',
+        onConfirm: () => excluirUsuarioConfirmado(login, loginNorm)
+    });
+}
+
+function excluirUsuarioConfirmado(login, loginNorm) {
+    let userKey = 'db_' + loginNorm;
+    if (!localStorage.getItem(userKey)) {
+        const chave = Object.keys(localStorage).find(k => k.startsWith('db_') && k.replace('db_', '').toLowerCase() === loginNorm);
+        if (chave) userKey = chave;
     }
-    
-    const userKey = 'db_' + login;
     localStorage.removeItem(userKey);
     
     showToast(`Usuário ${login} excluído com sucesso!`, 'success');
@@ -4025,25 +4945,12 @@ function adicionarTicketToLista(titulo) {
 // ================= FUNÇÕES GLOBAIS EXPORTADAS =================
 // Torna funções disponíveis globalmente para eventos onclick
 // Exporta ANTES de qualquer uso para garantir disponibilidade
-// FORÇA exportação - sempre sobrescreve para garantir que está atualizada
+// Exporta para uso em onclick (apenas atribuição para evitar "Cannot redefine property")
 if (typeof toggleSidebar === 'function') {
     window.toggleSidebar = toggleSidebar;
-    Object.defineProperty(window, 'toggleSidebar', {
-        value: toggleSidebar,
-        writable: true,
-        configurable: true,
-        enumerable: true
-    });
 }
-
 if (typeof navigate === 'function') {
     window.navigate = navigate;
-    Object.defineProperty(window, 'navigate', {
-        value: navigate,
-        writable: true,
-        configurable: true,
-        enumerable: true
-    });
 }
 
 // Garante que navigate esteja disponível imediatamente
@@ -4112,19 +5019,9 @@ if (typeof mudarPagina === 'function') {
 if (typeof exportarDados === 'function') {
     window.exportarDados = exportarDados;
 }
-// FORÇA exportação de abrirCadastroRapido (CRÍTICO)
+// Exportação de abrirCadastroRapido
 if (typeof abrirCadastroRapido === 'function') {
     window.abrirCadastroRapido = abrirCadastroRapido;
-    // Protege a função
-    Object.defineProperty(window, 'abrirCadastroRapido', {
-        value: abrirCadastroRapido,
-        writable: true,
-        configurable: true,
-        enumerable: true
-    });
-    console.log('✅ abrirCadastroRapido exportada e protegida');
-} else {
-    console.error('❌ abrirCadastroRapido não foi definida!');
 }
 // FORÇA exportação de funções de Rondas
 if (typeof carregarRondas === 'function') {
@@ -4233,6 +5130,12 @@ if (typeof verDetalhes === 'function') {
 if (typeof fecharDetalhes === 'function') {
     window.fecharDetalhes = fecharDetalhes;
 }
+if (typeof fecharModalEditar === 'function') {
+    window.fecharModalEditar = fecharModalEditar;
+}
+if (typeof abrirModalEditar === 'function') {
+    window.abrirModalEditar = abrirModalEditar;
+}
 if (typeof copiarParaClipboard === 'function') {
     window.copiarParaClipboard = copiarParaClipboard;
 }
@@ -4319,5 +5222,254 @@ function addDynamicCSS() {
 
 // Inicializa estilos dinâmicos
 addDynamicCSS();
+
+// ================= PERFIL NO NAV (ao lado do tema) =================
+function atualizarPerfilNav() {
+    var wrap = document.getElementById('axis-profile-wrap');
+    if (!wrap) return;
+    var login = localStorage.getItem('current_user_login');
+    if (!login) {
+        wrap.style.display = 'none';
+        return;
+    }
+    var userData = {};
+    try {
+        userData = JSON.parse(localStorage.getItem('db_' + login) || '{}');
+    } catch (_) {}
+    var nome = userData.name || login;
+    var setor = userData.setor || '—';
+    var foto = userData.foto || '';
+    var diasTexto = '—';
+    if (userData.senhaExpiracao) {
+        var exp = new Date(userData.senhaExpiracao).getTime();
+        var now = Date.now();
+        var dias = Math.ceil((exp - now) / (24 * 60 * 60 * 1000));
+        if (dias > 0) diasTexto = dias + ' dias';
+        else if (dias === 0) diasTexto = 'Hoje';
+        else diasTexto = 'Expirada';
+    }
+    var initial = (nome.charAt(0) || 'U').toUpperCase();
+    wrap.style.display = 'flex';
+    setEl('axis-profile-name-short', nome.length > 15 ? nome.substring(0, 12) + '…' : nome);
+    setEl('axis-profile-initial', initial);
+    setEl('axis-profile-dropdown-initial', initial);
+    setEl('axis-profile-dropdown-name', nome);
+    setEl('axis-profile-dropdown-login', login);
+    setEl('axis-profile-dropdown-setor', setor);
+    setEl('axis-profile-dropdown-dias', diasTexto);
+    var av = document.getElementById('axis-profile-avatar');
+    var avDrop = document.getElementById('axis-profile-dropdown-avatar');
+    if (av) {
+        if (foto) { av.src = foto; av.style.display = ''; av.nextElementSibling.style.display = 'none'; }
+        else { av.removeAttribute('src'); if (av.nextElementSibling) av.nextElementSibling.style.display = 'flex'; }
+    }
+    if (avDrop) {
+        if (foto) { avDrop.src = foto; avDrop.style.display = ''; avDrop.nextElementSibling.style.display = 'none'; }
+        else { avDrop.removeAttribute('src'); if (avDrop.nextElementSibling) avDrop.nextElementSibling.style.display = 'flex'; }
+    }
+    function setEl(id, text) {
+        var el = document.getElementById(id);
+        if (el) el.textContent = text;
+    }
+}
+
+function preencherPerfilMini() {
+    var login = localStorage.getItem('current_user_login');
+    if (!login) return;
+    var userData = {};
+    try {
+        userData = JSON.parse(localStorage.getItem('db_' + login) || '{}');
+    } catch (_) {}
+    var nomeEl = document.getElementById('axis-profile-mini-nome');
+    var setorEl = document.getElementById('axis-profile-mini-setor');
+    var imgEl = document.getElementById('axis-profile-dropdown-avatar');
+    var initialEl = document.getElementById('axis-profile-dropdown-initial');
+    if (nomeEl) nomeEl.value = userData.name || login;
+    if (setorEl) setorEl.value = userData.setor || '';
+    var aboutEl = document.getElementById('axis-profile-dropdown-setor');
+    if (aboutEl) aboutEl.textContent = (userData.setor && userData.setor.trim()) ? userData.setor.trim() : 'Toque para adicionar setor';
+    if (userData.foto && imgEl && initialEl) {
+        imgEl.src = userData.foto;
+        imgEl.style.display = 'block';
+        initialEl.style.display = 'none';
+    } else if (imgEl && initialEl) {
+        imgEl.removeAttribute('src');
+        initialEl.style.display = 'flex';
+        initialEl.textContent = ((userData.name || login).charAt(0) || 'U').toUpperCase();
+    }
+}
+
+function abrirPerfilNav() {
+    var trigger = document.getElementById('axis-profile-trigger');
+    var dropdown = document.getElementById('axis-profile-dropdown');
+    if (!trigger || !dropdown) {
+        if (typeof console !== 'undefined' && console.warn) console.warn('AXIS Perfil: trigger ou dropdown não encontrado');
+        return;
+    }
+    var wrap = document.getElementById('axis-profile-wrap');
+    if (wrap && dropdown.parentNode !== document.body) {
+        document.body.appendChild(dropdown);
+    }
+    var rect = trigger.getBoundingClientRect();
+    var w = Math.max(rect.width, 300);
+    var dropH = 420;
+    var spaceBelow = (window.innerHeight || document.documentElement.clientHeight) - rect.bottom;
+    var openAbove = spaceBelow < dropH && rect.top > dropH;
+    dropdown.style.position = 'fixed';
+    dropdown.style.width = w + 'px';
+    dropdown.style.right = 'auto';
+    dropdown.style.left = Math.min(rect.left, (window.innerWidth || document.documentElement.clientWidth) - w - 16) + 'px';
+    if (openAbove) {
+        dropdown.style.top = (rect.top - dropH - 8) + 'px';
+    } else {
+        dropdown.style.top = (rect.bottom + 8) + 'px';
+    }
+    dropdown.classList.add('open');
+    dropdown.setAttribute('aria-hidden', 'false');
+    if (trigger) trigger.setAttribute('aria-expanded', 'true');
+    if (dropdown.style.setProperty) {
+        dropdown.style.setProperty('visibility', 'visible', 'important');
+        dropdown.style.setProperty('opacity', '1', 'important');
+        dropdown.style.setProperty('display', 'block', 'important');
+        dropdown.style.setProperty('z-index', '999999', 'important');
+    } else {
+        dropdown.style.visibility = 'visible';
+        dropdown.style.opacity = '1';
+        dropdown.style.display = 'block';
+        dropdown.style.zIndex = '999999';
+    }
+    if (typeof preencherPerfilMini === 'function') preencherPerfilMini();
+    window._axisProfileOpenedAt = Date.now();
+    requestAnimationFrame(function() {
+        dropdown.style.setProperty('visibility', 'visible', 'important');
+        dropdown.style.setProperty('display', 'block', 'important');
+    });
+}
+function fecharPerfilNav() {
+    var trigger = document.getElementById('axis-profile-trigger');
+    var dropdown = document.getElementById('axis-profile-dropdown');
+    var wrap = document.getElementById('axis-profile-wrap');
+    if (dropdown) {
+        dropdown.classList.remove('open');
+        dropdown.style.position = '';
+        dropdown.style.top = '';
+        dropdown.style.left = '';
+        dropdown.style.right = '';
+        dropdown.style.width = '';
+        dropdown.style.visibility = '';
+        dropdown.style.opacity = '';
+        dropdown.style.display = '';
+        dropdown.style.zIndex = '';
+        if (wrap && dropdown.parentNode === document.body) {
+            wrap.appendChild(dropdown);
+        }
+    }
+    if (trigger) trigger.setAttribute('aria-expanded', 'false');
+}
+
+window.abrirPerfilNav = abrirPerfilNav;
+window.fecharPerfilNav = fecharPerfilNav;
+
+function initAxisProfile() {
+    var wrap = document.getElementById('axis-profile-wrap');
+    var trigger = document.getElementById('axis-profile-trigger');
+    var dropdown = document.getElementById('axis-profile-dropdown');
+    var saveBtn = document.getElementById('axis-profile-mini-save');
+    var cancelBtn = document.getElementById('axis-profile-mini-cancel');
+    var photoInput = document.getElementById('axis-profile-photo-input');
+    if (!wrap || !trigger || !dropdown) return;
+
+    var fotoPendente = null;
+
+    trigger.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var isOpen = dropdown.classList.contains('open');
+        if (isOpen) {
+            fecharPerfilNav();
+        } else {
+            abrirPerfilNav();
+            fotoPendente = null;
+        }
+        return false;
+    });
+
+    if (photoInput) {
+        photoInput.addEventListener('change', function() {
+            var file = this.files && this.files[0];
+            if (!file || !file.type.match(/^image\//)) return;
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                fotoPendente = e.target.result;
+                var imgEl = document.getElementById('axis-profile-dropdown-avatar');
+                var initialEl = document.getElementById('axis-profile-dropdown-initial');
+                if (imgEl) { imgEl.src = fotoPendente; imgEl.style.display = 'block'; }
+                if (initialEl) initialEl.style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    if (saveBtn) {
+        saveBtn.addEventListener('click', function() {
+            var login = localStorage.getItem('current_user_login');
+            if (!login) return;
+            var userKey = 'db_' + login;
+            var userData = {};
+            try {
+                userData = JSON.parse(localStorage.getItem(userKey) || '{}');
+            } catch (_) {}
+            var nome = document.getElementById('axis-profile-mini-nome');
+            var setorEl = document.getElementById('axis-profile-mini-setor');
+            if (nome && nome.value.trim()) userData.name = nome.value.trim();
+            if (setorEl) userData.setor = setorEl.value.trim() || '';
+            if (fotoPendente !== null) userData.foto = fotoPendente;
+            localStorage.setItem(userKey, JSON.stringify(userData));
+            if (userData.name) localStorage.setItem('current_user', userData.name);
+            if (typeof atualizarPerfilNav === 'function') atualizarPerfilNav();
+            if (typeof showToast === 'function') showToast('Perfil atualizado', 'success');
+            fecharPerfilNav();
+            fotoPendente = null;
+            var ud = document.getElementById('user-display-name');
+            if (ud && userData.name) ud.innerText = userData.name;
+        });
+    }
+
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', function() {
+            fecharPerfilNav();
+        });
+    }
+
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('#nav-welcome-text')) return;
+        var openedAt = window._axisProfileOpenedAt || 0;
+        if (Date.now() - openedAt < 200) return;
+        var drop = document.getElementById('axis-profile-dropdown');
+        var wr = document.getElementById('axis-profile-wrap');
+        if (!wr || !drop) return;
+        if (wr.contains(e.target) || drop.contains(e.target)) return;
+        fecharPerfilNav();
+    });
+}
+
+// Dropdown Perfil customizado no modal Editar Usuário + Login automático no cadastro
+if (document.readyState !== 'loading') {
+    initPerfilSelectEditar();
+    initCadastroUsuarioLoginAuto();
+    initAxisProfile();
+    if (localStorage.getItem('current_user_login')) {
+        setTimeout(function() { if (typeof atualizarPerfilNav === 'function') atualizarPerfilNav(); }, 0);
+    }
+} else {
+    document.addEventListener('DOMContentLoaded', function() {
+        initPerfilSelectEditar();
+        initCadastroUsuarioLoginAuto();
+        initAxisProfile();
+        if (localStorage.getItem('current_user_login')) {
+            setTimeout(function() { if (typeof atualizarPerfilNav === 'function') atualizarPerfilNav(); }, 0);
+        }
+    });
+}
 
 console.log('🚀 AXIS - Sistema JavaScript carregado completamente!');

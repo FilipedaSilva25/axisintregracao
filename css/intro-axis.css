@@ -1,0 +1,202 @@
+/* ============================================
+   INTRODUÇÃO AXIS - ESTILO APPLE VIDRO
+   Apresentação para primeira visita
+   ============================================ */
+
+#intro-axis-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
+    opacity: 1;
+    transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#intro-axis-overlay.intro-fade-out {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.intro-axis-container {
+    width: 100%;
+    max-width: 480px;
+    padding: 24px;
+    perspective: 1000px;
+}
+
+.intro-slide {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 40px 32px;
+    background: rgba(255, 255, 255, 0.55);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-radius: 28px;
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+    animation: introSlideIn 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.intro-slide.active {
+    display: flex;
+}
+
+@keyframes introSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(40px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Dados em vidro com animação suave */
+@keyframes introFadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.intro-slide h2,
+.intro-slide p,
+.intro-slide-img-wrap {
+    animation: introFadeIn 0.5s ease forwards;
+}
+
+.intro-slide-img-wrap {
+    width: 140px;
+    height: 140px;
+    margin-bottom: 28px;
+    border-radius: 28px;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+.intro-slide-img-wrap img {
+    width: 90px;
+    height: auto;
+    object-fit: contain;
+}
+
+.intro-slide h2 {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1d1d1f;
+    margin-bottom: 12px;
+    letter-spacing: -0.5px;
+}
+
+.intro-slide p {
+    font-size: 15px;
+    color: #3a3a3c;
+    line-height: 1.6;
+    margin-bottom: 32px;
+    max-width: 360px;
+}
+
+.intro-slide-buttons {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.intro-btn {
+    padding: 14px 32px;
+    border-radius: 14px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.intro-btn-secondary {
+    background: rgba(0, 0, 0, 0.06);
+    color: #1d1d1f;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.intro-btn-secondary:hover {
+    background: rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+.intro-btn-primary {
+    background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+    color: #fff;
+    box-shadow: 0 4px 20px rgba(46, 204, 113, 0.35);
+}
+
+.intro-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 28px rgba(46, 204, 113, 0.45);
+}
+
+.intro-dots {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 28px;
+}
+
+.intro-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.25);
+    transition: all 0.3s ease;
+}
+
+.intro-dot.active {
+    background: #2ecc71;
+    transform: scale(1.2);
+    box-shadow: 0 0 12px rgba(46, 204, 113, 0.5);
+}
+
+/* Transição para login - movimentos realistas */
+.auth-screen-transition-in {
+    animation: authTransitionIn 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes authTransitionIn {
+    0% {
+        opacity: 0;
+        transform: translateY(60px) scale(0.9);
+    }
+    50% {
+        opacity: 0.5;
+        transform: translateY(-10px) scale(1.02);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.auth-card-transition {
+    animation: authCardReveal 0.9s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s both;
+}
+
+@keyframes authCardReveal {
+    from {
+        opacity: 0;
+        transform: translateY(30px) rotateX(-5deg);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) rotateX(0);
+    }
+}

@@ -18,29 +18,26 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     const serial = document.getElementById('serial_id').value || 'SEM_SERIAL';
-    const dataAtual = new Date().toLocaleDateString('pt-BR').replaceAll('/', '-');
+    const dataVal = document.getElementById('data_id')?.value || new Date().toISOString().slice(0, 10);
+    const dataAtual = dataVal ? new Date(dataVal + 'T00:00:00').toLocaleDateString('pt-BR').replace(/\//g, '-') : new Date().toLocaleDateString('pt-BR').replace(/\//g, '-');
     const element = document.getElementById('pdf-content');
     const btn = document.getElementById('btn-gerar');
     
-    // Obter ano e mês selecionados no menu organizador
-    const anoSelecionado = document.getElementById('organizer-ano')?.value || new Date().getFullYear().toString();
-    const mesSelecionado = document.getElementById('organizer-mes')?.value || String(new Date().getMonth() + 1).padStart(2, '0');
+    // Ano e mês vêm da DATA da preventiva (campo Data do formulário) – pastas automáticas
+    const dataPreventiva = dataVal ? new Date(dataVal + 'T00:00:00') : new Date();
+    const anoSelecionado = dataPreventiva.getFullYear().toString();
+    const mesSelecionado = String(dataPreventiva.getMonth() + 1).padStart(2, '0');
     
-    // Nomes dos meses em português
     const mesesNomes = {
         '01': 'Janeiro', '02': 'Fevereiro', '03': 'Março', '04': 'Abril',
         '05': 'Maio', '06': 'Junho', '07': 'Julho', '08': 'Agosto',
         '09': 'Setembro', '10': 'Outubro', '11': 'Novembro', '12': 'Dezembro'
     };
-    
     const nomeMes = mesesNomes[mesSelecionado] || 'Mes';
     
-    // Criar nome do arquivo com estrutura organizada (ano e mês no nome)
-    // Nota: Navegadores não podem criar pastas automaticamente, então incluímos no nome
-    // Formato: AXIS_PV_SERIAL_ANO_MES_DATA.pdf
     const nomeArquivo = `AXIS_PV_${serial}_${anoSelecionado}_${nomeMes}_${dataAtual}.pdf`;
     
-    console.log('📁 Organização do PDF:', `${anoSelecionado}/${nomeMes}`);
+    console.log('📁 PDF será salvo em: Manutenções Preventivas/' + anoSelecionado + '/' + nomeMes);
     console.log('📄 Nome do arquivo:', nomeArquivo);
 
     // Feedback visual e desabilita o botão
@@ -48,7 +45,11 @@ document.addEventListener('DOMContentLoaded', function() {
     btn.textContent = "PROCESSANDO RELATÓRIO...";
     btn.style.opacity = '0.5';
 
-    // Configurações otimizadas para PDF com melhor alinhamento
+    // Garantir que o conteúdo esteja visível antes de capturar
+    window.scrollTo(0, 0);
+    element.scrollTop = 0;
+
+    // Configurações otimizadas para PDF - captura todo o conteúdo
     const opt = {
         margin: [15, 10, 15, 10],
         filename: nomeArquivo,
@@ -56,25 +57,29 @@ document.addEventListener('DOMContentLoaded', function() {
         html2canvas: { 
             scale: 2, 
             useCORS: true,
-            windowWidth: 2100, // Largura A4 em pixels (210mm * 10)
-            windowHeight: 2970, // Altura A4 em pixels (297mm * 10)
-            scrollY: 0,
-            scrollX: 0,
             logging: false,
             letterRendering: true,
-            allowTaint: false
+            allowTaint: false,
+            width: element.scrollWidth,
+            height: element.scrollHeight,
+            windowWidth: element.scrollWidth,
+            windowHeight: element.scrollHeight,
+            scrollX: 0,
+            scrollY: 0,
+            onclone: function(clonedDoc, clone) {
+                var clonedEl = clonedDoc.getElementById('pdf-content');
+                if (clonedEl) {
+                    clonedEl.style.overflow = 'visible';
+                    clonedEl.style.height = 'auto';
+                    clonedEl.style.display = 'block';
+                }
+            }
         },
-        // MODO DE QUEBRA ESPECÍFICO
-        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
-        jsPDF: { 
-            unit: 'mm', 
-            format: 'a4', 
-            orientation: 'portrait',
-            compress: true
-        }
+        pagebreak: { mode: ['css', 'legacy'], before: '.pdf-page-break' },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true }
     };
 
-    // GERAÇÃO DO PDF + NUMERAÇÃO DE PÁGINA
+    // GERAÇÃO DO PDF + NUMERAÇÃO DE PÁGINA + DOWNLOAD + ENVIO PARA PASTAS ANO/MÊS
     html2pdf().set(opt).from(element).toPdf().get('pdf').then(function (pdf) {
         const totalPages = pdf.internal.getNumberOfPages();
         for (let i = 1; i <= totalPages; i++) {
@@ -83,47 +88,74 @@ document.addEventListener('DOMContentLoaded', function() {
             pdf.setTextColor(150);
             pdf.text(`Página ${i} de ${totalPages}`, pdf.internal.pageSize.width / 2 - 20, pdf.internal.pageSize.height - 10);
         }
-    }).save().then(() => {
-        // Reseta o botão após salvar
+    }).outputPdf('blob').then(function (blob) {
+        // 1) Download no navegador
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = nomeArquivo;
+        a.click();
+        URL.revokeObjectURL(url);
+        
+        // 2) Enviar para o backend: Manutenções Preventivas / Ano / Mês
+        const reader = new FileReader();
+        reader.onloadend = function () {
+            const base64 = (reader.result || '').split(',')[1] || '';
+            fetch('/api/manutencoes/salvar-pdf', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    ano: anoSelecionado,
+                    mes: mesSelecionado,
+                    nomeArquivo: nomeArquivo,
+                    pdfBase64: base64
+                })
+            }).then(function (r) { return r.json(); }).then(function (data) {
+                if (data.ok) console.log('✅ PDF salvo em Manutenções Preventivas/' + anoSelecionado + '/' + nomeMes);
+                else console.warn('⚠️ Servidor:', data.error || data);
+            }).catch(function (e) { console.warn('⚠️ Erro ao enviar PDF para servidor:', e); });
+        };
+        reader.readAsDataURL(blob);
+        
+        // Reseta o botão
         btn.disabled = false;
         btn.textContent = "FINALIZAR E GERAR RELATÓRIO PDF";
         btn.style.opacity = '1';
         
         // ========== INTEGRAÇÃO COM WHATSAPP ALERTS ==========
-        // (Adicionado aqui para funcionar APÓS o PDF ser salvo)
         try {
             if (typeof window.whatsAppAlerts !== 'undefined') {
                 const dadosPreventiva = {
                     tecnico: document.getElementById('tecnico_id')?.value || 'FILIPE DA SILVA',
                     modelo: document.getElementById('modelo_id')?.value || 'ZT411',
-                    serial: document.getElementById('serial_id')?.value || 'N/D',
+                    serial: serial,
                     selb: document.getElementById('selb_id')?.value || 'N/D',
                     status: 'Preventiva concluída - PDF gerado',
-                    data: document.getElementById('data_id')?.value || new Date().toLocaleDateString('pt-BR')
+                    data: dataVal || new Date().toLocaleDateString('pt-BR')
                 };
-                
-                // Enviar alerta após 1 segundo (tempo para processar)
-                setTimeout(() => {
-                    window.whatsAppAlerts.alertarPreventivaConcluida(dadosPreventiva);
-                }, 1000);
-                
-                console.log('✅ Alerta WhatsApp agendado para envio');
-            } else {
-                console.warn('⚠️ WhatsApp Alerts não está disponível');
+                setTimeout(function () { window.whatsAppAlerts.alertarPreventivaConcluida(dadosPreventiva); }, 1000);
+                console.log('✅ Alerta WhatsApp agendado');
             }
-        } catch (error) {
-            console.error('❌ Erro na integração WhatsApp:', error);
-        }
-        // ========== FIM DA INTEGRAÇÃO ==========
+        } catch (error) { console.error('❌ WhatsApp:', error); }
 
-        // ========== REGISTRAR NA BIBLIOTECA DE MANUTENÇÕES ==========
+        // ========== REGISTRAR NA BIBLIOTECA (localStorage) - dados completos ==========
         try {
             const KEY = 'axis_manutencoes_biblioteca';
             let bib = {};
             try { bib = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (_) {}
             if (!bib[anoSelecionado]) bib[anoSelecionado] = {};
             if (!bib[anoSelecionado][mesSelecionado]) bib[anoSelecionado][mesSelecionado] = [];
-            const dataVal = document.getElementById('data_id')?.value || new Date().toISOString().slice(0, 10);
+
+            // Coletar checklist (itens marcados)
+            const checklist = [];
+            document.querySelectorAll('.checklist-grid .ios-check').forEach(function(label) {
+                const input = label.querySelector('input[type="checkbox"]');
+                const span = label.querySelector('span');
+                const grupo = (label.closest('.glass-card') && label.closest('.glass-card').querySelector('h3')) ? label.closest('.glass-card').querySelector('h3').textContent.trim() : '';
+                const item = span ? span.textContent.trim() : '';
+                checklist.push({ grupo: grupo, item: item, checked: input ? input.checked : false });
+            });
+
             bib[anoSelecionado][mesSelecionado].push({
                 id: Date.now(),
                 data: dataVal,
@@ -131,19 +163,28 @@ document.addEventListener('DOMContentLoaded', function() {
                 modelo: document.getElementById('modelo_id')?.value || '',
                 tecnico: document.getElementById('tecnico_id')?.value || '',
                 setor: document.getElementById('setor_id')?.value || '',
+                unidade: document.getElementById('unidade_id')?.value || '',
+                ip: document.getElementById('ip_id')?.value || '',
+                macRede: document.getElementById('mac_rede_id')?.value || '',
+                macBt: document.getElementById('mac_bt_id')?.value || '',
+                selb: document.getElementById('selb_id')?.value || '',
+                observacoes: document.getElementById('obs_id')?.value || '',
+                checklist: checklist,
                 arquivo: nomeArquivo
             });
             localStorage.setItem(KEY, JSON.stringify(bib));
         } catch (_) {}
-
-    }).catch(err => {
+        
+        showAlert("Relatório Concluído", "O checklist foi gerado, o download iniciado e o PDF salvo em Manutenções Preventivas/" + anoSelecionado + "/" + nomeMes + ".");
+    }).catch(function (err) {
         btn.disabled = false;
+        btn.textContent = "FINALIZAR E GERAR RELATÓRIO PDF";
         btn.style.opacity = '1';
         console.error("Erro crítico:", err);
+        showAlert("Erro", "Não foi possível gerar o PDF. Tente novamente.");
     });
 
-    // DISPARA O AVISO MODERNO (Substitui o alert preto do navegador)
-    showAlert("Relatório Concluído", "O checklist da AXIS foi gerado e o download iniciado!");
+    showAlert("Processando...", "Gerando relatório PDF e salvando em Manutenções Preventivas.");
     });
 });
 

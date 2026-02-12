@@ -975,3 +975,6 @@ if (document.readyState === 'loading') {
 }
 
 console.log('✅ Todas as funções completas foram carregadas!');
+
+
+
