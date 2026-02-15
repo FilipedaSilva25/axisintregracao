@@ -2,7 +2,7 @@
 
 **Não remover ou alterar** os trechos descritos abaixo sem revisar este documento. Eles garantem o visual unificado de status (EM USO, DEFEITO, BACKUP OPERACIONAL) como badges e os seletores customizados de Bancada e Status no formulário Cadastrar Nova Impressora.
 
-**Data da blindagem:** 2026-02-11
+**Data da blindagem:** 2026-02-11 | **Atualizado:** 2026-02-13 (Status placeholder, IP único, maxlength 14)
 
 ---
 
@@ -55,17 +55,28 @@
 ### 3.3 Seletor Status (cadastro)
 
 - **Estrutura HTML:** `#status-selector-wrap` contém:
-  - `<select id="cad-status" class="setor-selector-native-hidden">` (EM USO, DEFEITO, BACKUP OPERACIONAL)
-  - `#cad-status-trigger` (valor padrão EM USO)
-  - `#cad-status-dropdown` com opções EM USO, DEFEITO, BACKUP OPERACIONAL
+  - `<select id="cad-status" class="setor-selector-native-hidden">` com **primeira opção value=""** "Selecione um Status"; depois EM USO, DEFEITO, BACKUP OPERACIONAL.
+  - `#cad-status-trigger` com texto inicial **"Selecione um Status"** (não EM USO).
+  - `#cad-status-dropdown` com primeira opção "Selecione um Status" (data-value="") e depois EM USO, DEFEITO, BACKUP OPERACIONAL.
+  - Classe **setor-selector-status** no wrap e **setor-selector-dropdown-status** no dropdown para CSS (BACKUP OPERACIONAL em uma linha).
 
-- **JS:** `initSetorSelector('cad-status', 'cad-status-trigger', 'cad-status-dropdown', 'EM USO')`.
+- **JS:** `initSetorSelector('cad-status', 'cad-status-trigger', 'cad-status-dropdown', 'Selecione um Status')`. Em `abrirCadastroRapido` e `abrirCadastroParaEditar`, sync com placeholder **'Selecione um Status'**.
+
+- **CSS:** `#cadastro-modal .setor-selector-dropdown-status` com `min-width: 200px`; `.setor-selector-dropdown-status .setor-selector-option` com `white-space: nowrap` para "BACKUP OPERACIONAL" não quebrar em duas linhas.
 
 ### 3.4 Sincronização e fechamento de dropdowns
 
 - **`closeOtherFilterDropdowns(exceptDropdown)`** – Agora considera `#cadastro-modal` além de `#ucs-filter-panel`. Ao abrir um dropdown no cadastro (Setor, Bancada ou Status), os outros fecham.
 
-- **Sync após reset/edição:** Em `abrirCadastroRapido` e `abrirCadastroParaEditar`, após preencher os selects, chamar `syncSetorSelectorFromSelect` para cad-bancada e cad-status, para o trigger exibir o valor correto.
+- **Sync após reset/edição:** Em `abrirCadastroRapido` e `abrirCadastroParaEditar`, após preencher os selects, chamar `syncSetorSelectorFromSelect` para cad-bancada e cad-status (placeholder **'Selecione um Status'** para Status), para o trigger exibir o valor correto.
+
+### 3.5 Campo Endereço IP (cadastro)
+
+- **Sem prefixo:** não há mais prefixo fixo "10.201." nem wrapper com span. O campo é um **único input** no mesmo estilo do Número do Patrimônio.
+- **HTML:** `<input type="text" id="cad-ip" required placeholder="Ex: 10.201.131.222" maxlength="14">`.
+- **JS:** `getIpCompleto()` retorna apenas `document.getElementById('cad-ip').value.trim()` (sem concatenação com prefixo). Não existe mais `IP_PREFIXO`, `formatarIpSuffix` nem `initIpMask`.
+- **Edição:** em `abrirCadastroParaEditar`, `cad-ip` recebe `eq.ip || ''` (IP completo).
+- **Validação:** em `proximoPassoCadastro` e ao salvar, o IP é validado no formato 10.201.X.X; não usar comparação com `IP_PREFIXO`.
 
 ---
 
@@ -74,6 +85,9 @@
 - Remover `renderizarStatusBadge` ou o uso dela na tabela, confirm-status ou detail-status.
 - Voltar a usar texto plano em vez de badge para os status.
 - Remover a estrutura `setor-selector` de Bancada ou Status e voltar ao `<select class="cadastro-select">` nativo.
+- Remover a opção "Selecione um Status" ou usar "EM USO" como valor padrão no trigger ao abrir cadastro novo.
+- Remover `min-width` ou `white-space: nowrap` do dropdown de Status (quebra "BACKUP OPERACIONAL" em duas linhas).
+- Voltar a usar prefixo 10.201. no IP ou remover `maxlength="14"` do `#cad-ip`.
 - Remover `populateBancadaDropdown` ou a chamada em `initSetorSelectors`.
 - Remover `closeOtherFilterDropdowns` do escopo de `#cadastro-modal`.
 - Deixar de sincronizar os triggers em `abrirCadastroRapido` e `abrirCadastroParaEditar`.
@@ -88,4 +102,4 @@
 
 ---
 
-**Última atualização:** 2026-02-11 – Status como badge; Bancada e Status com seletores customizados no cadastro.
+**Última atualização:** 2026-02-13 – Status com placeholder "Selecione um Status"; BACKUP OPERACIONAL em uma linha; IP único sem prefixo, maxlength 14; ver também `BLINDAGEM_INVENTARIO_PAGINA_COMPLETA.md`.

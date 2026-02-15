@@ -10,11 +10,12 @@
     "abrir": "start.bat",
     "organizar-manutencoes": "node scripts/organizar-manutencoes-por-pasta.js"
   },
-  "keywords": [
-    "axis",
-    "zebra",
-    "inventario"
-  ],
+  "keywords": ["axis", "zebra", "inventario"],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "@whiskeysockets/baileys": "^6.7.9",
+    "pino": "^9.0.0",
+    "qrcode": "^1.5.4"
+  }
 }

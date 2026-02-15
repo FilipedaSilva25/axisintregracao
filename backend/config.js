@@ -34,6 +34,9 @@ const MIME_TYPES = {
     '.xml': 'application/xml'
 };
 
+/** Número oficial do bot AXIS (WhatsApp da empresa) - usado nas instruções e validação */
+const AXIS_BOT_NUMBER = process.env.AXIS_BOT_NUMBER || '5548991578172';
+
 const HEADERS = {
     'X-Content-Type-Options': 'nosniff',
     'X-Frame-Options': 'DENY',
@@ -46,6 +49,7 @@ const HEADERS = {
 module.exports = {
     PORT,
     NODE_ENV,
+    AXIS_BOT_NUMBER,
     ROOT_DIR,
     DATA_DIR,
     PAGES_DIR,

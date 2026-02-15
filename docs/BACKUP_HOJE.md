@@ -89,6 +89,13 @@ git checkout -b recuperar-fim-do-dia backup-fim-do-dia
   - Status (EM USO, DEFEITO, BACKUP OPERACIONAL) exibidos como badges estilizados (botão sem ação) na tabela, no passo 3 do cadastro e no modal Ver Detalhes.
   - Bancada e Status no cadastro: seletores customizados (mesmo design do Setor), dropdown com destaque azul, B01–B200 para Bancada.
   - Blindagem em `docs/BLINDAGEM_INVENTARIO_STATUS_SELECTORES_CADASTRO.md`.
+- **Inventário – Página completa blindada (13/02/2026)**
+  - Status no cadastro: placeholder "Selecione um Status" (não EM USO); opção BACKUP OPERACIONAL em uma linha no dropdown (min-width + white-space: nowrap).
+  - Endereço IP: campo único (como Número do Patrimônio), sem prefixo 10.201.; maxlength 14; getIpCompleto() retorna valor do input.
+  - Documento mestre: `docs/BLINDAGEM_INVENTARIO_PAGINA_COMPLETA.md` (índice de toda a blindagem do inventário).
+- **Inventário – Exportação e 100% (14/02/2026)**
+  - PDF, Excel, CSV e Impressão: apenas 9 colunas (Serial Number, Modelo, Endereço de IP, MAC Rede, MAC Bluetooth, Selb, Patrimônio, Setor, Alocação). Tag, Status, Última Checagem e Responsável removidos das exportações.
+  - **Inventário finalizado 100%.**
 
 ---
 
@@ -115,4 +122,4 @@ Servidor em `http://localhost:3006`.
 
 ---
 
-**Última atualização:** 2026-02-11 – Status como badge; Bancada/Status seletores; ver `docs/BLINDAGEM_INVENTARIO_STATUS_SELECTORES_CADASTRO.md`. Para backup físico: `.\scripts\backup-hoje.ps1` ou `.\backup-agora.bat`.
+**Última atualização:** 2026-02-14 – Inventário 100% (exportação com 9 colunas blindada); ver `docs/BLINDAGEM_INVENTARIO_PAGINA_COMPLETA.md`. Para backup físico: `.\scripts\backup-hoje.ps1` ou `.\backup-agora.bat`.

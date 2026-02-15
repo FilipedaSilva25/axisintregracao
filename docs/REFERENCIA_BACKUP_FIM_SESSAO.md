@@ -1,15 +1,23 @@
 # Referência Rápida – Backup e Blindagem (Fim da Sessão)
 
-**Data:** 11/02/2026
+**Data:** 14/02/2026
 
 ---
 
-## O que foi blindado nesta sessão
+## Página de Inventário – 100% concluída e blindada
 
-1. **Status como badge** – EM USO, DEFEITO e BACKUP OPERACIONAL exibidos como badges estilizados (botão sem ação) na tabela do inventário, no passo 3 do cadastro e no modal Ver Detalhes.
-2. **Seletores Bancada e Status no cadastro** – Campos Bancada e Status em "Cadastrar Nova Impressora" (dados técnicos) modernizados com o mesmo design do Setor: dropdown customizado, trigger estilizado, B01–B200 para Bancada.
+A **página de inventário** está **100% concluída** e blindada. Nada deve ser removido sem consultar a documentação.
 
-**Documento completo:** `docs/BLINDAGEM_INVENTARIO_STATUS_SELECTORES_CADASTRO.md`
+**Documento mestre (índice de tudo):** `docs/BLINDAGEM_INVENTARIO_PAGINA_COMPLETA.md`
+
+**O que está blindado:**
+1. **Status como badge** – EM USO, DEFEITO, BACKUP OPERACIONAL na tabela, passo 3 e Ver Detalhes.
+2. **Seletores Bancada e Status** – Dropdown customizado; Status com placeholder "Selecione um Status"; BACKUP OPERACIONAL em uma linha.
+3. **Campo Endereço IP** – Campo único (como Patrimônio), sem prefixo 10.201., maxlength 14.
+4. **Exportação (PDF, Excel, CSV, Impressão)** – Apenas 9 colunas: Serial Number, Modelo, Endereço de IP, MAC Rede, MAC Bluetooth, Selb, Patrimônio, Setor, Alocação (sem Tag, Status, Última Checagem, Responsável).
+5. Filtros, cards, menu Baixar, lista de setores, ZQ630 PLUS (ver documentos listados em BLINDAGEM_INVENTARIO_PAGINA_COMPLETA.md).
+
+**Documentos específicos:** `BLINDAGEM_INVENTARIO_STATUS_SELECTORES_CADASTRO.md`, `BLINDAGEM_INVENTARIO_FILTROS.md`, `BLINDAGEM_INVENTARIO_CARDS_BOTOES_MENU.md`
 
 ---
 
@@ -34,26 +42,27 @@
 
 ```bash
 git add .
-git commit -m "Backup fim sessão 11fev - Status badge + Bancada/Status seletores blindados"
-git tag backup-fim-sessao-11fev
+git commit -m "Inventário página completa blindada - Status, IP, maxlength 14"
+git tag backup-inventario-completo
 ```
 
 Para voltar a este ponto:
 ```bash
-git checkout backup-fim-sessao-11fev
+git checkout backup-inventario-completo
 ```
 
 ---
 
-## Arquivos modificados nesta sessão
+## Arquivos da blindagem do inventário
 
-- `index.html` – Estrutura setor-selector para Bancada e Status
-- `css/style.css` – Badges de status; setor-selector em form-row-bancada-status
-- `js/script.js` – renderizarStatusBadge; populateBancadaDropdown; initSetorSelector para Bancada/Status; sync e closeOtherFilterDropdowns
-- `docs/BLINDAGEM_INVENTARIO_STATUS_SELECTORES_CADASTRO.md` – criado
+- `index.html` – Cadastro (IP único, Status/Bancada seletores, opção "Selecione um Status")
+- `css/style.css` – Badges de status; setor-selector-status / setor-selector-dropdown-status (BACKUP OPERACIONAL em uma linha)
+- `js/script.js` – renderizarStatusBadge; getIpCompleto (sem prefixo); populateBancadaDropdown; initSetorSelector e sync; **exportarCSV, exportarExcel, exportarPDF, imprimirInventario** (9 colunas fixas)
+- `docs/BLINDAGEM_INVENTARIO_PAGINA_COMPLETA.md` – **índice da página de inventário** (inclui seção 3.6 Exportação)
+- `docs/BLINDAGEM_INVENTARIO_STATUS_SELECTORES_CADASTRO.md` – Status placeholder, IP, maxlength 14
 - `docs/BACKUP_HOJE.md` – atualizado
 - `docs/REFERENCIA_BACKUP_FIM_SESSAO.md` – atualizado (este arquivo)
 
 ---
 
-**Tudo blindado. Nada foi perdido.**
+**Inventário 100% concluído e blindado. Próximo passo: outras páginas do sistema.**

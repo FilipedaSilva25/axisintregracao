@@ -68,7 +68,23 @@ class ChatAI {
                 'De nada! Qualquer dúvida, pode me chamar.',
                 'Por nada! Estou sempre disponível para ajudar.',
                 'Foi um prazer ajudar! Até logo!'
-            ]
+            ],
+
+            // Navegação e módulos do AXIS
+            sistema: {
+                preventiva: {
+                    resposta: 'Para fazer uma **Manutenção Preventiva**:\n\n1. Acesse o menu e abra "Manutenção Preventiva" (Full Inspection)\n2. Preencha a identificação do ativo (Setor, Técnico, Serial, Modelo, etc.)\n3. Use o **Serial** do equipamento: ao sair do campo, os dados podem ser preenchidos automaticamente pelo inventário\n4. Marque o checklist de inspeção\n5. Adicione observações se necessário\n6. Clique em "FINALIZAR E GERAR RELATÓRIO PDF"\n\n💡 Dica: Use o botão "Preencher com último relatório" para repetir dados do último relatório.',
+                    acao: 'abrir_preventiva'
+                },
+                inventario: {
+                    resposta: 'O **Inventário** do AXIS mostra todos os equipamentos cadastrados (impressoras Zebra). Lá você pode:\n\n• Ver lista por modelo (ZT411, ZD421, ZQ630)\n• Filtrar por setor\n• Ver detalhes, IP, MAC, status\n• Cadastrar ou editar equipamentos\n\nQuer que eu te leve até o Inventário?',
+                    acao: 'abrir_inventario'
+                },
+                relatorio: {
+                    resposta: 'Para ver **relatórios e histórico de manutenções preventivas**:\n\n1. Acesse "Manutenções Preventivas" no menu (Dashboard de Manutenções)\n2. Escolha o ano e o mês\n3. Veja a lista de preventivas e baixe os PDFs\n\nQuer que eu te leve ao Dashboard de Manutenções?',
+                    acao: 'abrir_dashboard_manutencoes'
+                }
+            }
         };
     }
 
@@ -123,6 +139,18 @@ class ChatAI {
     }
 
     buscarResposta(mensagem) {
+        // Navegação e módulos do sistema (prioridade)
+        const sistema = this.baseConhecimento.sistema;
+        if (mensagem.includes('preventiva') || mensagem.includes('manutenção preventiva') || mensagem.includes('full inspection') || mensagem.includes('como fazer preventiva') || mensagem.includes('fazer preventiva')) {
+            return { texto: sistema.preventiva.resposta, acao: sistema.preventiva.acao, confianca: 0.95 };
+        }
+        if (mensagem.includes('inventário') || mensagem.includes('inventario') || mensagem.includes('lista de impressoras') || mensagem.includes('equipamentos cadastrados')) {
+            return { texto: sistema.inventario.resposta, acao: sistema.inventario.acao, confianca: 0.95 };
+        }
+        if (mensagem.includes('relatório') || mensagem.includes('relatorio') || mensagem.includes('dashboard manutenções') || mensagem.includes('histórico de manutenções') || mensagem.includes('preventivas do mês')) {
+            return { texto: sistema.relatorio.resposta, acao: sistema.relatorio.acao, confianca: 0.95 };
+        }
+
         // Buscar por palavras-chave nos problemas conhecidos
         for (const [palavraChave, solucao] of Object.entries(this.baseConhecimento.problemas)) {
             if (mensagem.includes(palavraChave)) {
@@ -157,7 +185,7 @@ class ChatAI {
         const saudacao = saudacoes[Math.floor(Math.random() * saudacoes.length)];
         
         return {
-            texto: saudacao + '\n\nPosso ajudar com:\n• Problemas de impressão\n• Configuração de impressoras\n• Status de consumíveis\n• Documentação técnica\n• E muito mais!',
+            texto: saudacao + '\n\nPosso ajudar com:\n• **Manutenção Preventiva** – como fazer, preencher relatório\n• **Inventário** – lista de equipamentos\n• **Relatórios** – histórico de preventivas\n• Problemas de impressão e configuração\n• Documentação técnica\n\nDigite "preventiva", "inventário" ou "relatório" para começar.',
             acao: null,
             confianca: 1.0
         };
@@ -258,6 +286,33 @@ class ChatAI {
                             showToast('Consulte o manual na seção de documentação', 'info');
                         }
                     }, 1000);
+                }
+                break;
+
+            case 'abrir_preventiva':
+                try {
+                    window.location.href = (typeof window.location.origin !== 'undefined' ? window.location.origin : '') + '/pages/manutenção_preventiva.html';
+                } catch (e) {
+                    if (typeof showToast === 'function') showToast('Acesse Manutenção Preventiva pelo menu', 'info');
+                }
+                break;
+
+            case 'abrir_inventario':
+                if (typeof window.navigate === 'function') {
+                    window.navigate('page-inventario');
+                } else if (window.location.pathname && window.location.pathname.indexOf('index') !== -1) {
+                    window.location.hash = 'page-inventario';
+                } else {
+                    window.location.href = (window.location.origin || '') + '/index.html#page-inventario';
+                }
+                if (typeof showToast === 'function') showToast('Abrindo Inventário...', 'info');
+                break;
+
+            case 'abrir_dashboard_manutencoes':
+                try {
+                    window.location.href = (typeof window.location.origin !== 'undefined' ? window.location.origin : '') + '/pages/manutencoes-dashboard.html';
+                } catch (e) {
+                    if (typeof showToast === 'function') showToast('Acesse Manutenções Preventivas pelo menu', 'info');
                 }
                 break;
         }

@@ -31,7 +31,23 @@ server.listen(PORT, '0.0.0.0', () => {
     console.log('\n🚀 Servidor Projeto Vida / AXIS');
     console.log(`   http://localhost:${PORT}`);
     console.log(`   Pasta: ${ROOT_DIR}`);
-    console.log('\n✨ Abra o navegador em: http://localhost:' + PORT + '\n');
+    console.log('\n🤖 Bot WhatsApp: http://localhost:' + PORT + '/pages/whatsapp-qr.html');
+    console.log('✨ Abra o navegador em: http://localhost:' + PORT + '\n');
+    let cloudApi = false;
+    try {
+        const cloud = require('./backend/whatsapp-cloud-api');
+        cloudApi = cloud.isConfigured();
+    } catch (e) {}
+    if (cloudApi) {
+        console.log('✅ Bot WhatsApp Cloud API (24/7) – webhook: /api/whatsapp/cloud-webhook');
+    } else {
+        try {
+            const { startConnector } = require('./backend/whatsapp-connector');
+            startConnector().then(() => {}).catch(e => console.warn('WhatsApp Baileys: ', e.message));
+        } catch (e) {
+            console.warn('⚠️ WhatsApp: npm install para Baileys. Ou use Cloud API (variáveis de ambiente).');
+        }
+    }
 });
 
 server.on('error', (error) => {

@@ -66,10 +66,11 @@ function tryPagesFallback(req, res, urlPath, extname, contentType, encoding) {
             return;
         }
         const searchName = (fileName || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+        const reqIsManutencao = searchName.includes('manuten') || searchName.includes('preventiva');
         let found = files.find((f) => {
             const fl = f.toLowerCase().replace(/[^a-z0-9]/g, '');
             return f === fileName || fl === searchName ||
-                (fl.includes('manuten') && fl.includes('preventiva'));
+                (reqIsManutencao && fl.includes('manuten') && fl.includes('preventiva'));
         });
         if (!found) {
             res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8' });

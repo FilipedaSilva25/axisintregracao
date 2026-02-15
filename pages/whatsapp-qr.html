@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AXIS INTEGRAÇÃO – QR Code Bot WhatsApp</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: #ffffff;
+            color: #333;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .card {
+            background: linear-gradient(145deg, rgba(255,152,0,0.1) 0%, #ffffff 40%, rgba(37,211,102,0.1) 100%);
+            border: 2px solid rgba(245,124,0,0.35);
+            box-shadow: 0 0 0 1px rgba(37,211,102,0.2), 0 8px 24px rgba(0,0,0,.06), 0 0 0 2px rgba(245,124,0,.08);
+            border-radius: 16px;
+            padding: 24px;
+            max-width: 420px;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+        }
+        h1 { font-size: 18px; margin: 0 0 4px; color: #1a1a1a; }
+        .sub { color: #555; margin-bottom: 14px; font-size: 11px; font-weight: 600; letter-spacing: 0.03em; line-height: 1.4; }
+        .qr-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin: 12px 0;
+            text-align: center;
+        }
+        @media (max-width: 640px) { .qr-grid { grid-template-columns: 1fr; } }
+        .qr-section {
+            background: #fff;
+            border-radius: 12px;
+            padding: 14px;
+            min-height: 220px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            border: 1px solid rgba(0,0,0,.06);
+        }
+        .qr-section h3 {
+            margin: 0 0 8px;
+            font-size: 13px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .qr-section.admin h3 { color: #e65100; }
+        .qr-section.tecnicos h3 { color: #1b5e20; }
+        .qr-section .qr-box {
+            width: 180px;
+            height: 180px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 10px;
+        }
+        .qr-section .qr-box img { width: 160px; height: 160px; display: block; }
+        .qr-section .qr-box .qr-placeholder { color: #94a3b8; font-size: 12px; padding: 8px; text-align: center; }
+        .qr-section .qr-status { font-size: 11px; margin-top: 6px; color: #555; }
+        .qr-section .qr-status.ativo { color: #25D366; font-weight: 600; }
+        /* Por perfil: admin vê só esquerda, técnicos só direita */
+        body.role-admin .qr-section.tecnicos { display: none !important; }
+        body.role-tecnico .qr-section.admin { display: none !important; }
+        body.role-admin .qr-grid,
+        body.role-tecnico .qr-grid { grid-template-columns: 1fr; max-width: 320px; margin-left: auto; margin-right: auto; }
+        body.role-tecnico .nav-btn-logout { display: none !important; }
+        .status { font-size: 12px; font-weight: 600; margin: 8px 0; color: #25D366; }
+        .status.err { color: #ef4444; }
+        .status.warn { color: #fd7e14; }
+        .alerta-box {
+            background: rgba(253,126,20,0.15);
+            border: 2px solid rgba(253,126,20,0.5);
+            border-radius: 10px;
+            padding: 10px 12px;
+            margin-bottom: 10px;
+            font-size: 12px;
+            text-align: left;
+            color: #333;
+            line-height: 1.5;
+        }
+        .alerta-box.verde { background: rgba(37,211,102,0.15); border-color: rgba(37,211,102,0.5); }
+        .alerta-box.verde strong { color: #1b5e20; }
+        .alerta-box strong { color: #e65100; }
+        .instrucoes {
+            font-size: 11px;
+            color: #444;
+            margin-top: 12px;
+            text-align: left;
+            padding: 12px;
+            background: rgba(0,0,0,.04);
+            border-radius: 10px;
+            line-height: 1.6;
+        }
+        .instrucoes ol { margin: 6px 0 0; padding-left: 18px; }
+        .instrucoes li { margin-bottom: 4px; }
+        /* Botões de navegação */
+        .nav-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+            margin-top: 16px;
+        }
+        .nav-buttons a {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 16px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 12px;
+            text-decoration: none;
+            transition: transform .15s, box-shadow .15s;
+        }
+        .nav-buttons a:hover { transform: translateY(-1px); }
+        .nav-btn-packing {
+            background: linear-gradient(135deg, #25D366, #20bd5a);
+            color: #fff;
+            box-shadow: 0 4px 14px rgba(37,211,102,.35);
+        }
+        .nav-btn-packing:hover { box-shadow: 0 6px 20px rgba(37,211,102,.45); }
+        .nav-btn-axis {
+            background: linear-gradient(135deg, #F57C00, #e65100);
+            color: #fff;
+            box-shadow: 0 4px 14px rgba(245,124,0,.35);
+        }
+        .nav-btn-axis:hover { box-shadow: 0 6px 20px rgba(245,124,0,.45); }
+        .nav-btn-logout {
+            background: #fff;
+            color: #d32f2f;
+            border: 2px solid #ef5350;
+            box-shadow: 0 2px 8px rgba(211,47,47,.15);
+        }
+        .nav-btn-logout:hover { box-shadow: 0 4px 12px rgba(211,47,47,.25); }
+        /* Notificação em vidro (desconexão) */
+        .pm-notif-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .pm-notif-overlay.show { display: flex; }
+        .pm-notif-glass {
+            background: rgba(255,255,255,0.12);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255,255,255,0.25);
+            border-radius: 20px;
+            padding: 28px 32px;
+            max-width: 380px;
+            text-align: center;
+            box-shadow: 0 16px 48px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.15);
+        }
+        .pm-notif-glass h3 {
+            margin: 0 0 12px;
+            font-size: 18px;
+            color: #25D366;
+        }
+        .pm-notif-glass p {
+            margin: 0;
+            font-size: 14px;
+            line-height: 1.5;
+            color: rgba(255,255,255,0.9);
+        }
+        .pm-notif-glass .pm-notif-close {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 24px;
+            background: rgba(0,229,255,0.2);
+            border: 1px solid rgba(0,229,255,0.4);
+            border-radius: 12px;
+            color: #00e5ff;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+        }
+        .pm-notif-glass .pm-notif-close:hover {
+            background: rgba(0,229,255,0.3);
+        }
+    </style>
+</head>
+<body>
+    <div id="pmNotifOverlay" class="pm-notif-overlay" onclick="if(event.target===this)this.classList.remove('show')">
+        <div class="pm-notif-glass" onclick="event.stopPropagation()">
+            <h3><i class="fab fa-whatsapp" style="color:#25D366;"></i> Bot desconectado</h3>
+            <p id="pmNotifMsg">Escaneie o novo QR com um número DEDICADO (chip secundário ou linha da empresa).</p>
+            <button type="button" class="pm-notif-close" onclick="document.getElementById('pmNotifOverlay').classList.remove('show')">Entendi</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <h1><i class="fab fa-whatsapp" style="color:#25D366;"></i> AXIS INTEGRAÇÃO</h1>
+        <p class="sub">TROCA DE CABEÇA DE IMPRESSÃO (PACKING MACHINE)</p>
+
+        <div id="alertaBox" style="display:none;"></div>
+
+        <div class="qr-grid">
+            <div class="qr-section admin">
+                <h3><i class="fas fa-user-shield"></i> Administrador</h3>
+                <p class="qr-status" id="adminStatus">Conexão do bot (celular AXIS)</p>
+                <div class="qr-box" id="qrAdmin">
+                    <span class="qr-placeholder" id="qrAdminPlaceholder">Carregando...</span>
+                </div>
+            </div>
+            <div class="qr-section tecnicos">
+                <h3><i class="fas fa-tools"></i> Técnicos</h3>
+                <p class="qr-status" id="tecnicosStatus">Abrir chat no WhatsApp</p>
+                <div class="qr-box" id="qrTecnicos">
+                    <span class="qr-placeholder" id="qrTecnicosPlaceholder">Carregando...</span>
+                </div>
+            </div>
+        </div>
+
+        <p id="status" class="status">Aguardando...</p>
+        <div class="instrucoes" id="instrucoes"></div>
+
+        <div class="nav-buttons">
+            <a href="packing_machine.html" class="nav-btn-packing">Packing Machine</a>
+            <a href="../index.html" class="nav-btn-axis">AXIS</a>
+            <a href="#" id="pmBtnDesconectar" class="nav-btn-logout">Desconectar bot</a>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            try {
+                var login = localStorage.getItem('current_user_login');
+                var userData = login ? localStorage.getItem('db_' + login) : null;
+                var db = userData ? JSON.parse(userData) : null;
+                if (db && db.perfil === 'admin') document.body.classList.add('role-admin');
+                else document.body.classList.add('role-tecnico');
+            } catch (e) { document.body.classList.add('role-tecnico'); }
+
+            var qrAdmin = document.getElementById('qrAdmin');
+            var qrTecnicos = document.getElementById('qrTecnicos');
+            var adminPlaceholder = document.getElementById('qrAdminPlaceholder');
+            var tecnicosPlaceholder = document.getElementById('qrTecnicosPlaceholder');
+            var adminStatus = document.getElementById('adminStatus');
+            var tecnicosStatus = document.getElementById('tecnicosStatus');
+            var statusEl = document.getElementById('status');
+            var alertaBox = document.getElementById('alertaBox');
+            var instrucoes = document.getElementById('instrucoes');
+
+            function setQrBox(box, placeholderEl, qrDataUrl) {
+                var img = box.querySelector('img');
+                if (qrDataUrl) {
+                    placeholderEl.style.display = 'none';
+                    if (!img) { img = document.createElement('img'); img.alt = 'QR Code'; box.appendChild(img); }
+                    img.src = qrDataUrl;
+                    img.style.display = 'block';
+                } else {
+                    if (img) img.remove();
+                    placeholderEl.style.display = 'inline';
+                }
+            }
+
+            function updateUI(d) {
+                if (!d || !d.ok) {
+                    statusEl.textContent = 'Servidor offline. Execute npm start e recarregue.';
+                    statusEl.className = 'status err';
+                    adminPlaceholder.textContent = 'Servidor offline';
+                    tecnicosPlaceholder.textContent = 'Servidor offline';
+                    adminPlaceholder.style.display = tecnicosPlaceholder.style.display = 'inline';
+                    qrAdmin.querySelectorAll('img').forEach(function(el) { el.remove(); });
+                    qrTecnicos.querySelectorAll('img').forEach(function(el) { el.remove(); });
+                    alertaBox.style.display = 'none';
+                    return;
+                }
+
+                var conectado = d.connected;
+
+                if (conectado) {
+                    adminStatus.textContent = 'Bot conectado';
+                    adminStatus.className = 'qr-status ativo';
+                    adminPlaceholder.textContent = 'Bot conectado';
+                    setQrBox(qrAdmin, adminPlaceholder, null);
+                } else {
+                    adminStatus.textContent = 'Escaneie com o celular AXIS para conectar';
+                    adminStatus.className = 'qr-status';
+                    setQrBox(qrAdmin, adminPlaceholder, d.qr || null);
+                    if (d.qr) adminPlaceholder.style.display = 'none';
+                    else adminPlaceholder.textContent = 'Aguardando QR... Recarregue em 5s.';
+                }
+
+                if (d.waMeQr) {
+                    setQrBox(qrTecnicos, tecnicosPlaceholder, d.waMeQr);
+                    tecnicosPlaceholder.style.display = 'none';
+                    if (conectado) {
+                        tecnicosStatus.textContent = 'Bot ativo – escaneie para abrir o chat';
+                        tecnicosStatus.className = 'qr-status ativo';
+                    } else {
+                        tecnicosStatus.textContent = 'Abrir chat (conecte o bot para responder)';
+                        tecnicosStatus.className = 'qr-status';
+                    }
+                } else {
+                    tecnicosPlaceholder.textContent = 'Carregando...';
+                    tecnicosPlaceholder.style.display = 'inline';
+                    qrTecnicos.querySelectorAll('img').forEach(function(el) { el.remove(); });
+                    tecnicosStatus.className = 'qr-status';
+                }
+
+                if (conectado) {
+                    statusEl.textContent = 'Bot ativo';
+                    statusEl.className = 'status';
+                    alertaBox.className = 'alerta-box verde';
+                    function normalizaBR(n) {
+                        var dg = String(n || '').replace(/\D/g, '').replace(/^0+/, '');
+                        if (!dg.startsWith('55') && dg.length >= 10) dg = '55' + dg;
+                        if (dg.length === 13 && dg.startsWith('55') && dg.charAt(4) === '9') dg = dg.slice(0, 4) + dg.slice(5);
+                        return dg;
+                    }
+                    var numCon = normalizaBR(d.numeroConectado || d.botNumber);
+                    var numAxis = normalizaBR(d.axisBotNumber || '5548991578172');
+                    if (numCon && numAxis && numCon !== numAxis) {
+                        alertaBox.innerHTML = '<strong>⚠️ Número errado!</strong><br>Conectado: ' + (d.numeroConectadoFormatado || d.numeroConectado || d.botNumber) + '<br>AXIS: +55 48 99157-8172. Desconectar bot e escanear com celular AXIS.';
+                        alertaBox.className = 'alerta-box';
+                    } else {
+                        alertaBox.innerHTML = 'Bot conectado (+55 48 99157-8172).<br>QR ao lado: técnicos abrem o chat e enviam <strong>troca</strong>.';
+                    }
+                    alertaBox.style.display = 'block';
+                    if (document.body.classList.contains('role-tecnico')) {
+                        alertaBox.innerHTML = 'Escaneie o QR acima para abrir o chat.<br>Envie <strong>troca</strong> para registrar.';
+                        instrucoes.innerHTML = '<strong>Passos:</strong><ol><li>Escaneie o QR com a câmera</li><li>Toque em "Abrir link" ou "WhatsApp"</li><li>Envie <strong>troca</strong> para registrar</li></ol>';
+                    } else {
+                        instrucoes.innerHTML = 'Para reconectar:<br>Desconectar bot → Escanear o QR.';
+                    }
+                } else {
+                    statusEl.textContent = document.body.classList.contains('role-tecnico') ? 'Aguardando bot' : 'Conecte o bot (QR acima)';
+                    statusEl.className = 'status warn';
+                    alertaBox.className = 'alerta-box';
+                    if (document.body.classList.contains('role-tecnico')) {
+                        alertaBox.innerHTML = 'Bot offline.<br>Administrador precisa conectar primeiro.';
+                        instrucoes.innerHTML = 'Quando o bot estiver ativo:<br>Escaneie o QR e envie <strong>troca</strong>.';
+                    } else {
+                        alertaBox.innerHTML = '<strong>Administrador</strong><br>Escaneie o QR com o celular AXIS.<br>WhatsApp → Menu → Aparelhos conectados → Conectar aparelho.';
+                    instrucoes.innerHTML = '<strong>Passos:</strong><ol><li>Celular AXIS</li><li>WhatsApp → Aparelhos conectados → Conectar</li><li>Escanear o QR</li></ol>';
+                    }
+                    alertaBox.style.display = 'block';
+                }
+            }
+
+            function poll() {
+                var base = window.location.origin || (window.location.protocol + '//' + window.location.host);
+                fetch(base + '/api/whatsapp/status')
+                    .then(function(r) { return r.json(); })
+                    .then(updateUI)
+                    .catch(function() { updateUI({ ok: false }); });
+            }
+
+            poll();
+            setInterval(poll, 3000);
+
+            document.getElementById('pmBtnDesconectar').addEventListener('click', function(e) {
+                e.preventDefault();
+                var btn = this;
+                btn.style.pointerEvents = 'none';
+                var base = window.location.origin || (window.location.protocol + '//' + window.location.host);
+                fetch(base + '/api/whatsapp/logout', { method: 'POST' })
+                    .then(function(r) { return r.json(); })
+                    .then(function(d) {
+                        var overlay = document.getElementById('pmNotifOverlay');
+                        var msg = document.getElementById('pmNotifMsg');
+                        msg.textContent = (d && d.message) || 'Escaneie o novo QR com um número DEDICADO (chip secundário ou linha da empresa).';
+                        overlay.classList.add('show');
+                        poll();
+                    })
+                    .catch(function() {
+                        document.getElementById('pmNotifMsg').textContent = 'Erro ao desconectar. Tente novamente.';
+                        document.getElementById('pmNotifOverlay').classList.add('show');
+                    })
+                    .finally(function() { btn.style.pointerEvents = ''; });
+            });
+        })();
+    </script>
+</body>
+</html>

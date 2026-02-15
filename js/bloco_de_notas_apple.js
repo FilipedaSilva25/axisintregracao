@@ -1083,6 +1083,9 @@ function openNote(noteId) {
         var content = note.content && note.content.trim();
         var isEmpty = !content || content === '<p></p>' || content === '<p><br></p>' || content === '<p>Comece a escrever...</p>';
         richEditor.innerHTML = isEmpty ? (typeof EMPTY_EDITOR_HTML !== 'undefined' ? EMPTY_EDITOR_HTML : '<p><br></p>') : note.content;
+        sanitizeEditorTextColor(richEditor);
+        var isDark = document.body.getAttribute('data-theme') === 'dark';
+        richEditor.style.color = isDark ? '#f5f5f7' : '#1d1d1f';
         richEditor.contentEditable = 'true';
         updatePlaceholderVisibility();
     }
@@ -1268,6 +1271,36 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+// Corrige texto invisível: remove cores que deixam texto invisível no fundo atual
+function sanitizeEditorTextColor(editor) {
+    if (!editor) return;
+    var isDark = document.body.getAttribute('data-theme') === 'dark';
+    var invisibleColors;
+    if (isDark) {
+        invisibleColors = /^\s*(#000(000)?|#1d1d1f|#0d0d0f|#111|black|rgb\s*\(\s*0\s*,\s*0\s*,\s*0\s*\)|rgb\s*\(\s*29\s*,\s*29\s*,\s*31\s*\)|rgba\s*\(\s*0\s*,\s*0\s*,\s*0\s*[,)])\s*$/i;
+    } else {
+        invisibleColors = /^\s*(#fff(fff)?|#f5f5f7|#fafafa|#f0f0f0|#fefefe|white|rgb\s*\(\s*25[0-5]\s*,\s*25[0-5]\s*,\s*25[0-5]\s*\)|rgb\s*\(\s*24[5-9]\s*,\s*24[5-9]\s*,\s*24[5-9]\s*\)|rgba\s*\(\s*255\s*,\s*255\s*,\s*255\s*[,)])\s*$/i;
+    }
+    var el = editor.querySelectorAll('[style*="color"]');
+    el.forEach(function(node) {
+        var s = node.getAttribute('style') || '';
+        var m = s.match(/color\s*:\s*([^;]+)/i);
+        if (m && invisibleColors.test(m[1].trim())) {
+            var rest = s.replace(/\s*color\s*:\s*[^;]+;?\s*/gi, '').trim();
+            if (rest) node.setAttribute('style', rest); else node.removeAttribute('style');
+        }
+    });
+    el = editor.querySelectorAll('font[color]');
+    el.forEach(function(node) {
+        var c = (node.getAttribute('color') || '').trim().toLowerCase();
+        var bad = isDark ? ['black', '#000', '#000000', '#1d1d1f', '#0d0d0f'] : ['white', '#fff', '#ffffff', '#f5f5f7', 'rgb(255,255,255)', 'rgb(245,245,247)'];
+        if (bad.some(function(b) { return c === b || c === b.replace(/#/g, ''); })) {
+            node.removeAttribute('color');
+        }
+    });
+    editor.style.webkitTextFillColor = '';
 }
 
 // Aplicar cor do texto
@@ -3246,6 +3279,12 @@ function applyTheme(theme) {
             if (icon) icon.className = iconClass;
         }
     });
+    
+    var editor = document.getElementById('rich-editor');
+    if (editor) {
+        sanitizeEditorTextColor(editor);
+        editor.style.color = theme === 'dark' ? '#f5f5f7' : '#1d1d1f';
+    }
     
     saveData();
 }

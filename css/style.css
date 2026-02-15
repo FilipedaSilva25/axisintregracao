@@ -3224,6 +3224,7 @@ tr:hover .row-actions {
     background: var(--card-bg);
     display: flex;
     align-items: center;
+    gap: 0;
     overflow: hidden;
 }
 /* Prefixo 10.201. dentro do mesmo card do Ex: – uma só borda, sem caixa própria */
@@ -3248,7 +3249,7 @@ tr:hover .row-actions {
     flex-shrink: 0;
 }
 #cadastro-modal .form-grid-two-columns .ip-input-wrapper .serial-prefix {
-    padding-right: 6px;
+    padding-right: 0;
 }
 #cadastro-modal .form-grid-two-columns .serial-input-wrapper input {
     height: 100%;
@@ -3258,10 +3259,10 @@ tr:hover .row-actions {
     border: none;
     box-shadow: none;
 }
-/* Só o wrapper do IP tem borda; input sem borda e pouco espaço entre 10.201. e placeholder */
+/* 10.201. e 131.222 no mesmo fluxo – sem espaço entre prefixo e input */
 #cadastro-modal .form-grid-two-columns .ip-input-wrapper input {
     border: none !important;
-    padding-left: 6px;
+    padding-left: 0;
 }
 /* Setor, Bancada, Status: mesmo tamanho que os inputs */
 #cadastro-modal .form-grid-two-columns .form-column .input-group .setor-selector,
@@ -3303,6 +3304,15 @@ tr:hover .row-actions {
     width: 100%;
     min-width: 0;
     box-sizing: border-box;
+}
+
+/* Status: campo mais largo + BACKUP OPERACIONAL em uma linha */
+#cadastro-modal .setor-selector-status .setor-selector-trigger,
+#cadastro-modal .setor-selector-dropdown-status {
+    min-width: 200px;
+}
+#cadastro-modal .setor-selector-dropdown-status .setor-selector-option {
+    white-space: nowrap;
 }
 
 @media (max-width: 768px) {

@@ -99,10 +99,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const authScreen = document.getElementById('auth-screen');
     const mainContent = document.getElementById('main-content');
     
+    // Se a URL tiver #login (ex.: script abrir-site abre sempre na tela de login), força tela de login
+    const forceLogin = (window.location.hash || '').toLowerCase() === '#login' ||
+        (window.location.search || '').toLowerCase().indexOf('tela=login') !== -1;
+    if (forceLogin) {
+        try {
+            localStorage.removeItem('user_logged_in');
+            localStorage.removeItem('current_user');
+            localStorage.removeItem('current_user_login');
+            localStorage.removeItem('axis-current-page');
+        } catch (_) {}
+    }
+    
     // Verifica se há usuário logado no localStorage
     // Verifica tanto 'true' quanto 'True' (case insensitive)
-    const savedUser = localStorage.getItem('current_user');
-    const isLoggedInRaw = localStorage.getItem('user_logged_in');
+    const savedUser = forceLogin ? null : localStorage.getItem('current_user');
+    const isLoggedInRaw = forceLogin ? null : localStorage.getItem('user_logged_in');
     const isLoggedIn = isLoggedInRaw === 'true' || isLoggedInRaw === 'True' || isLoggedInRaw === 'TRUE' || isLoggedInRaw === true;
     
     // Verificação adicional: se há usuário salvo mas não há flag de login, assume que está logado
@@ -1594,7 +1606,7 @@ function initSetorSelectors() {
     initSetorSelector('cad-setor', 'cad-setor-trigger', 'cad-setor-dropdown', 'Selecione um setor');
     initSetorSelector('ucs-filtro-panel-modelo', 'ucs-filtro-panel-modelo-trigger', 'ucs-filtro-panel-modelo-dropdown', 'Todos');
     initSetorSelector('cad-bancada', 'cad-bancada-trigger', 'cad-bancada-dropdown', 'Selecione uma bancada');
-    initSetorSelector('cad-status', 'cad-status-trigger', 'cad-status-dropdown', 'EM USO');
+    initSetorSelector('cad-status', 'cad-status-trigger', 'cad-status-dropdown', 'Selecione um Status');
     initSetorSelector('edit-setor', 'edit-setor-trigger', 'edit-setor-dropdown', '—');
     initSetorSelector('edit-bancada', 'edit-bancada-trigger', 'edit-bancada-dropdown', '—');
     initSetorSelector('edit-status', 'edit-status-trigger', 'edit-status-dropdown', 'EM USO');
@@ -2369,21 +2381,18 @@ function exportarDados(formato) {
 }
 
 function exportarCSV(dados) {
-    const cabecalhos = ['Serial', 'Tag', 'Modelo', 'IP', 'MAC Rede', 'MAC Bluetooth', 'SELB', 'Patrimônio', 'Setor', 'Status', 'Última Checagem', 'Responsável'];
+    const cabecalhos = ['Serial Number', 'Modelo', 'Endereço de IP', 'MAC Rede', 'MAC Bluetooth', 'Selb', 'Patrimônio', 'Setor', 'Alocação'];
     
     const linhas = dados.map(eqp => [
-        `"${eqp.serial}"`,
-        `"${eqp.tag}"`,
-        `"${eqp.modelo}"`,
-        `"${eqp.ip}"`,
-        `"${eqp.macRede}"`,
-        `"${eqp.macBluetooth || 'N/A'}"`,
-        `"${eqp.selb}"`,
-        `"${eqp.patrimonio || 'N/A'}"`,
-        `"${formatarSetor(eqp.setor)}"`,
-        `"${(eqp.status && eqp.status !== 'online') ? eqp.status : 'EM USO'}"`,
-        `"${formatarDataBonita(eqp.ultimaChecagem)}"`,
-        `"${eqp.responsavel}"`
+        `"${eqp.serial || ''}"`,
+        `"${eqp.modelo || ''}"`,
+        `"${eqp.ip || ''}"`,
+        `"${eqp.macRede || ''}"`,
+        `"${eqp.macBluetooth || ''}"`,
+        `"${eqp.selb || ''}"`,
+        `"${eqp.patrimonio || ''}"`,
+        `"${formatarSetor(eqp.setor) || ''}"`,
+        `"${eqp.bancada || ''}"`
     ]);
     
     const csvContent = [cabecalhos.join(','), ...linhas.map(linha => linha.join(','))].join('\n');
@@ -2403,20 +2412,17 @@ function exportarCSV(dados) {
 }
 
 function exportarExcel(dados) {
-    const cabecalhos = ['Serial', 'Tag', 'Modelo', 'IP', 'MAC Rede', 'MAC Bluetooth', 'SELB', 'Patrimônio', 'Setor', 'Status', 'Última Checagem', 'Responsável'];
+    const cabecalhos = ['Serial Number', 'Modelo', 'Endereço de IP', 'MAC Rede', 'MAC Bluetooth', 'Selb', 'Patrimônio', 'Setor', 'Alocação'];
     const linhas = dados.map(eqp => [
         `"${(eqp.serial || '').replace(/"/g, '""')}"`,
-        `"${(eqp.tag || '').replace(/"/g, '""')}"`,
         `"${(eqp.modelo || '').replace(/"/g, '""')}"`,
         `"${(eqp.ip || '').replace(/"/g, '""')}"`,
         `"${(eqp.macRede || '').replace(/"/g, '""')}"`,
-        `"${(eqp.macBluetooth || 'N/A').replace(/"/g, '""')}"`,
+        `"${(eqp.macBluetooth || '').replace(/"/g, '""')}"`,
         `"${(eqp.selb || '').replace(/"/g, '""')}"`,
-        `"${(eqp.patrimonio || 'N/A').replace(/"/g, '""')}"`,
+        `"${(eqp.patrimonio || '').replace(/"/g, '""')}"`,
         `"${(formatarSetor(eqp.setor) || '').replace(/"/g, '""')}"`,
-        `"${(eqp.status || '').replace(/"/g, '""')}"`,
-        `"${(formatarDataBonita(eqp.ultimaChecagem) || '').replace(/"/g, '""')}"`,
-        `"${(eqp.responsavel || '').replace(/"/g, '""')}"`
+        `"${(eqp.bancada || '').replace(/"/g, '""')}"`
     ]);
     const csvContent = [cabecalhos.join(','), ...linhas.map(linha => linha.join(','))].join('\n');
     const BOM = '\uFEFF';
@@ -2442,18 +2448,17 @@ function exportarPDF(dados) {
             return;
         }
         const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
-        const cabecalhos = ['Serial', 'Tag', 'Modelo', 'IP', 'MAC Rede', 'SELB', 'Setor', 'Status', 'Última Checagem', 'Responsável'];
+        const cabecalhos = ['Serial Number', 'Modelo', 'Endereço de IP', 'MAC Rede', 'MAC Bluetooth', 'Selb', 'Patrimônio', 'Setor', 'Alocação'];
         const linhas = dados.map(eqp => [
             eqp.serial || '',
-            eqp.tag || '',
             eqp.modelo || '',
             eqp.ip || '',
             eqp.macRede || '',
+            eqp.macBluetooth || '',
             eqp.selb || '',
+            eqp.patrimonio || '',
             formatarSetor(eqp.setor) || '',
-            eqp.status || '',
-            formatarDataBonita(eqp.ultimaChecagem) || '',
-            eqp.responsavel || ''
+            eqp.bancada || ''
         ]);
         doc.setFontSize(14);
         doc.text('AXIS | INVENTÁRIO DE IMPRESSORAS', 14, 15);
@@ -2553,27 +2558,29 @@ function imprimirInventario() {
             <table>
                 <thead>
                     <tr>
-                        <th>Serial</th>
+                        <th>Serial Number</th>
                         <th>Modelo</th>
-                        <th>Tag</th>
-                        <th>IP</th>
+                        <th>Endereço de IP</th>
+                        <th>MAC Rede</th>
+                        <th>MAC Bluetooth</th>
+                        <th>Selb</th>
+                        <th>Patrimônio</th>
                         <th>Setor</th>
-                        <th>Status</th>
-                        <th>Última Checagem</th>
-                        <th>Responsável</th>
+                        <th>Alocação</th>
                     </tr>
                 </thead>
                 <tbody>
                     ${inventarioData.map(eqp => `
                         <tr>
-                            <td>${eqp.serial}</td>
-                            <td>${eqp.modelo}</td>
-                            <td>${eqp.tag}</td>
-                            <td>${eqp.ip}</td>
-                            <td>${formatarSetor(eqp.setor)}</td>
-                            <td class="status-${eqp.status}">${eqp.status}</td>
-                            <td>${formatarDataBonita(eqp.ultimaChecagem)}</td>
-                            <td>${eqp.responsavel}</td>
+                            <td>${eqp.serial || ''}</td>
+                            <td>${eqp.modelo || ''}</td>
+                            <td>${eqp.ip || ''}</td>
+                            <td>${eqp.macRede || ''}</td>
+                            <td>${eqp.macBluetooth || ''}</td>
+                            <td>${eqp.selb || ''}</td>
+                            <td>${eqp.patrimonio || ''}</td>
+                            <td>${formatarSetor(eqp.setor) || ''}</td>
+                            <td>${eqp.bancada || ''}</td>
                         </tr>
                     `).join('')}
                 </tbody>
@@ -2667,13 +2674,12 @@ function abrirCadastroRapido() {
     if (typeof clearSerialPrefixSuffix === 'function') clearSerialPrefixSuffix();
 
     if (typeof initSerialSugestoes === 'function') initSerialSugestoes();
-    if (typeof initIpMask === 'function') initIpMask();
     if (typeof initSelbMask === 'function') initSelbMask();
 
     // Bancada e Status já populados em populateBancadaDropdown/HTML; sincroniza triggers
     if (typeof syncSetorSelectorFromSelect === 'function') {
         syncSetorSelectorFromSelect('cad-bancada', 'cad-bancada-trigger', 'cad-bancada-dropdown', 'Selecione uma bancada');
-        syncSetorSelectorFromSelect('cad-status', 'cad-status-trigger', 'cad-status-dropdown', 'EM USO');
+        syncSetorSelectorFromSelect('cad-status', 'cad-status-trigger', 'cad-status-dropdown', 'Selecione um Status');
     }
     
     // Foca no primeiro campo (serial)
@@ -2755,10 +2761,8 @@ function abrirCadastroParaEditar(tag) {
         suffixInput.value = serialSuffix;
     }
 
-    const ipFull = eq.ip || '';
-    const ipSuffix = ipFull.startsWith('10.201.') ? ipFull.slice(7) : ipFull.replace(/^\d{1,3}\.\d{1,3}\./, '');
     const ipInput = document.getElementById('cad-ip');
-    if (ipInput) ipInput.value = ipSuffix;
+    if (ipInput) ipInput.value = eq.ip || '';
 
     const macRede = document.getElementById('cad-mac-rede');
     if (macRede) macRede.value = eq.macRede || '';
@@ -2787,14 +2791,13 @@ function abrirCadastroParaEditar(tag) {
 
     if (typeof syncSetorSelectorFromSelect === 'function') {
         syncSetorSelectorFromSelect('cad-bancada', 'cad-bancada-trigger', 'cad-bancada-dropdown', 'Selecione uma bancada');
-        syncSetorSelectorFromSelect('cad-status', 'cad-status-trigger', 'cad-status-dropdown', 'EM USO');
+        syncSetorSelectorFromSelect('cad-status', 'cad-status-trigger', 'cad-status-dropdown', 'Selecione um Status');
     }
 
     const obsEl = document.getElementById('cad-observacoes');
     if (obsEl) obsEl.value = eq.observacoes || '';
 
     if (typeof initSerialSugestoes === 'function') initSerialSugestoes();
-    if (typeof initIpMask === 'function') initIpMask();
     if (typeof initSelbMask === 'function') initSelbMask();
 
     const serialInput = document.getElementById('cad-serial');
@@ -2931,32 +2934,10 @@ function initSerialSugestoes() {
     }
 }
 
-var IP_PREFIXO = '10.201.';
-
 function getIpCompleto() {
     var el = document.getElementById('cad-ip');
-    if (!el) return IP_PREFIXO;
-    var s = (el.value || '').trim();
-    return IP_PREFIXO + s;
-}
-
-function formatarIpSuffix(val) {
-    var d = (val || '').replace(/\D/g, '').slice(0, 6);
-    if (d.length <= 3) return d;
-    return d.slice(0, 3) + '.' + d.slice(3);
-}
-
-function initIpMask() {
-    var el = document.getElementById('cad-ip');
-    if (!el) return;
-    function onIpInput() {
-        var v = formatarIpSuffix(el.value);
-        if (v !== el.value) {
-            el.value = v;
-        }
-    }
-    el.removeEventListener('input', onIpInput);
-    el.addEventListener('input', onIpInput);
+    if (!el) return '';
+    return (el.value || '').trim();
 }
 
 function initSelbMask() {
@@ -3045,7 +3026,7 @@ function proximoPassoCadastro() {
         const macRede = macRedeInput.value.trim();
         const setor = setorSelect.value;
         
-        if (!ip || ip === IP_PREFIXO || !macRede || !setor) {
+        if (!ip || !macRede || !setor) {
             return;
         }
         

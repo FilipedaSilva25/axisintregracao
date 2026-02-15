@@ -7,7 +7,7 @@
 $ErrorActionPreference = "Stop"
 $projectRoot = $PSScriptRoot
 $port = 3006
-$url = "http://localhost:$port"
+$url = "http://localhost:${port}/#login"
 $maxWaitSeconds = 15
 $checkIntervalMs = 500
 
@@ -62,9 +62,10 @@ Write-Host "[3/4] Aguardando servidor responder..." -ForegroundColor Cyan
 $elapsed = 0
 $ready = $false
 
+$urlCheck = "http://localhost:${port}"
 while ($elapsed -lt ($maxWaitSeconds * 1000)) {
     try {
-        $request = [System.Net.WebRequest]::Create($url)
+        $request = [System.Net.WebRequest]::Create($urlCheck)
         $request.Timeout = 2000
         $request.Method = "GET"
         $response = $request.GetResponse()
@@ -100,10 +101,9 @@ $chrome = $chromePaths | Where-Object { Test-Path $_ } | Select-Object -First 1
 
 if ($chrome) {
     Start-Process -FilePath $chrome -ArgumentList $url
-    Write-Host "      Chrome aberto em $url" -ForegroundColor Green
+    Write-Host "      Chrome aberto em $url (porta $port)" -ForegroundColor Green
 } else {
-    Write-Host "      Chrome nao encontrado. Abrindo navegador padrao..." -ForegroundColor Yellow
-    Start-Process $url
+    Write-Host "      Chrome nao encontrado. Abra manualmente: $url" -ForegroundColor Yellow
 }
 
 # -----------------------------------------------------------------------------

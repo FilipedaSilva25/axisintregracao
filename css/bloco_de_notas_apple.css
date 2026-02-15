@@ -2379,11 +2379,23 @@ body {
     min-height: 100vh;
     font-size: 16px;
     line-height: 1.6;
-    color: #1d1d1f;
+    color: #1d1d1f !important;
     outline: none;
     padding: 32px 48px 120px;
     background: #ffffff;
     font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'SF Pro Text', sans-serif;
+}
+
+/* Forçar texto visível no modo claro (evita texto branco invisível) */
+body:not([data-theme="dark"]) .rich-editor,
+body:not([data-theme="dark"]) .rich-editor p,
+body:not([data-theme="dark"]) .rich-editor span,
+body:not([data-theme="dark"]) .rich-editor div,
+body:not([data-theme="dark"]) .rich-editor li,
+body:not([data-theme="dark"]) .rich-editor td,
+body:not([data-theme="dark"]) .rich-editor th,
+body:not([data-theme="dark"]) .rich-editor font {
+    color: #1d1d1f !important;
 }
 
 .rich-editor:focus {
@@ -2489,7 +2501,8 @@ body {
     align-items: center;
     background: #ffffff;
     font-size: 13px;
-    color: var(--apple-text-secondary);
+    color: #4a4a4e;
+    font-weight: 500;
 }
 
 .editor-info {
@@ -2500,7 +2513,7 @@ body {
 
 .editor-info .footer-sep {
     margin: 0 6px;
-    color: var(--apple-text-secondary);
+    color: #6e6e73;
     user-select: none;
 }
 
@@ -3059,6 +3072,8 @@ body[data-theme="light"] {
 body[data-theme="dark"] {
     background: linear-gradient(135deg, #1d1d1f 0%, #0d0d0f 100%);
     color: #f5f5f7;
+    --apple-glass: rgba(29, 29, 31, 0.95);
+    --apple-glass-border: rgba(255, 255, 255, 0.08);
 }
 
 /* Tema escuro – toda a página */
@@ -3250,17 +3265,43 @@ body[data-theme="dark"] .empty-editor-state h2 {
     color: #f5f5f7;
 }
 body[data-theme="dark"] .editor-content,
+body[data-theme="dark"] .editor-writing-area,
 body[data-theme="dark"] .rich-editor {
     background: #1d1d1f !important;
-    color: #f5f5f7;
+    color: #f5f5f7 !important;
+}
+
+body[data-theme="dark"] .rich-editor p,
+body[data-theme="dark"] .rich-editor span,
+body[data-theme="dark"] .rich-editor div,
+body[data-theme="dark"] .rich-editor li,
+body[data-theme="dark"] .rich-editor td,
+body[data-theme="dark"] .rich-editor th,
+body[data-theme="dark"] .rich-editor font {
+    color: #f5f5f7 !important;
 }
 body[data-theme="dark"] .rich-editor .img-figcaption {
     color: rgba(255, 255, 255, 0.7);
 }
+body[data-theme="dark"] .rich-editor-placeholder {
+    color: rgba(255, 255, 255, 0.65);
+}
+body[data-theme="dark"] .markdown-preview {
+    background: #1d1d1f !important;
+    color: #f5f5f7;
+}
+body[data-theme="dark"] .markdown-preview code,
+body[data-theme="dark"] .markdown-preview pre {
+    background: rgba(255, 255, 255, 0.08);
+}
 body[data-theme="dark"] .editor-footer {
     background: #1d1d1f;
     border-top-color: rgba(255, 255, 255, 0.08);
-    color: rgba(255, 255, 255, 0.7);
+    color: rgba(255, 255, 255, 0.85);
+}
+
+body[data-theme="dark"] .editor-info .footer-sep {
+    color: rgba(255, 255, 255, 0.5);
 }
 body[data-theme="dark"] .google-docs-toolbar {
     background: rgba(29, 29, 31, 0.95);

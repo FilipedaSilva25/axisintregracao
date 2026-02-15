@@ -36,3 +36,6 @@ backups/
 
 # Repo aninhado (backup-hoje copia o conteúdo)
 mylife-os/
+
+# Bot WhatsApp – sessão local (não versionar)
+config/data/whatsapp-auth/

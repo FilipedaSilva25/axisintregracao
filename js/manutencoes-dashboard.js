@@ -4,6 +4,7 @@
    ============================================ */
 
 const BIBLIOTECA_KEY = 'axis_manutencoes_biblioteca';
+const FAVORITOS_KEY = 'axis_manutencoes_favoritos';
 const MESES_NOMES = {
     '01': 'Janeiro', '02': 'Fevereiro', '03': 'Março', '04': 'Abril',
     '05': 'Maio', '06': 'Junho', '07': 'Julho', '08': 'Agosto',
@@ -74,10 +75,14 @@ let anoSelecionado = null;
 let mesSelecionado = null;
 let isListView = false;
 let previewTimeout = null;
-let ordenarPor = 'data';
+let ordenarPor = 'data-desc';
 let confirmCallback = null;
 let anosSortOrder = 'recente';
 let anosSearch = '';
+let chartAnosInstance = null;
+let chartMesesInstance = null;
+let chartSetorInstance = null;
+let chartTecnicoInstance = null;
 
 function getBiblioteca() {
     try {
@@ -93,6 +98,43 @@ function setBiblioteca(data) {
         localStorage.setItem(BIBLIOTECA_KEY, JSON.stringify(data));
         return true;
     } catch (_) { return false; }
+}
+
+function getFavoritos() {
+    try {
+        const raw = localStorage.getItem(FAVORITOS_KEY);
+        const arr = raw ? JSON.parse(raw) : [];
+        return new Set(Array.isArray(arr) ? arr : []);
+    } catch (_) { return new Set(); }
+}
+
+function setFavoritos(set) {
+    try {
+        localStorage.setItem(FAVORITOS_KEY, JSON.stringify([...set]));
+        return true;
+    } catch (_) { return false; }
+}
+
+function toggleFavorito(id, ano, mes) {
+    const key = `${id}-${ano}-${mes}`;
+    const fav = getFavoritos();
+    if (fav.has(key)) fav.delete(key);
+    else fav.add(key);
+    setFavoritos(fav);
+    refiltrar();
+}
+
+function isFavorito(id, ano, mes) {
+    return getFavoritos().has(`${id}-${ano}-${mes}`);
+}
+
+function proximoIdBiblioteca(bib) {
+    let max = 0;
+    todosRegistros(bib).forEach(m => {
+        const n = Number(m.id);
+        if (!isNaN(n) && n > max) max = n;
+    });
+    return max + 1;
 }
 
 function todosRegistros(bib) {
@@ -121,6 +163,178 @@ function atualizarStats() {
     }
     if (elAno) elAno.textContent = noAno;
     if (elMes) elMes.textContent = noMes;
+    atualizarGraficos();
+}
+
+function atualizarGraficos() {
+    if (typeof Chart === 'undefined') return;
+    const bib = getBiblioteca();
+    const anos = Object.keys(bib || {}).filter(a => a).sort((a, b) => Number(b) - Number(a));
+    const totaisAnos = anos.map(a => Object.values(bib[a] || {}).reduce((s, arr) => s + (Array.isArray(arr) ? arr.length : 0), 0));
+
+    const ctxAnos = document.getElementById('chart-anos');
+    if (ctxAnos) {
+        if (chartAnosInstance) chartAnosInstance.destroy();
+        chartAnosInstance = new Chart(ctxAnos, {
+            type: 'bar',
+            data: {
+                labels: anos.length ? anos : ['Nenhum ano'],
+                datasets: [{
+                    label: 'Manutenções',
+                    data: anos.length ? totaisAnos : [0],
+                    backgroundColor: anos.length ? ['#28a745', '#007aff', '#fd7e14', '#5856d6', '#32ade6'] : 'rgba(0,0,0,0.1)',
+                    borderColor: ['#1e7e34', '#0066cc', '#e56b00', '#4840b8', '#2596be'],
+                    borderWidth: 2,
+                    borderRadius: 10,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.06)' }, ticks: { color: '#6e6e73', font: { size: 11 } } },
+                    x: { grid: { display: false }, ticks: { color: '#6e6e73', font: { size: 11 } } }
+                }
+            }
+        });
+    }
+
+    const ctxMeses = document.getElementById('chart-meses');
+    const wrapMeses = document.getElementById('chart-meses-wrap');
+    const titleMeses = document.getElementById('chart-meses-title');
+    if (ctxMeses && wrapMeses) {
+        if (anoSelecionado) {
+            if (titleMeses) titleMeses.textContent = 'Manutenções por mês · ' + anoSelecionado;
+            wrapMeses.style.display = 'block';
+            const meses = bib[anoSelecionado] || {};
+            const labels = MESES_ORDEM.map(m => MESES_NOMES[m].slice(0, 3));
+            const data = MESES_ORDEM.map(m => (Array.isArray(meses[m]) ? meses[m].length : 0));
+            if (chartMesesInstance) chartMesesInstance.destroy();
+            chartMesesInstance = new Chart(ctxMeses, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Manutenções',
+                        data: data,
+                        backgroundColor: data.map((v, i) => v > 0 ? ['#28a745', '#2ecc71', '#32ade6', '#007aff', '#fd7e14', '#ff9f43', '#5856d6', '#28a745', '#2ecc71', '#32ade6', '#007aff', '#fd7e14'][i] : 'rgba(0,0,0,0.06)'),
+                        borderColor: data.map((v) => v > 0 ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.08)'),
+                        borderWidth: 2,
+                        borderRadius: 8,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.06)' }, ticks: { color: '#6e6e73', font: { size: 10 } } },
+                        x: { grid: { display: false }, ticks: { color: '#6e6e73', font: { size: 10 } } }
+                    }
+                }
+            });
+        } else {
+            if (titleMeses) titleMeses.textContent = 'Manutenções por mês';
+            wrapMeses.style.display = 'block';
+            if (chartMesesInstance) {
+                chartMesesInstance.destroy();
+                chartMesesInstance = null;
+            }
+            if (ctxMeses) {
+                chartMesesInstance = new Chart(ctxMeses, {
+                    type: 'bar',
+                    data: {
+                        labels: MESES_ORDEM.map(m => MESES_NOMES[m].slice(0, 3)),
+                        datasets: [{ label: 'Manutenções', data: MESES_ORDEM.map(() => 0), backgroundColor: 'rgba(0,0,0,0.05)', borderColor: 'rgba(0,0,0,0.08)', borderWidth: 1, borderRadius: 6 }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: { y: { beginAtZero: true }, x: { grid: { display: false } } }
+                    }
+                });
+            }
+        }
+    }
+
+    /* Gráfico: Distribuição por setor (pizza) */
+    const ctxSetor = document.getElementById('chart-setor');
+    const wrapSetor = document.getElementById('chart-setor-wrap');
+    if (ctxSetor && wrapSetor) {
+        const todos = todosRegistros(bib);
+        const bySetor = {};
+        todos.forEach(m => {
+            const s = (m.setor || 'Sem setor').trim();
+            bySetor[s] = (bySetor[s] || 0) + 1;
+        });
+        const setorLabels = Object.keys(bySetor).sort((a, b) => bySetor[b] - bySetor[a]);
+        const setorData = setorLabels.map(s => bySetor[s]);
+        const coresSetor = ['#28a745', '#007aff', '#fd7e14', '#5856d6', '#32ade6', '#2ecc71', '#ff9f43', '#e056fd'];
+        if (chartSetorInstance) chartSetorInstance.destroy();
+        chartSetorInstance = new Chart(ctxSetor, {
+            type: 'doughnut',
+            data: {
+                labels: setorLabels.length ? setorLabels : ['Sem dados'],
+                datasets: [{
+                    data: setorData.length ? setorData : [1],
+                    backgroundColor: setorLabels.map((_, i) => coresSetor[i % coresSetor.length]),
+                    borderColor: '#fff',
+                    borderWidth: 2,
+                    hoverOffset: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { color: '#6e6e73', font: { size: 11 }, padding: 12 } }
+                },
+                cutout: '55%'
+            }
+        });
+    }
+
+    /* Gráfico: Manutenções por técnico (barras horizontais) */
+    const ctxTec = document.getElementById('chart-tecnico');
+    const wrapTec = document.getElementById('chart-tecnico-wrap');
+    if (ctxTec && wrapTec) {
+        const todos = todosRegistros(bib);
+        const byTecnico = {};
+        todos.forEach(m => {
+            const t = (m.tecnico || 'Sem técnico').trim();
+            byTecnico[t] = (byTecnico[t] || 0) + 1;
+        });
+        const tecEntries = Object.entries(byTecnico).sort((a, b) => b[1] - a[1]).slice(0, 8);
+        const tecLabels = tecEntries.map(([k]) => k);
+        const tecData = tecEntries.map(([, v]) => v);
+        if (chartTecnicoInstance) chartTecnicoInstance.destroy();
+        chartTecnicoInstance = new Chart(ctxTec, {
+            type: 'bar',
+            data: {
+                labels: tecLabels.length ? tecLabels : ['—'],
+                datasets: [{
+                    label: 'Manutenções',
+                    data: tecData.length ? tecData : [0],
+                    backgroundColor: tecData.map((_, i) => ['#28a745', '#2ecc71', '#32ade6', '#007aff', '#fd7e14', '#ff9f43', '#5856d6', '#e056fd'][i % 8]),
+                    borderColor: tecData.map((_, i) => ['#1e7e34', '#27ae60', '#2596be', '#0066cc', '#e56b00', '#e67e22', '#4840b8', '#c0392b'][i % 8]),
+                    borderWidth: 2,
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.06)' }, ticks: { color: '#6e6e73', font: { size: 10 } } },
+                    y: { grid: { display: false }, ticks: { color: '#6e6e73', font: { size: 10 }, maxRotation: 0 } }
+                }
+            }
+        });
+    }
 }
 
 function formatarData(s) {
@@ -132,12 +346,18 @@ function formatarData(s) {
 
 function toggleViewMode() {
     isListView = !isListView;
-    const g = document.getElementById('view-mode-icon-grid');
-    const l = document.getElementById('view-mode-icon-list');
-    const sortWrap = document.getElementById('filter-sort-wrap');
-    if (g) g.style.display = isListView ? 'none' : '';
-    if (l) l.style.display = isListView ? '' : 'none';
-    if (sortWrap) sortWrap.style.display = isListView && mesSelecionado ? 'flex' : 'none';
+    if (anoSelecionado && mesSelecionado) {
+        const manuts = (getBiblioteca()[anoSelecionado] || {})[mesSelecionado.numero] || [];
+        aplicarBuscaEFiltro(manuts);
+    }
+}
+
+function toggleViewModeTo(modo) {
+    isListView = (modo === 'tabela');
+    const btnCards = document.getElementById('btn-view-cards');
+    const btnTabela = document.getElementById('btn-view-tabela');
+    if (btnCards) btnCards.classList.toggle('active', !isListView);
+    if (btnTabela) btnTabela.classList.toggle('active', isListView);
     if (anoSelecionado && mesSelecionado) {
         const manuts = (getBiblioteca()[anoSelecionado] || {})[mesSelecionado.numero] || [];
         aplicarBuscaEFiltro(manuts);
@@ -146,30 +366,55 @@ function toggleViewMode() {
 
 function _norm(s) { return (s || '').trim().toLowerCase(); }
 
+function aplicarFiltroPeriodo(lista) {
+    const periodo = (document.getElementById('filter-periodo')?.value || 'todos').trim();
+    if (!periodo || periodo === 'todos') return lista;
+    const now = new Date();
+    const hoje = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    return lista.filter(m => {
+        if (!m.data) return false;
+        const d = new Date(String(m.data).slice(0, 10) + 'T12:00:00').getTime();
+        if (periodo === '7') {
+            const lim = hoje - 7 * 24 * 60 * 60 * 1000;
+            return d >= lim;
+        }
+        if (periodo === '30') {
+            const lim = hoje - 30 * 24 * 60 * 60 * 1000;
+            return d >= lim;
+        }
+        if (periodo === 'ano') {
+            const inicioAno = new Date(now.getFullYear(), 0, 1).getTime();
+            return d >= inicioAno;
+        }
+        return true;
+    });
+}
+
 function aplicarBuscaEFiltro(manutencoes) {
     const q = (document.getElementById('mp-busca')?.value || '').trim().toLowerCase();
     const setor = (document.getElementById('filter-setor')?.value || '').trim();
     const modelo = (document.getElementById('filter-modelo')?.value || '').trim();
+    const agrupar = (document.getElementById('filter-agrupar')?.value || '').trim();
     let list = (manutencoes || []).slice();
     if (q) {
         list = list.filter(m => {
-            const s = [m.serial, m.modelo, m.setor, m.tecnico, m.arquivo].filter(Boolean).join(' ').toLowerCase();
+            const s = [m.serial, m.modelo, m.setor, m.tecnico, m.arquivo, (m._ano || ''), (m._mes || '')].filter(Boolean).join(' ').toLowerCase();
             return s.includes(q);
         });
     }
     if (setor) list = list.filter(m => _norm(m.setor) === _norm(setor));
     if (modelo) list = list.filter(m => _norm(m.modelo) === _norm(modelo));
-    const ord = (document.getElementById('filter-ordem')?.value || ordenarPor) || 'data';
+    list = aplicarFiltroPeriodo(list);
+    const ord = (document.getElementById('filter-ordem')?.value || ordenarPor) || 'data-desc';
+    const [campo, dir] = ord.includes('-') ? ord.split('-') : [ord, 'asc'];
     list.sort((a, b) => {
-        let va = (a[ord] || '').toString().toLowerCase();
-        let vb = (b[ord] || '').toString().toLowerCase();
-        if (ord === 'data') {
-            va = a.data || '';
-            vb = b.data || '';
-        }
-        return va < vb ? -1 : va > vb ? 1 : 0;
+        let va = (campo === 'data' ? (a.data || '') : (a[campo] || '').toString().toLowerCase());
+        let vb = (campo === 'data' ? (b.data || '') : (b[campo] || '').toString().toLowerCase());
+        const cmp = va < vb ? -1 : va > vb ? 1 : 0;
+        return dir === 'desc' ? -cmp : cmp;
     });
-    if (isListView) renderizarLista(list); else renderizarGrid(list);
+    atualizarStatsHistorico(list);
+    if (isListView) renderizarLista(list); else renderizarGrid(list, agrupar);
 }
 
 function esc(s) {
@@ -177,7 +422,34 @@ function esc(s) {
     return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
-function renderizarGrid(manutencoes) {
+function cardManutencaoHtml(m, ano, mes) {
+    const id = m.id != null ? String(m.id) : '';
+    const mesNome = (mesSelecionado?.nome ? mesSelecionado.nome : (MESES_NOMES[mes] || '')).slice(0, 3);
+    const favorito = isFavorito(id, ano, mes);
+    return `
+    <div class="mp-manut-card" data-id="${esc(id)}" data-ano="${esc(ano)}" data-mes="${esc(mes)}">
+        <div class="mp-manut-header">
+            <span class="mp-manut-title">${esc(m.modelo)} – ${esc(m.serial)}</span>
+            <div class="mp-manut-header-right">
+                <button class="mp-btn-fav" type="button" onclick="event.stopPropagation(); toggleFavorito('${esc(id)}','${esc(ano)}','${esc(mes)}')" title="${favorito ? 'Remover dos favoritos' : 'Marcar favorita'}"><i class="fas fa-star${favorito ? '' : '-o'}"></i></button>
+                <span class="mp-manut-date">${formatarData(m.data)}</span>
+            </div>
+        </div>
+        <div class="mp-manut-tags">
+            <span class="mp-tag mp-tag-setor"><i class="fas fa-building"></i> ${esc(m.setor) || '-'}</span>
+            <span class="mp-tag mp-tag-tecnico"><i class="fas fa-user"></i> ${esc(m.tecnico) || '-'}</span>
+            <span class="mp-tag mp-tag-mes"><i class="fas fa-calendar"></i> ${mesNome}</span>
+        </div>
+        <div class="mp-manut-actions">
+            <button class="mp-btn-action" type="button" onclick="event.stopPropagation(); mostrarPreview(this.closest('.mp-manut-card'))"><i class="fas fa-eye"></i> Ver</button>
+            <button class="mp-btn-action" type="button" onclick="event.stopPropagation(); baixarManutencao(this.closest('.mp-manut-card'))"><i class="fas fa-download"></i> Baixar</button>
+            <button class="mp-btn-action mp-btn-clone" type="button" onclick="event.stopPropagation(); clonarManutencao(this.closest('.mp-manut-card'))" title="Clonar manutenção"><i class="fas fa-copy"></i> Clonar</button>
+            <button class="mp-btn-action mp-btn-delete" type="button" data-id="${esc(id)}" data-ano="${esc(ano)}" data-mes="${esc(mes)}" onclick="event.stopPropagation(); confirmarExcluir(this)" title="Excluir"><i class="fas fa-trash-alt"></i></button>
+        </div>
+    </div>`;
+}
+
+function renderizarGrid(manutencoes, agruparPor) {
     const grid = document.getElementById('manutencoes-grid');
     if (!grid) return;
     if (!manutencoes || !manutencoes.length) {
@@ -185,29 +457,29 @@ function renderizarGrid(manutencoes) {
             <div class="mp-empty" style="grid-column:1/-1;">
                 <i class="fas fa-clipboard-list"></i>
                 <h3>Nenhuma manutenção</h3>
-                <p>Não há registros para este período.</p>
+                <p>Não há registros para este período. Tente alterar os filtros.</p>
             </div>`;
         return;
     }
     const ano = anoSelecionado || '';
     const mes = mesSelecionado?.numero || '';
-    grid.innerHTML = manutencoes.map((m) => {
-        const id = m.id != null ? String(m.id) : '';
-        return `
-        <div class="mp-manut-card" data-id="${esc(id)}" data-ano="${esc(ano)}" data-mes="${esc(mes)}">
-            <div class="mp-manut-header">
-                <span class="mp-manut-title">${esc(m.modelo)} – ${esc(m.serial)}</span>
-                <span class="mp-manut-date">${formatarData(m.data)}</span>
-            </div>
-            <div class="mp-manut-info"><i class="fas fa-user"></i> ${esc(m.tecnico) || '-'}</div>
-            <div class="mp-manut-info"><i class="fas fa-building"></i> ${esc(m.setor) || '-'}</div>
-            <div class="mp-manut-actions">
-                <button class="mp-btn-action" type="button" onclick="event.stopPropagation(); mostrarPreview(this.closest('.mp-manut-card'))"><i class="fas fa-eye"></i> Ver</button>
-                <button class="mp-btn-action" type="button" onclick="event.stopPropagation(); baixarManutencao(this.closest('.mp-manut-card'))"><i class="fas fa-download"></i> Baixar</button>
-                <button class="mp-btn-action mp-btn-delete" type="button" data-id="${esc(id)}" data-ano="${esc(ano)}" data-mes="${esc(mes)}" onclick="event.stopPropagation(); confirmarExcluir(this)" title="Excluir"><i class="fas fa-trash-alt"></i></button>
-            </div>
-        </div>`;
-    }).join('');
+    if (!agruparPor) {
+        grid.innerHTML = manutencoes.map(m => cardManutencaoHtml(m, ano, mes)).join('');
+        return;
+    }
+    const grupos = {};
+    manutencoes.forEach(m => {
+        const key = _norm(m[agruparPor] || 'Sem ' + agruparPor) || '—';
+        if (!grupos[key]) grupos[key] = [];
+        grupos[key].push(m);
+    });
+    const labels = { setor: 'Setor', tecnico: 'Técnico', modelo: 'Modelo' };
+    grid.innerHTML = Object.entries(grupos).map(([chave, itens]) => `
+        <div class="mp-grupo-wrap">
+            <h4 class="mp-grupo-title">${labels[agruparPor] || agruparPor}: ${esc(itens[0]?.[agruparPor] || chave)} <span class="mp-grupo-count">(${itens.length})</span></h4>
+            <div class="mp-grupo-cards">${itens.map(m => cardManutencaoHtml(m, ano, mes)).join('')}</div>
+        </div>
+    `).join('');
 }
 
 function renderizarLista(manutencoes) {
@@ -218,8 +490,10 @@ function renderizarLista(manutencoes) {
     const mes = mesSelecionado?.numero || '';
     tbody.innerHTML = list.map(m => {
         const id = m.id != null ? String(m.id) : '';
+        const fav = isFavorito(id, ano, mes);
         return `
         <tr data-id="${esc(id)}" data-ano="${esc(ano)}" data-mes="${esc(mes)}">
+            <td><button class="mp-btn-fav mp-btn-fav-inline" type="button" onclick="event.stopPropagation(); toggleFavorito('${esc(id)}','${esc(ano)}','${esc(mes)}')" title="${fav ? 'Remover favorito' : 'Marcar favorita'}"><i class="fas fa-star${fav ? '' : '-o'}"></i></button></td>
             <td>${formatarData(m.data)}</td>
             <td><strong>${esc(m.serial) || '-'}</strong></td>
             <td>${esc(m.modelo) || '-'}</td>
@@ -228,6 +502,7 @@ function renderizarLista(manutencoes) {
             <td class="mp-cell-actions">
                 <button class="mp-btn-action" type="button" onclick="event.stopPropagation(); mostrarPreview(this.closest('tr'))"><i class="fas fa-eye"></i></button>
                 <button class="mp-btn-action" type="button" onclick="event.stopPropagation(); baixarManutencao(this.closest('tr'))"><i class="fas fa-download"></i></button>
+                <button class="mp-btn-action mp-btn-clone" type="button" onclick="event.stopPropagation(); clonarManutencao(this.closest('tr'))" title="Clonar"><i class="fas fa-copy"></i></button>
                 <button class="mp-btn-action mp-btn-delete" type="button" data-id="${esc(id)}" data-ano="${esc(ano)}" data-mes="${esc(mes)}" onclick="event.stopPropagation(); confirmarExcluir(this)" title="Excluir"><i class="fas fa-trash-alt"></i></button>
             </td>
         </tr>`;
@@ -306,27 +581,277 @@ function abrirManutencao(arquivo) {
 function baixarManutencao(cardOrRow) {
     var m = getManutencaoFromCard(cardOrRow);
     if (!m) return;
-    if (typeof html2pdf === 'undefined') {
+    if (typeof window.jspdf === 'undefined' || !window.jspdf.jsPDF) {
         alert('Biblioteca de PDF não carregada. Recarregue a página.');
         return;
     }
-    var container = document.createElement('div');
-    container.id = 'mp-pdf-temp';
-    container.style.cssText = 'position:absolute;left:-9999px;top:0;width:800px;padding:24px;font-family:Inter,sans-serif;font-size:12px;color:#1d1d1f;background:#fff;';
-    container.innerHTML = buildPdfHtml(m);
-    document.body.appendChild(container);
-    var opt = {
-        margin: 15,
-        filename: (m.arquivo || 'AXIS_Manutencao_' + (m.serial || '') + '_' + formatarData(m.data).replace(/\//g, '-') + '.pdf'),
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, logging: false },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    };
-    html2pdf().set(opt).from(container).save().then(function() {
-        document.body.removeChild(container);
-    }).catch(function() {
-        if (container.parentNode) document.body.removeChild(container);
+    try {
+        var blob = gerarPDFManutencaoFromData(m);
+        if (!blob) throw new Error('PDF não gerado');
+        var nome = m.arquivo || 'AXIS_Manutencao_' + (m.serial || '') + '_' + (formatarData(m.data) || '').replace(/\//g, '-') + '.pdf';
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = nome;
+        a.click();
+        URL.revokeObjectURL(url);
+    } catch (e) {
+        console.error(e);
+        alert('Erro ao gerar PDF. Tente novamente.');
+    }
+}
+
+function gerarPDFManutencaoFromData(m) {
+    var doc = new window.jspdf.jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    var pageW = doc.internal.pageSize.width;
+    var pageH = doc.internal.pageSize.height;
+    var margin = 18;
+    var sectionGap = 14;
+    var COL_GREEN = [40, 167, 69];
+    var COL_ORANGE = [253, 126, 20];
+    var GLASS_FILL = [255, 255, 255];
+    var GLASS_BORDER = [230, 234, 239];
+    var y = margin;
+
+    function glassCard(x, y, w, h, accentColor) {
+        doc.setFillColor(GLASS_FILL[0], GLASS_FILL[1], GLASS_FILL[2]);
+        doc.setDrawColor(accentColor ? accentColor[0] : GLASS_BORDER[0], accentColor ? accentColor[1] : GLASS_BORDER[1], accentColor ? accentColor[2] : GLASS_BORDER[2]);
+        doc.setLineWidth(accentColor ? 0.5 : 0.3);
+        doc.roundedRect(x, y, w, h, 3, 3, 'FD');
+    }
+    function checkPageBreak(needed) {
+        if (y + needed > pageH - 28) {
+            doc.addPage();
+            y = margin;
+        }
+    }
+
+    doc.setFillColor(250, 252, 254);
+    doc.roundedRect(0, 0, pageW, 26, 0, 0, 'F');
+    doc.setFillColor(COL_GREEN[0], COL_GREEN[1], COL_GREEN[2]);
+    doc.roundedRect(0, 0, pageW * 0.4, 26, 0, 0, 'F');
+    doc.setFillColor(COL_ORANGE[0], COL_ORANGE[1], COL_ORANGE[2]);
+    doc.roundedRect(pageW * 0.38, 0, pageW * 0.62, 26, 0, 0, 'F');
+    doc.setFontSize(22);
+    doc.setTextColor(255, 255, 255);
+    doc.setFont(undefined, 'bold');
+    doc.text('MANUTENÇÃO', margin + 2, 11);
+    doc.text('PREVENTIVA', margin + 2, 18);
+    doc.setFont(undefined, 'normal');
+    doc.setFontSize(8);
+    doc.text('AXIS • Relatório de Inspeção', pageW - margin - 2, 16, { align: 'right' });
+    doc.setTextColor(0, 0, 0);
+    y = 34;
+
+    var idItems = [
+        ['Setor', m.setor], ['Unidade', m.unidade], ['Técnico', m.tecnico], ['Data', formatarData(m.data)],
+        ['Serial Number', m.serial], ['Modelo', m.modelo], ['Patrimônio (SELB)', m.selb],
+        ['IP', m.ip], ['MAC Rede', m.macRede], ['MAC Bluetooth', m.macBt]
+    ];
+    var labelW = 38, colGap = 12, rowH = 8;
+    var idPadding = 12;
+    var idColW = (pageW - 2 * margin - 2 * idPadding - colGap) / 2;
+    var valW = idColW - labelW - 4;
+    var idBoxH = 18, col0Y = 0, col1Y = 0;
+    idItems.forEach(function(item, i) {
+        var val = (item[1] || '—').toString();
+        var lines = doc.splitTextToSize(val, valW);
+        var lineCount = Math.min(lines.length, 3);
+        if (i % 2 === 0) col0Y += lineCount * rowH + 2; else col1Y += lineCount * rowH + 2;
     });
+    idBoxH += Math.max(col0Y, col1Y) + 10;
+    checkPageBreak(idBoxH + sectionGap);
+    glassCard(margin, y, pageW - 2 * margin, idBoxH, COL_GREEN);
+    doc.setFontSize(11);
+    doc.setTextColor(COL_GREEN[0], COL_GREEN[1], COL_GREEN[2]);
+    doc.setFont(undefined, 'bold');
+    doc.text('IDENTIFICAÇÃO DO ATIVO', margin + idPadding, y + 6);
+    doc.setFont(undefined, 'normal');
+    doc.setFontSize(8);
+    var rowY = y + 14, leftY = rowY, rightY = rowY;
+    idItems.forEach(function(item, i) {
+        var col = i % 2, isLeft = col === 0;
+        var xLabel = margin + idPadding + col * (idColW + colGap);
+        var xVal = xLabel + labelW + 4;
+        var yy = isLeft ? leftY : rightY;
+        doc.setTextColor(100, 116, 139);
+        doc.text(item[0] + ':', xLabel, yy);
+        doc.setTextColor(30, 41, 59);
+        var val = (item[1] || '—').toString();
+        var valLines = doc.splitTextToSize(val, valW);
+        var useLines = valLines.slice(0, 3);
+        if (!useLines.length) useLines = ['—'];
+        useLines.forEach(function(line, L) {
+            doc.text(line, xVal, yy + L * rowH);
+        });
+        var advance = useLines.length * rowH + 2;
+        if (isLeft) leftY += advance; else rightY += advance;
+    });
+    y = Math.max(leftY, rightY) + 8 + sectionGap;
+
+    var checklist = m.checklist || [];
+    if (checklist.length) {
+        var grupos = {};
+        checklist.forEach(function(c) {
+            var g = c.grupo || 'Outros';
+            if (!grupos[g]) grupos[g] = [];
+            grupos[g].push(c);
+        });
+        var titulos = Object.keys(grupos);
+        doc.setFontSize(12);
+        doc.setTextColor(30, 41, 59);
+        doc.setFont(undefined, 'bold');
+        doc.text('CHECKLIST DE INSPEÇÃO', margin, y + 6);
+        doc.setFont(undefined, 'normal');
+        y += 10;
+        var nCol = 3, gap = 5, cardPad = 10;
+        var cardW = (pageW - 2 * margin - (nCol - 1) * gap) / nCol;
+        var cardTextW = cardW - cardPad * 2 - 2;
+        for (var r = 0; r < Math.ceil(titulos.length / 3); r++) {
+            var rowTitulos = titulos.slice(r * 3, r * 3 + 3);
+            var rowH = 0;
+            rowTitulos.forEach(function(t) {
+                var itens = grupos[t];
+                var h = 8 + 8 + (itens.length * 5);
+                if (h > rowH) rowH = h;
+            });
+            rowH = Math.max(rowH, 36);
+            if (y + rowH + gap > pageH - 28) {
+                doc.addPage();
+                y = margin;
+            }
+            rowTitulos.forEach(function(titulo, colIdx) {
+                var itens = grupos[titulo];
+                var x0 = margin + colIdx * (cardW + gap);
+                var isGreen = colIdx % 2 === 0;
+                glassCard(x0, y, cardW, rowH, isGreen ? COL_GREEN : COL_ORANGE);
+                var cy = y + 9;
+                doc.setFontSize(9);
+                doc.setTextColor(isGreen ? COL_GREEN[0] : COL_ORANGE[0], isGreen ? COL_GREEN[1] : COL_ORANGE[1], isGreen ? COL_GREEN[2] : COL_ORANGE[2]);
+                doc.setFont(undefined, 'bold');
+                doc.text((titulo || '').toUpperCase(), x0 + cardPad, cy);
+                cy += 8;
+                doc.setFont(undefined, 'normal');
+                doc.setFontSize(7);
+                doc.setTextColor(51, 65, 85);
+                itens.forEach(function(c) {
+                    if (cy > y + rowH - 4) return;
+                    doc.setDrawColor(200, 208, 220);
+                    doc.roundedRect(x0 + cardPad, cy - 2.4, 2.8, 2.8, 0.5, 0.5, 'S');
+                    if (c.checked) {
+                        doc.setTextColor(COL_GREEN[0], COL_GREEN[1], COL_GREEN[2]);
+                        doc.setFontSize(9);
+                        doc.text('\u2713', x0 + cardPad + 1.2, cy - 0.2);
+                        doc.setFontSize(7);
+                        doc.setTextColor(51, 65, 85);
+                    }
+                    var itemText = (c.item || '').toString();
+                    var itemLines = doc.splitTextToSize(itemText, cardTextW - 6);
+                    itemLines.forEach(function(ln) {
+                        if (cy > y + rowH - 4) return;
+                        doc.text(ln, x0 + cardPad + 6, cy);
+                        cy += 4.5;
+                    });
+                    cy += 1.5;
+                });
+            });
+            y += rowH + gap;
+        }
+        y += sectionGap;
+    }
+
+    var obs = m.observacoes || '(Nenhuma observação registrada)';
+    var obsTextW = pageW - 2 * margin - 24;
+    var obsLines = doc.splitTextToSize(obs, obsTextW);
+    var obsLineH = 5.5, obsTitleH = 18, obsMaxH = 72;
+    var obsMaxLines = Math.floor((obsMaxH - obsTitleH - 8) / obsLineH);
+    var obsLinesToShow = obsLines.slice(0, obsMaxLines);
+    var obsBoxH = obsTitleH + obsLinesToShow.length * obsLineH + 10;
+    checkPageBreak(obsBoxH + sectionGap);
+    glassCard(margin, y, pageW - 2 * margin, obsBoxH, COL_GREEN);
+    doc.setFontSize(11);
+    doc.setTextColor(COL_GREEN[0], COL_GREEN[1], COL_GREEN[2]);
+    doc.setFont(undefined, 'bold');
+    doc.text('DESCRIÇÃO DOS PROBLEMAS | OBSERVAÇÕES', margin + 12, y + 6);
+    doc.setFont(undefined, 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(71, 85, 105);
+    obsLinesToShow.forEach(function(line, i) {
+        doc.text(line, margin + 12, y + obsTitleH + 4 + i * obsLineH);
+    });
+    if (obsLines.length > obsMaxLines) {
+        doc.setFontSize(7);
+        doc.setTextColor(148, 163, 184);
+        doc.text('... (texto truncado)', margin + 12, y + obsBoxH - 5);
+    }
+    y += obsBoxH + sectionGap;
+
+    var fotoCell = 18, fotoGap = 4;
+    var fotoGridW = 3 * fotoCell + 2 * fotoGap;
+    var fotoBoxH = 22 + (2 * fotoCell + fotoGap);
+    var fotoSep = 8;
+    var fotoColW = (pageW - 2 * margin - fotoSep - 24) / 2;
+    var fotoGrid1X = margin + 12 + Math.max(0, (fotoColW - fotoGridW) / 2);
+    var fotoGrid2X = margin + 12 + fotoColW + fotoSep + Math.max(0, (fotoColW - fotoGridW) / 2);
+    var fotoGridY = y + 22;
+    checkPageBreak(fotoBoxH + sectionGap);
+    glassCard(margin, y, pageW - 2 * margin, fotoBoxH, COL_ORANGE);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.setTextColor(COL_ORANGE[0], COL_ORANGE[1], COL_ORANGE[2]);
+    doc.text('REGISTRO FOTOGRÁFICO', margin + 10, y + 8);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(COL_ORANGE[0], COL_ORANGE[1], COL_ORANGE[2]);
+    doc.text('SITUAÇÃO ANTES', fotoGrid1X, y + 18);
+    doc.text('SITUAÇÃO DEPOIS', fotoGrid2X, y + 18);
+    doc.setFont('helvetica', 'normal');
+    doc.setDrawColor(200, 208, 220);
+    doc.setLineWidth(0.3);
+    for (var fr = 0; fr < 2; fr++) {
+        for (var fc = 0; fc < 3; fc++) {
+            var fx = fotoGrid1X + fc * (fotoCell + fotoGap);
+            var fy = fotoGridY + fr * (fotoCell + fotoGap);
+            doc.roundedRect(fx, fy, fotoCell, fotoCell, 2, 2, 'S');
+        }
+    }
+    for (var fr = 0; fr < 2; fr++) {
+        for (var fc = 0; fc < 3; fc++) {
+            var fx = fotoGrid2X + fc * (fotoCell + fotoGap);
+            var fy = fotoGridY + fr * (fotoCell + fotoGap);
+            doc.roundedRect(fx, fy, fotoCell, fotoCell, 2, 2, 'S');
+        }
+    }
+    doc.setDrawColor(230, 234, 239);
+    doc.line(margin + 12 + fotoColW + fotoSep / 2, y + 4, margin + 12 + fotoColW + fotoSep / 2, y + fotoBoxH - 4);
+
+    var totalPages = doc.internal.getNumberOfPages();
+    var footerH = 12, footerY = pageH - footerH;
+    for (var i = 1; i <= totalPages; i++) {
+        doc.setPage(i);
+        doc.setFillColor(248, 250, 254);
+        doc.rect(0, footerY - 1, pageW, footerH + 2, 'F');
+        doc.setDrawColor(230, 234, 239);
+        doc.setLineWidth(0.2);
+        doc.line(margin, footerY - 1, pageW - margin, footerY - 1);
+        doc.setFillColor(COL_GREEN[0], COL_GREEN[1], COL_GREEN[2]);
+        doc.roundedRect(margin, footerY + 1, 52, 6, 1, 1, 'F');
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8);
+        doc.setTextColor(255, 255, 255);
+        doc.text('AXIS', margin + 4, footerY + 5);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(7);
+        doc.text('Manutenção Preventiva', margin + 13, footerY + 5);
+        doc.setTextColor(71, 85, 105);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Página ' + i + ' de ' + totalPages, pageW / 2 - 10, footerY + 5);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(7);
+        doc.setTextColor(148, 163, 184);
+        doc.text('Gerado em ' + new Date().toLocaleString('pt-BR'), pageW - margin - 2, footerY + 5, { align: 'right' });
+    }
+    return doc.output('blob');
 }
 
 function buildPdfHtml(m) {
@@ -582,26 +1107,65 @@ function popularFiltros() {
     atualizarBadgesFiltros();
 }
 
+function atualizarStatsHistorico(lista) {
+    const wrap = document.getElementById('mp-stats-historico');
+    const elTec = document.getElementById('stat-top-tecnico');
+    const elSet = document.getElementById('stat-top-setor');
+    if (!wrap || (!elTec && !elSet)) return;
+    if (!lista || !lista.length) {
+        wrap.style.display = 'none';
+        return;
+    }
+    wrap.style.display = 'flex';
+    const byTec = {}, bySet = {};
+    lista.forEach(m => {
+        const t = _norm(m.tecnico) || '_';
+        const s = _norm(m.setor) || '_';
+        byTec[t] = (byTec[t] || 0) + 1;
+        bySet[s] = (bySet[s] || 0) + 1;
+    });
+    const topTec = Object.entries(byTec).filter(([k]) => k !== '_').sort((a, b) => b[1] - a[1])[0];
+    const topSet = Object.entries(bySet).filter(([k]) => k !== '_').sort((a, b) => b[1] - a[1])[0];
+    if (elTec) elTec.textContent = topTec ? lista.find(m => _norm(m.tecnico) === topTec[0])?.tecnico + ' (' + topTec[1] + ')' : '—';
+    if (elSet) elSet.textContent = topSet ? lista.find(m => _norm(m.setor) === topSet[0])?.setor + ' (' + topSet[1] + ')' : '—';
+}
+
 function fecharDropdowns() {
     document.getElementById('wrap-setor')?.classList.remove('open');
     document.getElementById('wrap-modelo')?.classList.remove('open');
+    document.getElementById('wrap-periodo')?.classList.remove('open');
+}
+
+function abrirDropdownPeriodo(e) {
+    popularFiltros();
+    document.getElementById('wrap-setor')?.classList.remove('open');
+    document.getElementById('wrap-modelo')?.classList.remove('open');
+    document.getElementById('wrap-periodo')?.classList.toggle('open');
+    e?.stopPropagation?.();
+}
+
+function escolherPeriodo(valor) {
+    const el = document.getElementById('filter-periodo');
+    if (el) el.value = valor || 'todos';
+    fecharDropdowns();
+    refiltrar();
+    popularFiltros();
+    atualizarBadgesFiltros();
 }
 
 function abrirDropdownSetores(e) {
     popularFiltros();
-    const wrapModelo = document.getElementById('wrap-modelo');
-    const wrapSetor = document.getElementById('wrap-setor');
-    if (wrapModelo) wrapModelo.classList.remove('open');
-    if (wrapSetor) wrapSetor.classList.toggle('open');
+    document.getElementById('wrap-modelo')?.classList.remove('open');
+    document.getElementById('wrap-periodo')?.classList.remove('open');
+    document.getElementById('wrap-setor')?.classList.toggle('open');
     e?.stopPropagation?.();
 }
 
 function abrirDropdownModelos(e) {
     popularFiltros();
-    const wrapSetor = document.getElementById('wrap-setor');
-    const wrapModelo = document.getElementById('wrap-modelo');
-    if (wrapSetor) wrapSetor.classList.remove('open');
-    if (wrapModelo) wrapModelo.classList.toggle('open');
+    document.getElementById('wrap-setor')?.classList.remove('open');
+    document.getElementById('wrap-periodo')?.classList.remove('open');
+    document.getElementById('wrap-modelo')?.classList.toggle('open');
     e?.stopPropagation?.();
 }
 
@@ -626,23 +1190,31 @@ function escolherModelo(value) {
 function atualizarBadgesFiltros() {
     const setor = (document.getElementById('filter-setor')?.value || '').trim();
     const modelo = (document.getElementById('filter-modelo')?.value || '').trim();
+    const periodo = (document.getElementById('filter-periodo')?.value || 'todos').trim();
     const bSetor = document.getElementById('badge-setor');
     const bModelo = document.getElementById('badge-modelo');
+    const bPeriodo = document.getElementById('badge-periodo');
     const btnLimpar = document.getElementById('btn-limpar-filtros');
     const t1 = document.getElementById('trigger-setor');
     const t2 = document.getElementById('trigger-modelo');
+    const t3 = document.getElementById('trigger-periodo');
+    const periodoLabel = { '7': '7 dias', '30': '30 dias', 'ano': 'Este ano', 'todos': 'Todos' };
     if (bSetor) { bSetor.textContent = setor || 'Todos'; bSetor.style.display = setor ? 'inline-flex' : 'none'; }
     if (bModelo) { bModelo.textContent = modelo || 'Todos'; bModelo.style.display = modelo ? 'inline-flex' : 'none'; }
-    if (btnLimpar) btnLimpar.style.display = setor || modelo ? 'inline-flex' : 'none';
+    if (bPeriodo) { bPeriodo.textContent = periodoLabel[periodo] || periodo; bPeriodo.style.display = (periodo && periodo !== 'todos') ? 'inline-flex' : 'none'; }
+    if (btnLimpar) btnLimpar.style.display = setor || modelo || (periodo && periodo !== 'todos') ? 'inline-flex' : 'none';
     if (t1) t1.classList.toggle('active', !!setor);
     if (t2) t2.classList.toggle('active', !!modelo);
+    if (t3) t3.classList.toggle('active', !!(periodo && periodo !== 'todos'));
 }
 
 function limparFiltros() {
     const s = document.getElementById('filter-setor');
     const m = document.getElementById('filter-modelo');
+    const p = document.getElementById('filter-periodo');
     if (s) s.value = '';
     if (m) m.value = '';
+    if (p) p.value = 'todos';
     atualizarBadgesFiltros();
     refiltrar();
     popularFiltros();
@@ -672,14 +1244,12 @@ function selecionarMes(mesNum, ano) {
     const gridManut = document.getElementById('manutencoes-grid');
     const listManut = document.getElementById('manutencoes-list');
     const filters = document.getElementById('mp-filters');
-    const sortWrap = document.getElementById('filter-sort-wrap');
     if (gridMeses) gridMeses.style.display = 'none';
     if (document.getElementById('ano-selecionado')) document.getElementById('ano-selecionado').textContent = `${nome} ${ano}`;
     if (document.getElementById('current-path')) document.getElementById('current-path').textContent = `${ano} › ${nome}`;
     if (document.getElementById('btn-voltar-anos')) document.getElementById('btn-voltar-anos').style.display = 'none';
     if (document.getElementById('btn-voltar-meses')) document.getElementById('btn-voltar-meses').style.display = 'inline-flex';
     if (filters) { filters.style.display = 'flex'; }
-    if (sortWrap) sortWrap.style.display = isListView ? 'flex' : 'none';
     if (isListView) {
         if (listManut) listManut.style.display = 'block';
         if (gridManut) gridManut.style.display = 'none';
@@ -693,7 +1263,7 @@ function selecionarMes(mesNum, ano) {
     atualizarStats();
 }
 
-const EMPTY_STATE_HTML = '<div class="mp-empty" id="mp-empty-initial"><i class="fas fa-folder-open"></i><h3>Selecione um ano</h3><p>Escolha um ano no menu lateral para ver as manutenções por mês.</p></div>';
+const EMPTY_STATE_HTML = '<div class="mp-empty mp-empty-hologram" id="mp-empty-initial"><div class="mp-empty-icon-wrap"><i class="fas fa-folder-open"></i></div><h3>Selecione um ano</h3><p>Escolha um ano no menu lateral para ver as manutenções por mês.</p></div>';
 
 function voltarParaAnos() {
     mesSelecionado = null;
@@ -788,6 +1358,33 @@ function excluirManutencao(id, ano, mes) {
     if (anoSelecionado) carregarMesesAno(anoSelecionado);
 }
 
+function clonarManutencao(cardOrRow) {
+    const m = getManutencaoFromCard(cardOrRow);
+    if (!m) return;
+    const ano = m._ano || anoSelecionado;
+    const mes = m._mes || mesSelecionado?.numero;
+    if (!ano || !mes) return;
+    const bib = getBiblioteca();
+    const novoId = proximoIdBiblioteca(bib);
+    const hoje = new Date().toISOString().slice(0, 10);
+    const clone = { ...m, id: novoId };
+    delete clone._ano;
+    delete clone._mes;
+    clone.data = hoje;
+    clone.arquivo = 'AXIS_PV_' + (m.serial || '') + '_' + hoje + '.pdf';
+    if (!bib[ano]) bib[ano] = {};
+    if (!Array.isArray(bib[ano][mes])) bib[ano][mes] = [];
+    bib[ano][mes].push(clone);
+    setBiblioteca(bib);
+    atualizarStats();
+    carregarAnosMenu();
+    if (anoSelecionado) carregarMesesAno(anoSelecionado);
+    if (mesSelecionado && anoSelecionado === ano && mesSelecionado.numero === mes) {
+        const manutencoes = (getBiblioteca()[ano] || {})[mes] || [];
+        aplicarBuscaEFiltro(manutencoes);
+    }
+}
+
 function exportarCSV() {
     document.querySelector('.mp-export-dropdown')?.classList.remove('open');
     const bib = getBiblioteca();
@@ -865,10 +1462,17 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
     carregarAnosMenu();
     atualizarStats();
+    atualizarGraficos();
     const busca = document.getElementById('mp-busca');
     if (busca) busca.addEventListener('input', refiltrar);
     const filterOrdem = document.getElementById('filter-ordem');
     if (filterOrdem) filterOrdem.addEventListener('change', refiltrar);
+    const filterAgrupar = document.getElementById('filter-agrupar');
+    if (filterAgrupar) filterAgrupar.addEventListener('change', refiltrar);
+
+    document.querySelectorAll('#dropdown-periodo .mp-panel-item').forEach(btn => {
+        btn.addEventListener('click', () => escolherPeriodo(btn.dataset.periodo));
+    });
 
     const anosBusca = document.getElementById('anos-busca');
     const anosOrdem = document.getElementById('anos-ordem');
@@ -913,8 +1517,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         const wrapSetor = document.getElementById('wrap-setor');
         const wrapModelo = document.getElementById('wrap-modelo');
-        if (wrapSetor?.classList.contains('open') || wrapModelo?.classList.contains('open')) {
-            if (!wrapSetor?.contains(e.target) && !wrapModelo?.contains(e.target)) fecharDropdowns();
+        const wrapPeriodo = document.getElementById('wrap-periodo');
+        if (wrapSetor?.classList.contains('open') || wrapModelo?.classList.contains('open') || wrapPeriodo?.classList.contains('open')) {
+            if (!wrapSetor?.contains(e.target) && !wrapModelo?.contains(e.target) && !wrapPeriodo?.contains(e.target)) fecharDropdowns();
         }
     });
     } catch (err) {
@@ -931,7 +1536,10 @@ window.baixarManutencao = baixarManutencao;
 window.atualizarDashboard = atualizarDashboard;
 window.toggleHamburgerMenu = toggleHamburgerMenu;
 window.toggleViewMode = toggleViewMode;
+window.toggleViewModeTo = toggleViewModeTo;
 window.adicionarManutencao = adicionarManutencao;
+window.clonarManutencao = clonarManutencao;
+window.toggleFavorito = toggleFavorito;
 window.mostrarPreview = mostrarPreview;
 window.esconderPreview = esconderPreview;
 window.exportarBiblioteca = exportarBiblioteca;

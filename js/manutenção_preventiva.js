@@ -20,7 +20,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const serial = document.getElementById('serial_id').value || 'SEM_SERIAL';
     const dataVal = document.getElementById('data_id')?.value || new Date().toISOString().slice(0, 10);
     const dataAtual = dataVal ? new Date(dataVal + 'T00:00:00').toLocaleDateString('pt-BR').replace(/\//g, '-') : new Date().toLocaleDateString('pt-BR').replace(/\//g, '-');
-    const element = document.getElementById('pdf-content');
     const btn = document.getElementById('btn-gerar');
     
     // Ano e mês vêm da DATA da preventiva (campo Data do formulário) – pastas automáticas
@@ -45,50 +44,11 @@ document.addEventListener('DOMContentLoaded', function() {
     btn.textContent = "PROCESSANDO RELATÓRIO...";
     btn.style.opacity = '0.5';
 
-    // Garantir que o conteúdo esteja visível antes de capturar
-    window.scrollTo(0, 0);
-    element.scrollTop = 0;
+    showAlert("Processando...", "Gerando relatório PDF e salvando em Manutenções Preventivas.");
 
-    // Configurações otimizadas para PDF - captura todo o conteúdo
-    const opt = {
-        margin: [15, 10, 15, 10],
-        filename: nomeArquivo,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { 
-            scale: 2, 
-            useCORS: true,
-            logging: false,
-            letterRendering: true,
-            allowTaint: false,
-            width: element.scrollWidth,
-            height: element.scrollHeight,
-            windowWidth: element.scrollWidth,
-            windowHeight: element.scrollHeight,
-            scrollX: 0,
-            scrollY: 0,
-            onclone: function(clonedDoc, clone) {
-                var clonedEl = clonedDoc.getElementById('pdf-content');
-                if (clonedEl) {
-                    clonedEl.style.overflow = 'visible';
-                    clonedEl.style.height = 'auto';
-                    clonedEl.style.display = 'block';
-                }
-            }
-        },
-        pagebreak: { mode: ['css', 'legacy'], before: '.pdf-page-break' },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true }
-    };
-
-    // GERAÇÃO DO PDF + NUMERAÇÃO DE PÁGINA + DOWNLOAD + ENVIO PARA PASTAS ANO/MÊS
-    html2pdf().set(opt).from(element).toPdf().get('pdf').then(function (pdf) {
-        const totalPages = pdf.internal.getNumberOfPages();
-        for (let i = 1; i <= totalPages; i++) {
-            pdf.setPage(i);
-            pdf.setFontSize(10);
-            pdf.setTextColor(150);
-            pdf.text(`Página ${i} de ${totalPages}`, pdf.internal.pageSize.width / 2 - 20, pdf.internal.pageSize.height - 10);
-        }
-    }).outputPdf('blob').then(function (blob) {
+    try {
+        const blob = gerarPDFPreventivaJsPDF();
+        if (!blob) throw new Error('PDF não gerado');
         // 1) Download no navegador
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -176,17 +136,325 @@ document.addEventListener('DOMContentLoaded', function() {
         } catch (_) {}
         
         showAlert("Relatório Concluído", "O checklist foi gerado, o download iniciado e o PDF salvo em Manutenções Preventivas/" + anoSelecionado + "/" + nomeMes + ".");
-    }).catch(function (err) {
+
+    } catch (err) {
         btn.disabled = false;
         btn.textContent = "FINALIZAR E GERAR RELATÓRIO PDF";
         btn.style.opacity = '1';
         console.error("Erro crítico:", err);
         showAlert("Erro", "Não foi possível gerar o PDF. Tente novamente.");
-    });
-
-    showAlert("Processando...", "Gerando relatório PDF e salvando em Manutenções Preventivas.");
+    }
     });
 });
+
+/* Gera PDF de manutenção preventiva com jsPDF - design em vidro (glassmorphism) */
+function gerarPDFPreventivaJsPDF() {
+    const { jsPDF } = window.jspdf;
+    if (!jsPDF) {
+        console.error('jsPDF não carregado');
+        return null;
+    }
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const pageW = doc.internal.pageSize.width;
+    const pageH = doc.internal.pageSize.height;
+    const margin = 18;
+    const sectionGap = 14;
+    const COL_GREEN = [40, 167, 69];
+    const COL_ORANGE = [253, 126, 20];
+    const GLASS_FILL = [255, 255, 255];
+    const GLASS_BORDER = [230, 234, 239];
+    const GLASS_ACCENT = [241, 245, 249];
+
+    function glassCard(x, y, w, h, accentColor) {
+        doc.setFillColor(GLASS_FILL[0], GLASS_FILL[1], GLASS_FILL[2]);
+        doc.setDrawColor(accentColor ? accentColor[0] : GLASS_BORDER[0], accentColor ? accentColor[1] : GLASS_BORDER[1], accentColor ? accentColor[2] : GLASS_BORDER[2]);
+        doc.setLineWidth(accentColor ? 0.5 : 0.3);
+        doc.roundedRect(x, y, w, h, 3, 3, 'FD');
+    }
+
+    function checkPageBreak(needed) {
+        if (y + needed > pageH - 22) {
+            doc.addPage();
+            y = margin;
+        }
+    }
+
+    let y = margin;
+
+    // ===== HEADER EM VIDRO =====
+    doc.setFillColor(250, 252, 254);
+    doc.roundedRect(0, 0, pageW, 26, 0, 0, 'F');
+    doc.setFillColor(COL_GREEN[0], COL_GREEN[1], COL_GREEN[2]);
+    doc.roundedRect(0, 0, pageW * 0.4, 26, 0, 0, 'F');
+    doc.setFillColor(COL_ORANGE[0], COL_ORANGE[1], COL_ORANGE[2]);
+    doc.roundedRect(pageW * 0.38, 0, pageW * 0.62, 26, 0, 0, 'F');
+    doc.setFontSize(22);
+    doc.setTextColor(255, 255, 255);
+    doc.setFont(undefined, 'bold');
+    doc.text('MANUTENÇÃO', margin + 2, 11);
+    doc.text('PREVENTIVA', margin + 2, 18);
+    doc.setFont(undefined, 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(255, 255, 255);
+    doc.text('AXIS • Relatório de Inspeção', pageW - margin - 2, 16, { align: 'right' });
+    doc.setTextColor(0, 0, 0);
+    y = 34;
+
+    // ===== IDENTIFICAÇÃO - CARD EM VIDRO =====
+    const idItems = [
+        ['Setor', document.getElementById('setor_id')?.value || ''],
+        ['Unidade', document.getElementById('unidade_id')?.value || ''],
+        ['Técnico', document.getElementById('tecnico_id')?.value || ''],
+        ['Data', document.getElementById('data_id')?.value || ''],
+        ['Serial Number', document.getElementById('serial_id')?.value || ''],
+        ['Modelo', document.getElementById('modelo_id')?.value || ''],
+        ['Patrimônio (SELB)', document.getElementById('selb_id')?.value || ''],
+        ['IP', document.getElementById('ip_id')?.value || ''],
+        ['MAC Rede', document.getElementById('mac_rede_id')?.value || ''],
+        ['MAC Bluetooth', document.getElementById('mac_bt_id')?.value || '']
+    ];
+    const labelW = 38;
+    const colGap = 12;
+    const rowH = 8;
+    const idPadding = 12;
+    const idColW = (pageW - 2 * margin - 2 * idPadding - colGap) / 2;
+    const valW = idColW - labelW - 4;
+    var idBoxH = 18;
+    var col0Y = 0, col1Y = 0;
+    idItems.forEach(function(item, i) {
+        var val = (item[1] || '—').toString();
+        var lines = doc.splitTextToSize(val, valW);
+        var lineCount = Math.min(lines.length, 3);
+        if (i % 2 === 0) { col0Y += lineCount * rowH + 2; } else { col1Y += lineCount * rowH + 2; }
+    });
+    idBoxH += Math.max(col0Y, col1Y) + 10;
+    checkPageBreak(idBoxH + sectionGap);
+    glassCard(margin, y, pageW - 2 * margin, idBoxH, COL_GREEN);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.setTextColor(COL_GREEN[0], COL_GREEN[1], COL_GREEN[2]);
+    doc.text('IDENTIFICAÇÃO DO ATIVO', margin + idPadding, y + 7);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    let rowY = y + 16;
+    var leftY = rowY, rightY = rowY;
+    idItems.forEach(function(item, i) {
+        const col = i % 2;
+        const xLabel = margin + idPadding + col * (idColW + colGap);
+        const xVal = xLabel + labelW + 4;
+        const isLeft = col === 0;
+        const yy = isLeft ? leftY : rightY;
+        doc.setTextColor(100, 116, 139);
+        doc.text(item[0] + ':', xLabel, yy);
+        doc.setTextColor(30, 41, 59);
+        var val = (item[1] || '—').toString();
+        var valLines = doc.splitTextToSize(val, valW);
+        var useLines = valLines.slice(0, 3);
+        if (!useLines.length) useLines = ['—'];
+        useLines.forEach(function(line, L) {
+            doc.text(line, xVal, yy + L * rowH);
+        });
+        var advance = useLines.length * rowH + 2;
+        if (isLeft) leftY += advance; else rightY += advance;
+    });
+    y = Math.max(leftY, rightY) + 8;
+    y += sectionGap;
+
+    // ===== CHECKLIST - CARDS EM VIDRO (título junto aos cards) =====
+    const cards = Array.from(document.querySelectorAll('.checklist-grid .glass-card'));
+    const nCol = 3;
+    const gap = 5;
+    const cardPad = 10;
+    const cardW = (pageW - 2 * margin - (nCol - 1) * gap) / nCol;
+    const cardTextW = cardW - cardPad * 2 - 2;
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.setTextColor(30, 41, 59);
+    doc.text('CHECKLIST DE INSPEÇÃO', margin, y + 6);
+    doc.setFont('helvetica', 'normal');
+    y += 10;
+
+    for (let row = 0; row < 3; row++) {
+        const rowCards = cards.slice(row * 3, row * 3 + 3);
+        const rowHeights = [];
+        rowCards.forEach(function(card) {
+            const h3 = card.querySelector('h3');
+            const titulo = (h3 ? h3.textContent.trim() : '').toUpperCase();
+            const checks = card.querySelectorAll('.ios-check');
+            let h = 10;
+            const tituloLines = doc.splitTextToSize(titulo, cardTextW);
+            h += tituloLines.length * 4.5 + 4;
+            checks.forEach(function(label) {
+                const span = label.querySelector('span');
+                const texto = span ? span.textContent.trim() : '';
+                const linhas = doc.splitTextToSize(texto, cardTextW - 6);
+                h += linhas.length * 4.5 + 2;
+            });
+            rowHeights.push(h + 10);
+        });
+        const rowHContent = Math.max.apply(null, rowHeights);
+        let drawRowH = Math.min(rowHContent, Math.max(20, pageH - margin - 28 - y - 2));
+        if (drawRowH < 20 || y + drawRowH + gap > pageH - 28) {
+            doc.addPage();
+            y = margin;
+            drawRowH = rowHContent;
+        }
+        rowCards.forEach(function(card, colIdx) {
+            const h3 = card.querySelector('h3');
+            const titulo = (h3 ? h3.textContent.trim() : '').toUpperCase();
+            const isGreen = h3 && h3.classList.contains('txt-green');
+            const x0 = margin + colIdx * (cardW + gap);
+            const cardY = y;
+
+            glassCard(x0, cardY, cardW, drawRowH, isGreen ? COL_GREEN : COL_ORANGE);
+
+            let cy = cardY + 10;
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(9);
+            doc.setTextColor(isGreen ? COL_GREEN[0] : COL_ORANGE[0], isGreen ? COL_GREEN[1] : COL_ORANGE[1], isGreen ? COL_GREEN[2] : COL_ORANGE[2]);
+            const tituloLines = doc.splitTextToSize(titulo, cardTextW);
+            tituloLines.forEach(function(line) {
+                if (cy < cardY + drawRowH - 6) doc.text(line, x0 + cardPad, cy);
+                cy += 4.5;
+            });
+            cy += 4;
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(7.5);
+            doc.setTextColor(51, 65, 85);
+            const checks = card.querySelectorAll('.ios-check');
+            checks.forEach(function(label) {
+                const input = label.querySelector('input[type="checkbox"]');
+                const span = label.querySelector('span');
+                const texto = span ? span.textContent.trim() : '';
+                const checked = input ? input.checked : false;
+                const textoLines = doc.splitTextToSize(texto, cardTextW - 6);
+                textoLines.forEach(function(line, idx) {
+                    if (cy > cardY + drawRowH - 4) return;
+                    if (idx === 0) {
+                        doc.setDrawColor(200, 208, 220);
+                        doc.roundedRect(x0 + cardPad, cy - 2.4, 2.8, 2.8, 0.5, 0.5, 'S');
+                        if (checked) {
+                            doc.setTextColor(COL_GREEN[0], COL_GREEN[1], COL_GREEN[2]);
+                            doc.setFontSize(9);
+                            doc.text('\u2713', x0 + cardPad + 1.2, cy - 0.2);
+                            doc.setFontSize(7.5);
+                            doc.setTextColor(51, 65, 85);
+                        }
+                        doc.text(line, x0 + cardPad + 6, cy);
+                    } else {
+                        doc.text(line, x0 + cardPad + 6, cy);
+                    }
+                    cy += 4.5;
+                });
+                cy += 1.5;
+            });
+        });
+        y += drawRowH + gap;
+    }
+    y += sectionGap;
+
+    // ===== OBSERVAÇÕES - CARD EM VIDRO =====
+    const obs = document.getElementById('obs_id')?.value || '(Nenhuma observação registrada)';
+    const obsTextW = pageW - 2 * margin - 24;
+    const obsLines = doc.splitTextToSize(obs, obsTextW);
+    const obsLineH = 5.5;
+    const obsTitleH = 18;
+    const obsMaxH = 72;
+    const obsMaxLines = Math.floor((obsMaxH - obsTitleH - 8) / obsLineH);
+    const obsLinesToShow = obsLines.slice(0, obsMaxLines);
+    const obsBoxH = obsTitleH + obsLinesToShow.length * obsLineH + 10;
+    checkPageBreak(obsBoxH + sectionGap);
+    glassCard(margin, y, pageW - 2 * margin, obsBoxH, COL_GREEN);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.setTextColor(COL_GREEN[0], COL_GREEN[1], COL_GREEN[2]);
+    doc.text('DESCRIÇÃO DOS PROBLEMAS | OBSERVAÇÕES', margin + 12, y + 8);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(71, 85, 105);
+    obsLinesToShow.forEach(function(line, i) {
+        doc.text(line, margin + 12, y + obsTitleH + 4 + i * obsLineH);
+    });
+    if (obsLines.length > obsMaxLines) {
+        doc.setFontSize(8);
+        doc.setTextColor(148, 163, 184);
+        doc.text('... (texto truncado)', margin + 12, y + obsBoxH - 5);
+    }
+    y += obsBoxH + sectionGap;
+
+    // ===== REGISTRO FOTOGRÁFICO - CARD EM VIDRO (caixas dentro do card, maiores) =====
+    var fotoCell = 18;
+    var fotoGap = 4;
+    var fotoGridW = 3 * fotoCell + 2 * fotoGap;
+    var fotoBoxH = 22 + (2 * fotoCell + fotoGap);
+    var fotoSep = 8;
+    var fotoColW = (pageW - 2 * margin - fotoSep - 24) / 2;
+    var fotoGrid1X = margin + 12 + Math.max(0, (fotoColW - fotoGridW) / 2);
+    var fotoGrid2X = margin + 12 + fotoColW + fotoSep + Math.max(0, (fotoColW - fotoGridW) / 2);
+    var fotoGridY = y + 22;
+    checkPageBreak(fotoBoxH + sectionGap);
+    glassCard(margin, y, pageW - 2 * margin, fotoBoxH, COL_ORANGE);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.setTextColor(COL_ORANGE[0], COL_ORANGE[1], COL_ORANGE[2]);
+    doc.text('REGISTRO FOTOGRÁFICO', margin + 10, y + 8);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(COL_ORANGE[0], COL_ORANGE[1], COL_ORANGE[2]);
+    doc.text('SITUAÇÃO ANTES', fotoGrid1X, y + 18);
+    doc.text('SITUAÇÃO DEPOIS', fotoGrid2X, y + 18);
+    doc.setFont('helvetica', 'normal');
+    doc.setDrawColor(200, 208, 220);
+    doc.setLineWidth(0.3);
+    for (var fr = 0; fr < 2; fr++) {
+        for (var fc = 0; fc < 3; fc++) {
+            var fx = fotoGrid1X + fc * (fotoCell + fotoGap);
+            var fy = fotoGridY + fr * (fotoCell + fotoGap);
+            doc.roundedRect(fx, fy, fotoCell, fotoCell, 2, 2, 'S');
+        }
+    }
+    for (var fr = 0; fr < 2; fr++) {
+        for (var fc = 0; fc < 3; fc++) {
+            var fx = fotoGrid2X + fc * (fotoCell + fotoGap);
+            var fy = fotoGridY + fr * (fotoCell + fotoGap);
+            doc.roundedRect(fx, fy, fotoCell, fotoCell, 2, 2, 'S');
+        }
+    }
+    doc.setDrawColor(230, 234, 239);
+    doc.line(margin + 12 + fotoColW + fotoSep / 2, y + 4, margin + 12 + fotoColW + fotoSep / 2, y + fotoBoxH - 4);
+
+    // ===== RODAPÉ EM VIDRO =====
+    const totalPages = doc.internal.getNumberOfPages();
+    const footerH = 12;
+    const footerY = pageH - footerH;
+    for (let i = 1; i <= totalPages; i++) {
+        doc.setPage(i);
+        doc.setFillColor(248, 250, 254);
+        doc.rect(0, footerY - 1, pageW, footerH + 2, 'F');
+        doc.setDrawColor(230, 234, 239);
+        doc.setLineWidth(0.2);
+        doc.line(margin, footerY - 1, pageW - margin, footerY - 1);
+        doc.setFillColor(COL_GREEN[0], COL_GREEN[1], COL_GREEN[2]);
+        doc.roundedRect(margin, footerY + 1, 52, 6, 1, 1, 'F');
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8);
+        doc.setTextColor(255, 255, 255);
+        doc.text('AXIS', margin + 4, footerY + 5);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(7);
+        doc.text('Manutenção Preventiva', margin + 13, footerY + 5);
+        doc.setTextColor(71, 85, 105);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Página ' + i + ' de ' + totalPages, pageW / 2 - 10, footerY + 5);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(7);
+        doc.setTextColor(148, 163, 184);
+        doc.text('Gerado em ' + new Date().toLocaleString('pt-BR'), pageW - margin - 2, footerY + 5, { align: 'right' });
+    }
+
+    return doc.output('blob');
+}
 
 /* ==========================================================
    2. LÓGICA DE UPLOAD DE FOTOS (OTIMIZADA)

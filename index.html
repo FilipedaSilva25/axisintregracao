@@ -372,6 +372,35 @@
             font-weight: 400;
         }
 
+        /* Card Packing Machine - Vidro estilo Apple, destaque teal industrial */
+        .mod-card.packing-master {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.85) 0%, rgba(0, 131, 143, 0.08) 50%, rgba(0, 188, 212, 0.06) 100%) !important;
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 2px solid rgba(0, 131, 143, 0.2) !important;
+        }
+        .mod-card.packing-master::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(0, 131, 143, 0.06) 0%, transparent 70%);
+            animation: rotate 10s linear infinite;
+            pointer-events: none;
+        }
+        .mod-card.packing-master:hover {
+            border-color: rgba(0, 131, 143, 0.4) !important;
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0, 131, 143, 0.2);
+        }
+        .mod-card.packing-master .mod-icon {
+            font-size: 38px;
+            margin-bottom: 12px;
+            filter: drop-shadow(0 2px 4px rgba(0, 131, 143, 0.3));
+        }
+
         /* Card Peças - Vidro estilo Apple, destaque laranja */
         .mod-card.pecas-master {
             background: linear-gradient(135deg, rgba(255, 255, 255, 0.85) 0%, rgba(253, 126, 20, 0.08) 50%, rgba(0, 188, 212, 0.06) 100%) !important;
@@ -513,6 +542,14 @@
 
         [data-theme="dark"] .mod-card.preventiva-master:hover {
             background: linear-gradient(135deg, rgba(40, 40, 40, 0.95) 0%, rgba(253, 126, 20, 0.25) 100%) !important;
+        }
+
+        [data-theme="dark"] .mod-card.packing-master {
+            background: linear-gradient(135deg, rgba(30, 30, 30, 0.9) 0%, rgba(0, 131, 143, 0.15) 100%) !important;
+            border-color: rgba(0, 131, 143, 0.4) !important;
+        }
+        [data-theme="dark"] .mod-card.packing-master:hover {
+            background: linear-gradient(135deg, rgba(40, 40, 40, 0.95) 0%, rgba(0, 131, 143, 0.25) 100%) !important;
         }
 
         /* Loading Screen */
@@ -1446,6 +1483,7 @@
                 <button data-nav-page="bloco" onclick="window.location.href='pages/bloco_de_notas_apple.html'" class="side-item">📝 Bloco de Notas</button>
                 <button data-nav-page="registro" onclick="window.location.href='pages/registro_chamados.html'" class="side-item">📋 Registro de Chamados</button>
                 <button data-nav-page="pecas" onclick="window.location.href='pages/pecas.html'" class="side-item">🔧 Peças</button>
+                <button data-nav-page="packing" onclick="window.location.href='pages/packing_machine.html'" class="side-item">🏭 Packing Machine</button>
                 <button data-nav-page="notas" onclick="window.location.href='pages/notas_fiscais.html'" class="side-item">📄 Notas Fiscais</button>
                 <button data-nav-page="page-configuracoes" onclick="if(typeof navigate === 'function') { navigate('page-configuracoes'); } return false;" class="side-item">⚙️ Configurações</button>
                 <button data-nav-page="page-administracao" onclick="if(typeof navigate === 'function') { navigate('page-administracao'); } return false;" class="side-item" id="menu-admin" style="display: none;">👤 Administração</button>
@@ -1539,6 +1577,14 @@
                         <div class="mod-icon">🔧</div>
                         <div class="mod-content">
                             <h3 class="txt-axis-gradient">Peças</h3>
+                        </div>
+                    </div>
+
+                    <!-- Card Packing Machine -->
+                    <div class="mod-card packing-master" onclick="window.location.href='pages/packing_machine.html'" tabindex="0" role="button">
+                        <div class="mod-icon">🏭</div>
+                        <div class="mod-content">
+                            <h3 class="txt-axis-gradient">PACKING MACHINE</h3>
                         </div>
                     </div>
 
@@ -2437,10 +2483,7 @@
                             <div class="form-column">
                                 <div class="input-group">
                                     <label for="cad-ip">Endereço IP *</label>
-                                    <div class="ip-input-wrapper serial-input-wrapper" id="cad-ip-wrapper">
-                                        <span class="serial-prefix" id="cad-ip-prefix">10.201.</span>
-                                        <input type="text" id="cad-ip" required placeholder="131.222" autocomplete="off" maxlength="7" inputmode="numeric">
-                                    </div>
+                                    <input type="text" id="cad-ip" required placeholder="Ex: 10.201.131.222" maxlength="14">
                                 </div>
                                 
                                 <div class="input-group">
@@ -2542,15 +2585,17 @@
                                     </div>
                                     <div class="input-group input-group-half">
                                         <label for="cad-status">Status</label>
-                                        <div class="setor-selector setor-selector-cadastro" id="status-selector-wrap">
+                                        <div class="setor-selector setor-selector-cadastro setor-selector-status" id="status-selector-wrap">
                                             <select id="cad-status" class="setor-selector-native-hidden" aria-hidden="true">
+                                                <option value="">Selecione um Status</option>
                                                 <option value="EM USO">EM USO</option>
                                                 <option value="DEFEITO">DEFEITO</option>
                                                 <option value="BACKUP OPERACIONAL">BACKUP OPERACIONAL</option>
                                             </select>
-                                            <button type="button" class="setor-selector-trigger setor-selector-trigger-cadastro" id="cad-status-trigger" aria-haspopup="listbox" aria-expanded="false">EM USO</button>
-                                            <div class="setor-selector-dropdown" id="cad-status-dropdown" role="listbox" aria-hidden="true">
-                                                <div class="setor-selector-option selected" data-value="EM USO" role="option">EM USO</div>
+                                            <button type="button" class="setor-selector-trigger setor-selector-trigger-cadastro" id="cad-status-trigger" aria-haspopup="listbox" aria-expanded="false">Selecione um Status</button>
+                                            <div class="setor-selector-dropdown setor-selector-dropdown-status" id="cad-status-dropdown" role="listbox" aria-hidden="true">
+                                                <div class="setor-selector-option" data-value="" role="option">Selecione um Status</div>
+                                                <div class="setor-selector-option" data-value="EM USO" role="option">EM USO</div>
                                                 <div class="setor-selector-option" data-value="DEFEITO" role="option">DEFEITO</div>
                                                 <div class="setor-selector-option" data-value="BACKUP OPERACIONAL" role="option">BACKUP OPERACIONAL</div>
                                             </div>
