@@ -23,9 +23,16 @@
 - Link **Escanear QR do bot WhatsApp** visível só para técnicos (não admin) na Packing Machine
 - **css/packing_machine.css** – Estilos
 - **js/packing_machine.js** – Lógica da página
+- **config/data/packing-trocas.json** – Lista de trocas (iniciada vazia `[]`). Sync do frontend aceita lista vazia e limpa a tabela quando o servidor retorna `[]`.
+- Tabela expande com os dados (quanto mais registros, mais espaço para baixo); texto WhatsApp e passo a passo em maiúsculas.
 
 ### Segurança
 - **.gitignore** – `config/data/whatsapp-auth/` não é versionado (sessão local do WhatsApp).
+
+## Estado final (PACKING MACHINE finalizado)
+
+- Tabela de histórico **zerada**; dados reais entram pelo site (formulário/ingresso manual) e pelo bot WhatsApp.
+- Sync: se a API retornar `trocas: []`, o frontend limpa o `localStorage` e a tabela.
 
 ## Como recuperar
 

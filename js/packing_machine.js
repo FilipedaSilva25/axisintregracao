@@ -54,30 +54,37 @@
 
     function syncFromApi() {
         fetch(API_TROCAS).then(function(r) { return r.json(); }).then(function(data) {
-            if (data && data.ok && Array.isArray(data.trocas) && data.trocas.length > 0) {
-                var local = getTrocas();
-                var ids = {};
-                var merged = [];
-                data.trocas.forEach(function(t) {
-                    if (!ids[t.id]) {
-                        ids[t.id] = true;
-                        merged.push(t);
-                    }
-                });
-                local.forEach(function(t) {
-                    if (!ids[t.id]) {
-                        ids[t.id] = true;
-                        merged.push(t);
-                    }
-                });
-                merged.sort(function(a, b) {
-                    return new Date(b.dataHora || 0) - new Date(a.dataHora || 0);
-                });
-                saveTrocas(merged);
+            if (!data || !data.ok || !Array.isArray(data.trocas)) return;
+            var server = data.trocas;
+            if (server.length === 0) {
+                saveTrocas([]);
                 updateStats();
                 renderTable();
                 renderCharts();
+                return;
             }
+            var local = getTrocas();
+            var ids = {};
+            var merged = [];
+            server.forEach(function(t) {
+                if (!ids[t.id]) {
+                    ids[t.id] = true;
+                    merged.push(t);
+                }
+            });
+            local.forEach(function(t) {
+                if (!ids[t.id]) {
+                    ids[t.id] = true;
+                    merged.push(t);
+                }
+            });
+            merged.sort(function(a, b) {
+                return new Date(b.dataHora || 0) - new Date(a.dataHora || 0);
+            });
+            saveTrocas(merged);
+            updateStats();
+            renderTable();
+            renderCharts();
         }).catch(function() {});
     }
 
@@ -259,8 +266,9 @@
             }
         });
 
+        var maxVal = Math.max.apply(null, dadosTempoObj.values);
         var barColors = PM_OPCOES.map(function(_, i) {
-            var hues = ['#00e5ff', '#b388ff', '#ff5252', '#ffd740', '#69f0ae', '#ff8a80'];
+            var hues = ['#00acc1', '#7c4dff', '#e53935', '#f9a825', '#43a047', '#fb8c00'];
             return hues[i % hues.length];
         });
         if (chartTempoTroca) chartTempoTroca.destroy();
@@ -271,36 +279,58 @@
                 datasets: [{
                     label: 'Dias entre trocas',
                     data: dadosTempoObj.values,
-                    backgroundColor: barColors,
-                    borderColor: barColors.map(function(c) { return c; }),
-                    borderWidth: 2
+                    backgroundColor: barColors.map(function(c) {
+                        return isDark ? c + 'cc' : c;
+                    }),
+                    borderColor: barColors,
+                    borderWidth: 1,
+                    borderRadius: 6,
+                    borderSkipped: false
                 }]
             },
             options: {
+                indexAxis: 'y',
                 responsive: true,
                 maintainAspectRatio: false,
+                layout: { padding: { left: 8, right: 8 } },
                 plugins: {
                     legend: { display: false },
                     tooltip: {
+                        backgroundColor: isDark ? 'rgba(30,30,35,0.95)' : 'rgba(255,255,255,0.98)',
+                        titleColor: textColor,
+                        bodyColor: textColor,
+                        borderColor: gridColor,
+                        borderWidth: 1,
+                        padding: 10,
                         callbacks: {
                             label: function(ctx) {
                                 var v = ctx.raw;
-                                return v === 0 ? 'Sem dados suficientes (mín. 2 trocas)' : v + ' dias em média';
+                                if (v === 0) return 'Sem dados suficientes (mín. 2 trocas)';
+                                if (v < 1) return (Math.round(v * 24 * 10) / 10) + ' horas em média';
+                                return (Math.round(v * 10) / 10) + ' dias em média';
                             }
                         }
                     }
                 },
                 scales: {
                     x: {
-                        grid: { color: gridColor },
-                        ticks: { color: textColor }
-                    },
-                    y: {
                         beginAtZero: true,
+                        suggestedMax: maxVal > 0 ? Math.ceil(maxVal * 1.2 * 2) / 2 : 1,
                         grid: { color: gridColor },
                         ticks: {
                             color: textColor,
-                            callback: function(v) { return v === 0 ? '0' : v + 'd'; }
+                            callback: function(v) {
+                                if (v === 0) return '0';
+                                if (v < 1) return (Math.round(v * 24)) + 'h';
+                                return v === 1 ? '1 dia' : v + ' dias';
+                            }
+                        }
+                    },
+                    y: {
+                        grid: { display: false },
+                        ticks: {
+                            color: textColor,
+                            font: { size: 12, weight: '500' }
                         }
                     }
                 }

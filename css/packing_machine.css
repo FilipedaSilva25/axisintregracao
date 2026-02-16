@@ -117,6 +117,7 @@ body.pm-page {
     padding: 28px;
     max-width: 1800px;
     margin: 0 auto;
+    min-height: calc(100vh - 80px);
 }
 
 .pm-left-column {
@@ -130,6 +131,7 @@ body.pm-page {
     flex-direction: column;
     gap: 24px;
     min-width: 0;
+    min-height: 0;
 }
 
 @media (max-width: 1200px) {
@@ -198,6 +200,8 @@ body.pm-page {
     font-size: 13px;
     color: var(--pm-text-sec);
     line-height: 1.7;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
 }
 
 .pm-instructions-list li {
@@ -212,6 +216,8 @@ body.pm-page {
     border: 1px solid rgba(37, 211, 102, 0.25);
     border-radius: 14px;
     backdrop-filter: blur(12px);
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
 }
 
 .pm-whatsapp-text {
@@ -758,7 +764,10 @@ body.pm-page {
 
 /* Panel - Histórico - Remodelado em vidro + cores eletrizantes */
 .pm-panel-trocas {
-    min-height: 360px;
+    min-height: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
     border-left: 4px solid #00e5ff;
     box-shadow: 0 12px 48px rgba(0, 229, 255, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
@@ -897,10 +906,13 @@ body.pm-page {
     border-color: rgba(179, 136, 255, 0.25);
 }
 
-/* Table - Vidro + cores eletrizantes */
+/* Table - Vidro + cores eletrizantes
+ * REGRA: quanto mais dados forem adicionados, mais pra baixo vai o espaço.
+ * A tabela cresce com o conteúdo (sem max-height); a página rola quando necessário. */
 .pm-table-wrap {
-    max-height: 400px;
-    overflow: auto;
+    min-height: 520px;
+    flex: 1 1 auto;
+    overflow: visible;
     border-radius: 18px;
     background: rgba(255, 255, 255, 0.2);
     backdrop-filter: blur(16px);
