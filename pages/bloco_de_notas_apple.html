@@ -31,6 +31,10 @@
             <button class="btn-theme-header" id="btn-theme-toggle-header" title="Alternar tema (claro/escuro)" type="button" aria-label="Alternar tema">
                 <i class="fas fa-moon"></i>
             </button>
+            <button class="btn-draft-header" id="btn-draft-header" title="Novo Rascunho (separado de notas)" onclick="typeof createNewDraft==='function'&&createNewDraft(); return false;">
+                <i class="fas fa-file-pen"></i>
+                <span>RASCUNHO</span>
+            </button>
             <button class="btn-new-note-header" id="btn-new-note-header" title="Nova Nota (Ctrl+N)" onclick="typeof createNewNote==='function'&&createNewNote(); return false;">
                 <span>NOVA NOTA</span>
             </button>
@@ -407,13 +411,12 @@
         <!-- Sidebar de Pastas -->
         <aside class="notebook-sidebar">
             <div class="sidebar-header">
-                <h2 class="sidebar-title">
-                    <i class="fas fa-folder"></i>
-                    Pastas
-                </h2>
                 <div class="sidebar-header-actions-row">
                     <button class="btn-search-icon" id="btn-search-notes" title="Buscar notas" onclick="typeof toggleSearch==='function'&&toggleSearch(); return false;">
                         <i class="fas fa-search"></i>
+                    </button>
+                    <button class="btn-draft-sidebar" id="btn-draft-sidebar" title="Ver Rascunhos" onclick="typeof showDrafts==='function'&&showDrafts(); return false;">
+                        <i class="fas fa-file-pen"></i>
                     </button>
                     <button class="btn-new-folder" id="btn-new-folder" title="Nova Pasta" onclick="typeof showModal==='function'&&showModal('modal-new-folder'); return false;">
                         <i class="fas fa-plus"></i>
@@ -555,7 +558,7 @@
                     </div>
                     <div class="editor-writing-area">
                         <div class="rich-editor-placeholder" id="rich-editor-placeholder" aria-hidden="true">Comece a escrever...</div>
-                        <div class="rich-editor" id="rich-editor" contenteditable="true" spellcheck="true" data-placeholder="Comece a escrever..."><p><br></p></div>
+                        <iframe id="rich-editor-iframe" class="rich-editor-iframe" srcdoc="&lt;!DOCTYPE html&gt;&lt;html&gt;&lt;head&gt;&lt;meta charset='UTF-8'&gt;&lt;style&gt;*{box-sizing:border-box}html,body{margin:0;padding:0;min-height:100%;font:16px/1.6 system-ui,sans-serif;color:#000!important;-webkit-text-fill-color:#000!important;background:#fff!important}#rich-editor{min-height:100vh;padding:32px 48px 120px;max-width:720px;margin:0 auto;outline:none;color:#000!important;-webkit-text-fill-color:#000!important;caret-color:#000}#rich-editor p,#rich-editor span,#rich-editor div{color:#000!important}#rich-editor p{margin-bottom:16px}&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;div id='rich-editor' contenteditable='true' spellcheck='true'&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;/div&gt;&lt;/body&gt;&lt;/html&gt;" title="Editor de texto"></iframe>
                     </div>
                     <div class="markdown-preview" id="markdown-preview" style="display: none;"></div>
                 </div>

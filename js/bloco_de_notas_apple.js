@@ -3,6 +3,15 @@
 // Todas as funcionalidades implementadas
 // ============================================
 
+// Helper: retorna o editor (dentro do iframe isolado para texto visível)
+function getRichEditor() {
+    var iframe = document.getElementById('rich-editor-iframe');
+    if (iframe && iframe.contentDocument && iframe.contentDocument.getElementById) {
+        return iframe.contentDocument.getElementById('rich-editor');
+    }
+    return null;
+}
+
 // Estrutura de Dados Expandida
 let notebookData = {
     folders: {},
@@ -244,13 +253,28 @@ function setupEventListeners() {
         }
     });
     
-    // Editor de conteúdo
-    const editor = document.getElementById('rich-editor');
-    if (editor) {
+    // Editor de conteúdo (dentro do iframe - esperar load)
+    var editorIframe = document.getElementById('rich-editor-iframe');
+    if (editorIframe) {
+        var initEditorInFrame = function() {
+            var editor = getRichEditor();
+            if (!editor) return;
+        // MutationObserver: corrige cor do texto em tempo real (evita texto invisível)
+        var _sanitizeScheduled = false;
+        const editorObserver = new MutationObserver(function() {
+            if (_sanitizeScheduled) return;
+            _sanitizeScheduled = true;
+            requestAnimationFrame(function() {
+                _sanitizeScheduled = false;
+                if (typeof sanitizeEditorTextColor === 'function') sanitizeEditorTextColor(editor);
+            });
+        });
+        editorObserver.observe(editor, { childList: true, subtree: true, characterData: true });
         editor.addEventListener('focus', function() {
             const toolbar = document.getElementById('editor-format-toolbar');
             if (toolbar && notebookData.currentNote) toolbar.style.display = 'block';
             updatePlaceholderVisibility();
+            if (typeof sanitizeEditorTextColor === 'function') sanitizeEditorTextColor(editor);
         });
         editor.addEventListener('blur', function() {
             const toolbar = document.getElementById('editor-format-toolbar');
@@ -265,9 +289,15 @@ function setupEventListeners() {
         });
         editor.addEventListener('input', (function() {
             var saveTimeout;
+            var sanitizeTimeout;
             return function() {
                 updatePlaceholderVisibility();
                 if (notebookData.currentNote) {
+                    clearTimeout(sanitizeTimeout);
+                    if (typeof sanitizeEditorTextColor === 'function') sanitizeEditorTextColor(editor);
+                    sanitizeTimeout = setTimeout(function() {
+                        if (typeof sanitizeEditorTextColor === 'function') sanitizeEditorTextColor(editor);
+                    }, 50);
                     notebookData.notes[notebookData.currentNote].content = isEditorEmpty(editor) ? '' : editor.innerHTML;
                     updateWordCount();
                     clearTimeout(saveTimeout);
@@ -277,9 +307,49 @@ function setupEventListeners() {
                 }
             };
         })());
+        editor.addEventListener('compositionend', function() {
+            if (typeof sanitizeEditorTextColor === 'function') sanitizeEditorTextColor(editor);
+        });
         editor.addEventListener('paste', handlePaste);
         initImageLayoutToolbar(editor);
         updatePlaceholderVisibility();
+        try { (editor.ownerDocument || document).execCommand('styleWithCSS', false, false); } catch (e) {}
+        
+        // Interceptar digitação (execCommand usa doc do iframe)
+        editor.addEventListener('keydown', function(e) {
+            if (e.isComposing) return;
+            var key = e.key;
+            if (e.ctrlKey || e.metaKey || e.altKey) return;
+            if (key === 'Backspace' || key === 'Delete' || key === 'Tab') return;
+            if (key === 'Enter') {
+                e.preventDefault();
+                (editor.ownerDocument || document).execCommand('insertParagraph', false, null);
+                if (typeof sanitizeEditorTextColor === 'function') sanitizeEditorTextColor(editor);
+                return;
+            }
+            if (key.length === 1 && !e.repeat) {
+                e.preventDefault();
+                var isDark = document.body.getAttribute('data-theme') === 'dark';
+                var txtColor = isDark ? '#f5f5f7' : '#000000';
+                (editor.ownerDocument || document).execCommand('insertHTML', false, '<span style="color:' + txtColor + ' !important;-webkit-text-fill-color:' + txtColor + ' !important;">' + (key === ' ' ? '&nbsp;' : key.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')) + '</span>');
+                if (typeof sanitizeEditorTextColor === 'function') sanitizeEditorTextColor(editor);
+                updatePlaceholderVisibility();
+                var toolbar = document.getElementById('editor-format-toolbar');
+                if (toolbar && !isEditorEmpty(editor)) toolbar.style.display = 'block';
+                if (notebookData.currentNote) {
+                    notebookData.notes[notebookData.currentNote].content = isEditorEmpty(editor) ? '' : editor.innerHTML;
+                    updateWordCount();
+                    clearTimeout(window._editorSaveTimeout);
+                    window._editorSaveTimeout = setTimeout(saveData, 300);
+                }
+            }
+        });
+        };
+        if (editorIframe.contentDocument && editorIframe.contentDocument.readyState === 'complete') {
+            initEditorInFrame();
+        } else {
+            editorIframe.addEventListener('load', initEditorInFrame);
+        }
     }
     
     // Busca
@@ -535,7 +605,7 @@ function setupColorPickers() {
     });
     
     // Obter referência ao editor
-    const richEditor = document.getElementById('rich-editor');
+    const richEditor = getRichEditor();
     
     // Fechar apenas quando clicar fora - NÃO fechar ao clicar no editor
     document.addEventListener('click', function(e) {
@@ -748,61 +818,62 @@ function createSidebarNoteRow(note) {
     return div;
 }
 
-// Selecionar pasta
+// Selecionar pasta (toggle: primeiro clique mostra notas, segundo clique esconde)
 function selectFolder(folderId, clickedElement) {
-    // Fechar editor se estiver aberto
-    if (notebookData.currentNote) {
-        closeEditor();
+    const notesList = document.getElementById('notes-list-container');
+    const emptyState = document.getElementById('empty-editor-state');
+    
+    // Ao clicar numa pasta com subpastas recolhidas, expandir automaticamente (1 clique basta)
+    const hasSubfolders = Object.values(notebookData.folders || {}).some(f => f.parent === folderId);
+    if (hasSubfolders && notebookData.folderExpanded && notebookData.folderExpanded[folderId] === false) {
+        notebookData.folderExpanded[folderId] = true;
+        renderFolders();
     }
     
+    // Toggle: se clicar na mesma pasta já selecionada, esconde a lista
+    if (notebookData.currentFolder === folderId && notesList && notesList.style.display !== 'none') {
+        notesList.style.display = 'none';
+        notesList.classList.add('hidden');
+        if (emptyState) {
+            emptyState.style.display = 'flex';
+            emptyState.classList.add('show');
+        }
+        if (notebookData.currentNote) closeEditor();
+        return;
+    }
+    
+    if (notebookData.currentNote) closeEditor();
     notebookData.currentFolder = folderId;
     
-    // Atualizar UI - remover active de todas as pastas
-    document.querySelectorAll('.folder-content').forEach(el => {
-        el.classList.remove('active');
-    });
-    
-    // Ativar a pasta clicada
+    document.querySelectorAll('.folder-content').forEach(el => el.classList.remove('active'));
     if (clickedElement) {
         clickedElement.classList.add('active');
     } else {
-        // Fallback: encontrar o elemento da pasta
         const folderEl = document.querySelector(`[data-folder-id="${folderId}"] .folder-content`);
         if (folderEl) folderEl.classList.add('active');
     }
     
-    // Atualizar nome da pasta
-    const folderName = folderId === 'root' 
-        ? 'Todas as Notas' 
-        : notebookData.folders[folderId]?.name || 'Pasta';
+    const folderName = folderId === 'root' ? 'Todas as Notas' : notebookData.folders[folderId]?.name || 'Pasta';
     const folderNameEl = document.getElementById('current-folder-name');
-    if (folderNameEl) {
-        folderNameEl.textContent = folderName;
-    }
+    if (folderNameEl) folderNameEl.textContent = folderName;
     
-    // Garantir que o editor está fechado
     const editorContainer = document.getElementById('note-editor-container');
     if (editorContainer) {
         editorContainer.style.display = 'none';
         editorContainer.classList.remove('active');
     }
     
-    // Garantir que o espaço em branco está escondido
-    const emptyState = document.getElementById('empty-editor-state');
     if (emptyState) {
         emptyState.style.display = 'none';
         emptyState.classList.remove('show');
     }
     
-    // Garantir que a lista está visível
-    const notesList = document.getElementById('notes-list-container');
     if (notesList) {
         notesList.style.display = 'block';
         notesList.style.visibility = 'visible';
         notesList.classList.remove('hidden');
     }
     
-    // Renderizar notas
     renderNotes();
 }
 
@@ -821,9 +892,8 @@ function renderNotes() {
     
     notesGrid.innerHTML = '';
     
-    // Filtrar notas (excluir apenas as que estão explicitamente trashed)
-    let notes = Object.values(notebookData.notes).filter(n => !n.trashed);
-    console.log(`📝 Total de notas: ${Object.keys(notebookData.notes).length}, Não trashed: ${notes.length}`);
+    // Filtrar notas (excluir trashed e rascunhos - rascunhos aparecem só em Rascunhos)
+    let notes = Object.values(notebookData.notes).filter(n => !n.trashed && !n.draft);
     if (notebookData.currentFolder !== 'root') {
         notes = notes.filter(n => n.folder === notebookData.currentFolder);
     }
@@ -926,8 +996,6 @@ function renderNotes() {
     
     // Atualizar árvore de pastas (contagem e notas sob cada subpasta)
     renderFolders();
-    
-    console.log(`✅ ${notes.length} notas renderizadas na pasta "${notebookData.currentFolder === 'root' ? 'Todas as Notas' : notebookData.folders[notebookData.currentFolder]?.name || 'Pasta'}"`);
 }
 
 // Criar card de nota (versão expandida)
@@ -1013,6 +1081,7 @@ function createNewNote() {
         title: 'Nova Nota',
         content: '',
         folder: notebookData.currentFolder,
+        draft: false,
         starred: false,
         pinned: false,
         created: new Date().toISOString(),
@@ -1072,7 +1141,7 @@ function openNote(noteId) {
 
     // Preencher dados
     const titleInput = document.getElementById('note-title');
-    const richEditor = document.getElementById('rich-editor');
+    const richEditor = getRichEditor();
     
     if (titleInput) {
         titleInput.value = note.title || '';
@@ -1085,7 +1154,7 @@ function openNote(noteId) {
         richEditor.innerHTML = isEmpty ? (typeof EMPTY_EDITOR_HTML !== 'undefined' ? EMPTY_EDITOR_HTML : '<p><br></p>') : note.content;
         sanitizeEditorTextColor(richEditor);
         var isDark = document.body.getAttribute('data-theme') === 'dark';
-        richEditor.style.color = isDark ? '#f5f5f7' : '#1d1d1f';
+        richEditor.style.color = isDark ? '#f5f5f7' : '#000000';
         richEditor.contentEditable = 'true';
         updatePlaceholderVisibility();
     }
@@ -1105,21 +1174,23 @@ function openNote(noteId) {
     setTimeout(() => {
         if (richEditor) {
             richEditor.focus();
-            // Mover cursor para o início
+            if (typeof sanitizeEditorTextColor === 'function') sanitizeEditorTextColor(richEditor);
             try {
-                const range = document.createRange();
-                const sel = window.getSelection();
-                if (richEditor.childNodes.length > 0) {
-                    range.setStart(richEditor.childNodes[0], 0);
-                } else {
-                    range.setStart(richEditor, 0);
+                var doc = richEditor.ownerDocument;
+                var win = doc.defaultView;
+                var range = doc.createRange();
+                var sel = win ? win.getSelection() : window.getSelection();
+                if (sel) {
+                    if (richEditor.childNodes.length > 0) {
+                        range.setStart(richEditor.childNodes[0], 0);
+                    } else {
+                        range.setStart(richEditor, 0);
+                    }
+                    range.collapse(true);
+                    sel.removeAllRanges();
+                    sel.addRange(range);
                 }
-                range.collapse(true);
-                sel.removeAllRanges();
-                sel.addRange(range);
-            } catch (e) {
-                console.log('Erro ao posicionar cursor:', e);
-            }
+            } catch (e) {}
         }
     }, 200);
     
@@ -1214,7 +1285,7 @@ function saveCurrentNote() {
     const note = notebookData.notes[notebookData.currentNote];
     if (!note) return;
     
-    var editor = document.getElementById('rich-editor');
+    var editor = getRichEditor();
     note.title = document.getElementById('note-title').value || 'Sem título';
     note.content = (editor && isEditorEmpty(editor)) ? '' : (editor ? editor.innerHTML : '');
     note.updated = new Date().toISOString();
@@ -1226,20 +1297,19 @@ function saveCurrentNote() {
 
 // Aplicar formatação
 function applyFormat(format) {
-    const editor = document.getElementById('rich-editor');
+    const editor = getRichEditor();
     if (!editor) return;
     
     editor.focus();
-    
-    // Tratar alinhamentos
+    var doc = editor.ownerDocument || document;
     if (format === 'alignLeft') {
-        document.execCommand('justifyLeft', false, null);
+        doc.execCommand('justifyLeft', false, null);
     } else if (format === 'alignCenter') {
-        document.execCommand('justifyCenter', false, null);
+        doc.execCommand('justifyCenter', false, null);
     } else if (format === 'alignRight') {
-        document.execCommand('justifyRight', false, null);
+        doc.execCommand('justifyRight', false, null);
     } else {
-        document.execCommand(format, false, null);
+        doc.execCommand(format, false, null);
     }
     
     // Atualizar botões ativos
@@ -1259,7 +1329,7 @@ function isEditorEmpty(editor) {
     return false;
 }
 function updatePlaceholderVisibility() {
-    var editor = document.getElementById('rich-editor');
+    var editor = getRichEditor();
     var placeholder = document.getElementById('rich-editor-placeholder');
     if (!editor || !placeholder) return;
     var empty = isEditorEmpty(editor);
@@ -1279,9 +1349,9 @@ function sanitizeEditorTextColor(editor) {
     var isDark = document.body.getAttribute('data-theme') === 'dark';
     var invisibleColors;
     if (isDark) {
-        invisibleColors = /^\s*(#000(000)?|#1d1d1f|#0d0d0f|#111|black|rgb\s*\(\s*0\s*,\s*0\s*,\s*0\s*\)|rgb\s*\(\s*29\s*,\s*29\s*,\s*31\s*\)|rgba\s*\(\s*0\s*,\s*0\s*,\s*0\s*[,)])\s*$/i;
+        invisibleColors = /^\s*(#000(000)?|#1d1d1f|#0d0d0f|#111|black|transparent|rgb\s*\(\s*0\s*,\s*0\s*,\s*0\s*\)|rgb\s*\(\s*29\s*,\s*29\s*,\s*31\s*\)|rgba\s*\(\s*0\s*,\s*0\s*,\s*0\s*[^)]*\)|rgba\s*\(\s*255\s*,\s*255\s*,\s*255\s*,\s*0\s*\))\s*$/i;
     } else {
-        invisibleColors = /^\s*(#fff(fff)?|#f5f5f7|#fafafa|#f0f0f0|#fefefe|white|rgb\s*\(\s*25[0-5]\s*,\s*25[0-5]\s*,\s*25[0-5]\s*\)|rgb\s*\(\s*24[5-9]\s*,\s*24[5-9]\s*,\s*24[5-9]\s*\)|rgba\s*\(\s*255\s*,\s*255\s*,\s*255\s*[,)])\s*$/i;
+        invisibleColors = /^\s*(#fff(fff)?|#f5f5f7|#fafafa|#f0f0f0|#fefefe|white|transparent|rgb\s*\(\s*25[0-5]\s*,\s*25[0-5]\s*,\s*25[0-5]\s*\)|rgb\s*\(\s*24[5-9]\s*,\s*24[5-9]\s*,\s*24[5-9]\s*\)|rgba\s*\(\s*255\s*,\s*255\s*,\s*255\s*[^)]*\)|rgba\s*\(\s*255\s*,\s*255\s*,\s*255\s*,\s*0\s*\))\s*$/i;
     }
     var el = editor.querySelectorAll('[style*="color"]');
     el.forEach(function(node) {
@@ -1300,12 +1370,23 @@ function sanitizeEditorTextColor(editor) {
             node.removeAttribute('color');
         }
     });
-    editor.style.webkitTextFillColor = '';
+    // Forçar cor visível em todos os descendentes (modo claro: PRETO para garantir visibilidade)
+    var targetColor = isDark ? '#f5f5f7' : '#000000';
+    editor.style.color = targetColor;
+    editor.style.webkitTextFillColor = targetColor;
+    editor.querySelectorAll('p, span, div, li, td, th, b, strong, i, em, u, font').forEach(function(el) {
+        var s = el.getAttribute('style') || '';
+        var m = s.match(/color\s*:\s*([^;]+)/i);
+        if (m && invisibleColors.test(m[1].trim())) {
+            el.style.color = targetColor;
+            el.style.webkitTextFillColor = targetColor;
+        }
+    });
 }
 
 // Aplicar cor do texto
 function applyTextColor(color) {
-    const editor = document.getElementById('rich-editor');
+    const editor = getRichEditor();
     if (!editor) return;
     
     editor.focus();
@@ -1326,7 +1407,7 @@ function applyTextColor(color) {
 
 // Aplicar realce (marca texto)
 function applyHighlight(color) {
-    const editor = document.getElementById('rich-editor');
+    const editor = getRichEditor();
     if (!editor) return;
     
     editor.focus();
@@ -1440,7 +1521,7 @@ function fillEditorOptionsColorsGrid(mode) {
 }
 
 function applyEditorOptionColor(color, mode) {
-    var editor = document.getElementById('rich-editor');
+    var editor = getRichEditor();
     if (!editor) return;
     editor.focus();
     if (mode === 'highlight') {
@@ -1540,7 +1621,7 @@ function applyImageLayoutToElement(wrapOrImg, layout) {
 
 function confirmInsertImage() {
     if (!_insertImageDataUrl) return;
-    var editor = document.getElementById('rich-editor');
+    var editor = getRichEditor();
     if (!editor) return;
     var posSelect = document.getElementById('insert-image-pos');
     var layout = (posSelect && posSelect.value) ? posSelect.value : 'block';
@@ -1706,7 +1787,7 @@ function confirmInsertLink() {
     var textInput = document.getElementById('insert-link-text');
     var url = urlInput && urlInput.value.trim();
     if (!url) return;
-    var editor = document.getElementById('rich-editor');
+    var editor = getRichEditor();
     if (!editor) return;
     var text = textInput && textInput.value.trim();
     var sel = window.getSelection();
@@ -1723,7 +1804,7 @@ function insertTable() {
     const rows = parseInt(prompt('Número de linhas:', '3')) || 3;
     const cols = parseInt(prompt('Número de colunas:', '3')) || 3;
     
-    const editor = document.getElementById('rich-editor');
+    const editor = getRichEditor();
     const table = document.createElement('table');
     
     for (let i = 0; i < rows; i++) {
@@ -1911,7 +1992,7 @@ function updateWordCount() {
     if (footer) {
         footer.querySelectorAll('.word-count').forEach(el => { if (!el.id) el.remove(); });
     }
-    const editor = document.getElementById('rich-editor');
+    const editor = getRichEditor();
     if (!editor) return;
     
     const text = editor.innerText || editor.textContent || '';
@@ -2374,8 +2455,11 @@ function closeModal(modalId) {
 // Handle paste
 function handlePaste(e) {
     e.preventDefault();
+    var editor = getRichEditor();
+    var doc = editor ? (editor.ownerDocument || document) : document;
     const text = (e.clipboardData || window.clipboardData).getData('text');
-    document.execCommand('insertText', false, text);
+    doc.execCommand('insertText', false, text);
+    if (editor && typeof sanitizeEditorTextColor === 'function') sanitizeEditorTextColor(editor);
     saveCurrentNote();
 }
 
@@ -2472,6 +2556,80 @@ function escapeHtml(text) {
     div.textContent = text;
     return div.innerHTML;
 }
+
+// Rascunhos (notas sem título definido)
+function showDrafts() {
+    notebookData.currentFolder = 'drafts';
+    document.getElementById('current-folder-name').textContent = 'Rascunhos';
+    const notesListContainer = document.getElementById('notes-list-container');
+    if (notesListContainer) {
+        notesListContainer.classList.remove('view-trash');
+        notesListContainer.style.display = 'block';
+        notesListContainer.style.visibility = 'visible';
+        notesListContainer.classList.remove('hidden');
+    }
+    const emptyState = document.getElementById('empty-editor-state');
+    if (emptyState) {
+        emptyState.style.display = 'none';
+        emptyState.classList.remove('show');
+    }
+    const notesGrid = document.getElementById('notes-grid');
+    if (!notesGrid) return;
+    notesGrid.innerHTML = '';
+    const drafts = Object.values(notebookData.notes).filter(n => !n.trashed && n.draft === true);
+    
+    if (drafts.length === 0) {
+        notesGrid.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-icon">📄</div>
+                <h3>Nenhum rascunho</h3>
+                <p>Clique em <strong>NOVO RASCUNHO</strong> no topo para criar rascunhos separados das notas.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    drafts.sort((a, b) => new Date(b.updated || b.created) - new Date(a.updated || a.created));
+    drafts.forEach(note => {
+        const card = createNoteCard(note);
+        notesGrid.appendChild(card);
+    });
+}
+window.showDrafts = showDrafts;
+
+// Criar novo rascunho (separado de notas - aparece só em Rascunhos)
+function createNewDraft() {
+    if (_createNewNoteLock) return;
+    _createNewNoteLock = true;
+    setTimeout(function () { _createNewNoteLock = false; }, 800);
+
+    const noteId = 'draft-' + Date.now();
+    const note = {
+        id: noteId,
+        title: '',
+        content: '',
+        folder: 'drafts',
+        draft: true,
+        starred: false,
+        pinned: false,
+        created: new Date().toISOString(),
+        updated: new Date().toISOString()
+    };
+
+    notebookData.notes[noteId] = note;
+    saveData();
+    notebookData.currentFolder = 'drafts';
+    showDrafts();
+    const emptyState = document.getElementById('empty-editor-state');
+    if (emptyState) {
+        emptyState.style.display = 'none';
+        emptyState.classList.remove('show');
+    }
+    const notesList = document.getElementById('notes-list-container');
+    if (notesList) notesList.style.display = 'none';
+    openNote(noteId);
+}
+window.createNewDraft = createNewDraft;
 
 // Favoritos
 function showFavorites() {
@@ -2656,8 +2814,8 @@ function openTrashedNote(noteId) {
     // Preencher dados
     document.getElementById('note-title').value = note.title || '';
     document.getElementById('note-title').disabled = true;
-    document.getElementById('rich-editor').innerHTML = note.content || '<p>Sem conteúdo...</p>';
-    document.getElementById('rich-editor').contentEditable = 'false';
+    getRichEditor().innerHTML = note.content || '<p>Sem conteúdo...</p>';
+    getRichEditor().contentEditable = 'false';
     
     // Esconder toolbar de formatação (se existir)
     const fmtToolbar = document.getElementById('editor-format-toolbar');
@@ -2766,7 +2924,7 @@ function extractImagesFromNote(note) {
 
 // 3. BARRA DE PROGRESSO DE LEITURA
 function updateReadingProgress() {
-    const editor = document.getElementById('rich-editor');
+    const editor = getRichEditor();
     const progressBar = document.getElementById('reading-progress');
     if (!editor || !progressBar) return;
     
@@ -2940,7 +3098,7 @@ function useTemplate(templateId) {
     
     createNewNote();
     setTimeout(() => {
-        document.getElementById('rich-editor').innerHTML = template.content;
+        getRichEditor().innerHTML = template.content;
         saveCurrentNote();
         closeModal('modal-templates');
     }, 100);
@@ -3114,7 +3272,7 @@ function initializeDragAndDrop() {
 
 // 12. PREVIEW MARKDOWN
 function toggleMarkdownPreview() {
-    const editor = document.getElementById('rich-editor');
+    const editor = getRichEditor();
     const preview = document.getElementById('markdown-preview');
     const btn = document.getElementById('toolbar-markdown-preview') || document.getElementById('btn-markdown-preview');
     
@@ -3280,10 +3438,18 @@ function applyTheme(theme) {
         }
     });
     
-    var editor = document.getElementById('rich-editor');
+    var editor = getRichEditor();
     if (editor) {
+        var doc = editor.ownerDocument;
+        var isDark = theme === 'dark';
+        var txtColor = isDark ? '#f5f5f7' : '#000000';
+        var bgColor = isDark ? '#1d1d1f' : '#ffffff';
+        if (doc && doc.body) {
+            doc.body.style.color = txtColor;
+            doc.body.style.background = bgColor;
+        }
         sanitizeEditorTextColor(editor);
-        editor.style.color = theme === 'dark' ? '#f5f5f7' : '#1d1d1f';
+        editor.style.color = txtColor;
     }
     
     saveData();
@@ -3317,7 +3483,7 @@ function fixFolderStructure() {
 // 31. AUTOSAVE INTELIGENTE - Melhorado para salvar mais frequentemente
 let autosaveTimeout;
 function startIntelligentAutosave() {
-    const editor = document.getElementById('rich-editor');
+    const editor = getRichEditor();
     const titleInput = document.getElementById('note-title');
     if (!editor) return;
     
@@ -3545,7 +3711,7 @@ function initializeAdvancedFeatures() {
     renderShortcuts();
     
     // Inicializar scroll listener para progresso de leitura
-    const editor = document.getElementById('rich-editor');
+    const editor = getRichEditor();
     if (editor) {
         editor.addEventListener('scroll', updateReadingProgress);
     }
@@ -3895,7 +4061,7 @@ function showToast(message, type = 'info') {
 
 // Setup Toolbar Google Docs
 function setupGoogleDocsToolbar() {
-    const editor = document.getElementById('rich-editor');
+    const editor = getRichEditor();
     if (!editor) return;
     
     // Menus button

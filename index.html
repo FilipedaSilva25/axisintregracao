@@ -1251,60 +1251,20 @@
          ============================================ -->
     <link rel="stylesheet" href="css/intro-axis.css">
     <div id="intro-axis-overlay" style="display: none;">
-        <div class="intro-axis-container">
-            <!-- Slide 1 -->
-            <div class="intro-slide active" data-slide="1">
-                <div class="intro-slide-img-wrap">
-                    <img src="assets/IMAGENS/Nova_Logo_Sem_Fundo_1.2.png" alt="AXIS">
-                </div>
-                <h2>Bem-vindo ao AXIS</h2>
-                <p>Sistema de Gestão de Inventário de Impressoras Zebra. Controle centralizado, relatórios e muito mais.</p>
-                <div class="intro-slide-buttons">
-                    <button type="button" class="intro-btn intro-btn-primary" onclick="introProximoSlide()">Próximo</button>
-                </div>
+        <!-- Bumper estilo YouTube - logo + efeitos, auto-play -->
+        <div class="intro-cinema-bg"></div>
+        <div class="intro-smoke intro-smoke-1"></div>
+        <div class="intro-smoke intro-smoke-2"></div>
+        <div class="intro-smoke intro-smoke-3"></div>
+        <div class="intro-light-rays"></div>
+        <canvas id="intro-smoke-canvas" class="intro-smoke-canvas" aria-hidden="true"></canvas>
+        <div class="intro-film-grain"></div>
+        <div class="intro-bumper-container">
+            <div class="intro-bumper-logo">
+                <img src="assets/IMAGENS/Nova_Logo_Sem_Fundo_1.2.png" alt="AXIS">
             </div>
-            <!-- Slide 2 -->
-            <div class="intro-slide" data-slide="2">
-                <div class="intro-slide-img-wrap">
-                    <img src="assets/IMAGENS/Novo_Fivecon_1.2.png" alt="Inventário">
-                </div>
-                <h2>Inventário Inteligente</h2>
-                <p>Cadastre impressoras, acompanhe status, consumíveis e localização em tempo real.</p>
-                <div class="intro-slide-buttons">
-                    <button type="button" class="intro-btn intro-btn-secondary" onclick="introSlideAnterior()">Voltar</button>
-                    <button type="button" class="intro-btn intro-btn-primary" onclick="introProximoSlide()">Próximo</button>
-                </div>
-            </div>
-            <!-- Slide 3 -->
-            <div class="intro-slide" data-slide="3">
-                <div class="intro-slide-img-wrap">
-                    <span style="font-size: 64px;">🛡️</span>
-                </div>
-                <h2>Rondas e Manutenções</h2>
-                <p>Planeje rondas de vistoria, manutenções preventivas e registre chamados de forma organizada.</p>
-                <div class="intro-slide-buttons">
-                    <button type="button" class="intro-btn intro-btn-secondary" onclick="introSlideAnterior()">Voltar</button>
-                    <button type="button" class="intro-btn intro-btn-primary" onclick="introProximoSlide()">Próximo</button>
-                </div>
-            </div>
-            <!-- Slide 4 - Final -->
-            <div class="intro-slide" data-slide="4">
-                <div class="intro-slide-img-wrap">
-                    <span style="font-size: 64px;">✨</span>
-                </div>
-                <h2>Pronto para começar</h2>
-                <p>Faça login e acesse todas as funcionalidades do sistema.</p>
-                <div class="intro-slide-buttons">
-                    <button type="button" class="intro-btn intro-btn-secondary" onclick="introSlideAnterior()">Voltar</button>
-                    <button type="button" class="intro-btn intro-btn-primary" onclick="introIrParaLogin()">Acessar AXIS</button>
-                </div>
-            </div>
-            <div class="intro-dots" id="intro-dots">
-                <span class="intro-dot active" data-dot="1"></span>
-                <span class="intro-dot" data-dot="2"></span>
-                <span class="intro-dot" data-dot="3"></span>
-                <span class="intro-dot" data-dot="4"></span>
-            </div>
+            <p class="intro-bumper-text">AXIS INTEGRAÇÃO</p>
+            <button type="button" class="intro-bumper-skip" onclick="introIrParaLogin()">Pular</button>
         </div>
     </div>
 
@@ -4124,45 +4084,82 @@
             setTimeout(setupLoginButton, 500);
         })();
         
-        // ========== INTRO AXIS - Funções da apresentação ==========
-        function introProximoSlide() {
-            var slides = document.querySelectorAll('.intro-slide');
-            var dots = document.querySelectorAll('.intro-dot');
-            var current = 0;
-            slides.forEach(function(s, i) { if (s.classList.contains('active')) current = i; });
-            if (current >= slides.length - 1) return;
-            slides[current].classList.remove('active');
-            slides[current + 1].classList.add('active');
-            dots.forEach(function(d, i) { d.classList.toggle('active', i === current + 1); });
-        }
-        function introSlideAnterior() {
-            var slides = document.querySelectorAll('.intro-slide');
-            var dots = document.querySelectorAll('.intro-dot');
-            var current = 0;
-            slides.forEach(function(s, i) { if (s.classList.contains('active')) current = i; });
-            if (current <= 0) return;
-            slides[current].classList.remove('active');
-            slides[current - 1].classList.add('active');
-            dots.forEach(function(d, i) { d.classList.toggle('active', i === current - 1); });
-        }
+        // ========== INTRO AXIS - Bumper estilo YouTube ==========
         function introIrParaLogin() {
-            localStorage.setItem('axis_intro_seen', 'true');
-            var overlay = document.getElementById('intro-axis-overlay');
-            var authScreen = document.getElementById('auth-screen');
-            var authCard = authScreen ? authScreen.querySelector('.auth-card') : null;
-            if (overlay) overlay.classList.add('intro-fade-out');
-            setTimeout(function() {
-                if (overlay) overlay.style.display = 'none';
-                if (authScreen) {
-                    authScreen.style.display = 'flex';
-                    authScreen.classList.add('auth-screen-transition-in');
-                    if (authCard) authCard.classList.add('auth-card-transition');
+            try {
+                if (window._introAutoTimeout) {
+                    clearTimeout(window._introAutoTimeout);
+                    window._introAutoTimeout = null;
                 }
-            }, 800);
+                var overlay = document.getElementById('intro-axis-overlay');
+                if (overlay && overlay.classList.contains('intro-fade-out')) return;
+                var authScreen = document.getElementById('auth-screen');
+                var authCard = authScreen ? authScreen.querySelector('.auth-card') : null;
+                if (overlay) overlay.classList.add('intro-fade-out');
+                setTimeout(function() {
+                    try {
+                        if (overlay) overlay.style.display = 'none';
+                        if (authScreen) {
+                            authScreen.style.display = 'flex';
+                            authScreen.classList.add('auth-screen-transition-in');
+                            if (authCard) authCard.classList.add('auth-card-transition');
+                        }
+                    } catch (e) { console.warn('Intro transition:', e); }
+                }, 800);
+            } catch (e) { console.warn('introIrParaLogin:', e); }
         }
-        window.introProximoSlide = introProximoSlide;
-        window.introSlideAnterior = introSlideAnterior;
         window.introIrParaLogin = introIrParaLogin;
+
+        // Efeito fumaça cinematográfica (canvas)
+        function initIntroSmoke() {
+            try {
+            var canvas = document.getElementById('intro-smoke-canvas');
+            if (!canvas) return;
+            var ctx = canvas.getContext('2d');
+            var particles = [];
+            var w = canvas.width = window.innerWidth;
+            var h = canvas.height = window.innerHeight;
+            function resize() {
+                w = canvas.width = window.innerWidth;
+                h = canvas.height = window.innerHeight;
+            }
+            window.addEventListener('resize', resize);
+            for (var i = 0; i < 40; i++) {
+                particles.push({
+                    x: Math.random() * w,
+                    y: Math.random() * h,
+                    r: 80 + Math.random() * 120,
+                    vx: (Math.random() - 0.5) * 0.3,
+                    vy: (Math.random() - 0.5) * 0.3,
+                    opacity: 0.03 + Math.random() * 0.06
+                });
+            }
+            function draw() {
+                var ol = document.getElementById('intro-axis-overlay');
+                if (!ol || ol.style.display === 'none' || ol.classList.contains('intro-fade-out')) return;
+                ctx.clearRect(0, 0, w, h);
+                particles.forEach(function(p) {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    if (p.x < -p.r) p.x = w + p.r;
+                    if (p.x > w + p.r) p.x = -p.r;
+                    if (p.y < -p.r) p.y = h + p.r;
+                    if (p.y > h + p.r) p.y = -p.r;
+                    var g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r);
+                    g.addColorStop(0, 'rgba(255,255,255,' + p.opacity + ')');
+                    g.addColorStop(0.5, 'rgba(200,200,255,' + p.opacity * 0.5 + ')');
+                    g.addColorStop(1, 'rgba(255,255,255,0)');
+                    ctx.fillStyle = g;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+                requestAnimationFrame(draw);
+            }
+            draw();
+            } catch (e) { console.warn('initIntroSmoke:', e); }
+        }
+        window.initIntroSmoke = initIntroSmoke;
 
         // Remove loading screen e controla Intro (primeira visita)
         window.addEventListener('load', function() {
@@ -4184,14 +4181,21 @@
                 var themeIcon = document.getElementById('theme-icon');
                 if (themeIcon) themeIcon.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
                 
-                // Intro: mostra apenas na primeira visita
-                var introJaVisto = localStorage.getItem('axis_intro_seen') === 'true';
-                var userLogado = localStorage.getItem('current_user') && (localStorage.getItem('user_logged_in') === 'true');
-                
-                if (!introJaVisto && !userLogado && introOverlay && authScreen) {
-                    authScreen.style.display = 'none';
-                    introOverlay.style.display = 'flex';
-                }
+                // Intro estilo YouTube: sempre antes do login (quando não logado)
+                try {
+                    var userLogado = localStorage.getItem('current_user') && (localStorage.getItem('user_logged_in') === 'true');
+                    var mostrarIntro = !userLogado && introOverlay && authScreen;
+                    if (mostrarIntro) {
+                        authScreen.style.display = 'none';
+                        introOverlay.style.display = 'flex';
+                        if (typeof initIntroSmoke === 'function') initIntroSmoke();
+                        window._introAutoTimeout = setTimeout(function() {
+                            if (typeof introIrParaLogin === 'function') introIrParaLogin();
+                        }, 4500);
+                    } else if (authScreen) {
+                        authScreen.style.display = 'flex';
+                    }
+                } catch (e) { console.warn('Intro init:', e); if (authScreen) authScreen.style.display = 'flex'; }
             }, 800);
         });
 

@@ -123,6 +123,29 @@ body {
     letter-spacing: 0.02em;
 }
 
+/* Botão Rascunho no header (cria rascunhos separados de notas) */
+.btn-draft-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    background: rgba(0, 122, 255, 0.15) !important;
+    color: #007AFF !important;
+    border: 1px solid rgba(0, 122, 255, 0.4) !important;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.btn-draft-header:hover {
+    background: rgba(0, 122, 255, 0.25) !important;
+    border-color: #007AFF !important;
+}
+.btn-draft-header i {
+    font-size: 14px;
+}
+
 /* Botão de tema no header (ao lado de NOVA NOTA) */
 .btn-theme-header {
     width: 40px;
@@ -667,6 +690,7 @@ body {
 }
 
 .sidebar-header-actions-row .btn-search-icon,
+.sidebar-header-actions-row .btn-draft-sidebar,
 .sidebar-header-actions-row .btn-new-folder {
     width: clamp(34px, 9vw, 42px) !important;
     height: clamp(34px, 9vw, 42px) !important;
@@ -675,6 +699,7 @@ body {
 }
 
 .sidebar-header-actions-row .btn-search-icon i,
+.sidebar-header-actions-row .btn-draft-sidebar i,
 .sidebar-header-actions-row .btn-new-folder i {
     font-size: clamp(14px, 3.5vw, 18px) !important;
 }
@@ -689,6 +714,7 @@ body {
 }
 
 .btn-search-icon,
+.btn-draft-sidebar,
 .btn-new-folder {
     width: 36px !important;
     height: 36px !important;
@@ -712,7 +738,8 @@ body {
     position: relative !important;
 }
 
-.btn-search-icon:hover {
+.btn-search-icon:hover,
+.btn-draft-sidebar:hover {
     background: rgba(0, 122, 255, 0.15) !important;
     color: var(--apple-primary) !important;
     transform: scale(1.1);
@@ -727,6 +754,7 @@ body {
 }
 
 .btn-search-icon i,
+.btn-draft-sidebar i,
 .btn-new-folder i {
     font-size: 16px !important;
     transition: all 0.3s ease;
@@ -760,7 +788,8 @@ body {
 }
 
 .btn-new-folder,
-.btn-search-icon {
+.btn-search-icon,
+.btn-draft-sidebar {
     width: 36px;
     height: 36px;
     border: none;
@@ -785,7 +814,8 @@ body {
     box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
 }
 
-.btn-search-icon:hover {
+.btn-search-icon:hover,
+.btn-draft-sidebar:hover {
     background: rgba(0, 122, 255, 0.1);
     color: var(--apple-primary);
     transform: scale(1.1);
@@ -793,6 +823,7 @@ body {
 }
 
 .btn-search-icon i,
+.btn-draft-sidebar i,
 .btn-new-folder i {
     font-size: 16px;
     transition: all 0.3s ease;
@@ -1962,7 +1993,7 @@ body {
 .note-card-actions {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 4px;
     margin-left: auto;
 }
 
@@ -1973,9 +2004,9 @@ body {
     cursor: pointer;
     transition: all 0.2s ease;
     flex-shrink: 0;
-    font-size: 16px;
-    padding: 4px;
-    border-radius: 6px;
+    font-size: 11px;
+    padding: 2px;
+    border-radius: 4px;
 }
 
 .note-card-star:hover {
@@ -2346,22 +2377,34 @@ body {
     padding: 40px;
 }
 
+/* iframe do editor (documento isolado - texto sempre visível) */
+.rich-editor-iframe {
+    flex: 1;
+    width: 100%;
+    min-height: 100%;
+    border: none;
+    background: #ffffff;
+}
+
 /* Área de escrita com placeholder invisível quando há conteúdo */
 .editor-writing-area {
     position: relative;
     width: 100%;
-    max-width: 720px;
+    max-width: 100%;
     margin: 0 auto;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
 }
 .rich-editor-placeholder {
     position: absolute;
-    top: 32px;
-    left: 48px;
-    right: 48px;
+    top: 72px;
+    left: 88px;
+    right: 88px;
+    pointer-events: none;
     font-size: 16px;
     line-height: 1.6;
     color: #86868b;
-    pointer-events: none;
     font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'SF Pro Text', sans-serif;
 }
 .rich-editor-placeholder[aria-hidden="true"] {
@@ -2379,27 +2422,53 @@ body {
     min-height: 100vh;
     font-size: 16px;
     line-height: 1.6;
-    color: #1d1d1f !important;
+    color: #000000 !important;
+    -webkit-text-fill-color: #000000 !important;
     outline: none;
     padding: 32px 48px 120px;
     background: #ffffff;
     font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'SF Pro Text', sans-serif;
 }
 
-/* Forçar texto visível no modo claro (evita texto branco invisível) */
+/* Forçar texto PRETO no modo claro (para garantir visibilidade) */
 body:not([data-theme="dark"]) .rich-editor,
+body:not([data-theme="dark"]) .rich-editor *,
 body:not([data-theme="dark"]) .rich-editor p,
 body:not([data-theme="dark"]) .rich-editor span,
 body:not([data-theme="dark"]) .rich-editor div,
 body:not([data-theme="dark"]) .rich-editor li,
 body:not([data-theme="dark"]) .rich-editor td,
 body:not([data-theme="dark"]) .rich-editor th,
-body:not([data-theme="dark"]) .rich-editor font {
-    color: #1d1d1f !important;
+body:not([data-theme="dark"]) .rich-editor font,
+body:not([data-theme="dark"]) .rich-editor b,
+body:not([data-theme="dark"]) .rich-editor strong,
+body:not([data-theme="dark"]) .rich-editor i,
+body:not([data-theme="dark"]) .rich-editor em,
+body:not([data-theme="dark"]) .rich-editor u {
+    color: #000000 !important;
+    -webkit-text-fill-color: #000000 !important;
 }
 
 .rich-editor:focus {
     outline: none;
+}
+
+/* Garantir que texto digitado seja sempre visível (prioridade máxima) */
+.rich-editor,
+.rich-editor * {
+    opacity: 1 !important;
+}
+.rich-editor[contenteditable="true"]::before,
+.rich-editor[contenteditable="true"]::after {
+    display: none !important;
+}
+
+/* Garantir cursor visível e texto legível (corrige texto invisível ao digitar) */
+body:not([data-theme="dark"]) .rich-editor {
+    caret-color: #000000;
+}
+body[data-theme="dark"] .rich-editor {
+    caret-color: #f5f5f7;
 }
 
 .rich-editor p {
@@ -3277,8 +3346,14 @@ body[data-theme="dark"] .rich-editor div,
 body[data-theme="dark"] .rich-editor li,
 body[data-theme="dark"] .rich-editor td,
 body[data-theme="dark"] .rich-editor th,
-body[data-theme="dark"] .rich-editor font {
+body[data-theme="dark"] .rich-editor font,
+body[data-theme="dark"] .rich-editor b,
+body[data-theme="dark"] .rich-editor strong,
+body[data-theme="dark"] .rich-editor i,
+body[data-theme="dark"] .rich-editor em,
+body[data-theme="dark"] .rich-editor u {
     color: #f5f5f7 !important;
+    -webkit-text-fill-color: #f5f5f7 !important;
 }
 body[data-theme="dark"] .rich-editor .img-figcaption {
     color: rgba(255, 255, 255, 0.7);

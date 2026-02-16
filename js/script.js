@@ -1088,7 +1088,7 @@ function execLogout() {
         localStorage.removeItem('current_user');
         localStorage.removeItem('current_user_login');
         localStorage.removeItem('user_logged_in');
-        localStorage.removeItem('axis-current-page'); // Limpa também a página salva
+        localStorage.removeItem('axis-current-page');
         sessionStorage.removeItem('just_logged_in');
         
         // Mostra tela de login e esconde conteúdo principal
