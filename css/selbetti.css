@@ -1,0 +1,988 @@
+/**
+ * SELBETTI - Biblioteca do Técnico Resident
+ * Design em vidro (glass) estilo Apple | AXIS
+ * Cores vivas do site: verde e azul
+ */
+
+* { box-sizing: border-box; }
+
+/* Paleta alta performance: verde vibrante, azul elétrico, aviso */
+.selbetti-page {
+    min-height: 100vh;
+    margin: 0;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: #1d1d1f;
+    position: relative;
+    overflow-x: hidden;
+    --selbetti-green: #00C853;
+    --selbetti-blue: #2979FF;
+    --selbetti-warning: #FF3D00;
+    --selbetti-glass: rgba(255, 255, 255, 0.72);
+    --selbetti-glass-border: rgba(255, 255, 255, 0.6);
+    --selbetti-bg: #f5f5f7;
+    background: var(--selbetti-bg);
+}
+
+/* Dark mode: cinza carvão + neon verde/azul */
+.selbetti-page.dark {
+    --selbetti-bg: #0B0E14;
+    color: #e4e6eb;
+    --selbetti-glass: rgba(20, 25, 32, 0.85);
+    --selbetti-glass-border: rgba(0, 200, 83, 0.15);
+    --selbetti-green: #00E676;
+    --selbetti-blue: #40C4FF;
+}
+
+.selbetti-page.dark .selbetti-bg-overlay {
+    background: linear-gradient(180deg, rgba(11, 14, 20, 0.75) 0%, rgba(11, 14, 20, 0.92) 100%);
+}
+
+.selbetti-page.dark .selbetti-card h2,
+.selbetti-page.dark .selbetti-dash-card,
+.selbetti-page.dark .selbetti-desc { color: #e4e6eb; }
+
+.selbetti-page.dark .selbetti-desc,
+.selbetti-page.dark .selbetti-header-title p { color: #9ca3af; }
+
+.selbetti-page.dark .selbetti-nav-item { color: #d1d5db; }
+.selbetti-page.dark .selbetti-nav-item:hover,
+.selbetti-page.dark .selbetti-nav-item.active { color: #00E676; }
+.selbetti-page.dark .selbetti-list-wrap h3,
+.selbetti-page.dark .selbetti-form-wrap label { color: #d1d5db; }
+.selbetti-page.dark .selbetti-input {
+    background: rgba(30, 36, 45, 0.8);
+    border-color: rgba(255,255,255,0.1);
+    color: #e4e6eb;
+}
+.selbetti-page.dark .selbetti-list-wrap li { background: rgba(30, 36, 45, 0.6); }
+.selbetti-page.dark .selbetti-upload-label,
+.selbetti-page.dark .selbetti-ocr-label { color: #d1d5db; }
+
+/* Fundo com logo Selbetti borrada */
+.selbetti-bg {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+}
+
+.selbetti-bg-image {
+    position: absolute;
+    inset: -20%;
+    background: url('../assets/IMAGENS/Robo_Selbetti_Card.png') center center no-repeat;
+    background-size: 55% auto;
+    filter: blur(28px) brightness(1.15) saturate(0.4);
+    opacity: 0.35;
+}
+
+.selbetti-bg-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(255,255,255,0.7) 0%, rgba(248,248,252,0.85) 50%, rgba(240,242,248,0.9) 100%);
+}
+
+/* Vidro estilo Apple com toque de cor */
+.glass {
+    background: var(--selbetti-glass);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid var(--selbetti-glass-border);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+}
+
+/* Header */
+.selbetti-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    margin: 0 16px 16px;
+    border-radius: 16px;
+}
+
+.selbetti-back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: rgba(34, 197, 94, 0.15);
+    color: #15803d;
+    border: 1px solid rgba(34, 197, 94, 0.35);
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+
+.selbetti-back-btn:hover {
+    background: rgba(34, 197, 94, 0.25);
+    transform: translateY(-1px);
+}
+
+.selbetti-header-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.selbetti-logo-icon { font-size: 28px; }
+
+.selbetti-header-title h1 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--selbetti-green);
+}
+
+.selbetti-header-title p {
+    margin: 2px 0 0 0;
+    font-size: 12px;
+    color: #666;
+}
+
+.selbetti-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.selbetti-theme-toggle {
+    padding: 10px 14px;
+    border: none;
+    border-radius: 10px;
+    font-size: 18px;
+    color: var(--selbetti-green);
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.selbetti-theme-toggle:hover { transform: scale(1.08); }
+
+.selbetti-menu-toggle {
+    display: none;
+    padding: 10px 14px;
+    background: rgba(0,0,0,0.06);
+    border: none;
+    border-radius: 10px;
+    font-size: 18px;
+    color: #333;
+    cursor: pointer;
+}
+
+@media (max-width: 768px) {
+    .selbetti-menu-toggle { display: inline-flex; }
+    .selbetti-nav { transform: translateX(-100%); }
+    .selbetti-nav.open { transform: translateX(0); }
+}
+
+/* Layout */
+.selbetti-layout {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 16px 80px;
+    gap: 24px;
+}
+
+/* Navegação lateral */
+.selbetti-nav {
+    flex-shrink: 0;
+    width: 260px;
+    border-radius: 16px;
+    padding: 16px;
+    transition: transform 0.3s ease;
+}
+
+.selbetti-nav-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.selbetti-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 12px 14px;
+    margin-bottom: 4px;
+    background: transparent;
+    border: none;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #333;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s;
+}
+
+.selbetti-nav-item:hover {
+    background: rgba(34, 197, 94, 0.12);
+    color: #15803d;
+}
+
+.selbetti-nav-item.active {
+    background: rgba(34, 197, 94, 0.2);
+    color: #15803d;
+    font-weight: 600;
+}
+
+.selbetti-nav-item i { width: 20px; text-align: center; }
+
+.selbetti-nav-sub .selbetti-submenu {
+    list-style: none;
+    margin: 0 0 8px 0;
+    padding: 0 0 0 32px;
+}
+
+.selbetti-nav-sub .selbetti-nav-item .selbetti-chevron {
+    margin-left: auto;
+    transition: transform 0.2s;
+}
+
+.selbetti-nav-sub.open .selbetti-chevron { transform: rotate(180deg); }
+
+.selbetti-submenu .selbetti-nav-item { padding: 8px 12px; font-size: 13px; }
+
+/* Conteúdo principal */
+.selbetti-main {
+    flex: 1;
+    min-width: 0;
+}
+
+.selbetti-section {
+    display: none;
+    animation: selbettiFade 0.25s ease;
+}
+
+.selbetti-section.active { display: block; }
+
+@keyframes selbettiFade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.selbetti-card {
+    border-radius: 20px;
+    padding: 24px;
+    margin-bottom: 20px;
+}
+
+.selbetti-card h2 {
+    margin: 0 0 8px 0;
+    font-size: 22px;
+    font-weight: 700;
+    color: #1d1d1f;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.selbetti-card h2 i { color: var(--selbetti-green); }
+
+.selbetti-desc {
+    margin: 0 0 20px 0;
+    font-size: 14px;
+    color: #666;
+    line-height: 1.5;
+}
+
+/* Dashboard: cards de status rápido */
+.selbetti-dashboard-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.selbetti-dash-card {
+    padding: 20px;
+    border-radius: 16px;
+    text-align: center;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.selbetti-dash-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+}
+
+.selbetti-page.dark .selbetti-dash-card:hover {
+    box-shadow: 0 12px 28px rgba(0, 230, 118, 0.15);
+}
+
+.selbetti-dash-icon {
+    font-size: 28px;
+    color: var(--selbetti-green);
+    margin-bottom: 8px;
+}
+
+.selbetti-dash-value {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--selbetti-green);
+    margin-bottom: 4px;
+}
+
+.selbetti-page.dark .selbetti-dash-value { color: #00E676; }
+
+.selbetti-dash-value.selbetti-dash-ata-title {
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.3;
+    max-height: 2.6em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.selbetti-dash-label {
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 12px;
+}
+
+.selbetti-page.dark .selbetti-dash-label { color: #9ca3af; }
+
+.selbetti-dash-action {
+    display: inline-block;
+    padding: 8px 14px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid rgba(0, 200, 83, 0.4);
+    background: rgba(0, 200, 83, 0.1);
+    color: var(--selbetti-green);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.selbetti-dash-action:hover {
+    background: rgba(0, 200, 83, 0.2);
+}
+
+.selbetti-quick-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 12px;
+}
+
+.selbetti-quick-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 20px 16px;
+    border: 1px solid rgba(255,255,255,0.6);
+    border-radius: 14px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #333;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.selbetti-quick-card:hover {
+    background: rgba(255,255,255,0.9);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(0,0,0,0.08);
+}
+
+.selbetti-quick-card i { font-size: 24px; color: var(--selbetti-green); }
+
+/* Formulários */
+.selbetti-form-wrap {
+    margin-bottom: 20px;
+}
+
+.selbetti-form-wrap label {
+    display: block;
+    margin: 12px 0 4px 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: #444;
+}
+
+.selbetti-input {
+    width: 100%;
+    max-width: 400px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    border-radius: 12px;
+    border: 1px solid rgba(0,0,0,0.08);
+    font-size: 14px;
+    font-family: inherit;
+    background: rgba(255,255,255,0.6);
+    transition: border-color 0.2s;
+}
+
+.selbetti-input:focus {
+    outline: none;
+    border-color: rgba(0, 200, 83, 0.5);
+}
+
+/* Campos de código (OS, SELB): Roboto Mono para 0 vs O */
+.selbetti-input-code {
+    font-family: 'Roboto Mono', 'Consolas', monospace;
+    font-size: 14px;
+    letter-spacing: 0.02em;
+}
+
+.selbetti-file-input {
+    margin: 8px 0 12px 0;
+    font-size: 13px;
+}
+
+.selbetti-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.selbetti-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+}
+
+.selbetti-btn-primary {
+    background: linear-gradient(135deg, var(--selbetti-green), #16a34a);
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(34, 197, 94, 0.35);
+}
+
+.selbetti-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(34, 197, 94, 0.45);
+}
+
+.selbetti-btn-secondary {
+    background: rgba(0, 122, 255, 0.12);
+    color: #0066cc;
+    border: 1px solid rgba(0, 122, 255, 0.3);
+}
+
+.selbetti-btn-secondary:hover { background: rgba(0, 122, 255, 0.2); }
+
+.selbetti-btn-danger {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(239, 68, 68, 0.3);
+}
+
+.selbetti-btn-danger:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+}
+
+.selbetti-btn-danger:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.selbetti-btn-sm {
+    padding: 8px 14px;
+    font-size: 12px;
+}
+
+/* Micro-interação: Guardar → check animado */
+.selbetti-btn-save {
+    transition: all 0.35s ease;
+}
+
+.selbetti-btn-save.success {
+    background: linear-gradient(135deg, #00C853, #00E676) !important;
+    pointer-events: none;
+}
+
+.selbetti-btn-save.success i::before {
+    content: "\f00c";
+}
+
+.selbetti-btn-save.success {
+    animation: selbettiCheck 0.5s ease;
+}
+
+@keyframes selbettiCheck {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+/* Listas */
+.selbetti-list-wrap {
+    border-radius: 14px;
+    padding: 16px;
+    margin-top: 16px;
+}
+
+.selbetti-list-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.selbetti-list-header h3 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: #333;
+}
+
+.selbetti-page.dark .selbetti-list-header h3 { color: #d1d5db; }
+
+.selbetti-export-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.selbetti-list-wrap h3 {
+    margin: 0 0 12px 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: #333;
+}
+
+.selbetti-list-wrap ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.selbetti-list-wrap li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px 12px;
+    margin-bottom: 6px;
+    background: rgba(255,255,255,0.5);
+    border-radius: 10px;
+    font-size: 14px;
+}
+
+.selbetti-list-wrap li .selbetti-item-del {
+    padding: 4px 10px;
+    background: rgba(200,0,0,0.1);
+    color: #c62828;
+    border: none;
+    border-radius: 8px;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.selbetti-list-wrap .selbetti-empty { color: #888; font-size: 14px; padding: 12px 0; }
+
+/* Tabs (Atas) */
+.selbetti-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.selbetti-tab {
+    padding: 10px 18px;
+    background: rgba(255,255,255,0.5);
+    border: 1px solid rgba(0,0,0,0.08);
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #555;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.selbetti-tab:hover { background: rgba(34, 197, 94, 0.12); color: #15803d; }
+
+.selbetti-tab.active {
+    background: rgba(34, 197, 94, 0.2);
+    color: #15803d;
+    border-color: rgba(34, 197, 94, 0.35);
+}
+
+/* Assistente */
+.selbetti-assistant-wrap {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 200;
+}
+
+.selbetti-assistant-panel {
+    position: absolute;
+    bottom: 60px;
+    right: 0;
+    width: 320px;
+    max-height: 360px;
+    border-radius: 16px;
+    padding: 0;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+    display: none;
+    overflow: hidden;
+}
+
+.selbetti-assistant-panel.open { display: block; }
+
+.selbetti-assistant-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    background: rgba(34, 197, 94, 0.15);
+    font-weight: 700;
+    color: #15803d;
+}
+
+.selbetti-assistant-close {
+    padding: 6px;
+    background: transparent;
+    border: none;
+    font-size: 18px;
+    color: #15803d;
+    cursor: pointer;
+}
+
+.selbetti-assistant-body {
+    padding: 16px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #444;
+    max-height: 280px;
+    overflow-y: auto;
+}
+
+.selbetti-assistant-body ul { margin: 8px 0; padding-left: 20px; }
+
+.selbetti-assistant-fab {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: none;
+    font-size: 24px;
+    color: var(--selbetti-green);
+    cursor: pointer;
+    box-shadow: 0 6px 20px rgba(34, 197, 94, 0.35);
+    transition: all 0.2s;
+}
+
+.selbetti-assistant-fab:hover {
+    transform: scale(1.08);
+    box-shadow: 0 8px 28px rgba(34, 197, 94, 0.45);
+}
+
+/* Upload zone (Orçamento / Certificados) */
+.selbetti-upload-zone {
+    border: 2px dashed rgba(34, 197, 94, 0.4);
+    border-radius: 16px;
+    padding: 28px;
+    text-align: center;
+    margin-bottom: 20px;
+    transition: all 0.2s;
+}
+
+.selbetti-upload-zone.dragover {
+    border-color: var(--selbetti-green);
+    background: rgba(34, 197, 94, 0.08);
+}
+
+.selbetti-upload-label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    color: #444;
+}
+
+.selbetti-upload-label i {
+    font-size: 36px;
+    color: var(--selbetti-green);
+}
+
+.selbetti-upload-label span { font-weight: 600; font-size: 15px; }
+.selbetti-upload-label small { font-size: 12px; color: #666; }
+
+/* Preview grid (biblioteca de imagens/PDF) */
+.selbetti-preview-grid {
+    border-radius: 16px;
+    padding: 20px;
+    min-height: 200px;
+}
+
+.selbetti-preview-grid .selbetti-empty {
+    margin: 0;
+    padding: 24px;
+    text-align: center;
+    color: #888;
+}
+
+.selbetti-preview-inner {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 14px;
+}
+
+.selbetti-preview-item {
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    background: rgba(255,255,255,0.6);
+    aspect-ratio: 1;
+    border: 1px solid rgba(0,0,0,0.06);
+}
+
+.selbetti-preview-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.selbetti-preview-item .selbetti-preview-pdf {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 6px;
+    padding: 12px;
+    font-size: 12px;
+    color: #555;
+    text-align: center;
+}
+
+.selbetti-preview-item .selbetti-preview-pdf i { font-size: 28px; color: var(--selbetti-blue); }
+
+.selbetti-preview-item .selbetti-preview-del {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(239, 68, 68, 0.9);
+    color: #fff;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s;
+}
+
+.selbetti-preview-item .selbetti-preview-del:hover { transform: scale(1.1); }
+
+/* Form grid (Backup) */
+.selbetti-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 20px;
+    align-items: end;
+}
+
+.selbetti-form-grid label { margin-top: 0; }
+.selbetti-form-grid .selbetti-btn { grid-column: 1 / -1; justify-self: start; }
+
+@media (max-width: 600px) {
+    .selbetti-form-grid { grid-template-columns: 1fr; }
+}
+
+/* Ferramentas: card e lista mais bonitos */
+.selbetti-card-ferramentas .selbetti-form-inline {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: flex-end;
+}
+
+.selbetti-form-inline .selbetti-input { max-width: 220px; margin-bottom: 0; }
+.selbetti-form-inline .selbetti-btn { flex-shrink: 0; }
+
+.selbetti-ferramentas-list ul { display: grid; gap: 8px; }
+.selbetti-ferramentas-list li {
+    padding: 14px 16px;
+    border-left: 4px solid var(--selbetti-green);
+}
+
+/* Atas: gravação por microfone */
+.selbetti-ata-gravar {
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 24px;
+    border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.selbetti-ata-gravar h3 {
+    margin: 0 0 8px 0;
+    font-size: 17px;
+    font-weight: 700;
+    color: #1d1d1f;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.selbetti-ata-gravar h3 i { color: var(--selbetti-green); }
+
+.selbetti-ata-mic-actions {
+    display: flex;
+    gap: 10px;
+    margin: 16px 0;
+}
+
+.selbetti-ata-transcript-wrap label {
+    display: block;
+    margin: 12px 0 4px 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: #444;
+}
+
+.selbetti-ata-transcript-wrap .selbetti-input {
+    max-width: 100%;
+    min-height: 180px;
+    font-family: inherit;
+}
+
+.selbetti-ata-transcript-wrap .selbetti-btn { margin-top: 12px; }
+
+/* Destaques (comandos de voz) */
+.selbetti-ata-highlights {
+    margin-bottom: 16px;
+    padding: 12px 16px;
+    border-radius: 12px;
+    border-left: 4px solid var(--selbetti-warning);
+    background: rgba(255, 61, 0, 0.08);
+}
+
+.selbetti-ata-highlights h4 {
+    margin: 0 0 8px 0;
+    font-size: 14px;
+    font-weight: 700;
+    color: #333;
+}
+
+.selbetti-page.dark .selbetti-ata-highlights h4 { color: #e4e6eb; }
+
+.selbetti-ata-highlights ul {
+    margin: 0;
+    padding-left: 20px;
+    font-size: 13px;
+}
+
+/* OCR bar e resultado */
+.selbetti-ocr-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    border-radius: 12px;
+}
+
+.selbetti-ocr-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #444;
+}
+
+.selbetti-ocr-hint {
+    font-size: 12px;
+    color: #666;
+}
+
+.selbetti-ocr-result {
+    margin-top: 16px;
+    padding: 16px;
+    border-radius: 12px;
+}
+
+.selbetti-ocr-result h4 {
+    margin: 0 0 8px 0;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.selbetti-ocr-result pre {
+    margin: 0;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 12px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+/* Predição Backup (sugestão) */
+.selbetti-prediction-card {
+    margin-bottom: 16px;
+    padding: 14px 18px;
+    border-radius: 12px;
+    border-left: 4px solid var(--selbetti-blue);
+    background: rgba(41, 121, 255, 0.08);
+}
+
+.selbetti-prediction-card h4 {
+    margin: 0 0 6px 0;
+    font-size: 14px;
+    font-weight: 700;
+    color: #333;
+}
+
+.selbetti-prediction-card h4 i { color: var(--selbetti-blue); }
+
+.selbetti-prediction-card p {
+    margin: 0;
+    font-size: 13px;
+    color: #555;
+}
+
+/* Status entrega (badge) */
+.selbetti-status-badge {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-weight: 600;
+}
+
+.selbetti-status-badge.pendente { background: rgba(255, 61, 0, 0.2); color: #FF3D00; }
+.selbetti-status-badge.transito { background: rgba(41, 121, 255, 0.2); color: #2979FF; }
+.selbetti-status-badge.entregue { background: rgba(0, 200, 83, 0.2); color: #00C853; }
+
+.selbetti-status-select {
+    font-size: 12px;
+    padding: 4px 8px;
+    border-radius: 8px;
+    border: 1px solid rgba(0,0,0,0.1);
+    background: rgba(255,255,255,0.8);
+    cursor: pointer;
+}
+
+.selbetti-page.dark .selbetti-status-select {
+    background: rgba(30, 36, 45, 0.9);
+    border-color: rgba(255,255,255,0.15);
+    color: #e4e6eb;
+}

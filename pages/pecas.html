@@ -1,304 +1,321 @@
 <!DOCTYPE html>
-<!-- AXIS | PEÇAS - INVENTÁRIO -->
+<!-- AXIS | PEÇAS - Inventário Entrada e Saída | Layout profissional centralizado -->
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AXIS | PEÇAS - INVENTÁRIO</title>
+    <title>AXIS | Peças, Acessórios e Produtos de Limpeza</title>
     <link rel="stylesheet" href="../css/pecas.css">
-    <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body class="pecas-page">
-    <header class="pecas-top-bar">
-        <h1>INVENTÁRIO DE PEÇAS</h1>
-        <div class="pecas-top-bar-actions">
-            <button type="button" class="pecas-theme-toggle" id="pecas-theme-toggle" title="Alternar modo escuro">
-                <i class="fas fa-moon"></i>
-            </button>
-            <a href="../index.html#page-home" class="pecas-back-btn">
-                <span>Voltar ao Dashboard</span>
-            </a>
-        </div>
-    </header>
+    <div class="pecas-container">
+        <header class="pecas-header">
+            <div class="pecas-header-brand">
+                <div class="pecas-header-icon"><i class="fas fa-boxes-stacked"></i></div>
+                <div>
+                    <h1 class="pecas-header-title">Inventário de Peças, Acessórios e Limpeza</h1>
+                </div>
+            </div>
+            <div class="pecas-header-actions">
+                <button type="button" class="pecas-menu-btn" id="pecas-menu-toggle" aria-label="Abrir menu de navegação">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="pecas-menu-dropdown" id="pecas-menu-dropdown">
+                    <button type="button" class="pecas-menu-item" data-view="inventario"><i class="fas fa-boxes-stacked"></i> Inventário de Peças</button>
+                    <button type="button" class="pecas-menu-item" data-view="cadastro"><i class="fas fa-pen-to-square"></i> Cadastro de Peças</button>
+                    <button type="button" class="pecas-menu-item" data-action="dashboard"><i class="fas fa-arrow-left"></i> Voltar ao Dashboard</button>
+                </div>
+            </div>
+        </header>
 
-    <main class="pecas-main">
-        <div class="pecas-left-column">
-            <!-- Modal 1: Cadastro de Peças -->
-            <section class="pecas-glass-card pecas-modal-cadastro">
-                <h2 class="pecas-form-title">
-                    <span class="pecas-title-accent">CADASTRO</span>
-                    <span class="pecas-title-dark"> DE PEÇAS</span>
-                </h2>
-                <form id="pecas-form">
-                    <div class="pecas-form-row">
-                        <div class="pecas-field">
-                            <label for="pecas-nome">NOME DA PEÇA</label>
-                            <input type="text" id="pecas-nome" placeholder="Ex: Cabeça de Impressão ZD420" maxlength="200" required>
-                        </div>
-                        <div class="pecas-field">
-                            <label for="pecas-codigo">CÓDIGO DA PEÇA</label>
-                            <input type="text" id="pecas-codigo" placeholder="Ex: 2038655-001" maxlength="80">
-                        </div>
+        <main class="pecas-content">
+        <!-- View 1: Inventário -->
+        <section id="pecas-view-inventario" class="pecas-layout-dashboard">
+            <!-- Linha 1: KPIs no topo (estilo dashboard) -->
+            <section class="pecas-kpi-row">
+                <div class="pecas-kpi-card pecas-kpi-total">
+                    <div class="pecas-kpi-label">Total em estoque</div>
+                    <div class="pecas-kpi-value" id="pecas-dash-estoque-total">0</div>
+                </div>
+                <div class="pecas-kpi-card pecas-kpi-entrada">
+                    <div class="pecas-kpi-label">Entradas (mês)</div>
+                    <div class="pecas-kpi-value" id="pecas-dash-entradas-mes">0</div>
+                </div>
+                <div class="pecas-kpi-card pecas-kpi-saida">
+                    <div class="pecas-kpi-label">Saídas (mês)</div>
+                    <div class="pecas-kpi-value" id="pecas-dash-saidas-mes">0</div>
+                </div>
+            </section>
+
+            <!-- Coluna 1: Gráficos e resumo -->
+            <aside class="pecas-col pecas-col-chart">
+                <section class="pecas-card pecas-card-chart">
+                    <h2 class="pecas-card-title">VISÃO GERAL</h2>
+                    <div class="pecas-chart-wrap">
+                        <canvas id="pecas-chart" width="280" height="220"></canvas>
                     </div>
-                    <div class="pecas-form-row pecas-form-row-modelo">
-                        <div class="pecas-field pecas-field-compact">
-                            <label for="pecas-quantidade">QUANTIDADE</label>
-                            <input type="number" id="pecas-quantidade" min="1" max="99999" value="1" required>
-                        </div>
-                        <div class="pecas-field pecas-field-modelo pecas-cadastro-modelo-wrap">
-                            <label for="pecas-modelo" class="pecas-label-nowrap">MODELO DE IMPRESSORA</label>
-                            <input type="hidden" id="pecas-modelo" name="pecas-modelo" value="">
-                            <button type="button" class="pecas-cadastro-modelo-trigger" id="pecas-modelo-trigger">
-                                <span id="pecas-modelo-label">TODOS</span>
-                                <i class="fas fa-chevron-down"></i>
-                            </button>
-                            <div class="pecas-cadastro-modelo-dropdown pecas-filter-dropdown-glass" id="pecas-modelo-dropdown">
-                                <button type="button" class="pecas-filter-opt pecas-cadastro-modelo-opt" data-modelo="">TODOS</button>
-                                <button type="button" class="pecas-filter-opt pecas-cadastro-modelo-opt" data-modelo="ZT411">ZT411</button>
-                                <button type="button" class="pecas-filter-opt pecas-cadastro-modelo-opt" data-modelo="ZD421">ZD421</button>
-                                <button type="button" class="pecas-filter-opt pecas-cadastro-modelo-opt" data-modelo="ZQ630">ZQ630 PLUS</button>
+                </section>
+                <section class="pecas-card pecas-card-chart-categoria">
+                    <h3 class="pecas-card-subtitle">ESTOQUE POR CATEGORIA</h3>
+                    <div class="pecas-chart-wrap">
+                        <canvas id="pecas-chart-categoria" width="260" height="140"></canvas>
+                    </div>
+                </section>
+                <section class="pecas-card pecas-card-chart-secondary">
+                    <h3 class="pecas-card-subtitle">TOP 5 EM ESTOQUE</h3>
+                    <div class="pecas-chart-wrap">
+                        <canvas id="pecas-chart-bars" width="260" height="220"></canvas>
+                    </div>
+                </section>
+                <section class="pecas-card pecas-card-alertas" id="pecas-card-alertas">
+                    <h3 class="pecas-card-subtitle"><i class="fas fa-bell"></i> Alertas</h3>
+                    <div class="pecas-alertas-list" id="pecas-alertas-list">
+                        <p class="pecas-alertas-empty" id="pecas-alertas-empty">Nenhum alerta.</p>
+                    </div>
+                </section>
+                <section class="pecas-card pecas-card-avencer">
+                    <h3 class="pecas-card-subtitle"><i class="fas fa-calendar-times"></i> A vencer</h3>
+                    <div class="pecas-avencer-list" id="pecas-avencer-list"></div>
+                    <p class="pecas-avencer-empty" id="pecas-avencer-empty">Nenhum item a vencer.</p>
+                </section>
+                <section class="pecas-card pecas-card-assistente">
+                    <h3 class="pecas-card-subtitle"><i class="fas fa-robot"></i> Assistente inteligente</h3>
+                    <div class="pecas-assistente-list" id="pecas-assistente-list"></div>
+                    <p class="pecas-assistente-empty" id="pecas-assistente-empty">Analisando estoque…</p>
+                </section>
+            </aside>
+
+            <!-- Coluna 2: Inventário (tabela) -->
+            <section class="pecas-col pecas-col-table">
+            <section class="pecas-card pecas-card-table">
+                <div class="pecas-toolbar">
+                    <div class="pecas-tabs">
+                        <button type="button" class="pecas-tab active" data-tab="estoque">Estoque</button>
+                        <button type="button" class="pecas-tab" data-tab="movimentos">Entradas e saídas</button>
+                    </div>
+                    <select id="pecas-filter-categoria" class="pecas-filter-cat" title="Filtrar por categoria">
+                        <option value="">Todas as categorias</option>
+                        <option value="peca">Peça</option>
+                        <option value="acessorio">Acessório</option>
+                        <option value="limpeza">Produto de limpeza</option>
+                    </select>
+                    <span class="pecas-count-badge" id="pecas-count-itens" title="Itens no estoque">0 itens</span>
+                    <input type="search" id="pecas-search-estoque" class="pecas-search" placeholder="Buscar...">
+                    <input type="search" id="pecas-search-movimentos" class="pecas-search pecas-search-mov" placeholder="Buscar..." style="display:none">
+                    <button type="button" class="pecas-btn-sec" id="pecas-btn-export" title="Exportar movimentos">EXPORTAR</button>
+                    <div class="pecas-toolbar-extra">
+                        <button type="button" class="pecas-btn-sec" id="pecas-btn-export-estoque" title="Exportar estoque completo em CSV">ESTOQUE CSV</button>
+                        <button type="button" class="pecas-btn-sec" id="pecas-btn-backup" title="Fazer backup (JSON)">BACKUP</button>
+                        <label class="pecas-btn-sec pecas-btn-restore" title="Restaurar de um ficheiro JSON">RESTAURAR<input type="file" id="pecas-input-restore" accept=".json" hidden></label>
+                    </div>
+                </div>
+
+                <div class="pecas-tab-panel active" id="pecas-tab-estoque">
+                    <div class="pecas-table-scroll">
+                        <table class="pecas-table" id="pecas-table-estoque">
+                            <thead>
+                                <tr>
+                                    <th>Categoria</th>
+                                    <th>Data receb.</th>
+                                    <th>Produto</th>
+                                    <th>Fabricante</th>
+                                    <th>Conteúdo</th>
+                                    <th>Lote</th>
+                                    <th>Validade</th>
+                                    <th>Qtd</th>
+                                    <th>Projeção</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="pecas-tbody-estoque"></tbody>
+                        </table>
+                    </div>
+                    <p class="pecas-empty" id="pecas-empty-estoque">Nenhuma peça cadastrada.</p>
+                </div>
+
+                <div class="pecas-tab-panel" id="pecas-tab-movimentos">
+                    <div class="pecas-table-scroll">
+                        <table class="pecas-table" id="pecas-table-movimentos">
+                            <thead>
+                                <tr>
+                                    <th>Data / Hora</th>
+                                    <th>Tipo</th>
+                                    <th>Produto</th>
+                                    <th>Qtd</th>
+                                    <th>Observação</th>
+                                </tr>
+                            </thead>
+                            <tbody id="pecas-tbody-movimentos"></tbody>
+                        </table>
+                    </div>
+                    <p class="pecas-empty" id="pecas-empty-movimentos">Nenhum movimento.</p>
+                </div>
+            </section>
+            </section>
+        </section>
+
+        <!-- Formulário de cadastro original (oculto, usado como origem para clone) -->
+        <div id="pecas-form-origem" style="display:none">
+            <section class="pecas-card pecas-card-form">
+                <form id="pecas-form" class="pecas-form">
+                    <div class="pecas-form-section">
+                        <h3 class="pecas-form-section-title"><i class="fas fa-box"></i> Dados do produto</h3>
+                        <div class="pecas-form-grid">
+                            <div class="pecas-fld">
+                                <label for="pecas-categoria">Categoria</label>
+                                <select id="pecas-categoria" required>
+                                    <option value="peca">Peça</option>
+                                    <option value="acessorio">Acessório</option>
+                                    <option value="limpeza">Produto de limpeza</option>
+                                </select>
+                            </div>
+                            <div class="pecas-fld pecas-fld-span-2 pecas-fld-autocomplete">
+                                <label for="pecas-produto">Produto</label>
+                                <input type="text" id="pecas-produto" placeholder="Ex: Citrus Limpante" maxlength="200" required autocomplete="off">
+                                <div class="pecas-autocomplete" id="pecas-autocomplete-produto"></div>
+                            </div>
+                            <div class="pecas-fld pecas-fld-autocomplete">
+                                <label for="pecas-fabricante">Fabricante</label>
+                                <input type="text" id="pecas-fabricante" placeholder="Ex: 3M" maxlength="120" autocomplete="off">
+                                <div class="pecas-autocomplete" id="pecas-autocomplete-fabricante"></div>
+                            </div>
+                            <div class="pecas-fld">
+                                <label for="pecas-conteudo">Conteúdo</label>
+                                <input type="text" id="pecas-conteudo" placeholder="Ex: 300ML" maxlength="100">
+                            </div>
+                            <div class="pecas-fld">
+                                <label for="pecas-lote">Lote</label>
+                                <input type="text" id="pecas-lote" placeholder="Ex: 2521300677" maxlength="80">
+                            </div>
+                            <div class="pecas-fld">
+                                <label for="pecas-validade">Validade</label>
+                                <input type="text" id="pecas-validade" placeholder="Ex: agosto/2027" maxlength="50">
                             </div>
                         </div>
                     </div>
-                    <div class="pecas-form-row">
-                        <div class="pecas-field">
-                            <label for="pecas-local">LOCAL | ARMÁRIO</label>
-                            <input type="text" id="pecas-local" placeholder="Ex: Armário A, Prateleira 2" maxlength="100">
+                    <div class="pecas-form-section">
+                        <h3 class="pecas-form-section-title"><i class="fas fa-calculator"></i> Quantidade e datas</h3>
+                        <div class="pecas-form-grid">
+                            <div class="pecas-fld">
+                                <label for="pecas-quantidade">Quantidade</label>
+                                <input type="number" id="pecas-quantidade" min="1" max="99999" value="1" required>
+                            </div>
+                            <div class="pecas-fld">
+                                <label for="pecas-data-recebimento">Data de recebimento</label>
+                                <input type="date" id="pecas-data-recebimento">
+                            </div>
+                            <div class="pecas-fld pecas-fld-span-2">
+                                <label for="pecas-local">Local / Armário</label>
+                                <input type="text" id="pecas-local" placeholder="Ex: Armário A" maxlength="100">
+                            </div>
                         </div>
                     </div>
-                    <div class="pecas-field">
-                        <label for="pecas-obs">OBSERVAÇÃO</label>
-                        <textarea id="pecas-obs" placeholder="Descrição ou observações..." maxlength="500"></textarea>
+                    <div class="pecas-form-section">
+                        <div class="pecas-fld pecas-fld-full">
+                            <label for="pecas-obs"><i class="fas fa-sticky-note"></i> Observação</label>
+                            <textarea id="pecas-obs" placeholder="Opcional — notas internas sobre este item" maxlength="500" rows="2"></textarea>
+                        </div>
                     </div>
-                    <button type="submit" class="pecas-btn-register">
-                        CADASTRAR PEÇA
+                    <button type="submit" class="pecas-btn-primary" id="pecas-btn-cadastrar">
+                        <i class="fas fa-plus"></i> Cadastrar / Entrada
                     </button>
                 </form>
             </section>
-
-            <!-- Modal 2: Peças Utilizadas -->
-            <section class="pecas-glass-card pecas-modal-utilizadas">
-                <span class="pecas-dash-label">PEÇAS UTILIZADAS</span>
-                <ul class="pecas-dash-list" id="pecas-dash-list-utilizadas"></ul>
-            </section>
-
-            <!-- Modal 3: Dashboards -->
-            <section class="pecas-glass-card pecas-modal-dashboards">
-                <div class="pecas-dashboards">
-                    <div class="pecas-dash-tres-blocos">
-                        <div class="pecas-dash-card pecas-dash-card-3d">
-                            <span class="pecas-dash-value" id="pecas-dash-utilizadas-mes">0</span>
-                            <span class="pecas-dash-label">TOTAL NO MÊS</span>
-                        </div>
-                        <div class="pecas-dash-card pecas-dash-card-3d">
-                            <span class="pecas-dash-value" id="pecas-dash-por-mes">0</span>
-                            <span class="pecas-dash-label">TOTAL GERAL</span>
-                        </div>
-                        <div class="pecas-dash-card pecas-dash-card-3d pecas-dash-card-click" id="pecas-dash-btn-mes" title="Ver por mês">
-                            <span class="pecas-dash-value" id="pecas-dash-total-mes-badge">0</span>
-                            <span class="pecas-dash-label">UTILIZADAS NO MÊS</span>
-                        </div>
-                    </div>
-                    <div class="pecas-dash-card pecas-dash-card-3d pecas-dash-card-click pecas-dash-sistema" id="pecas-dash-btn-sistema" title="Ver peças no sistema">
-                        <span class="pecas-dash-value" id="pecas-dash-entradas">0</span>
-                        <span class="pecas-dash-label">PEÇAS NO SISTEMA</span>
-                    </div>
-                </div>
-            </section>
         </div>
 
-        <!-- Painel Visualização + Peças Utilizadas -->
-        <section class="pecas-glass-card pecas-double">
-            <div class="pecas-tabs">
-                <button type="button" class="pecas-tab active" data-tab="estoque">📦 PEÇAS EM ESTOQUE</button>
-                <button type="button" class="pecas-tab" data-tab="utilizadas">📋 PEÇAS UTILIZADAS</button>
-                <div class="pecas-filter-tab-wrap">
-                    <input type="hidden" id="pecas-filter-modelo" value="">
-                    <button type="button" class="pecas-tab pecas-tab-filter" id="pecas-filter-modelo-trigger" title="Filtrar por modelo">
-                        <i class="fas fa-print"></i>
-                        <span id="pecas-filter-modelo-label">TODOS</span>
-                        <i class="fas fa-chevron-down"></i>
-                    </button>
-                    <div class="pecas-filter-dropdown pecas-filter-dropdown-glass" id="pecas-filter-modelo-dropdown">
-                        <button type="button" class="pecas-filter-opt" data-modelo="">TODOS</button>
-                        <button type="button" class="pecas-filter-opt" data-modelo="ZT411">ZT411</button>
-                        <button type="button" class="pecas-filter-opt" data-modelo="ZD421">ZD421</button>
-                        <button type="button" class="pecas-filter-opt" data-modelo="ZQ630">ZQ630 PLUS</button>
-                    </div>
+        <!-- View 2: Cadastro isolado -->
+        <section id="pecas-view-cadastro" class="pecas-view-cadastro" style="display:none">
+            <div class="pecas-cadastro-card">
+                <div class="pecas-cadastro-header">
+                    <h2 class="pecas-cadastro-title">Cadastro de Peças</h2>
                 </div>
-            </div>
-
-            <!-- Tab Estoque -->
-            <div class="pecas-tab-content active" id="pecas-tab-estoque">
-                <div class="pecas-table-header">
-                    <h3>PEÇAS EM BACKUP OPERACIONAL</h3>
-                    <input type="search" id="pecas-search-estoque" placeholder="Buscar peça..." class="pecas-search">
-                </div>
-                <div class="pecas-table-wrap">
-                    <table class="pecas-table" id="pecas-table-estoque">
-                        <thead>
-                            <tr>
-                                <th>DATA CADASTRO</th>
-                                <th>NOME</th>
-                                <th>CÓDIGO</th>
-                                <th>MODELO</th>
-                                <th>QTD</th>
-                                <th>LOCAL</th>
-                                <th>AÇÕES</th>
-                            </tr>
-                        </thead>
-                        <tbody id="pecas-tbody-estoque"></tbody>
-                    </table>
-                </div>
-                <div class="pecas-empty" id="pecas-empty-estoque">Nenhuma peça cadastrada.</div>
-            </div>
-
-            <!-- Tab Utilizadas -->
-            <div class="pecas-tab-content" id="pecas-tab-utilizadas">
-                <div class="pecas-table-header pecas-utilizadas-header">
-                    <h3>PEÇAS UTILIZADAS</h3>
-                    <div class="pecas-table-header-actions">
-                        <input type="search" id="pecas-search-utilizadas" placeholder="Buscar peça..." class="pecas-search">
-                        <div class="pecas-export-wrap">
-                            <button type="button" class="pecas-btn-export" id="pecas-btn-export">
-                                <i class="fas fa-download"></i> EXPORTAR
-                                <i class="fas fa-chevron-down"></i>
-                            </button>
-                            <div class="pecas-export-dropdown pecas-filter-dropdown-glass" id="pecas-export-dropdown">
-                                <button type="button" class="pecas-filter-opt pecas-export-opt" data-format="googleplanilha">GOOGLE PLANILHA</button>
-                                <button type="button" class="pecas-filter-opt pecas-export-opt" data-format="googledocumento">GOOGLE DOCUMENTO</button>
-                                <button type="button" class="pecas-filter-opt pecas-export-opt" data-format="excel">EXCEL</button>
-                                <button type="button" class="pecas-filter-opt pecas-export-opt" data-format="documentos">DOCUMENTOS</button>
-                                <button type="button" class="pecas-filter-opt pecas-export-opt" data-format="txt">TXT</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="pecas-table-wrap">
-                    <table class="pecas-table" id="pecas-table-utilizadas">
-                        <thead>
-                            <tr>
-                                <th>DATA / HORA USO</th>
-                                <th>NOME</th>
-                                <th>CÓDIGO</th>
-                                <th>QTD</th>
-                                <th>OBSERVAÇÃO</th>
-                            </tr>
-                        </thead>
-                        <tbody id="pecas-tbody-utilizadas"></tbody>
-                    </table>
-                </div>
-                <div class="pecas-empty" id="pecas-empty-utilizadas">Nenhuma peça utilizada registrada.</div>
+                <form id="pecas-form-clone" class="pecas-form pecas-form-standalone">
+                    <!-- Campos serão preenchidos via JavaScript reaproveitando o mesmo modelo de formulário -->
+                </form>
             </div>
         </section>
-    </main>
 
-    <!-- Modal Marcar como Utilizada -->
-    <div class="pecas-modal-overlay" id="pecas-modal-uso" style="display: none;">
-        <div class="pecas-modal-glass">
-            <h3>MARCAR A PEÇA COMO UTILIZADA</h3>
+        </main>
+    </div>
+
+    <!-- Modais (fora do container, fullscreen) -->
+    <div class="pecas-overlay" id="pecas-modal-entrada" style="display:none">
+        <div class="pecas-modal">
+            <h3>Registrar entrada</h3>
+            <form id="pecas-form-entrada">
+                <input type="hidden" id="pecas-entrada-id">
+                <p class="pecas-modal-produto" id="pecas-entrada-nome">—</p>
+                <div class="pecas-fld">
+                    <label for="pecas-entrada-qtd">Quantidade</label>
+                    <input type="number" id="pecas-entrada-qtd" min="1" value="1" required>
+                </div>
+                <div class="pecas-fld">
+                    <label for="pecas-entrada-obs">Observação</label>
+                    <textarea id="pecas-entrada-obs" rows="2" maxlength="500"></textarea>
+                </div>
+                <div class="pecas-modal-btns">
+                    <button type="button" class="pecas-btn-sec" id="pecas-modal-entrada-cancel">Cancelar</button>
+                    <button type="submit" class="pecas-btn-primary">Registrar entrada</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="pecas-overlay" id="pecas-modal-uso" style="display:none">
+        <div class="pecas-modal">
+            <h3>Registrar saída</h3>
             <form id="pecas-form-uso">
                 <input type="hidden" id="pecas-uso-id">
-                <div class="pecas-modal-form-row">
-                    <div class="pecas-field">
-                        <label>PEÇA</label>
-                        <p id="pecas-uso-nome" class="pecas-modal-info">—</p>
-                    </div>
-                    <div class="pecas-field">
-                        <label for="pecas-uso-qtd">QUANTIDADE A USAR *</label>
-                        <input type="number" id="pecas-uso-qtd" min="0" value="0" required>
-                    </div>
+                <p class="pecas-modal-produto" id="pecas-uso-nome">—</p>
+                <div class="pecas-fld">
+                    <label for="pecas-uso-qtd">Quantidade</label>
+                    <input type="number" id="pecas-uso-qtd" min="0" value="0" required>
                 </div>
-                <div class="pecas-field">
-                    <label for="pecas-uso-obs">OBSERVAÇÃO (impressora, chamado, etc.)</label>
-                    <textarea id="pecas-uso-obs" placeholder="Ex: Impressora TAG-001, manutenção preventiva" maxlength="500"></textarea>
+                <div class="pecas-fld">
+                    <label for="pecas-uso-obs">Observação</label>
+                    <textarea id="pecas-uso-obs" rows="2" maxlength="500"></textarea>
                 </div>
-                <div class="pecas-modal-actions">
-                    <button type="button" class="pecas-modal-btn pecas-modal-cancel" id="pecas-modal-uso-cancel">Cancelar</button>
-                    <button type="submit" class="pecas-modal-btn pecas-modal-primary">Registrar Uso</button>
+                <div class="pecas-modal-btns">
+                    <button type="button" class="pecas-btn-sec" id="pecas-modal-uso-cancel">Cancelar</button>
+                    <button type="submit" class="pecas-btn-primary">Registrar saída</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Modal Utilizadas por Mês (3D) -->
-    <div class="pecas-modal-overlay pecas-modal-dash" id="pecas-modal-mes" style="display: none;">
-        <div class="pecas-modal-glass pecas-modal-3d">
-            <h3>UTILIZADAS POR MÊS</h3>
-            <div class="pecas-modal-mes-list" id="pecas-modal-mes-list"></div>
-            <button type="button" class="pecas-modal-close" id="pecas-modal-mes-close">Fechar</button>
-        </div>
-    </div>
-
-    <!-- Modal Editar Peça -->
-    <div class="pecas-modal-overlay" id="pecas-modal-editar" style="display: none;">
-        <div class="pecas-modal-glass pecas-modal-editar">
-            <h3>EDITAR PEÇA</h3>
+    <div class="pecas-overlay" id="pecas-modal-editar" style="display:none">
+        <div class="pecas-modal pecas-modal-wide">
+            <h3>Editar peça</h3>
             <form id="pecas-form-editar">
                 <input type="hidden" id="pecas-editar-id">
-                <div class="pecas-form-row">
-                    <div class="pecas-field">
-                        <label for="pecas-editar-nome">NOME DA PEÇA</label>
-                        <input type="text" id="pecas-editar-nome" maxlength="200" required>
-                    </div>
-                    <div class="pecas-field">
-                        <label for="pecas-editar-codigo">CÓDIGO DA PEÇA</label>
-                        <input type="text" id="pecas-editar-codigo" maxlength="80">
-                    </div>
+                <div class="pecas-form-grid">
+<div class="pecas-fld"><label for="pecas-editar-categoria">Categoria</label><select id="pecas-editar-categoria"><option value="peca">Peça</option><option value="acessorio">Acessório</option><option value="limpeza">Produto de limpeza</option></select></div>
+                                    <div class="pecas-fld"><label for="pecas-editar-produto">Produto</label><input type="text" id="pecas-editar-produto" maxlength="200" required></div>
+                                    <div class="pecas-fld"><label for="pecas-editar-fabricante">Fabricante</label><input type="text" id="pecas-editar-fabricante" maxlength="120"></div>
+                    <div class="pecas-fld"><label for="pecas-editar-conteudo">Conteúdo</label><input type="text" id="pecas-editar-conteudo" maxlength="100"></div>
+                    <div class="pecas-fld"><label for="pecas-editar-lote">Lote</label><input type="text" id="pecas-editar-lote" maxlength="80"></div>
+                    <div class="pecas-fld"><label for="pecas-editar-validade">Validade</label><input type="text" id="pecas-editar-validade" maxlength="50"></div>
+                    <div class="pecas-fld"><label for="pecas-editar-quantidade">Quantidade</label><input type="number" id="pecas-editar-quantidade" min="0" required></div>
+                    <div class="pecas-fld"><label for="pecas-editar-data-recebimento">Data recebimento</label><input type="date" id="pecas-editar-data-recebimento"></div>
+                    <div class="pecas-fld"><label for="pecas-editar-local">Local</label><input type="text" id="pecas-editar-local" maxlength="100"></div>
                 </div>
-                <div class="pecas-form-row">
-                    <div class="pecas-field">
-                        <label for="pecas-editar-quantidade">QUANTIDADE</label>
-                        <input type="number" id="pecas-editar-quantidade" min="0" required>
-                    </div>
-                    <div class="pecas-field pecas-cadastro-modelo-wrap">
-                        <label for="pecas-editar-modelo" class="pecas-label-nowrap">MODELO DE IMPRESSORA</label>
-                        <input type="hidden" id="pecas-editar-modelo" value="">
-                        <button type="button" class="pecas-cadastro-modelo-trigger" id="pecas-editar-modelo-trigger">
-                            <span id="pecas-editar-modelo-label">TODOS</span>
-                            <i class="fas fa-chevron-down"></i>
-                        </button>
-                        <div class="pecas-cadastro-modelo-dropdown pecas-filter-dropdown-glass" id="pecas-editar-modelo-dropdown">
-                            <button type="button" class="pecas-filter-opt pecas-cadastro-modelo-opt" data-modelo="">TODOS</button>
-                            <button type="button" class="pecas-filter-opt pecas-cadastro-modelo-opt" data-modelo="ZT411">ZT411</button>
-                            <button type="button" class="pecas-filter-opt pecas-cadastro-modelo-opt" data-modelo="ZD421">ZD421</button>
-                            <button type="button" class="pecas-filter-opt pecas-cadastro-modelo-opt" data-modelo="ZQ630">ZQ630 PLUS</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="pecas-field">
-                    <label for="pecas-editar-local">LOCAL | ARMÁRIO</label>
-                    <input type="text" id="pecas-editar-local" maxlength="100">
-                </div>
-                <div class="pecas-field">
-                    <label for="pecas-editar-obs">OBSERVAÇÃO</label>
-                    <textarea id="pecas-editar-obs" maxlength="500"></textarea>
-                </div>
-                <div class="pecas-modal-actions">
-                    <button type="button" class="pecas-modal-btn pecas-modal-cancel" id="pecas-modal-editar-cancel">Cancelar</button>
-                    <button type="submit" class="pecas-modal-btn pecas-modal-primary">Salvar</button>
+                <div class="pecas-fld pecas-fld-full"><label for="pecas-editar-obs">Observação</label><textarea id="pecas-editar-obs" maxlength="500" rows="2"></textarea></div>
+                <div class="pecas-modal-btns">
+                    <button type="button" class="pecas-btn-sec" id="pecas-modal-editar-cancel">Cancelar</button>
+                    <button type="submit" class="pecas-btn-primary">Salvar</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Modal Detalhes / Histórico -->
-    <div class="pecas-modal-overlay" id="pecas-modal-detalhes" style="display: none;">
-        <div class="pecas-modal-glass pecas-modal-detalhes">
-            <h3>HISTÓRICO</h3>
+    <div class="pecas-overlay" id="pecas-modal-detalhes" style="display:none">
+        <div class="pecas-modal">
+            <h3>Histórico</h3>
             <div id="pecas-detalhes-conteudo"></div>
-            <button type="button" class="pecas-modal-close" id="pecas-modal-detalhes-close">Fechar</button>
-        </div>
-    </div>
-
-    <!-- Modal Peças no Sistema (3D circular) -->
-    <div class="pecas-modal-overlay pecas-modal-dash" id="pecas-modal-sistema" style="display: none;">
-        <div class="pecas-modal-glass pecas-modal-3d pecas-modal-round">
-            <h3>PEÇAS NO SISTEMA</h3>
-            <div class="pecas-modal-sistema-chart" id="pecas-modal-sistema-chart"></div>
-            <button type="button" class="pecas-modal-close" id="pecas-modal-sistema-close">Fechar</button>
+            <button type="button" class="pecas-btn-sec" id="pecas-modal-detalhes-close">Fechar</button>
         </div>
     </div>
 

@@ -154,6 +154,14 @@
 
 ---
 
+## JAVASCRIPT — try sempre com catch/finally
+
+- **Regra:** Todo bloco `try { ... }` em ficheiros `.js` deve ter `catch` ou `finally` (evita "Missing catch or finally after try").
+- **Regra Cursor:** `.cursor/rules/JS_TRY_CATCH_OBRIGATORIO.mdc` — aplicar em alterações a js/**/*.js.
+- **Peças (pecas.js):** Todos os try têm catch; cabeçalho do ficheiro referencia a regra.
+
+---
+
 ## NÃO REMOVER
 
 - Atributos `data-nav-page` nos side-items
