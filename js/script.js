@@ -803,6 +803,7 @@ function navigate(pageId) {
         case 'page-configuracoes':
             loadSettings();
             if (typeof initAccentColorPicker === 'function') initAccentColorPicker();
+            if (typeof axisInitNiceSelectsConfig === 'function') axisInitNiceSelectsConfig();
             updateConfigSessionCard();
             if (typeof refreshTotpSettings === 'function') refreshTotpSettings();
             showToast('Configurações carregadas', 'info');
@@ -1371,6 +1372,129 @@ function abrirModalPrivacidade() {
     if (modal) { modal.style.display = 'flex'; modal.onclick = function(e) { if (e.target === modal) modal.style.display = 'none'; }; }
     else showToast('Política de privacidade em construção.', 'info');
 }
+
+// Garantir acesso global (onclick no HTML + compatibilidade)
+window.abrirModalTermos = abrirModalTermos;
+window.abrirModalPrivacidade = abrirModalPrivacidade;
+
+try {
+    document.addEventListener('DOMContentLoaded', function() {
+        var bt = document.getElementById('btn-ver-termos');
+        var bp = document.getElementById('btn-ver-politica');
+        if (bt && !bt.getAttribute('data-bound')) {
+            bt.setAttribute('data-bound', '1');
+            bt.addEventListener('click', function(e) { try { e.preventDefault(); } catch (_) {} if (window.abrirModalTermos) window.abrirModalTermos(); });
+        }
+        if (bp && !bp.getAttribute('data-bound')) {
+            bp.setAttribute('data-bound', '1');
+            bp.addEventListener('click', function(e) { try { e.preventDefault(); } catch (_) {} if (window.abrirModalPrivacidade) window.abrirModalPrivacidade(); });
+        }
+    });
+} catch (_) {}
+
+// ================= SELECT BONITO (igual ao picker de destaque, sem cor) =================
+function axisInitNiceSelect(selectId) {
+    try {
+        var sel = document.getElementById(selectId);
+        if (!sel || sel.getAttribute('data-axis-nice') === '1') return;
+        sel.setAttribute('data-axis-nice', '1');
+
+        // wrapper
+        var wrap = document.createElement('div');
+        wrap.className = 'axis-nice-select';
+        wrap.setAttribute('data-for', selectId);
+
+        // trigger
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'axis-nice-select-trigger';
+        btn.setAttribute('aria-haspopup', 'listbox');
+        btn.setAttribute('aria-expanded', 'false');
+
+        var label = document.createElement('span');
+        label.className = 'axis-nice-select-label';
+
+        var chev = document.createElement('span');
+        chev.className = 'axis-nice-select-chevron';
+        chev.textContent = '▼';
+
+        btn.appendChild(label);
+        btn.appendChild(chev);
+
+        // dropdown
+        var dd = document.createElement('div');
+        dd.className = 'axis-nice-select-dropdown';
+        dd.setAttribute('role', 'listbox');
+
+        function sync() {
+            var opt = sel.options[sel.selectedIndex];
+            label.textContent = opt ? (opt.textContent || opt.label || opt.value) : '—';
+            var buttons = dd.querySelectorAll('.axis-nice-select-option');
+            buttons.forEach(function(b) {
+                b.classList.toggle('selected', b.getAttribute('data-value') === sel.value);
+            });
+        }
+
+        Array.prototype.slice.call(sel.options || []).forEach(function(opt) {
+            var o = document.createElement('button');
+            o.type = 'button';
+            o.className = 'axis-nice-select-option';
+            o.setAttribute('role', 'option');
+            o.setAttribute('data-value', opt.value);
+            o.textContent = opt.textContent || opt.label || opt.value;
+            o.addEventListener('click', function(e) {
+                try { e.preventDefault(); } catch (_) {}
+                sel.value = opt.value;
+                try { sel.dispatchEvent(new Event('change', { bubbles: true })); } catch (_) {}
+                wrap.classList.remove('open');
+                btn.setAttribute('aria-expanded', 'false');
+                sync();
+            });
+            dd.appendChild(o);
+        });
+
+        // inserir no DOM
+        var parent = sel.parentNode;
+        parent.insertBefore(wrap, sel);
+        wrap.appendChild(sel);
+        wrap.appendChild(btn);
+        wrap.appendChild(dd);
+
+        // esconder select nativo
+        sel.style.display = 'none';
+
+        btn.addEventListener('click', function(e) {
+            try { e.preventDefault(); } catch (_) {}
+            try { e.stopPropagation(); } catch (_) {}
+            var open = wrap.classList.toggle('open');
+            btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+        });
+
+        // fechar ao clicar fora
+        document.addEventListener('click', function() {
+            if (wrap.classList.contains('open')) {
+                wrap.classList.remove('open');
+                btn.setAttribute('aria-expanded', 'false');
+            }
+        });
+
+        sel.addEventListener('change', function() { sync(); });
+        sync();
+    } catch (e) {
+        if (typeof console !== 'undefined' && console.warn) console.warn('axisInitNiceSelect(' + selectId + '):', e);
+    }
+}
+window.axisInitNiceSelect = axisInitNiceSelect;
+
+function axisInitNiceSelectsConfig() {
+    // IDs solicitados
+    ['time-format-setting','date-format-setting','axis-language-setting','logout-timeout','font-size-setting','items-per-page','home-page-setting'].forEach(function(id) {
+        axisInitNiceSelect(id);
+    });
+}
+window.axisInitNiceSelectsConfig = axisInitNiceSelectsConfig;
+
+try { document.addEventListener('DOMContentLoaded', function() { setTimeout(axisInitNiceSelectsConfig, 50); }); } catch (_) {}
 
 function clearLocalCache() {
     if (confirm('Tem certeza que deseja limpar o cache local? Isso não afetará os dados do inventário.')) {

@@ -3216,7 +3216,7 @@
                                 <p>Condições de uso do sistema</p>
                             </div>
                             <div class="setting-control">
-                                <button type="button" class="btn-secondary btn-link" onclick="abrirModalTermos()">Ver termos</button>
+                                <button type="button" id="btn-ver-termos" class="btn-secondary btn-link" onclick="if(window.abrirModalTermos){window.abrirModalTermos();} return false;">Ver termos</button>
                             </div>
                         </div>
                         <div class="setting-item setting-item-actions">
@@ -3225,7 +3225,7 @@
                                 <p>Como tratamos seus dados</p>
                             </div>
                             <div class="setting-control">
-                                <button type="button" class="btn-secondary btn-link" onclick="abrirModalPrivacidade()">Ver política</button>
+                                <button type="button" id="btn-ver-politica" class="btn-secondary btn-link" onclick="if(window.abrirModalPrivacidade){window.abrirModalPrivacidade();} return false;">Ver política</button>
                             </div>
                         </div>
                     </div>
