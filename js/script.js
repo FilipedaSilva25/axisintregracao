@@ -1021,8 +1021,10 @@ function initAccentColorPicker() {
     if (!picker || !trigger || !dropdown || !sel) return;
     window._accentColorPickerInit = true;
     trigger.addEventListener('click', function(e) {
+        try { e.preventDefault(); } catch (_) {}
         e.stopPropagation();
         picker.classList.toggle('open');
+        try { trigger.setAttribute('aria-expanded', picker.classList.contains('open') ? 'true' : 'false'); } catch (_) {}
     });
     dropdown.querySelectorAll('.accent-color-option').forEach(function(opt) {
         opt.addEventListener('click', function(e) {
@@ -1035,9 +1037,69 @@ function initAccentColorPicker() {
     });
     document.addEventListener('click', function() {
         picker.classList.remove('open');
+        try { trigger.setAttribute('aria-expanded', 'false'); } catch (_) {}
     });
     syncAccentColorPicker();
 }
+
+// Garantir que o seletor de cor de destaque funcione mesmo sem navegar (ex.: reload direto em Configurações)
+try {
+    document.addEventListener('DOMContentLoaded', function() {
+        if (typeof initAccentColorPicker === 'function') initAccentColorPicker();
+    });
+} catch (_) {}
+
+// ================= TROCA DE SENHA (Configurações > Conta) =================
+function axisChangePassword() {
+    try {
+        var login = localStorage.getItem('current_user_login');
+        if (!login) { if (typeof showToast === 'function') showToast('Faça login para trocar a senha.', 'warning'); return; }
+        var raw = localStorage.getItem('db_' + login);
+        if (!raw) { if (typeof showToast === 'function') showToast('Usuário não encontrado. Faça login novamente.', 'error'); return; }
+
+        var curEl = document.getElementById('axis-current-password');
+        var newEl = document.getElementById('axis-new-password');
+        var confEl = document.getElementById('axis-new-password-confirm');
+        var hint = document.getElementById('axis-change-password-hint');
+        var btn = document.getElementById('axis-change-password-btn');
+        var cur = curEl ? curEl.value : '';
+        var np = newEl ? newEl.value : '';
+        var cp = confEl ? confEl.value : '';
+
+        if (!cur || !np || !cp) { if (typeof showToast === 'function') showToast('Preencha senha atual, nova senha e confirmação.', 'warning'); return; }
+        if (String(np).length < 6) { if (typeof showToast === 'function') showToast('A nova senha deve ter pelo menos 6 caracteres.', 'warning'); return; }
+        if (np !== cp) { if (typeof showToast === 'function') showToast('A confirmação não confere com a nova senha.', 'warning'); return; }
+
+        var db = {};
+        try { db = JSON.parse(raw || '{}'); } catch (_) { db = {}; }
+        if ((db.pass || '') !== cur) { if (typeof showToast === 'function') showToast('Senha atual incorreta.', 'error'); return; }
+        if ((db.pass || '') === np) { if (typeof showToast === 'function') showToast('A nova senha deve ser diferente da senha atual.', 'warning'); return; }
+
+        if (btn) { btn.disabled = true; btn.textContent = 'Salvando...'; }
+        db.pass = np;
+        // Mantém expiração: após troca, define 90 dias (padrão) – pode ajustar depois nas políticas internas
+        try {
+            var exp = new Date();
+            exp.setDate(exp.getDate() + 90);
+            db.senhaExpiracao = exp.toISOString();
+        } catch (_) {}
+        localStorage.setItem('db_' + login, JSON.stringify(db));
+
+        if (curEl) curEl.value = '';
+        if (newEl) newEl.value = '';
+        if (confEl) confEl.value = '';
+        if (hint) { hint.style.display = 'block'; hint.textContent = 'Senha atualizada. Use a nova senha no próximo login.'; }
+        if (typeof showToast === 'function') showToast('Senha atualizada com sucesso.', 'success');
+        try { if (typeof atualizarPerfilNav === 'function') atualizarPerfilNav(); } catch (_) {}
+    } catch (e) {
+        if (typeof console !== 'undefined' && console.error) console.error('axisChangePassword:', e);
+        if (typeof showToast === 'function') showToast('Erro ao trocar senha. Tente novamente.', 'error');
+    } finally {
+        var btn2 = document.getElementById('axis-change-password-btn');
+        if (btn2) { btn2.disabled = false; btn2.textContent = 'Salvar nova senha'; }
+    }
+}
+window.axisChangePassword = axisChangePassword;
 function updateHomePage() {
     const el = document.getElementById('home-page-setting');
     const v = el ? el.value : 'page-home';
@@ -5028,22 +5090,20 @@ function startRealTimeSimulation() {
                 
                 // Adiciona notificação se ficou offline
                 if (oldStatus === 'online' && equipamento.status === 'offline') {
-                    addNotification(
-                        'warning',
-                        `${equipamento.tag} offline`,
-                        `Equipamento perdeu conexão`,
-                        equipamento.tag
-                    );
+                    try {
+                        if (typeof window.axisAddNotification === 'function') {
+                            window.axisAddNotification(String(equipamento.tag || 'Equipamento') + ' ficou offline (perdeu conexão).', 'warning');
+                        }
+                    } catch (_) {}
                 }
                 
                 // Adiciona notificação se voltou online
                 if (oldStatus === 'offline' && equipamento.status === 'online') {
-                    addNotification(
-                        'success',
-                        `${equipamento.tag} online`,
-                        `Conexão restabelecida`,
-                        equipamento.tag
-                    );
+                    try {
+                        if (typeof window.axisAddNotification === 'function') {
+                            window.axisAddNotification(String(equipamento.tag || 'Equipamento') + ' voltou online (conexão restabelecida).', 'success');
+                        }
+                    } catch (_) {}
                 }
                 
                 // Atualiza estatísticas
@@ -6678,6 +6738,61 @@ function addDynamicCSS() {
 addDynamicCSS();
 
 // ================= NOTIFICAÇÕES NO NAV =================
+// Notificações reais (não lidas) persistidas localmente
+function axisLoadNotifications() {
+    try {
+        var raw = localStorage.getItem('axis_notifications') || '[]';
+        var arr = JSON.parse(raw);
+        if (!Array.isArray(arr)) arr = [];
+        return arr;
+    } catch (_) {
+        return [];
+    }
+}
+function axisSaveNotifications(arr) {
+    try { localStorage.setItem('axis_notifications', JSON.stringify(arr || [])); } catch (_) {}
+}
+function axisCountUnread(arr) {
+    try {
+        var list = Array.isArray(arr) ? arr : axisLoadNotifications();
+        var n = 0;
+        for (var i = 0; i < list.length; i++) if (list[i] && list[i].read !== true) n++;
+        return n;
+    } catch (_) { return 0; }
+}
+function axisUpdateNotificationBadge() {
+    var countEl = document.getElementById('nav-notification-count');
+    if (!countEl) return;
+    var unread = axisCountUnread();
+    countEl.textContent = unread > 9 ? '9+' : String(unread);
+    countEl.style.display = unread > 0 ? 'flex' : 'none';
+}
+function axisAddNotification(text, type) {
+    try {
+        var arr = axisLoadNotifications();
+        arr.unshift({
+            id: 'n-' + Date.now() + '-' + Math.random().toString(16).slice(2),
+            text: String(text || '').trim(),
+            type: String(type || 'info'),
+            date: new Date().toISOString(),
+            read: false
+        });
+        // limite para não crescer sem controle
+        if (arr.length > 200) arr = arr.slice(0, 200);
+        axisSaveNotifications(arr);
+        axisUpdateNotificationBadge();
+    } catch (_) {}
+}
+function axisMarkAllNotificationsRead() {
+    try {
+        var arr = axisLoadNotifications();
+        for (var i = 0; i < arr.length; i++) if (arr[i]) arr[i].read = true;
+        axisSaveNotifications(arr);
+        axisUpdateNotificationBadge();
+    } catch (_) {}
+}
+window.axisAddNotification = axisAddNotification;
+
 function toggleNavNotifications() {
     var panel = document.getElementById('nav-notifications-dropdown');
     if (!panel) return;
@@ -6689,6 +6804,8 @@ function toggleNavNotifications() {
         panel.classList.add('open');
         panel.setAttribute('aria-hidden', 'false');
         carregarNavNotifications();
+        // Ao abrir, marca como lidas (o usuário viu o painel)
+        axisMarkAllNotificationsRead();
     }
 }
 
@@ -6696,32 +6813,25 @@ function carregarNavNotifications() {
     var body = document.getElementById('nav-notifications-body');
     var countEl = document.getElementById('nav-notification-count');
     if (!body) return;
-    var items = [];
-    try {
-        var audit = JSON.parse(localStorage.getItem('axis_audit_log') || '[]');
-        var lastLogin = JSON.parse(localStorage.getItem('last_login') || '{}');
-        if (lastLogin && lastLogin.data) {
-            items.push({ type: 'login', text: 'Último acesso em ' + new Date(lastLogin.data).toLocaleString('pt-BR'), date: lastLogin.data });
-        }
-        audit.slice(-10).reverse().forEach(function(ev) {
-            if (ev.type === 'login') items.push({ type: 'login', text: ev.user + ' acessou em ' + new Date(ev.date || 0).toLocaleString('pt-BR'), date: ev.date });
-        });
-    } catch (e) {}
-    if (items.length === 0) {
+    var items = axisLoadNotifications();
+    if (!items || items.length === 0) {
         body.innerHTML = '<p class="nav-notifications-empty" id="nav-notifications-empty">Nenhuma notificação nova</p>';
     } else {
-        body.innerHTML = items.map(function(it) {
-            return '<div class="nav-notification-item" style="padding:10px 0;border-bottom:1px solid var(--glass-border);font-size:13px;color:var(--text-main);">' + (it.text || '') + '</div>';
+        body.innerHTML = items.slice(0, 30).map(function(it) {
+            var dt = '';
+            try { dt = it.date ? new Date(it.date).toLocaleString('pt-BR') : ''; } catch (_) { dt = ''; }
+            var meta = dt ? ('<div style="font-size:11px;color:var(--text-secondary);margin-top:4px;">' + dt + '</div>') : '';
+            return '<div class="nav-notification-item" style="padding:10px 0;border-bottom:1px solid var(--glass-border);font-size:13px;color:var(--text-main);">' +
+                '<div>' + (it.text || '') + '</div>' + meta +
+            '</div>';
         }).join('');
     }
-    if (countEl) {
-        var unread = Math.min(items.length, 9);
-        countEl.textContent = unread;
-        countEl.style.display = unread > 0 ? 'flex' : 'none';
-    }
+    axisUpdateNotificationBadge();
 }
 
 window.toggleNavNotifications = toggleNavNotifications;
+
+try { document.addEventListener('DOMContentLoaded', axisUpdateNotificationBadge); } catch (_) {}
 
 // Fechar dropdown de notificações ao clicar fora
 document.addEventListener('click', function(e) {
