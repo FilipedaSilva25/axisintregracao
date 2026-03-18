@@ -243,6 +243,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (introOverlay) introOverlay.style.display = 'none';
             const userDisplay = document.getElementById('user-display-name');
             if (userDisplay) userDisplay.innerText = currentUser;
+            var profileWrap = document.getElementById('axis-profile-wrap');
+            if (profileWrap) { profileWrap.style.display = 'flex'; profileWrap.style.visibility = 'visible'; }
+            if (typeof atualizarPerfilNav === 'function') try { atualizarPerfilNav(); } catch (_) {}
             const menuAdmin = document.getElementById('menu-admin');
             if (menuAdmin) {
                 if (currentUserProfile === 'admin') {
@@ -271,9 +274,12 @@ document.addEventListener('DOMContentLoaded', () => {
                             document.querySelectorAll('.main-section').forEach(s => {
                                 s.classList.remove('active');
                                 s.style.display = 'none';
+                                s.style.visibility = 'hidden';
                             });
                             targetSection.classList.add('active');
                             targetSection.style.display = 'block';
+                            targetSection.style.visibility = 'visible';
+                            targetSection.style.opacity = '1';
                         }
                     };
                     navigateToPage(savedPage);
@@ -299,9 +305,12 @@ document.addEventListener('DOMContentLoaded', () => {
                             document.querySelectorAll('.main-section').forEach(s => {
                                 s.classList.remove('active');
                                 s.style.display = 'none';
+                                s.style.visibility = 'hidden';
                             });
                             homeSection.classList.add('active');
                             homeSection.style.display = 'block';
+                            homeSection.style.visibility = 'visible';
+                            homeSection.style.opacity = '1';
                         }
                     };
                     goHome();
@@ -328,9 +337,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         document.querySelectorAll('.main-section').forEach(s => {
                             s.classList.remove('active');
                             s.style.display = 'none';
+                            s.style.visibility = 'hidden';
                         });
                         homeSection.classList.add('active');
                         homeSection.style.display = 'block';
+                        homeSection.style.visibility = 'visible';
+                        homeSection.style.opacity = '1';
                     }
                 };
                 goHomeOnce();
@@ -346,10 +358,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     else goHomeOnce();
                 }, 100);
             }
+            var bemVindo = document.getElementById('modal-bem-vindo');
+            if (bemVindo) bemVindo.style.display = 'none';
         }
-        
-        // 2FA: não fazer o check aqui; deixar apenas persistLoginCheck (load) fazer um único check,
-        // para evitar pedir código em todo o reload (regra de 60 min fica no backend).
+        showMainContentRestore();
+        // 2FA: persistLoginCheck (load) fará o check se necessário; conteúdo já está visível sem esperar load.
     } else {
         // Não há usuário logado, mostra tela de login
         if (authScreen) {
@@ -581,6 +594,7 @@ function toggleSidebar() {
         // Fecha o menu
         sidebar.classList.remove('open');
         overlay.classList.remove('active');
+        document.documentElement.classList.remove('menu-open');
         document.body.classList.remove('menu-open');
         if (menuBtn) menuBtn.classList.remove('active');
         overlay.style.opacity = '0';
@@ -589,7 +603,8 @@ function toggleSidebar() {
         }, 300);
         console.log('✅ Menu fechado');
     } else {
-        // Abre o menu (classe no body remove linha em L)
+        // Abre o menu (classe em html/body trava rolagem do site; rolagem fica só no menu)
+        document.documentElement.classList.add('menu-open');
         document.body.classList.add('menu-open');
         overlay.style.opacity = '1';
         overlay.style.display = 'block';

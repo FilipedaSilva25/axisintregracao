@@ -1214,6 +1214,15 @@ body.menu-open .glass-sidebar {
 body.menu-open .apple-nav {
     border-bottom: none !important;
 }
+/* Com menu aberto: rolagem só dentro do menu, site atrás não rola */
+html.menu-open,
+body.menu-open {
+    overflow: hidden !important;
+}
+body.menu-open .content-wrapper,
+body.menu-open #main-content {
+    overflow: hidden !important;
+}
 
 /* Garante que o menu não fique escondido */
 .glass-sidebar {
@@ -1240,6 +1249,12 @@ body.menu-open .apple-nav {
     width: 100%;
     box-sizing: border-box;
     gap: 0;
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: calc(100vh - 32px);
+    overflow-y: auto !important;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
 }
 
 .side-item {
