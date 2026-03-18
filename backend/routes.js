@@ -61,6 +61,13 @@ async function handleApi(req, res, urlPath) {
         return true;
     }
 
+    // ---- Canonical URL: evitar /index.html no domínio ----
+    if ((urlPath === '/index.html' || urlPath === '/index.htm') && method === 'GET') {
+        res.writeHead(301, { 'Location': '/', ...HEADERS });
+        res.end();
+        return true;
+    }
+
     // ---- Health / Ping ----
     if ((urlPath === '/health' || urlPath === '/ping') && method === 'GET') {
         sendJson(res, { ok: true, port: require('./config').PORT, env: require('./config').NODE_ENV });

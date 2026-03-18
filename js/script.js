@@ -1364,12 +1364,24 @@ function startInactivityTimer() {
 }
 function abrirModalTermos() {
     var modal = document.getElementById('modal-termos-uso');
-    if (modal) { modal.style.display = 'flex'; modal.onclick = function(e) { if (e.target === modal) modal.style.display = 'none'; }; }
+    if (modal) {
+        // O modal pode estar dentro de uma seção ocultada (display:none). Para garantir visibilidade,
+        // movemos para document.body (mesma estratégia usada em modais críticos do AXIS).
+        try { if (modal.parentNode !== document.body) document.body.appendChild(modal); } catch (_) {}
+        modal.style.display = 'flex';
+        modal.style.zIndex = '10002';
+        modal.onclick = function(e) { if (e.target === modal) modal.style.display = 'none'; };
+    }
     else showToast('Termos de uso em construção.', 'info');
 }
 function abrirModalPrivacidade() {
     var modal = document.getElementById('modal-politica-privacidade');
-    if (modal) { modal.style.display = 'flex'; modal.onclick = function(e) { if (e.target === modal) modal.style.display = 'none'; }; }
+    if (modal) {
+        try { if (modal.parentNode !== document.body) document.body.appendChild(modal); } catch (_) {}
+        modal.style.display = 'flex';
+        modal.style.zIndex = '10002';
+        modal.onclick = function(e) { if (e.target === modal) modal.style.display = 'none'; };
+    }
     else showToast('Política de privacidade em construção.', 'info');
 }
 
