@@ -505,6 +505,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (typeof updateHomeHero === 'function') updateHomeHero();
                 if (typeof startHomeHeroClock === 'function') startHomeHeroClock();
                 if (typeof loadDashboardData === 'function') loadDashboardData();
+                if (typeof renderHomeModules === 'function') renderHomeModules();
                 var navWelcome = document.getElementById('nav-welcome-text');
                 if (navWelcome) { navWelcome.style.display = 'block'; }
                 var ud = document.getElementById('user-display-name');
@@ -630,50 +631,152 @@ document.addEventListener('click', (e) => {
 
 // Overlay do menu: fechado via setupMenuOverlay (index) para evitar double-toggle
 
-// ================= CONFIGURAÇÃO DOS CARDS DA HOME =================
+// ================= CONFIGURAÇÃO DA HOME (Hero, Busca, Favoritos, Abas, Bento) =================
+var AXIS_HOME_MODULES = [
+    { id: 'inventario', title: 'INVENTÁRIO', icon: '📦', category: 'gestao', action: 'navigate', page: 'page-inventario', size: 'large' },
+    { id: 'rondas', title: 'RONDAS', icon: '🛡️', category: 'gestao', action: 'navigate', page: 'page-rondas', size: 'normal' },
+    { id: 'manutencao', title: 'MANUTENÇÃO PREVENTIVA', icon: '🖨️', category: 'tecnico', action: 'url', href: 'pages/manutenção_preventiva.html', size: 'normal' },
+    { id: 'suporte', title: 'SUPORTE TÉCNICO', icon: '💬', category: 'tecnico', action: 'navigate', page: 'page-suporte', size: 'normal' },
+    { id: 'notas', title: 'NOTAS FISCAIS', icon: '📄', category: 'gestao', action: 'url', href: 'pages/notas_fiscais.html', size: 'normal' },
+    { id: 'bloco', title: 'BLOCO DE NOTAS', icon: '📝', category: 'gestao', action: 'url', href: 'pages/bloco_de_notas_apple.html', size: 'normal' },
+    { id: 'chamados', title: 'REGISTRO DE CHAMADOS', icon: '📋', category: 'tecnico', action: 'url', href: 'pages/registro_chamados.html', size: 'normal' },
+    { id: 'pecas', title: 'PEÇAS', icon: '🔧', category: 'tecnico', action: 'url', href: 'pages/pecas.html', size: 'normal' },
+    { id: 'packing', title: 'PACKING MACHINE', icon: '🏭', category: 'tecnico', action: 'url', href: 'pages/packing_machine.html', size: 'normal' },
+    { id: 'status-bancada', title: 'STATUS DE BANCADA', icon: '📊', category: 'tecnico', action: 'url', href: 'pages/status_bancada.html', size: 'normal' },
+    { id: 'sauron', title: 'SAURON', icon: '👁', category: 'tecnico', action: 'url', href: 'pages/sauron.html', size: 'normal' },
+    { id: 'jovem-aprendiz', title: 'JOVEM APRENDIZ', icon: '🎓', category: 'gestao', action: 'url', href: 'pages/jovem-aprendiz.html', size: 'normal' },
+    { id: 'selbetti', title: 'SELBETTI', icon: '🤖', category: 'tecnico', action: 'url', href: 'pages/selbetti.html', size: 'normal' },
+    { id: 'configuracoes', title: 'CONFIGURAÇÕES', icon: '⚙️', category: 'admin', action: 'navigate', page: 'page-configuracoes', size: 'normal' },
+    { id: 'administracao', title: 'ADMINISTRAÇÃO', icon: '👤', category: 'admin', action: 'navigate', page: 'page-administracao', size: 'normal', adminOnly: true }
+];
+
+function getAxisHomeFavorites() {
+    try {
+        var raw = localStorage.getItem('axis_home_favorites');
+        if (!raw) return [];
+        var arr = JSON.parse(raw);
+        return Array.isArray(arr) ? arr : [];
+    } catch (e) { return []; }
+}
+function setAxisHomeFavorites(ids) {
+    try {
+        localStorage.setItem('axis_home_favorites', JSON.stringify(ids));
+    } catch (e) {}
+}
+
+function renderHomeModules() {
+    try {
+        var grid = document.getElementById('home-bento-grid');
+        var favoritesList = document.getElementById('home-favorites-list');
+        var favoritesWrap = document.getElementById('home-favorites-wrap');
+        var noResults = document.getElementById('home-no-results');
+        var searchInput = document.getElementById('home-search-input');
+        var searchQ = (searchInput && searchInput.value) ? searchInput.value.trim().toLowerCase() : '';
+        var activeTab = (document.querySelector('.home-tab.active') && document.querySelector('.home-tab.active').dataset.category) ? document.querySelector('.home-tab.active').dataset.category : 'todos';
+        var favorites = getAxisHomeFavorites();
+        var isAdmin = (typeof currentUserProfile !== 'undefined' && currentUserProfile === 'admin') || (typeof window.currentUserProfile !== 'undefined' && window.currentUserProfile === 'admin');
+
+        var modules = AXIS_HOME_MODULES.filter(function(m) {
+            if (m.adminOnly && !isAdmin) return false;
+            if (activeTab !== 'todos') {
+                if (activeTab === 'admin' && m.category !== 'admin') return false;
+                if (activeTab === 'gestao' && m.category !== 'gestao') return false;
+                if (activeTab === 'tecnico' && m.category !== 'tecnico') return false;
+            }
+            if (searchQ && m.title.toLowerCase().indexOf(searchQ) === -1 && m.id.toLowerCase().indexOf(searchQ) === -1) return false;
+            return true;
+        });
+
+        if (noResults) noResults.style.display = modules.length ? 'none' : 'block';
+        if (!grid) return;
+
+        var pinHtml = function(id, isFav) { return '<span class="home-mod-pin" data-module-id="' + (id || '') + '" role="button" title="' + (isFav ? 'Remover dos favoritos' : 'Adicionar aos favoritos') + '">' + (isFav ? '⭐' : '☆') + '</span>'; };
+        var cardHtml = function(m, isFav) {
+            var sizeClass = (m.size === 'large') ? ' home-mod-card-large' : '';
+            var iconContent = m.icon.indexOf('img') === -1 ? m.icon : '<img src="assets/IMAGENS/Robo_Selbetti_Card.png" alt="" onerror="this.outerHTML=\'🤖\'" />';
+            return '<div class="home-mod-card' + sizeClass + '" data-module-id="' + (m.id || '') + '" data-action="' + (m.action || '') + '" data-page="' + (m.page || '') + '" data-href="' + (m.href || '') + '" tabindex="0" role="button">' +
+                pinHtml(m.id, isFav) +
+                '<div class="home-mod-icon">' + iconContent + '</div>' +
+                '<h3 class="home-mod-title">' + (m.title || '') + '</h3></div>';
+        };
+
+        grid.innerHTML = modules.map(function(m) {
+            return cardHtml(m, favorites.indexOf(m.id) >= 0);
+        }).join('');
+
+        if (favoritesList && favoritesWrap) {
+            var favMods = AXIS_HOME_MODULES.filter(function(m) { return favorites.indexOf(m.id) >= 0 && (!m.adminOnly || isAdmin); });
+            if (favMods.length === 0) {
+                favoritesWrap.style.display = 'none';
+            } else {
+                favoritesWrap.style.display = 'block';
+                favoritesList.innerHTML = favMods.map(function(m) {
+                    return '<span class="home-fav-pill" data-module-id="' + m.id + '" data-action="' + m.action + '" data-page="' + (m.page || '') + '" data-href="' + (m.href || '') + '">' + m.icon + ' ' + m.title + ' <span class="home-fav-remove" aria-label="Remover">×</span></span>';
+                }).join('');
+            }
+        }
+
+        grid.querySelectorAll('.home-mod-card').forEach(function(card) {
+            card.addEventListener('click', function(e) {
+                if (e.target.closest('.home-mod-pin')) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    var id = (e.target.closest('.home-mod-pin').dataset && e.target.closest('.home-mod-pin').dataset.moduleId) || '';
+                    if (!id) return;
+                    var fav = getAxisHomeFavorites();
+                    var idx = fav.indexOf(id);
+                    if (idx >= 0) fav.splice(idx, 1); else fav.push(id);
+                    setAxisHomeFavorites(fav);
+                    renderHomeModules();
+                    return;
+                }
+                var action = card.dataset.action;
+                var page = card.dataset.page;
+                var href = card.dataset.href;
+                if (action === 'navigate' && page && typeof navigate === 'function') navigate(page);
+                else if (action === 'url' && href) window.location.href = href;
+            });
+        });
+
+        if (favoritesList) {
+            favoritesList.querySelectorAll('.home-fav-pill').forEach(function(pill) {
+                pill.addEventListener('click', function(e) {
+                    if (e.target.classList.contains('home-fav-remove')) {
+                        var id = pill.dataset.moduleId;
+                        var fav = getAxisHomeFavorites().filter(function(f) { return f !== id; });
+                        setAxisHomeFavorites(fav);
+                        renderHomeModules();
+                        return;
+                    }
+                    var action = pill.dataset.action;
+                    var page = pill.dataset.page;
+                    var href = pill.dataset.href;
+                    if (action === 'navigate' && page && typeof navigate === 'function') navigate(page);
+                    else if (action === 'url' && href) window.location.href = href;
+                });
+            });
+        }
+    } catch (err) { console.error('Erro ao renderizar módulos da home:', err); }
+}
+
 function setupHomeCards() {
     console.log('🔧 Configurando cards da home...');
-    
-    // Mapeamento de cards para páginas
-    const cardMappings = {
-        'page-inventario': 'Inventário',
-        'page-rondas': 'Rondas',
-        'page-suporte': 'Suporte',
-        'page-configuracoes': 'Configurações'
-    };
-    
-    // Adiciona listeners a todos os cards que usam navigate
-    Object.keys(cardMappings).forEach(pageId => {
-        const cards = document.querySelectorAll(`.mod-card[onclick*="${pageId}"]`);
-        cards.forEach(card => {
-            // Remove listeners antigos
-            const newCard = card.cloneNode(true);
-            card.parentNode.replaceChild(newCard, card);
-            
-            // Adiciona listener direto
-            newCard.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                console.log(`🖱️ Card clicado: ${cardMappings[pageId]}`);
-                
-                if (typeof navigate === 'function') {
-                    navigate(pageId);
-                } else {
-                    console.error('❌ Função navigate não encontrada!');
-                    // Fallback: mostra a seção diretamente
-                    const targetSection = document.getElementById(pageId);
-                    if (targetSection) {
-                        document.querySelectorAll('.main-section').forEach(s => s.classList.remove('active'));
-                        targetSection.classList.add('active');
-                    }
-                }
+    var searchInput = document.getElementById('home-search-input');
+    var tabButtons = document.querySelectorAll('.home-tab[data-category]');
+    if (searchInput) {
+        searchInput.addEventListener('input', renderHomeModules);
+        searchInput.addEventListener('keyup', renderHomeModules);
+    }
+    if (tabButtons && tabButtons.length) {
+        tabButtons.forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                tabButtons.forEach(function(b) { b.classList.remove('active'); });
+                this.classList.add('active');
+                renderHomeModules();
             });
-            
-            // Adiciona estilo de cursor
-            newCard.style.cursor = 'pointer';
         });
-    });
-    
+    }
+    renderHomeModules();
     console.log('✅ Cards da home configurados');
 }
 

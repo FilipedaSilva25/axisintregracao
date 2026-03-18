@@ -1679,8 +1679,8 @@
                  PÁGINA INICIAL - DASHBOARD
                  ============================================ -->
             <section id="page-home" class="main-section active">
-                <!-- Visão Rápida (hero moderno) -->
-                <div class="home-hero" id="home-hero">
+                <!-- 1. Hero em vidro: saudação + relógio + data -->
+                <div class="home-hero home-hero-glass" id="home-hero">
                     <div class="home-hero-content">
                         <div class="home-hero-greeting">
                             <span class="home-hero-salute" id="home-hero-salute">BEM-VINDO AO AXIS</span>, <span class="home-hero-name" id="home-hero-name">usuário</span>
@@ -1689,7 +1689,7 @@
                     </div>
                     <div class="home-hero-stats" id="home-hero-stats">
                         <div class="home-hero-stat">
-                            <span class="home-hero-stat-value" id="home-hero-stat-modules">10</span>
+                            <span class="home-hero-stat-value" id="home-hero-stat-modules">14</span>
                             <span class="home-hero-stat-label">Módulos</span>
                         </div>
                         <div class="home-hero-stat">
@@ -1699,129 +1699,33 @@
                     </div>
                 </div>
 
-                <div class="dashboard-header">
-                    <div class="welcome-text">
-                        <h1>MÓDULOS TÉCNICOS</h1>
-                        <p>Gestão centralizada de ativos e vistorias técnicas.</p>
+                <!-- 2. Barra de comando / busca -->
+                <div class="home-command-bar">
+                    <label for="home-search-input" class="sr-only">O que você quer fazer?</label>
+                    <input type="search" id="home-search-input" class="home-search-input" placeholder="O que você quer fazer? Pesquise um módulo..." autocomplete="off" />
+                    <span class="home-search-icon" aria-hidden="true">🔍</span>
+                </div>
+
+                <!-- 3. Favoritos (pinned) -->
+                <div class="home-favorites-wrap" id="home-favorites-wrap">
+                    <h3 class="home-favorites-title">⭐ Favoritos</h3>
+                    <div class="home-favorites-list" id="home-favorites-list"></div>
+                </div>
+
+                <!-- 4. Abas por categoria -->
+                <div class="home-tabs-wrap">
+                    <div class="home-tabs" role="tablist">
+                        <button type="button" class="home-tab active" data-category="todos" role="tab">Todos</button>
+                        <button type="button" class="home-tab" data-category="gestao" role="tab">Gestão</button>
+                        <button type="button" class="home-tab" data-category="tecnico" role="tab">Técnico</button>
+                        <button type="button" class="home-tab" data-category="admin" role="tab">Administração</button>
                     </div>
                 </div>
 
-                <!-- Grid de Módulos -->
-                <div class="dashboard-grid">
-                    <!-- Card Inventário -->
-                    <div class="mod-card inventario-master" onclick="if(typeof navigate === 'function') { navigate('page-inventario'); } else { console.error('navigate não encontrada'); alert('Erro: Função de navegação não encontrada. Recarregue a página.'); } return false;" tabindex="0" role="button" style="cursor: pointer;">
-                        <div class="mod-icon">📦</div>
-                        <div class="mod-content">
-                            <h3 class="txt-axis-gradient">INVENTÁRIO</h3>
-                        </div>
-                    </div>
-
-                    <!-- Card Rondas -->
-                    <div class="mod-card rondas-master" onclick="if(typeof navigate === 'function') { navigate('page-rondas'); } else { console.error('navigate não encontrada'); alert('Erro: Função de navegação não encontrada. Recarregue a página.'); } return false;" tabindex="0" role="button" style="cursor: pointer;">
-                        <div class="mod-icon">🛡️</div>
-                        <div class="mod-content">
-                            <h3 class="txt-axis-gradient">RONDAS</h3>
-                        </div>
-                    </div>
-
-                    <!-- Card Manutenção Preventiva (DESTAQUE) -->
-                    <div class="mod-card preventiva-master" 
-                         onclick="window.location.href='pages/manutenção_preventiva.html'" 
-                         tabindex="0" 
-                         role="button">
-                        <div class="mod-icon">🖨️</div>
-                        <div class="mod-content">
-                            <h3 class="txt-axis-gradient">MANUTENÇÃO PREVENTIVA</h3>
-                        </div>
-                    </div>
-
-                    <!-- Card Suporte -->
-                    <div class="mod-card suporte-master" onclick="if(typeof navigate === 'function') { navigate('page-suporte'); } else { console.error('navigate não encontrada'); alert('Erro: Função de navegação não encontrada. Recarregue a página.'); } return false;" tabindex="0" role="button" style="cursor: pointer;">
-                        <div class="mod-icon">💬</div>
-                        <div class="mod-content">
-                            <h3 class="txt-axis-gradient">SUPORTE TÉCNICO</h3>
-                        </div>
-                    </div>
-
-                    <!-- Card Notas Fiscais -->
-                    <div class="mod-card notas-master" onclick="window.location.href='pages/notas_fiscais.html'" tabindex="0" role="button">
-                        <div class="mod-icon">📄</div>
-                        <div class="mod-content">
-                            <h3 class="txt-axis-gradient">NOTAS FISCAIS</h3>
-                        </div>
-                    </div>
-
-                    <!-- Card Bloco de Notas -->
-                    <div class="mod-card bloco-master" onclick="window.location.href='pages/bloco_de_notas_apple.html'" tabindex="0" role="button">
-                        <div class="mod-icon">📝</div>
-                        <div class="mod-content">
-                            <h3 class="txt-axis-gradient">BLOCO DE NOTAS</h3>
-                        </div>
-                    </div>
-
-                    <!-- Card Registro de Chamados (design vidro, cores do site) -->
-                    <div class="mod-card chamados-master" onclick="window.location.href='pages/registro_chamados.html'" tabindex="0" role="button">
-                        <div class="mod-icon">📋</div>
-                        <div class="mod-content">
-                            <h3 class="txt-axis-gradient">REGISTRO DE CHAMADOS</h3>
-                        </div>
-                    </div>
-
-                    <!-- Card Peças -->
-                    <div class="mod-card pecas-master" onclick="window.location.href='pages/pecas.html'" tabindex="0" role="button">
-                        <div class="mod-icon">🔧</div>
-                        <div class="mod-content">
-                            <h3 class="txt-axis-gradient">PEÇAS</h3>
-                        </div>
-                    </div>
-
-                    <!-- Card Packing Machine -->
-                    <div class="mod-card packing-master" onclick="window.location.href='pages/packing_machine.html'" tabindex="0" role="button">
-                        <div class="mod-icon">🏭</div>
-                        <div class="mod-content">
-                            <h3 class="txt-axis-gradient">PACKING MACHINE</h3>
-                        </div>
-                    </div>
-
-                    <!-- Card Status de Bancada -->
-                    <div class="mod-card status-bancada-master" onclick="window.location.href='pages/status_bancada.html'" tabindex="0" role="button">
-                        <div class="mod-icon">📊</div>
-                        <div class="mod-content">
-                            <h3 class="txt-axis-gradient">STATUS DE BANCADA</h3>
-                        </div>
-                    </div>
-
-                    <!-- Card SAURON -->
-                    <div class="mod-card sauron-master" onclick="window.location.href='pages/sauron.html'" tabindex="0" role="button">
-                        <div class="mod-icon">👁</div>
-                        <div class="mod-content">
-                            <h3 class="txt-axis-gradient">SAURON</h3>
-                        </div>
-                    </div>
-
-                    <!-- Card Jovem Aprendiz -->
-                    <div class="mod-card jovem-aprendiz-master" onclick="window.location.href='pages/jovem-aprendiz.html'" tabindex="0" role="button">
-                        <div class="mod-icon">🎓</div>
-                        <div class="mod-content">
-                            <h3 class="txt-axis-gradient">JOVEM APRENDIZ</h3>
-                        </div>
-                    </div>
-
-                    <!-- Card Selbetti (página em construção) -->
-                    <div class="mod-card selbetti-master" onclick="window.location.href='pages/selbetti.html'" tabindex="0" role="button" style="cursor: pointer;">
-                        <div class="mod-icon"><img src="assets/IMAGENS/Robo_Selbetti_Card.png" alt="SELBETTI" onerror="this.style.display='none';this.nextElementSibling.style.display='block';" /><span style="display:none;font-size:38px;">🏭</span></div>
-                        <div class="mod-content">
-                            <h3 class="txt-axis-gradient">SELBETTI</h3>
-                        </div>
-                    </div>
-
-                    <!-- Card Configurações -->
-                    <div class="mod-card config-master" onclick="if(typeof navigate === 'function') { navigate('page-configuracoes'); } else { console.error('navigate não encontrada'); alert('Erro: Função de navegação não encontrada. Recarregue a página.'); } return false;" tabindex="0" role="button" style="cursor: pointer;">
-                        <div class="mod-icon">⚙️</div>
-                        <div class="mod-content">
-                            <h3 class="txt-axis-gradient">CONFIGURAÇÕES</h3>
-                        </div>
-                    </div>
+                <!-- 5. Bento grid em vidro (módulos injetados por JS) -->
+                <div class="home-bento-wrap">
+                    <div class="home-bento-grid" id="home-bento-grid"></div>
+                    <p class="home-no-results" id="home-no-results" style="display:none;">Nenhum módulo encontrado. Tente outra busca ou abas.</p>
                 </div>
             </section>
 
