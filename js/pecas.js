@@ -11,6 +11,7 @@
     const STORAGE_UTILIZADAS = 'axis_pecas_utilizadas';
     const THEME_KEY = 'axis_pecas_theme';
     const VARIANT_KEY = 'axis_pecas_variant';
+    var estoqueViewMode = 'lista'; /* 'lista' | 'cards' */
 
     /* 32 temas (versões) — cores aplicadas ao design em vidro */
     var PECAS_VARIANTS = [
@@ -495,11 +496,10 @@
             if (list.length === 0) {
                 tbody.innerHTML = '';
                 if (empty) empty.classList.add('visible');
-                return;
-            }
-            if (empty) empty.classList.remove('visible');
+            } else {
+                if (empty) empty.classList.remove('visible');
 
-            tbody.innerHTML = list.map(function(p) {
+                tbody.innerHTML = list.map(function(p) {
                 var produto = getProdutoNome(p);
                 var cat = p.categoria || 'peca';
                 var proj = calcularProjecaoDias(p, movimentos);
@@ -562,7 +562,85 @@
                     updateAvencer();
                 });
             });
+            }
+            var tableWrap = document.getElementById('pecas-table-wrap');
+            var cardsContainer = document.getElementById('pecas-estoque-cards');
+            if (estoqueViewMode === 'cards') {
+                renderEstoqueCards(list, movimentos);
+                if (tableWrap) tableWrap.style.display = 'none';
+                if (cardsContainer) { cardsContainer.style.display = 'grid'; }
+            } else {
+                if (tableWrap) tableWrap.style.display = '';
+                if (cardsContainer) cardsContainer.style.display = 'none';
+            }
+            document.querySelectorAll('.pecas-view-btn[data-view]').forEach(function(b) {
+                b.classList.toggle('active', (b.dataset.view || '') === estoqueViewMode);
+            });
         } catch (err) { console.error('Erro ao renderizar estoque:', err); }
+    }
+
+    function renderEstoqueCards(list, movimentos) {
+        try {
+            var container = document.getElementById('pecas-estoque-cards');
+            if (!container) return;
+            if (!Array.isArray(list) || list.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+            var html = list.map(function(p) {
+                var produto = getProdutoNome(p);
+                var cat = p.categoria || 'peca';
+                var proj = calcularProjecaoDias(p, movimentos);
+                var id = escapeHtml(p.id || '');
+                return '<div class="pecas-estoque-card-item" data-id="' + id + '">' +
+                    '<div class="pecas-estoque-card-header">' +
+                    '<p class="pecas-estoque-card-produto">' + escapeHtml(produto || '—') + '</p>' +
+                    '<span class="pecas-badge-cat pecas-cat-' + escapeHtml(cat) + ' pecas-estoque-card-cat">' + escapeHtml(getCategoriaLabel(cat)) + '</span>' +
+                    '</div>' +
+                    '<div class="pecas-estoque-card-meta">' +
+                    (p.fabricante ? '<span><i class="fas fa-industry"></i> ' + escapeHtml(p.fabricante) + '</span>' : '') +
+                    (p.conteudo ? '<span><i class="fas fa-vial"></i> ' + escapeHtml(p.conteudo) + '</span>' : '') +
+                    (p.validade ? '<span><i class="fas fa-calendar"></i> ' + escapeHtml(p.validade) + '</span>' : '') +
+                    '</div>' +
+                    '<div class="pecas-estoque-card-qtd">' + (p.quantidade || 0) + ' un.</div>' +
+                    '<div class="pecas-estoque-card-projec">' + proj.html + '</div>' +
+                    '<div class="pecas-estoque-card-actions">' +
+                    '<button type="button" class="pecas-btn-action pecas-btn-entrada" data-id="' + id + '" title="Registrar entrada"><i class="fas fa-arrow-down"></i> ENTRADA</button>' +
+                    '<button type="button" class="pecas-btn-action" data-id="' + id + '" title="Registrar saída"><i class="fas fa-arrow-up"></i> SAÍDA</button>' +
+                    '<button type="button" class="pecas-btn-edit" data-id="' + id + '" title="Editar"><i class="fas fa-edit"></i></button>' +
+                    '<button type="button" class="pecas-btn-detalhes" data-id="' + id + '" title="Histórico"><i class="fas fa-history"></i></button>' +
+                    '<button type="button" class="pecas-btn-delete" data-id="' + id + '" title="Excluir">🗑️</button>' +
+                    '</div></div>';
+            }).join('');
+            container.innerHTML = html;
+            container.querySelectorAll('.pecas-btn-entrada').forEach(function(btn) {
+                btn.addEventListener('click', function() { var id = safeId(this.dataset.id); if (id) openModalEntrada(id); });
+            });
+            container.querySelectorAll('.pecas-btn-action:not(.pecas-btn-entrada)').forEach(function(btn) {
+                btn.addEventListener('click', function() { var id = safeId(this.dataset.id); if (id) openModalUso(id); });
+            });
+            container.querySelectorAll('.pecas-btn-edit').forEach(function(btn) {
+                btn.addEventListener('click', function() { var id = safeId(this.dataset.id); if (id) openModalEditar(id); });
+            });
+            container.querySelectorAll('.pecas-btn-detalhes').forEach(function(btn) {
+                btn.addEventListener('click', function() { var id = safeId(this.dataset.id); if (id) openModalDetalhes(id); });
+            });
+            container.querySelectorAll('.pecas-btn-delete').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    var id = safeId(this.dataset.id);
+                    if (!id || !confirm('Remover esta peça do inventário e todos os movimentos associados?')) return;
+                    var estoque = getEstoque().filter(function(p) { return p && p.id !== id; });
+                    var movimentosFiltered = getMovimentos().filter(function(m) { return !m || m.pecaId !== id; });
+                    saveEstoque(estoque);
+                    saveMovimentos(movimentosFiltered);
+                    renderEstoque();
+                    renderMovimentos();
+                    updateDashboards();
+                    updateAssistente();
+                    updateAvencer();
+                });
+            });
+        } catch (err) { console.error('Erro ao renderizar cards de estoque:', err); }
     }
 
     function renderMovimentos() {
@@ -1350,10 +1428,27 @@
                         searchEst.style.display = target === 'estoque' ? '' : 'none';
                         searchMov.style.display = target === 'movimentos' ? '' : 'none';
                     }
+                    var viewToggleWrap = document.getElementById('pecas-view-toggle-wrap');
+                    if (viewToggleWrap) viewToggleWrap.style.display = target === 'estoque' ? '' : 'none';
                     if (target === 'movimentos') renderMovimentos();
                 });
             });
         } catch (err) { console.error('Erro ao configurar tabs:', err); }
+    }
+
+    function setupEstoqueViewToggle() {
+        try {
+            document.querySelectorAll('.pecas-view-btn[data-view]').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    var v = (this.dataset && this.dataset.view) ? String(this.dataset.view) : '';
+                    if (v !== 'lista' && v !== 'cards') return;
+                    estoqueViewMode = v;
+                    document.querySelectorAll('.pecas-view-btn[data-view]').forEach(function(b) { b.classList.remove('active'); });
+                    this.classList.add('active');
+                    renderEstoque();
+                });
+            });
+        } catch (err) { console.error('Erro ao configurar toggle de vista:', err); }
     }
 
     function toggleView(target) {
@@ -1442,6 +1537,7 @@
             }
 
             setupTabs();
+            setupEstoqueViewToggle();
 
             var form = document.getElementById('pecas-form');
             if (form) {
@@ -1600,6 +1696,8 @@
 
             // Inicializar views e menu
             toggleView('inventario');
+            var viewToggleWrap = document.getElementById('pecas-view-toggle-wrap');
+            if (viewToggleWrap) viewToggleWrap.style.display = ''; /* visível na aba Estoque */
             initMenu();
         } catch (err) { console.error('Erro ao inicializar peças:', err); }
     }

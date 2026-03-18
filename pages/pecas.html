@@ -96,6 +96,10 @@
                         <button type="button" class="pecas-tab active" data-tab="estoque">Estoque</button>
                         <button type="button" class="pecas-tab" data-tab="movimentos">Entradas e saídas</button>
                     </div>
+                    <div class="pecas-view-toggle pecas-view-estoque-only" id="pecas-view-toggle-wrap" title="Alternar entre lista e cards">
+                        <button type="button" class="pecas-view-btn active" data-view="lista" aria-label="Ver como lista"><i class="fas fa-list"></i></button>
+                        <button type="button" class="pecas-view-btn" data-view="cards" aria-label="Ver como cards"><i class="fas fa-th-large"></i></button>
+                    </div>
                     <select id="pecas-filter-categoria" class="pecas-filter-cat" title="Filtrar por categoria">
                         <option value="">Todas as categorias</option>
                         <option value="peca">Peça</option>
@@ -114,25 +118,28 @@
                 </div>
 
                 <div class="pecas-tab-panel active" id="pecas-tab-estoque">
-                    <div class="pecas-table-scroll">
-                        <table class="pecas-table" id="pecas-table-estoque">
-                            <thead>
-                                <tr>
-                                    <th>Categoria</th>
-                                    <th>Data receb.</th>
-                                    <th>Produto</th>
-                                    <th>Fabricante</th>
-                                    <th>Conteúdo</th>
-                                    <th>Lote</th>
-                                    <th>Validade</th>
-                                    <th>Qtd</th>
-                                    <th>Projeção</th>
-                                    <th>Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody id="pecas-tbody-estoque"></tbody>
-                        </table>
+                    <div class="pecas-table-wrap" id="pecas-table-wrap">
+                        <div class="pecas-table-scroll">
+                            <table class="pecas-table" id="pecas-table-estoque">
+                                <thead>
+                                    <tr>
+                                        <th>Categoria</th>
+                                        <th>Data receb.</th>
+                                        <th>Produto</th>
+                                        <th>Fabricante</th>
+                                        <th>Conteúdo</th>
+                                        <th>Lote</th>
+                                        <th>Validade</th>
+                                        <th>Qtd</th>
+                                        <th>Projeção</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="pecas-tbody-estoque"></tbody>
+                            </table>
+                        </div>
                     </div>
+                    <div class="pecas-estoque-cards" id="pecas-estoque-cards" style="display:none"></div>
                     <p class="pecas-empty" id="pecas-empty-estoque">Nenhuma peça cadastrada.</p>
                 </div>
 

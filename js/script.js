@@ -109,6 +109,17 @@ const CSSClasses = {
 
 // ================= 1. INICIALIZAÇÃO DO SISTEMA =================
 document.addEventListener('DOMContentLoaded', () => {
+    // Ao abrir o site pela raiz (ex.: axisintegracao.com.br), forçar tela de login para pedir usuário e senha
+    var path = (window.location.pathname || '/').replace(/\/+$/, '') || '/';
+    var isRoot = path === '' || path === '/' || path === '/index.html';
+    var search = window.location.search || '';
+    if (isRoot && search.indexOf('tela=login') === -1) {
+        try {
+            window.location.replace((window.location.pathname || '/') + '?tela=login#login');
+            return;
+        } catch (_) {}
+    }
+
     // Ao sair ou recarregar: guardar página atual para reabrir na mesma
     window.addEventListener('beforeunload', (e) => {
         var page = (window.location.hash || '').replace('#', '').trim().replace(/^\/+/, '') || activePage || localStorage.getItem('axis-current-page') || 'page-home';

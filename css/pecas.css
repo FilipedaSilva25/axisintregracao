@@ -310,21 +310,18 @@ body.pecas-page {
 @media (min-width: 1024px) {
     .pecas-layout-dashboard {
         display: grid;
-        /* Aumenta um pouco mais a largura da coluna de estoque,
-           para o card branco chegar mais perto da borda direita,
-           alinhando com o conjunto de cards da coluna da esquerda */
-        grid-template-columns: minmax(0, 0.65fr) minmax(920px, 2fr);
-        grid-template-rows: auto auto 1fr;
+        /* Coluna esquerda: gráficos + Alertas + A vencer + Assistente. Coluna direita: card Estoque até à borda (alinhado à direita do Assistente). */
+        grid-template-columns: minmax(0, 0.52fr) minmax(720px, 1.48fr);
+        grid-template-rows: auto 1fr;
         grid-template-areas:
             "kpis kpis"
-            "chart chart"
-            "table table";
+            "chart table";
         gap: 24px;
         align-items: start;
     }
     .pecas-kpi-row { grid-area: kpis; }
     .pecas-col-chart { grid-area: chart; }
-    .pecas-col-table { grid-area: table; }
+    .pecas-col-table { grid-area: table; min-width: 0; }
 }
 
 /* View Cadastro isolado */
@@ -793,13 +790,29 @@ body.pecas-page {
     box-shadow: 0 4px 12px rgba(14, 165, 233, 0.35);
 }
 
-/* Table card — data grid profissional */
+/* Table card — vidro estilo Apple, ocupa toda a largura até à direita do Assistente */
 .pecas-card-table {
-    padding: 24px;
+    padding: 26px 28px;
     margin-left: 0;
     margin-right: 0;
     width: 100%;
+    min-width: 0;
+    background: var(--pecas-glass-bg);
+    backdrop-filter: var(--pecas-glass-blur);
+    -webkit-backdrop-filter: var(--pecas-glass-blur);
+    border: 1px solid var(--pecas-glass-border);
+    border-radius: var(--pecas-radius);
+    box-shadow: var(--pecas-glass-shadow), 0 0 0 1px rgba(255, 255, 255, 0.4) inset;
+    transition: var(--pecas-transition);
 }
+.pecas-card-table:hover {
+    box-shadow: var(--pecas-shadow-card-hover), 0 0 30px -10px rgba(14, 165, 233, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+    border-color: rgba(255, 255, 255, 0.5);
+}
+[data-theme="dark"] .pecas-card-table {
+    box-shadow: var(--pecas-glass-shadow), 0 0 0 1px rgba(255, 255, 255, 0.06) inset;
+}
+[data-theme="dark"] .pecas-card-table:hover { border-color: rgba(255, 255, 255, 0.12); }
 .pecas-toolbar {
     display: flex;
     flex-wrap: wrap;
@@ -871,14 +884,47 @@ body.pecas-page {
     background: rgba(14, 165, 233, 0.1);
 }
 
-.pecas-tab-panel { display: none; }
-.pecas-tab-panel.active { display: block; }
-.pecas-table-scroll {
-    margin-bottom: 12px;
+.pecas-view-toggle {
+    display: inline-flex;
+    gap: 4px;
+    padding: 4px;
+    background: var(--pecas-bg);
     border-radius: var(--pecas-radius-sm);
     border: 1px solid var(--pecas-border);
+}
+.pecas-view-toggle .pecas-view-btn {
+    padding: 8px 12px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--pecas-muted);
+    cursor: pointer;
+    transition: var(--pecas-transition);
+}
+.pecas-view-toggle .pecas-view-btn:hover { color: var(--pecas-text); }
+.pecas-view-toggle .pecas-view-btn.active {
+    background: var(--pecas-glass-bg);
+    color: var(--pecas-primary);
+    box-shadow: var(--pecas-shadow);
+}
+.pecas-view-estoque-only { margin-left: auto; }
+.pecas-tab-panel { display: none; }
+.pecas-tab-panel.active { display: block; }
+.pecas-table-wrap { margin-bottom: 12px; }
+.pecas-table-scroll {
+    margin-bottom: 0;
+    border-radius: var(--pecas-radius-sm);
     overflow-x: auto;
     overflow-y: visible;
+    background: rgba(255, 255, 255, 0.35);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--pecas-glass-border);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3) inset;
+}
+[data-theme="dark"] .pecas-table-scroll {
+    background: rgba(0, 0, 0, 0.15);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
 }
 .pecas-table {
     width: 100%;
@@ -989,6 +1035,83 @@ body.pecas-page {
 }
 .pecas-empty.visible { display: block; }
 
+/* Vista em cards — estoque inteligente */
+.pecas-estoque-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 18px;
+    margin-bottom: 12px;
+}
+.pecas-estoque-card-item {
+    background: rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--pecas-glass-border);
+    border-radius: var(--pecas-radius-sm);
+    padding: 18px 20px;
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.4) inset, 0 4px 20px rgba(0, 0, 0, 0.06);
+    transition: var(--pecas-transition);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.pecas-estoque-card-item:hover {
+    border-color: rgba(14, 165, 233, 0.35);
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+    transform: translateY(-2px);
+}
+[data-theme="dark"] .pecas-estoque-card-item {
+    background: rgba(30, 41, 59, 0.6);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06) inset;
+}
+.pecas-estoque-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.pecas-estoque-card-produto {
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--pecas-text);
+    line-height: 1.3;
+    margin: 0;
+}
+.pecas-estoque-card-cat {
+    flex-shrink: 0;
+}
+.pecas-estoque-card-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 14px;
+    font-size: 0.8rem;
+    color: var(--pecas-muted);
+}
+.pecas-estoque-card-meta span { display: flex; align-items: center; gap: 4px; }
+.pecas-estoque-card-qtd {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--pecas-primary);
+    letter-spacing: -0.02em;
+}
+.pecas-estoque-card-projec { margin-top: 4px; }
+.pecas-estoque-card-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+    padding-top: 12px;
+    border-top: 1px solid var(--pecas-border);
+}
+.pecas-estoque-card-actions .pecas-btn-action,
+.pecas-estoque-card-actions .pecas-btn-edit,
+.pecas-estoque-card-actions .pecas-btn-detalhes,
+.pecas-estoque-card-actions .pecas-btn-delete {
+    padding: 6px 10px;
+    font-size: 0.7rem;
+}
+
 /* Modais */
 .pecas-overlay {
     position: fixed;
@@ -1061,11 +1184,11 @@ body.pecas-page {
         grid-template-rows: auto auto;
     }
     .pecas-layout-dashboard {
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: 1fr;
         grid-template-rows: auto auto auto;
-        grid-template-areas: "kpis kpis" "chart form" "table table";
+        grid-template-areas: "kpis" "chart" "table";
     }
-    .pecas-col-chart { grid-column: 1 / -1; }
+    .pecas-col-chart { grid-column: 1; }
     .pecas-card-chart { position: static; }
     .pecas-chart-wrap { height: 200px; }
 }
@@ -1076,7 +1199,7 @@ body.pecas-page {
     .pecas-layout-dashboard {
         grid-template-columns: 1fr;
         grid-template-rows: auto;
-        grid-template-areas: "kpis" "chart" "form" "table";
+        grid-template-areas: "kpis" "chart" "table";
     }
     .pecas-kpi-row { grid-template-columns: 1fr; }
 }
