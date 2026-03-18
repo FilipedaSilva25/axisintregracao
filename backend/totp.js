@@ -8,7 +8,8 @@ const speakeasy = require('speakeasy');
 const { DATA_DIR } = require('./config');
 const { readJson, writeJson } = require('./data');
 
-const TOTP_FILE = path.join(DATA_DIR, 'totp-secrets.json');
+// Permite apontar para um caminho persistente em produção (ex.: Render Disk)
+const TOTP_FILE = process.env.TOTP_FILE || path.join(DATA_DIR, 'totp-secrets.json');
 const ISSUER = 'AXIS';
 
 /** Mesma normalização do frontend (axisLoginCanonico): trim, lowercase, espaços e pontos → _ */

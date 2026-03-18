@@ -6883,12 +6883,27 @@ function atualizarPerfilNav() {
     var av = document.getElementById('axis-profile-avatar');
     var avDrop = document.getElementById('axis-profile-dropdown-avatar');
     if (av) {
-        if (foto) { av.src = foto; av.style.display = ''; av.nextElementSibling.style.display = 'none'; }
-        else { av.removeAttribute('src'); if (av.nextElementSibling) av.nextElementSibling.style.display = 'flex'; }
+        if (foto) {
+            av.src = foto;
+            av.style.display = '';
+            if (av.nextElementSibling) av.nextElementSibling.style.display = 'none';
+        } else {
+            // Evita ícone de imagem quebrada quando src fica vazio
+            av.removeAttribute('src');
+            av.style.display = 'none';
+            if (av.nextElementSibling) av.nextElementSibling.style.display = 'flex';
+        }
     }
     if (avDrop) {
-        if (foto) { avDrop.src = foto; avDrop.style.display = ''; avDrop.nextElementSibling.style.display = 'none'; }
-        else { avDrop.removeAttribute('src'); if (avDrop.nextElementSibling) avDrop.nextElementSibling.style.display = 'flex'; }
+        if (foto) {
+            avDrop.src = foto;
+            avDrop.style.display = '';
+            if (avDrop.nextElementSibling) avDrop.nextElementSibling.style.display = 'none';
+        } else {
+            avDrop.removeAttribute('src');
+            avDrop.style.display = 'none';
+            if (avDrop.nextElementSibling) avDrop.nextElementSibling.style.display = 'flex';
+        }
     }
     function setEl(id, text) {
         var el = document.getElementById(id);
