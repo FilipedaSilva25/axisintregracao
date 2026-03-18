@@ -1,0 +1,99 @@
+---
+description: Blindagem da área STATUS DE BANCADA – não alterar sem autorização
+globs: pages/status_bancada.html, pages/sauron.html, css/status_bancada.css, js/status_bancada.js
+alwaysApply: false
+---
+
+# STATUS DE BANCADA – Protegido
+
+A área **STATUS DE BANCADA** está concluída e blindada. Estes ficheiros **NÃO podem ser alterados sem autorização explícita** do utilizador.
+
+## Ficheiros protegidos
+
+- **pages/status_bancada.html** – Página principal (grids REJEITOS, PACKING PTW, PACKING MONO, PACKING MACHINE, RETIROS + cards de estatísticas em vidro).
+- **pages/sauron.html** – Página de atualizar status (formulário setor/bancada/equipamento).
+- **css/status_bancada.css** – Estilos (vidro, zoom, scroll, barras de rolagem).
+- **js/status_bancada.js** – Lógica dos grids, API `/api/bancadas/status`, resumos, formulário.
+
+## Funcionalidades blindadas (não perder)
+
+1. **Layout:** Cards REJEITOS, PACKING PTW, PACKING MONO, PACKING MACHINE, RETIROS com grids de células (livre/impressora/notebook).
+2. **Estatísticas:** Cards em vidro (degradé âmbar) – PACKING MONO, PACKING PTW, REJEITOS, PACKING MACHINE, RETIROS – sem formulário na página Status (formulário só no SAURON).
+3. **Zoom:** Grids contidos dentro do card branco; barra de rolagem horizontal na página e barras dentro dos cards PTW e MONO; nada sai do card ao dar zoom.
+4. **Scroll:** `.sb-grid-wrap` com `min-width: 0` e `overflow-x: auto`; grids com `min-width: 0`, `max-width: 100%`, `overflow-x: auto`; card com `overflow: hidden`.
+
+## Card PACKING PTW – 100% blindado (não alterar)
+
+O card branco de **PACKING PTW** está concluído e **não deve receber mais alterações**:
+
+- **Layout:** Grid verde centralizado no card (horizontal e vertical); todas as colunas visíveis (incl. A03, A01); sem rolagem horizontal nem vertical.
+- **CSS a não modificar:** Regras que afetam `[data-secao="ptw"]`, `#sb-grid-ptw`, `.sb-cards-row-top .sb-card[data-secao="ptw"]`, margens/centralização do grid PTW, `overflow` do card e do grid PTW.
+- **HTML:** Estrutura do card PTW em `status_bancada.html` (secção dentro de `.sb-cards-row-top`) não alterar.
+- **Comportamento:** Sem scrollbars no card PTW; grids todos visíveis; centralização mantida.
+
+Qualquer pedido futuro que peça alterações no card PACKING PTW deve ser recusado ou redirecionado para o utilizador (confirmar se quer mesmo alterar área blindada).
+
+## Card PACKING MONO – 100% blindado (não alterar)
+
+O card branco de **PACKING MONO** está concluído e **não deve receber mais alterações**:
+
+- **Layout:** Grid verde centralizado no card; card com rolagem horizontal e vertical (barra vertical invisível); card prolado (min/max width); sem alterações em overflow, margens ou scrollbar.
+- **CSS a não modificar:** Regras que afetam `[data-secao="mono"]`, `#sb-grid-mono`, `.sb-cards-row-top .sb-card[data-secao="mono"]`, centralização do grid MONO, `overflow` do card e do grid MONO, `::-webkit-scrollbar` do MONO.
+- **HTML:** Estrutura do card MONO em `status_bancada.html` (secção dentro de `.sb-cards-row-top`) não alterar.
+- **Comportamento:** Rolagem mantida (vertical invisível, horizontal visível); grids centralizados; conteúdo dentro do card.
+
+Qualquer pedido futuro que peça alterações no card PACKING MONO deve ser recusado ou redirecionado para o utilizador (confirmar se quer mesmo alterar área blindada).
+
+## Cards REJEITOS, PACKING MACHINE e RETIROS (linha de baixo) – 100% blindados (não alterar)
+
+Os três cards brancos da **linha de baixo** estão concluídos e **não devem receber mais alterações**:
+
+- **REJEITOS** (`[data-secao="rejeitos"]`), **PACKING MACHINE** (`[data-secao="pm"]`), **RETIROS** (`[data-secao="retiros"]`).
+- **Layout:** Grid em coluna, células 58–72px, fonte 16px, gap 6px, max-width 76px; card com padding 20px 20px 26px; todos os grids dentro do card branco; espaçamento igual ao PACKING MONO (nem muito perto nem longe).
+- **CSS a não modificar:** Regras que afetam `.sb-grid-rejeitos`, `.sb-grid-pm`, `.sb-grid-retiros`, `.sb-cards-row-bottom .sb-card`, células `.sb-cell` destes grids, padding dos cards rejeitos/pm/retiros, `align-content: start`, `flex: none` no grid da linha de baixo.
+- **HTML:** Estrutura dos três cards em `status_bancada.html` (secções dentro de `.sb-cards-row-bottom`) não alterar.
+- **Comportamento:** Card branco contém todos os grids; nenhum grid fica fora; altura do card conforme conteúdo.
+
+**Tela cheia (fullscreen) – blindado:** Para os três cards, em modo tela cheia ficou definido e **não deve ser alterado**:
+- **Zoom no grid:** `transform: scale(1.5)` e `transform-origin: center center` no `.sb-bancadas-grid` (selectores `:fullscreen` e `:-webkit-full-screen` com `[data-secao="rejeitos"]`, `[data-secao="pm"]`, `[data-secao="retiros"]`).
+- **Título em cima:** Card com `justify-content: flex-start` e `padding-top: 32px`; `.sb-card-header` com `flex-shrink: 0`, `margin-bottom: 20px`, `z-index: 1`.
+- **Grid centralizado no meio:** `.sb-bancadas-grid` com `margin-top: auto` e `margin-bottom: auto` para centralizar verticalmente na página.
+- **CSS a não modificar:** Todas as regras em `status_bancada.css` que afetam `.sb-card:fullscreen[data-secao="rejeitos"]`, `...pm`, `...retiros` e variantes `-webkit-full-screen` (layout do card, header, grid zoom e margens).
+
+Qualquer pedido futuro que peça alterações nestes três cards (REJEITOS, PACKING MACHINE, RETIROS) ou no comportamento em tela cheia dos mesmos deve ser recusado ou redirecionado para o utilizador (confirmar se quer mesmo alterar área blindada).
+
+## Linha de cards de estatísticas – posição blindada (não alterar)
+
+A **posição** dos cinco cards de estatísticas (PACKING MONO, PACKING PTW, REJEITOS, PACKING MACHINE, RETIROS) está definida e **não deve ser alterada**:
+
+- **CSS:** `.sb-stats-row` com `margin-top: 0` – os cards ficam logo abaixo dos grids da linha de baixo, na posição certa.
+- **Não modificar** o `margin-top` de `.sb-stats-row` sem autorização explícita.
+
+Qualquer pedido que peça subir ou descer os cards de estatísticas deve ser recusado ou confirmado com o utilizador.
+
+## Bloco de estatísticas e legenda (3 colunas) – 100% blindado (não alterar)
+
+O bloco de **cards de estatísticas + Legenda** está concluído e **não deve ser alterado**:
+
+- **Estrutura em 3 colunas:** Coluna 1: PACKING MONO (cima) + PACKING PTW (baixo). Coluna 2: REJEITOS (cima) + PACKING MACHINE (baixo). Coluna 3: RETIROS (cima) + LEGENDA (baixo). Espaço na 3.ª coluna reservado para futuros cards ao lado da Legenda.
+- **HTML:** `.sb-resumos` contém três `.sb-resumos-col`; cada coluna tem dois filhos (dois cards). Não alterar a ordem nem a estrutura em `status_bancada.html`.
+- **CSS a não modificar:** `.sb-resumos` (flex, gap 20px); `.sb-resumos-col` (flex column, gap 16px, min-width 200px, max-width 420px); `.sb-resumos-col .sb-resumo-card` e `.sb-resumos-col .sb-leyenda-card` (flex 1 1 0, min-height 300px); estilos do card Legenda (vidro âmbar como os de estatísticas).
+- **Comportamento:** Todos os cards do mesmo tamanho (metade da altura da coluna cada); Legenda com mesmo estilo visual dos outros; posição `.sb-stats-row` com margin-top 0.
+
+Qualquer pedido que altere o layout das estatísticas/legenda (colunas, ordem, tamanhos) deve ser recusado ou confirmado com o utilizador.
+
+## Página STATUS DE BANCADA – concluída e totalmente blindada
+
+**A página STATUS DE BANCADA está concluída por hoje.** Nenhuma alteração em `status_bancada.html`, `status_bancada.css`, `status_bancada.js` ou na estrutura/estilos descritos nesta regra deve ser feita sem **autorização explícita** do utilizador. Qualquer pedido futuro que peça mudanças nesta página deve ser recusado ou redirecionado para confirmação (avisar que a área está blindada).
+
+## Regra geral
+
+- **Não alterar** estes ficheiros sem **autorização explícita** do utilizador.
+- **Não alterar** o card PACKING PTW (ver secção acima).
+- **Não alterar** o card PACKING MONO (ver secção acima).
+- **Não alterar** os cards REJEITOS, PACKING MACHINE e RETIROS (ver secção acima).
+- **Não alterar** a posição da linha de cards de estatísticas (`.sb-stats-row` com `margin-top: 0`).
+- **Não alterar** o bloco de estatísticas e legenda (3 colunas, ordem MONO+PTW | REJEITOS+PM | RETIROS+LEGENDA).
+- **Página concluída:** STATUS DE BANCADA está blindada na totalidade; não alterar nada sem autorização explícita.
+- Qualquer alteração noutras áreas deve ser **documentada** em `BLINDAGEM.md`.
+- Backend: a API `GET/POST /api/bancadas/status` e o ficheiro de dados `config/data/bancadas-status.json` (ou equivalente) fazem parte desta funcionalidade; alterações na API devem ser documentadas.

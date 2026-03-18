@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<!-- AXIS | PACKING MACHINE - Troca de Cabeça de Impressão -->
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AXIS | PACKING MACHINE - Troca de Cabeça</title>
+    <link rel="stylesheet" href="../css/packing_machine.css">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
+</head>
+<body class="pm-page">
+    <header class="pm-top-bar">
+        <h1>PACKING MACHINE</h1>
+        <div class="pm-top-bar-actions">
+            <button type="button" class="pm-theme-toggle" id="pm-theme-toggle" title="Alternar modo escuro">
+                <i class="fas fa-moon"></i>
+            </button>
+            <a href="../index.html#page-home" class="pm-back-btn">
+                <span>Voltar ao Dashboard</span>
+            </a>
+        </div>
+    </header>
+
+    <main class="pm-main">
+        <!-- Coluna esquerda: Formulários -->
+        <div class="pm-left-column">
+            <!-- Card: Registro rápido (data/hora atual) -->
+            <section class="pm-glass-card pm-card-registro">
+                <h2 class="pm-form-title">
+                    <span class="pm-title-accent">TROCA DE CABEÇA</span>
+                    <span class="pm-title-dark"> DE IMPRESSÃO</span>
+                </h2>
+                <div class="pm-whatsapp-block">
+                    <p class="pm-whatsapp-text">Envie <strong>troca</strong> pelo WhatsApp ao bot AXIS e o registro aparecerá aqui automaticamente.</p>
+                    <span id="pm-admin-links" style="display:none;">
+                        <a href="whatsapp-qr.html" class="pm-btn-qr-glass">Ver QR Code</a>
+                    </span>
+                    <span id="pm-tecnico-qr-link" style="display:none;">
+                        <a href="whatsapp-qr.html" class="pm-btn-qr-glass pm-btn-qr-tecnico">Escanear QR do bot WhatsApp</a>
+                    </span>
+                </div>
+
+                <div class="pm-instructions">
+                    <p class="pm-instructions-title">Passo a passo para validação do ciclo de impressão</p>
+                    <ol class="pm-instructions-list">
+                        <li>Faça login com o usuário de manutenção</li>
+                        <li>Clique no ícone de engrenagem</li>
+                        <li>Clique em Métricas de Produtividade</li>
+                        <li>Nesta página, informe a contagem de ciclos no campo abaixo</li>
+                        <li>Após trocar a cabeça: redefina as métricas em Reset User Metrics</li>
+                    </ol>
+                </div>
+
+                <form id="pm-form">
+                    <div class="pm-field">
+                        <label>NÚMERO DA PM *</label>
+                        <div class="pm-radio-group">
+                            <label class="pm-radio-label"><input type="radio" name="pm-numero" value="PM 1" required> PM 1</label>
+                            <label class="pm-radio-label"><input type="radio" name="pm-numero" value="PM 2"> PM 2</label>
+                            <label class="pm-radio-label"><input type="radio" name="pm-numero" value="PM 3"> PM 3</label>
+                            <label class="pm-radio-label"><input type="radio" name="pm-numero" value="PM 4"> PM 4</label>
+                            <label class="pm-radio-label"><input type="radio" name="pm-numero" value="PM 5"> PM 5</label>
+                            <label class="pm-radio-label"><input type="radio" name="pm-numero" value="PM 6"> PM 6</label>
+                        </div>
+                    </div>
+                    <div class="pm-field">
+                        <label for="pm-quantidade">QUANTIDADE DE IMPRESSÕES *</label>
+                        <input type="number" id="pm-quantidade" name="pm-quantidade" placeholder="Ex: 70303" min="0" max="999999999" required>
+                    </div>
+                    <div class="pm-field">
+                        <label for="pm-tecnico">NOME DO TÉCNICO RESPONSÁVEL *</label>
+                        <input type="text" id="pm-tecnico" name="pm-tecnico" placeholder="Seu nome" maxlength="100" required>
+                    </div>
+                    <button type="submit" class="pm-btn-submit pm-btn-teal">
+                        <i class="fas fa-paper-plane"></i> REGISTRAR TROCA
+                    </button>
+                </form>
+            </section>
+
+            <!-- Card: Ingresso manual (data/hora personalizada) -->
+            <section class="pm-glass-card pm-card-manual">
+                <h2 class="pm-form-title">
+                    <span class="pm-title-accent">INGRESSO</span>
+                    <span class="pm-title-dark"> MANUAL</span>
+                </h2>
+                <p class="pm-form-subtitle">Para registrar trocas com data e hora específicas (incluindo dados antigos)</p>
+                <form id="pm-form-manual">
+                    <div class="pm-form-row-inline pm-form-row-data-hora">
+                        <div class="pm-field pm-field-half">
+                            <label for="pm-manual-data">DATA *</label>
+                            <div class="pm-input-glass pm-input-date-wrap">
+                                <i class="fas fa-calendar-alt pm-input-icon"></i>
+                                <input type="text" id="pm-manual-data" name="pm-manual-data" class="pm-input-glass-inner" placeholder="dd/mm/aaaa" required>
+                            </div>
+                        </div>
+                        <div class="pm-field pm-field-time">
+                            <label>HORA * (hora, minutos e segundos)</label>
+                            <div class="pm-time-glass">
+                                <div class="pm-time-segment">
+                                    <input type="number" id="pm-manual-hora" min="0" max="23" placeholder="HH" value="" required>
+                                    <span class="pm-time-label">Hora</span>
+                                </div>
+                                <span class="pm-time-sep">:</span>
+                                <div class="pm-time-segment">
+                                    <input type="number" id="pm-manual-min" min="0" max="59" placeholder="MM" value="" required>
+                                    <span class="pm-time-label">Min</span>
+                                </div>
+                                <span class="pm-time-sep">:</span>
+                                <div class="pm-time-segment">
+                                    <input type="number" id="pm-manual-seg" min="0" max="59" placeholder="SS" value="0" title="Segundos (0 se não houver)">
+                                    <span class="pm-time-label">Seg</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="pm-field">
+                        <label>NÚMERO DA PM *</label>
+                        <div class="pm-radio-group">
+                            <label class="pm-radio-label"><input type="radio" name="pm-manual-numero" value="PM 1" required> PM 1</label>
+                            <label class="pm-radio-label"><input type="radio" name="pm-manual-numero" value="PM 2"> PM 2</label>
+                            <label class="pm-radio-label"><input type="radio" name="pm-manual-numero" value="PM 3"> PM 3</label>
+                            <label class="pm-radio-label"><input type="radio" name="pm-manual-numero" value="PM 4"> PM 4</label>
+                            <label class="pm-radio-label"><input type="radio" name="pm-manual-numero" value="PM 5"> PM 5</label>
+                            <label class="pm-radio-label"><input type="radio" name="pm-manual-numero" value="PM 6"> PM 6</label>
+                        </div>
+                    </div>
+                    <div class="pm-field">
+                        <label for="pm-manual-quantidade">QUANTIDADE DE IMPRESSÕES *</label>
+                        <input type="number" id="pm-manual-quantidade" name="pm-manual-quantidade" placeholder="Ex: 70303" min="0" max="999999999" required>
+                    </div>
+                    <div class="pm-field">
+                        <label for="pm-manual-tecnico">NOME DO TÉCNICO RESPONSÁVEL *</label>
+                        <input type="text" id="pm-manual-tecnico" name="pm-manual-tecnico" placeholder="Nome do técnico" maxlength="100" required>
+                    </div>
+                    <button type="submit" class="pm-btn-submit pm-btn-coral">
+                        <i class="fas fa-plus-circle"></i> ADICIONAR MANUALMENTE
+                    </button>
+                </form>
+            </section>
+
+            <!-- Card: Resumo -->
+            <section class="pm-glass-card pm-card-stats">
+                <span class="pm-dash-label">RESUMO</span>
+                <div class="pm-dash-tres-blocos">
+                    <div class="pm-dash-card pm-dash-teal">
+                        <span class="pm-dash-value" id="pm-dash-total">0</span>
+                        <span class="pm-dash-label">TOTAL DE TROCAS</span>
+                    </div>
+                    <div class="pm-dash-card pm-dash-violet">
+                        <span class="pm-dash-value" id="pm-dash-mes">0</span>
+                        <span class="pm-dash-label">ESTE MÊS</span>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Coluna direita: Gráficos + Tabela -->
+        <div class="pm-right-column">
+            <!-- Gráficos -->
+            <div class="pm-charts-row">
+                <section class="pm-glass-card pm-chart-card pm-chart-pm pm-chart-3d">
+                    <h3 class="pm-chart-title">TROCAS POR PM</h3>
+                    <div class="pm-chart-wrap pm-chart-round-3d">
+                        <canvas id="pm-chart-por-pm"></canvas>
+                    </div>
+                </section>
+                <section class="pm-glass-card pm-chart-card pm-chart-tempo">
+                    <h3 class="pm-chart-title">TEMPO MÉDIO ENTRE TROCAS (dias)</h3>
+                    <div class="pm-chart-wrap">
+                        <canvas id="pm-chart-tempo-troca"></canvas>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Painel: Histórico -->
+            <section class="pm-glass-card pm-panel-trocas">
+                <div class="pm-panel-header">
+                    <h3>HISTÓRICO DE TROCAS</h3>
+                    <div class="pm-panel-actions pm-panel-actions-row">
+                        <input type="search" id="pm-search" placeholder="Buscar por PM, técnico..." class="pm-search">
+                        <div class="pm-filter-wrap">
+                            <input type="hidden" id="pm-filter-pm" value="">
+                            <button type="button" class="pm-filter-btn" id="pm-filter-pm-trigger" title="Filtrar por PM">
+                                <i class="fas fa-filter"></i>
+                                <span id="pm-filter-pm-label">TODAS AS PM</span>
+                                <i class="fas fa-chevron-down"></i>
+                            </button>
+                            <div class="pm-filter-dropdown" id="pm-filter-pm-dropdown">
+                                <button type="button" class="pm-filter-opt" data-pm="">TODAS AS PM</button>
+                                <button type="button" class="pm-filter-opt" data-pm="PM 1">PM 1</button>
+                                <button type="button" class="pm-filter-opt" data-pm="PM 2">PM 2</button>
+                                <button type="button" class="pm-filter-opt" data-pm="PM 3">PM 3</button>
+                                <button type="button" class="pm-filter-opt" data-pm="PM 4">PM 4</button>
+                                <button type="button" class="pm-filter-opt" data-pm="PM 5">PM 5</button>
+                                <button type="button" class="pm-filter-opt" data-pm="PM 6">PM 6</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="pm-table-wrap">
+                    <table class="pm-table" id="pm-table">
+                        <thead>
+                            <tr>
+                                <th>DATA / HORA</th>
+                                <th>NÚMERO DA PM</th>
+                                <th>QUANTIDADE DE IMPRESSÕES</th>
+                                <th>TÉCNICO RESPONSÁVEL</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pm-tbody"></tbody>
+                    </table>
+                </div>
+                <div class="pm-empty" id="pm-empty">Nenhuma troca registrada.</div>
+            </section>
+        </div>
+    </main>
+
+    <script>
+        (function() {
+            var adminEl = document.getElementById('pm-admin-links');
+            var tecnicoEl = document.getElementById('pm-tecnico-qr-link');
+            try {
+                var login = localStorage.getItem('current_user_login');
+                var userData = login ? localStorage.getItem('db_' + login) : null;
+                var db = userData ? JSON.parse(userData) : null;
+                var isAdmin = db && db.perfil === 'admin';
+                if (adminEl) adminEl.style.display = isAdmin ? 'inline' : 'none';
+                if (tecnicoEl) tecnicoEl.style.display = isAdmin ? 'none' : 'inline';
+            } catch (e) {
+                if (tecnicoEl) tecnicoEl.style.display = 'inline';
+            }
+        })();
+    </script>
+    <script src="../js/packing_machine.js"></script>
+</body>
+</html>

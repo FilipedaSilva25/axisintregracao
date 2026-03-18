@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<!-- AXIS | SAURON - Atualizar Status de Bancada -->
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AXIS | SAURON</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/status_bancada.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body.sauron-page { min-height: 100vh; background: #f5f5f7; margin: 0; font-family: 'Inter', sans-serif; color: #1d1d1f; }
+        .sauron-top-bar { display: flex; align-items: center; justify-content: space-between; padding: 16px 24px; background: rgba(255,255,255,0.9); border-bottom: 1px solid rgba(0,0,0,0.08); }
+        .sauron-top-bar h1 { font-size: 22px; font-weight: 800; color: #ff9800; margin: 0; }
+        .sauron-back { padding: 10px 20px; background: linear-gradient(135deg, rgba(255,152,0,0.2), rgba(255,193,7,0.15)); color: #ff9800; border: 1px solid rgba(255,152,0,0.35); border-radius: 12px; font-size: 14px; font-weight: 600; text-decoration: none; transition: all 0.2s; }
+        .sauron-back:hover { background: linear-gradient(135deg, rgba(255,152,0,0.3), rgba(255,193,7,0.25)); transform: translateY(-1px); }
+        .sauron-main { padding: 24px; max-width: 480px; margin: 0 auto; }
+        .sauron-form-wrap { width: 100%; }
+    </style>
+</head>
+<body class="sauron-page">
+    <header class="sauron-top-bar">
+        <h1>SAURON</h1>
+        <div class="sauron-top-bar-actions">
+            <a href="../index.html#page-home" class="sauron-back">
+                <i class="fas fa-th-large"></i> Voltar ao Dashboard
+            </a>
+        </div>
+    </header>
+
+    <main class="sauron-main">
+        <div class="sauron-form-wrap sb-form-column">
+            <section class="sb-card">
+                <h2><i class="fas fa-edit"></i> Atualizar status</h2>
+                <p style="font-size: 13px; color: var(--sb-text-sec); margin-bottom: 16px;">
+                    Informe a bancada e o equipamento para atualizar o status. Os dados ficam salvos no AXIS (sem planilha nem Forms).
+                </p>
+                <form id="sb-form">
+                    <div class="sb-field sb-field-setor">
+                        <label for="sb-setor">SETOR</label>
+                        <select id="sb-setor" name="setor" aria-hidden="true" tabindex="-1">
+                            <option value="">Escolher...</option>
+                            <option value="RETIROS">RETIROS</option>
+                            <option value="PACKING MACHINE">PACKING MACHINE</option>
+                            <option value="PACKING MONO">PACKING MONO</option>
+                            <option value="PACKING PTW">PACKING PTW</option>
+                            <option value="REJEITOS">REJEITOS</option>
+                        </select>
+                        <div class="sb-setor-custom" id="sb-setor-custom" role="combobox" aria-expanded="false" aria-haspopup="listbox" aria-label="Setor">
+                            <span class="sb-setor-trigger" id="sb-setor-trigger">Escolher...</span>
+                            <span class="sb-setor-arrow"><i class="fas fa-chevron-down"></i></span>
+                            <div class="sb-setor-card" id="sb-setor-card" role="listbox" hidden>
+                                <button type="button" class="sb-setor-opt" data-value="" role="option">Escolher...</button>
+                                <button type="button" class="sb-setor-opt" data-value="RETIROS" role="option"><i class="fas fa-box-open"></i> RETIROS</button>
+                                <button type="button" class="sb-setor-opt" data-value="PACKING MACHINE" role="option"><i class="fas fa-cogs"></i> PACKING MACHINE</button>
+                                <button type="button" class="sb-setor-opt" data-value="PACKING MONO" role="option"><i class="fas fa-th-large"></i> PACKING MONO</button>
+                                <button type="button" class="sb-setor-opt" data-value="PACKING PTW" role="option"><i class="fas fa-th"></i> PACKING PTW</button>
+                                <button type="button" class="sb-setor-opt" data-value="REJEITOS" role="option"><i class="fas fa-times-circle"></i> REJEITOS</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="sb-field sb-field-bancada">
+                        <label for="sb-bancada">BANCADA *</label>
+                        <select id="sb-bancada" name="bancada" required aria-hidden="true" tabindex="-1">
+                            <option value="">Escolher...</option>
+                        </select>
+                        <div class="sb-bancada-custom" id="sb-bancada-custom" role="combobox" aria-expanded="false" aria-haspopup="listbox" aria-label="Bancada">
+                            <span class="sb-bancada-trigger" id="sb-bancada-trigger">Selecione primeiro o setor</span>
+                            <span class="sb-bancada-arrow"><i class="fas fa-chevron-down"></i></span>
+                            <div class="sb-bancada-card" id="sb-bancada-card" role="listbox" hidden></div>
+                        </div>
+                    </div>
+                    <div class="sb-field sb-field-equipamento">
+                        <label for="sb-equipamento">QUAL EQUIPAMENTO? *</label>
+                        <select id="sb-equipamento" name="equipamento" required aria-hidden="true" tabindex="-1">
+                            <option value="">Escolher...</option>
+                            <option value="DISPONIVEL">Livre</option>
+                            <option value="IMPRESSORA">Defeito impressora</option>
+                            <option value="NOTEBOOK">Defeito notebook</option>
+                            <option value="SEM_IMPRESSORA_IMP">Bancada sem impressora</option>
+                            <option value="SEM_IMPRESSORA_NB">Bancada sem notebook</option>
+                        </select>
+                        <div class="sb-equipamento-custom" id="sb-equipamento-custom" role="combobox" aria-expanded="false" aria-haspopup="listbox" aria-label="Qual equipamento?">
+                            <span class="sb-equipamento-trigger" id="sb-equipamento-trigger">Escolher...</span>
+                            <span class="sb-equipamento-arrow"><i class="fas fa-chevron-down"></i></span>
+                            <div class="sb-equipamento-card" id="sb-equipamento-card" role="listbox" hidden>
+                                <button type="button" class="sb-equipamento-opt" data-value="" role="option">Escolher...</button>
+                                <button type="button" class="sb-equipamento-opt" data-value="DISPONIVEL" role="option"><i class="fas fa-check-circle"></i> Livre</button>
+                                <button type="button" class="sb-equipamento-opt" data-value="IMPRESSORA" role="option"><i class="fas fa-print"></i> Defeito impressora</button>
+                                <button type="button" class="sb-equipamento-opt" data-value="NOTEBOOK" role="option"><i class="fas fa-laptop"></i> Defeito notebook</button>
+                                <button type="button" class="sb-equipamento-opt" data-value="SEM_IMPRESSORA_IMP" role="option"><i class="fas fa-print"></i> Bancada sem impressora</button>
+                                <button type="button" class="sb-equipamento-opt" data-value="SEM_IMPRESSORA_NB" role="option"><i class="fas fa-laptop"></i> Bancada sem notebook</button>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="sb-btn sb-btn-primary">
+                        <i class="fas fa-check"></i> ATUALIZAR STATUS
+                    </button>
+                </form>
+                <div id="sb-msg" class="sb-msg" role="alert"></div>
+            </section>
+        </div>
+    </main>
+
+    <script src="../js/status_bancada.js"></script>
+</body>
+</html>

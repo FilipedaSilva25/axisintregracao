@@ -1,0 +1,25 @@
+================================================================================
+  COPIA DE SEGURANCA - SCRIPTS INICIAR SITE AXIS
+  NUNCA APAGUE ESTA PASTA
+================================================================================
+
+Esta pasta contem copias de seguranca dos scripts que iniciam o site AXIS
+na porta 3006 e abrem a tela de login.
+
+IMPORTANTE: Use sempre o iniciar-site.bat que esta na RAIZ do projeto.
+Estes ficheiros aqui sao SO para recuperacao. Se os da raiz forem apagados:
+
+1. Copie iniciar-site.ps1 para a raiz do projeto (onde esta o server.js).
+2. Copie iniciar-site.bat para a mesma raiz.
+3. No .bat, a linha do powershell deve chamar: "%~dp0iniciar-site.ps1"
+   (%~dp0 = pasta onde esta o .bat, ou seja a raiz).
+
+Regras dos scripts (nao alterar):
+- Porta: 3006
+- URL de abertura: http://localhost:3006/?tela=login#login
+- Sempre tela de login, nunca abrir ja dentro do usuario.
+
+Recomendacao: guarde tambem esta pasta noutro sitio (Pen, OneDrive, etc.)
+para nunca perder os scripts.
+
+================================================================================

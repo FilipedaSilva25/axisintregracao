@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<!-- AXIS | JOVEM APRENDIZ - Registro de atividades (substitui Forms) -->
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AXIS | Jovem Aprendiz - Registro de Atividades</title>
+    <link rel="stylesheet" href="../css/jovem-aprendiz.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body class="ja-page">
+    <div class="ja-container">
+        <header class="ja-header">
+            <div class="ja-header-brand">
+                <div class="ja-header-icon"><i class="fas fa-graduation-cap"></i></div>
+                <div>
+                    <h1 class="ja-header-title">Jovem Aprendiz</h1>
+                    <p class="ja-header-sub">Registro de atividades na unidade</p>
+                </div>
+            </div>
+            <div class="ja-header-actions">
+                <button type="button" class="ja-btn-theme" id="ja-theme-toggle" title="Tema claro/escuro"><i class="fas fa-moon"></i></button>
+                <div class="ja-dropdown-wrap">
+                    <button type="button" class="ja-btn-hamburger" id="ja-hamburger" title="Menu" aria-label="Abrir menu">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="ja-dropdown" id="ja-dropdown">
+                        <a href="../index.html#page-home" class="ja-dropdown-item"><i class="fas fa-th-large"></i> Dashboard</a>
+                        <a href="jovem-aprendiz-biblioteca.html" class="ja-dropdown-item"><i class="fas fa-book"></i> Biblioteca</a>
+                        <a href="jovem-aprendiz.html" class="ja-dropdown-item"><i class="fas fa-pen-to-square"></i> Registrar</a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Banner do formulário (estilo Apple) -->
+        <div class="ja-form-banner" id="ja-form-banner">
+            <div class="ja-form-banner-bg"></div>
+            <div class="ja-form-banner-content">
+                <div class="ja-form-banner-icon"><i class="fas fa-clipboard-list"></i></div>
+                <h2 class="ja-form-banner-title">Registrar atividade</h2>
+                <p class="ja-form-banner-sub">Preencha as etapas abaixo. Data e hora são registradas automaticamente.</p>
+                <div class="ja-form-meta" id="ja-form-meta">
+                    <span class="ja-form-meta-item" id="ja-meta-user"><i class="fas fa-user"></i> <span id="ja-meta-user-name">—</span></span>
+                    <span class="ja-form-meta-divider" aria-hidden="true">·</span>
+                    <span class="ja-form-meta-item" id="ja-meta-datetime"><i class="fas fa-clock"></i> <span id="ja-meta-datetime-text">—</span></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Formulário em etapas (6 passos) -->
+        <section class="ja-card ja-card-form" id="ja-form-card">
+            <div class="ja-steps-indicator" id="ja-steps-indicator">
+                <span class="ja-steps-text" id="ja-steps-text">Etapa 1 de 6</span>
+                <div class="ja-steps-bar"><div class="ja-steps-fill" id="ja-steps-fill"></div></div>
+            </div>
+            <form id="ja-form" class="ja-form">
+                <div class="ja-step active" id="ja-step-1" data-step="1">
+                    <div class="ja-fld">
+                        <label for="ja-nome">Nome do aprendiz</label>
+                        <input type="text" id="ja-nome" placeholder="Ex: Gabriel Melo" required maxlength="120" autocomplete="name">
+                    </div>
+                    <div class="ja-fld">
+                        <label for="ja-tarefas-dia">Tarefas que fiz no dia (opcional)</label>
+                        <textarea id="ja-tarefas-dia" placeholder="Marcar aqui as tarefas do dia. Use Enter para nova linha." rows="4"></textarea>
+                    </div>
+                </div>
+
+                <div class="ja-step" id="ja-step-2" data-step="2">
+                    <div class="ja-fld">
+                        <label>Qual o tipo de equipamento?</label>
+                        <div class="ja-radio-group" id="ja-tipo-equipamento">
+                            <label class="ja-radio-wrap"><input type="radio" name="tipoEquipamento" value="Handheld"> Handheld</label>
+                            <label class="ja-radio-wrap"><input type="radio" name="tipoEquipamento" value="Notebook" required> Notebook</label>
+                            <label class="ja-radio-wrap"><input type="radio" name="tipoEquipamento" value="Onboarding"> Onboarding</label>
+                            <label class="ja-radio-wrap"><input type="radio" name="tipoEquipamento" value="Scanner"> Scanner</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ja-step" id="ja-step-3" data-step="3">
+                    <div class="ja-fld" id="ja-fld-modelo-notebook">
+                        <label for="ja-modelo-notebook">Qual o modelo? (Notebook)</label>
+                        <div class="ja-select-glass" data-ja-select="ja-modelo-notebook">
+                            <select id="ja-modelo-notebook" class="ja-select-native" aria-hidden="true" tabindex="-1">
+                                <option value="">Selecione o modelo</option>
+                                <option value="3400">3400</option>
+                                <option value="3410">3410</option>
+                                <option value="3420">3420</option>
+                                <option value="i7">i7</option>
+                                <option value="PRO">PRO</option>
+                            </select>
+                            <button type="button" class="ja-select-trigger" id="ja-modelo-notebook-trigger" aria-haspopup="listbox" aria-expanded="false" aria-label="Selecionar modelo de notebook">
+                                <span class="ja-select-value">Selecione o modelo</span>
+                                <i class="fas fa-chevron-down ja-select-chevron" aria-hidden="true"></i>
+                            </button>
+                            <div class="ja-select-dropdown" role="listbox" id="ja-dropdown-notebook" aria-hidden="true">
+                                <div class="ja-select-option" data-value="">Selecione o modelo</div>
+                                <div class="ja-select-option" data-value="3400">3400</div>
+                                <div class="ja-select-option" data-value="3410">3410</div>
+                                <div class="ja-select-option" data-value="3420">3420</div>
+                                <div class="ja-select-option" data-value="i7">i7</div>
+                                <div class="ja-select-option" data-value="PRO">PRO</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ja-fld" id="ja-fld-modelo-handheld" style="display:none">
+                        <label for="ja-modelo-handheld">Qual o modelo? (Handheld)</label>
+                        <div class="ja-select-glass" data-ja-select="ja-modelo-handheld">
+                            <select id="ja-modelo-handheld" class="ja-select-native" aria-hidden="true" tabindex="-1">
+                                <option value="">Selecione o modelo</option>
+                                <option value="Honeywell">Honeywell</option>
+                                <option value="Zebra">Zebra</option>
+                            </select>
+                            <button type="button" class="ja-select-trigger" id="ja-modelo-handheld-trigger" aria-haspopup="listbox" aria-expanded="false" aria-label="Selecionar modelo handheld">
+                                <span class="ja-select-value">Selecione o modelo</span>
+                                <i class="fas fa-chevron-down ja-select-chevron" aria-hidden="true"></i>
+                            </button>
+                            <div class="ja-select-dropdown" role="listbox" id="ja-dropdown-handheld" aria-hidden="true">
+                                <div class="ja-select-option" data-value="">Selecione o modelo</div>
+                                <div class="ja-select-option" data-value="Honeywell">Honeywell</div>
+                                <div class="ja-select-option" data-value="Zebra">Zebra</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ja-fld" id="ja-fld-modelo-scanner" style="display:none">
+                        <label for="ja-modelo-scanner">Qual o modelo? (Scanner)</label>
+                        <div class="ja-select-glass" data-ja-select="ja-modelo-scanner">
+                            <select id="ja-modelo-scanner" class="ja-select-native" aria-hidden="true" tabindex="-1">
+                                <option value="">Selecione o modelo</option>
+                                <option value="Honeywell">Honeywell</option>
+                                <option value="Zebra">Zebra</option>
+                            </select>
+                            <button type="button" class="ja-select-trigger" id="ja-modelo-scanner-trigger" aria-haspopup="listbox" aria-expanded="false" aria-label="Selecionar modelo scanner">
+                                <span class="ja-select-value">Selecione o modelo</span>
+                                <i class="fas fa-chevron-down ja-select-chevron" aria-hidden="true"></i>
+                            </button>
+                            <div class="ja-select-dropdown" role="listbox" id="ja-dropdown-scanner" aria-hidden="true">
+                                <div class="ja-select-option" data-value="">Selecione o modelo</div>
+                                <div class="ja-select-option" data-value="Honeywell">Honeywell</div>
+                                <div class="ja-select-option" data-value="Zebra">Zebra</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ja-step" id="ja-step-4" data-step="4">
+                    <div class="ja-fld">
+                        <label for="ja-serie">Qual o número de série?</label>
+                        <input type="text" id="ja-serie" placeholder="Digite aqui o número de série" maxlength="80">
+                    </div>
+                </div>
+
+                <div class="ja-step" id="ja-step-5" data-step="5">
+                    <div class="ja-fld">
+                        <label>Qual o tipo de tarefa?</label>
+                        <div class="ja-radio-group" id="ja-tipo-tarefa">
+                            <label class="ja-radio-wrap"><input type="radio" name="tipoTarefa" value="Configurar" required> Configurar</label>
+                            <label class="ja-radio-wrap"><input type="radio" name="tipoTarefa" value="Formatar"> Formatar</label>
+                            <label class="ja-radio-wrap"><input type="radio" name="tipoTarefa" value="Desmontar"> Desmontar</label>
+                            <label class="ja-radio-wrap"><input type="radio" name="tipoTarefa" value="Reparar"> Reparar</label>
+                            <label class="ja-radio-wrap"><input type="radio" name="tipoTarefa" value="Validar"> Validar</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ja-step" id="ja-step-6" data-step="6">
+                    <div class="ja-fld">
+                        <label for="ja-resumo">Informe com poucas palavras a tarefa/observação (opcional)</label>
+                        <input type="text" id="ja-resumo" placeholder="Descrição breve" maxlength="200">
+                    </div>
+                    <div class="ja-fld">
+                        <label for="ja-defeito">Defeito? (opcional)</label>
+                        <input type="text" id="ja-defeito" placeholder="Resposta curta" maxlength="200">
+                    </div>
+                    <div class="ja-fld">
+                        <label for="ja-observacao">Digite aqui a tarefa ou observação desejada</label>
+                        <textarea id="ja-observacao" placeholder="Texto longo — descreva a atividade" maxlength="2000" rows="4"></textarea>
+                    </div>
+                </div>
+
+                <div class="ja-step-buttons">
+                    <button type="button" class="ja-btn-sec" id="ja-btn-prev" style="display:none"><i class="fas fa-arrow-left"></i> Anterior</button>
+                    <button type="button" class="ja-btn-primary" id="ja-btn-next"><i class="fas fa-arrow-right"></i> Próximo</button>
+                    <button type="submit" class="ja-btn-primary" id="ja-btn-submit" style="display:none"><i class="fas fa-save"></i> Salvar na biblioteca</button>
+                </div>
+            </form>
+        </section>
+    </div>
+
+    <!-- Modal sucesso (estilo vidro) -->
+    <div id="ja-modal-success" class="ja-modal-wrap" role="alertdialog" aria-modal="true" aria-labelledby="ja-modal-success-title" aria-hidden="true" hidden>
+        <div class="ja-modal-overlay" id="ja-modal-success-overlay"></div>
+        <div class="ja-modal-glass">
+            <div class="ja-modal-icon"><i class="fas fa-circle-check"></i></div>
+            <h2 class="ja-modal-title" id="ja-modal-success-title">ATIVIDADE SALVA COM SUCESSO</h2>
+            <button type="button" class="ja-modal-btn" id="ja-modal-success-ok">OK</button>
+        </div>
+    </div>
+
+    <script src="../js/jovem-aprendiz.js"></script>
+</body>
+</html>

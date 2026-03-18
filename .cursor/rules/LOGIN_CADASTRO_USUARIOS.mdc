@@ -1,0 +1,35 @@
+---
+description: Regra para garantir que todo usuário criado por administrador funcione no login (mesma chave no cadastro e no login)
+globs: js/script.js
+alwaysApply: false
+---
+
+# Login e cadastro de usuários — chave única
+
+Todo usuário criado por um administrador no site deve conseguir entrar com o **mesmo login e senha** que lhe foram atribuídos. A chave no `localStorage` tem de ser a mesma no cadastro e na validação do login.
+
+## Função obrigatória: `axisLoginCanonico(s)`
+
+- Existe em `js/script.js` e **não deve ser removida**.
+- Faz a normalização única do login: `trim`, `toLowerCase`, espaços → `_`, pontos → `_`.
+- Exemplo: `"Joao.Silva"`, `"JOAO SILVA"` e `"joao.silva"` passam todos a `"joao_silva"`.
+- A chave no localStorage é sempre `'db_' + axisLoginCanonico(login)`.
+
+## Onde usar
+
+1. **handleAuth (login)**  
+   - Obter o login canonizado com `axisLoginCanonico(userInput)`.  
+   - Procurar primeiro `localStorage.getItem('db_' + loginNormalizado)`.  
+   - Se não encontrar, percorrer **todas** as chaves `db_*`, normalizar cada uma com `axisLoginCanonico` e comparar com o login digitado (para encontrar usuários criados com formato antigo ou variações).
+
+2. **cadastrarUsuario (cadastro)**  
+   - Usar `loginNorm = axisLoginCanonico(login)` e guardar com `localStorage.setItem('db_' + loginNorm, JSON.stringify(novoUsuario))`.  
+   - Na verificação "usuário já existe", comparar sempre usando `axisLoginCanonico` na parte da chave (sem `db_`).
+
+3. **salvarUsuarioEditado**  
+   - Usar `axisLoginCanonico(login)` para a nova chave ao atualizar, para manter o mesmo formato que o login espera.
+
+## Regra de ouro
+
+- **Nunca** usar uma normalização diferente no cadastro e no login (por exemplo, só `toLowerCase().replace(/\s+/g, '_')` num lado e no outro não converter pontos).  
+- Qualquer nova função que grave ou leia usuários por chave `db_*` deve usar `axisLoginCanonico` para a parte do login.

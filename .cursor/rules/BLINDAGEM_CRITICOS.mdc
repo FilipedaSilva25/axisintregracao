@@ -1,0 +1,15 @@
+---
+description: Blindagem geral de ficheiros críticos (pedida pelo utilizador)
+globs: iniciar-site.ps1, iniciar-site.bat, abrir-site.ps1, start.bat, server.js, backend/routes.js, js/script.js, index.html, css/style.css
+alwaysApply: false
+---
+
+# Blindagem geral — ficheiros críticos
+
+Estes ficheiros são **críticos** para o funcionamento do AXIS (arranque, login, rotas/API, UI principal).
+
+## Regra
+
+- **Não alterar** estes ficheiros sem **autorização explícita** do utilizador.
+- Se for necessário alterar, **documentar** o motivo e o que mudou em `BLINDAGEM.md`.
+

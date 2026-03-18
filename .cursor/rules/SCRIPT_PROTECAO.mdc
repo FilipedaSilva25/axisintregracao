@@ -1,0 +1,23 @@
+---
+description: Proteção dos scripts de início AXIS - não alterar sem autorização
+globs: start.bat, abrir-site.ps1, iniciar-site.ps1, iniciar-site.bat
+alwaysApply: false
+---
+
+# Scripts de Início – Protegidos
+
+Os ficheiros **start.bat**, **abrir-site.ps1**, **iniciar-site.ps1** e **iniciar-site.bat** são protegidos e **NÃO podem ser alterados sem autorização explícita** do utilizador.
+
+**Script principal em uso:** iniciar-site.ps1 / iniciar-site.bat (porta 3006, tela de login). Cópia de segurança em `_scripts_protegidos_axis/`.
+
+## Regras obrigatórias (não violar)
+
+1. O script **sempre** abre o site na **tela de login**, nunca dentro de um utilizador logado (incluindo Filipe da Silva).
+2. O site usa a **porta 3006** (porta original do AXIS).
+3. O script **não** abre a página do QR Code – abre o site principal com `?tela=login#login`.
+
+## Ao editar estes ficheiros
+
+- **Perguntar primeiro** ao utilizador se a alteração é autorizada.
+- Se o utilizador não tiver autorizado explicitamente, **não modificar**.
+- Documentar qualquer alteração em BLINDAGEM.md.

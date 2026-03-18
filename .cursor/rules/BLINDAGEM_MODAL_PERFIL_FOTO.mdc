@@ -1,0 +1,34 @@
+---
+description: Modal de perfil e atualização de foto – centralizado, vidro, blur. Não alterar sem autorização explícita do utilizador.
+globs: index.html, css/style.css, js/script.js
+alwaysApply: false
+---
+
+# Modal de perfil e foto – Blindado (15/03/2026)
+
+O **modal de perfil** (dropdown com nome, setor, Fechar, Salvar) e o **modal de atualização da foto** (Atualizar Imagem, Visualizar, Salvar Imagem) foram concluídos e estão protegidos.
+
+## Comportamento garantido (não alterar)
+
+1. **Perfil (clique no nome no header):**
+   - Card **centralizado** no meio da página (overlay com fundo borrado).
+   - Card em **vidro estilo Apple** (backdrop-filter, fundo semi-transparente).
+   - Overlay cobre a viewport; clique no fundo fecha.
+
+2. **Modal da foto (clique na foto do perfil):**
+   - Card **exatamente ao centro** da viewport (position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%)).
+   - Modal é **movido para document.body** ao abrir (em `abrirModalFotoPerfil`) para o `position: fixed` ser relativo à viewport e não a um ancestral com transform.
+   - Fundo **borrado** (backdrop-filter no overlay); card em **vidro**.
+
+## Ficheiros e trechos protegidos
+
+- **index.html:** estrutura de `#axis-profile-dropdown`, `#axis-profile-photo-modal`, `#axis-profile-overlay` (overlay do perfil).
+- **css/style.css:** estilos `.axis-profile-overlay`, `.axis-profile-modal-center`, `.axis-profile-overlay .axis-profile-dropdown`, `.axis-profile-photo-modal`, `.axis-profile-photo-modal-box` (centralização e vidro).
+- **js/script.js:** `abrirPerfilNav()` (overlay + mover dropdown para modal-center), `fecharPerfilNav()`, `abrirModalFotoPerfil()` (mover modal para body + mostrar), `fecharModalFotoPerfil()`.
+
+## Regra obrigatória
+
+- **Não alterar** posicionamento, centralização, efeito de vidro ou blur do modal de perfil nem do modal da foto **sem autorização explícita** do utilizador.
+- Não remover a lógica de mover o modal da foto para `document.body` ao abrir.
+- Não alterar `position: fixed` + `top: 50%; left: 50%; transform: translate(-50%, -50%)` do card da foto.
+- Qualquer alteração nestas áreas deve ser **documentada em BLINDAGEM.md** e só feita quando o utilizador pedir.

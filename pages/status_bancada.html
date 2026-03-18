@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<!-- AXIS | STATUS DE BANCADA - Substitui Google Forms e planilha -->
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AXIS | STATUS DE BANCADA</title>
+    <link rel="stylesheet" href="../css/status_bancada.css">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body class="sb-page">
+    <header class="sb-top-bar">
+        <h1>STATUS DE BANCADA</h1>
+        <div class="sb-top-bar-actions">
+            <button type="button" class="sb-hamburger" id="sb-hamburger" aria-label="Abrir menu" aria-expanded="false">
+                <span class="sb-hamburger-line"></span>
+                <span class="sb-hamburger-line"></span>
+                <span class="sb-hamburger-line"></span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Menu lateral (hambúrguer) -->
+    <div class="sb-menu-overlay" id="sb-menu-overlay" aria-hidden="true"></div>
+    <nav class="sb-menu-panel" id="sb-menu-panel" aria-label="Menu de secções">
+        <div class="sb-menu-header">
+            <span class="sb-menu-title">Menu</span>
+            <button type="button" class="sb-menu-close" id="sb-menu-close" aria-label="Fechar menu">&times;</button>
+        </div>
+        <ul class="sb-menu-list">
+            <li><a href="../index.html#page-home" class="sb-menu-item sb-menu-item-dashboard"><i class="fas fa-th-large"></i> Voltar ao Dashboard</a></li>
+            <li><button type="button" class="sb-menu-item sb-menu-item-secao" data-secao=""><i class="fas fa-grid-2"></i> Ver todos</button></li>
+            <li><button type="button" class="sb-menu-item sb-menu-item-secao" data-secao="retiros"><i class="fas fa-box-open"></i> RETIROS</button></li>
+            <li><button type="button" class="sb-menu-item sb-menu-item-secao" data-secao="pm"><i class="fas fa-cogs"></i> PACKING MACHINE</button></li>
+            <li><button type="button" class="sb-menu-item sb-menu-item-secao" data-secao="mono"><i class="fas fa-th-large"></i> PACKING MONO</button></li>
+            <li><button type="button" class="sb-menu-item sb-menu-item-secao" data-secao="ptw"><i class="fas fa-th"></i> PACKING PTW</button></li>
+            <li><button type="button" class="sb-menu-item sb-menu-item-secao" data-secao="rejeitos"><i class="fas fa-times-circle"></i> REJEITOS</button></li>
+        </ul>
+    </nav>
+
+    <main class="sb-main">
+        <!-- Área dos cards (REJEITOS, PTW, MONO, PM, RETIROS) – alinhados à esquerda, largura total -->
+        <div class="sb-grid-wrap">
+            <!-- Linha 1: PACKING PTW + PACKING MONO | Legenda abaixo | Linha 2: REJEITOS, PACKING MACHINE, RETIROS -->
+            <div class="sb-cards-area">
+                <div class="sb-cards-row sb-cards-row-top">
+                    <section class="sb-card" data-secao="ptw">
+                        <div class="sb-card-header">
+                            <h2 class="sb-section-title">PACKING PTW</h2>
+                            <button type="button" class="sb-card-expand" aria-label="Tela cheia" title="Tela cheia"><i class="fas fa-expand"></i></button>
+                        </div>
+                        <div id="sb-grid-ptw" class="sb-bancadas-grid"></div>
+                    </section>
+                    <section class="sb-card" data-secao="mono">
+                        <div class="sb-card-header">
+                            <h2 class="sb-section-title">PACKING MONO</h2>
+                            <button type="button" class="sb-card-expand" aria-label="Tela cheia" title="Tela cheia"><i class="fas fa-expand"></i></button>
+                        </div>
+                        <div id="sb-grid-mono" class="sb-bancadas-grid"></div>
+                    </section>
+                </div>
+                <div class="sb-cards-row sb-cards-row-bottom">
+                    <section class="sb-card" data-secao="rejeitos">
+                        <div class="sb-card-header">
+                            <h2 class="sb-section-title">REJEITOS</h2>
+                            <button type="button" class="sb-card-expand" aria-label="Tela cheia" title="Tela cheia"><i class="fas fa-expand"></i></button>
+                        </div>
+                        <div id="sb-grid-rejeitos" class="sb-bancadas-grid sb-grid-rejeitos"></div>
+                    </section>
+                    <section class="sb-card sb-card-pm" data-secao="pm">
+                        <div class="sb-card-header">
+                            <h2 class="sb-section-title">PACKING MACHINE</h2>
+                            <button type="button" class="sb-card-expand" aria-label="Tela cheia" title="Tela cheia"><i class="fas fa-expand"></i></button>
+                        </div>
+                        <div id="sb-grid-pm" class="sb-bancadas-grid sb-grid-pm"></div>
+                    </section>
+                    <section class="sb-card" data-secao="retiros">
+                        <div class="sb-card-header">
+                            <h2 class="sb-section-title">RETIROS</h2>
+                            <button type="button" class="sb-card-expand" aria-label="Tela cheia" title="Tela cheia"><i class="fas fa-expand"></i></button>
+                        </div>
+                        <div id="sb-grid-retiros" class="sb-bancadas-grid sb-grid-retiros"></div>
+                    </section>
+                </div>
+            </div>
+
+            <!-- Estatísticas: resumos por setor (sem formulário – atualizar status fica no SAURON) -->
+            <div class="sb-stats-row">
+                <div class="sb-resumos">
+                    <!-- Coluna 1: PACKING MONO | PACKING PTW -->
+                    <div class="sb-resumos-col">
+                        <div class="sb-resumo-card" id="sb-resumo-mono" data-secao="mono">
+                            <h3>PACKING MONO</h3>
+                            <div class="sb-resumo-row"><span class="label">Cap. estática</span><span class="value" id="mono-cap">0</span></div>
+                            <div class="sb-resumo-row"><span class="label">Disponível</span><span class="value verde" id="mono-disp">0</span></div>
+                            <div class="sb-resumo-row"><span class="label">Indisponível</span><span class="value vermelho" id="mono-indisp">0</span></div>
+                            <div class="sb-resumo-row"><span class="label">Disponibilidade</span><span class="value" id="mono-pct">0%</span></div>
+                            <div class="sb-resumo-row"><span class="label">Impressora</span><span class="value vermelho" id="mono-imp">0</span></div>
+                            <div class="sb-resumo-row"><span class="label">Notebook</span><span class="value azul" id="mono-nb">0</span></div>
+                            <div class="sb-resumo-row"><span class="label">Sem impressora</span><span class="value laranja" id="mono-semimp">0</span></div>
+                            <div class="sb-resumo-row"><span class="label">Sem notebook</span><span class="value laranja-fraco" id="mono-semnb">0</span></div>
+                        </div>
+                        <div class="sb-resumo-card" id="sb-resumo-ptw" data-secao="ptw">
+                            <h3>PACKING PTW</h3>
+                            <div class="sb-resumo-row"><span class="label">Cap. estática</span><span class="value" id="ptw-cap">0</span></div>
+                            <div class="sb-resumo-row"><span class="label">Disponível</span><span class="value verde" id="ptw-disp">0</span></div>
+                            <div class="sb-resumo-row"><span class="label">Indisponível</span><span class="value vermelho" id="ptw-indisp">0</span></div>
+                            <div class="sb-resumo-row"><span class="label">Disponibilidade</span><span class="value" id="ptw-pct">0%</span></div>
+                            <div class="sb-resumo-row"><span class="label">Impressora</span><span class="value vermelho" id="ptw-imp">0</span></div>
+                            <div class="sb-resumo-row"><span class="label">Notebook</span><span class="value azul" id="ptw-nb">0</span></div>
+                            <div class="sb-resumo-row"><span class="label">Sem impressora</span><span class="value laranja" id="ptw-semimp">0</span></div>
+                            <div class="sb-resumo-row"><span class="label">Sem notebook</span><span class="value laranja-fraco" id="ptw-semnb">0</span></div>
+                        </div>
+                    </div>
+                    <!-- Coluna 2: REJEITOS | PACKING MACHINE -->
+                    <div class="sb-resumos-col">
+                        <div class="sb-resumo-card" id="sb-resumo-rejeitos" data-secao="rejeitos">
+                            <h3>REJEITOS</h3>
+                            <div class="sb-resumo-row"><span class="label">Cap. estática</span><span class="value" id="rejeitos-cap">0</span></div>
+                            <div class="sb-resumo-row"><span class="label">Disponível</span><span class="value verde" id="rejeitos-disp">0</span></div>
+                            <div class="sb-resumo-row"><span class="label">Indisponível</span><span class="value vermelho" id="rejeitos-indisp">0</span></div>
+                            <div class="sb-resumo-row"><span class="label">Disponibilidade</span><span class="value" id="rejeitos-pct">0%</span></div>
+                            <div class="sb-resumo-row"><span class="label">Impressora</span><span class="value vermelho" id="rejeitos-imp">0</span></div>
+                            <div class="sb-resumo-row"><span class="label">Notebook</span><span class="value azul" id="rejeitos-nb">0</span></div>
+                            <div class="sb-resumo-row"><span class="label">Sem impressora</span><span class="value laranja" id="rejeitos-semimp">0</span></div>
+                            <div class="sb-resumo-row"><span class="label">Sem notebook</span><span class="value laranja-fraco" id="rejeitos-semnb">0</span></div>
+                        </div>
+                        <div class="sb-resumo-card" id="sb-resumo-pm" data-secao="pm">
+                            <h3>PACKING MACHINE</h3>
+                            <div class="sb-resumo-row"><span class="label">Cap. estática</span><span class="value" id="pm-cap">0</span></div>
+                            <div class="sb-resumo-row"><span class="label">Disponível</span><span class="value verde" id="pm-disp">0</span></div>
+                            <div class="sb-resumo-row"><span class="label">Indisponível</span><span class="value vermelho" id="pm-indisp">0</span></div>
+                            <div class="sb-resumo-row"><span class="label">Disponibilidade</span><span class="value" id="pm-pct">0%</span></div>
+                            <div class="sb-resumo-row"><span class="label">Impressora</span><span class="value vermelho" id="pm-imp">0</span></div>
+                            <div class="sb-resumo-row"><span class="label">Notebook</span><span class="value azul" id="pm-nb">0</span></div>
+                            <div class="sb-resumo-row"><span class="label">Sem impressora</span><span class="value laranja" id="pm-semimp">0</span></div>
+                            <div class="sb-resumo-row"><span class="label">Sem notebook</span><span class="value laranja-fraco" id="pm-semnb">0</span></div>
+                        </div>
+                    </div>
+                    <!-- Coluna 3: RETIROS | LEGENDA (espaço para mais cards no futuro) -->
+                    <div class="sb-resumos-col">
+                        <div class="sb-resumo-card" id="sb-resumo-retiros" data-secao="retiros">
+                            <h3>RETIROS</h3>
+                            <div class="sb-resumo-row"><span class="label">Cap. estática</span><span class="value" id="retiros-cap">0</span></div>
+                            <div class="sb-resumo-row"><span class="label">Disponível</span><span class="value verde" id="retiros-disp">0</span></div>
+                            <div class="sb-resumo-row"><span class="label">Indisponível</span><span class="value vermelho" id="retiros-indisp">0</span></div>
+                            <div class="sb-resumo-row"><span class="label">Disponibilidade</span><span class="value" id="retiros-pct">0%</span></div>
+                            <div class="sb-resumo-row"><span class="label">Impressora</span><span class="value vermelho" id="retiros-imp">0</span></div>
+                            <div class="sb-resumo-row"><span class="label">Notebook</span><span class="value azul" id="retiros-nb">0</span></div>
+                            <div class="sb-resumo-row"><span class="label">Sem impressora</span><span class="value laranja" id="retiros-semimp">0</span></div>
+                            <div class="sb-resumo-row"><span class="label">Sem notebook</span><span class="value laranja-fraco" id="retiros-semnb">0</span></div>
+                        </div>
+                        <aside class="sb-card sb-leyenda-card" aria-label="Legenda de cores">
+                            <h2 class="sb-leyenda-title">Legenda</h2>
+                            <div class="sb-leyenda">
+                                <span><span class="dot livre"></span> Livre</span>
+                                <span><span class="dot impressora"></span> Defeito impressora</span>
+                                <span><span class="dot notebook"></span> Defeito notebook</span>
+                                <span><span class="dot sem-impressora-imp"></span> Bancada sem impressora</span>
+                                <span><span class="dot sem-impressora-nb"></span> Bancada sem notebook</span>
+                            </div>
+                        </aside>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="../js/status_bancada.js"></script>
+</body>
+</html>

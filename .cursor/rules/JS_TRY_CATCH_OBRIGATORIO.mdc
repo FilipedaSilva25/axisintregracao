@@ -1,0 +1,34 @@
+---
+description: Todo bloco try em JavaScript deve ter catch ou finally — evita SyntaxError e falhas silenciosas
+globs: js/**/*.js, pages/**/*.html
+alwaysApply: false
+---
+
+# JavaScript — try sempre com catch ou finally
+
+Para evitar erros como **"Missing catch or finally after try"** e falhas silenciosas:
+
+## Regra obrigatória
+
+- **Todo** bloco `try { ... }` deve ser seguido de `catch` ou `finally` (ou ambos).
+- **Nunca** deixar um `try` sem fechar com `} catch (e) { ... }` ou `} finally { ... }`.
+
+## Exemplo correto
+
+```javascript
+try {
+    // código
+} catch (err) {
+    console.error('Erro em X:', err);
+}
+```
+
+## Ao adicionar ou editar try
+
+1. Ao escrever `try {`, incluir de imediato o `} catch (err) { ... }` correspondente.
+2. Em funções que já tenham vários `try`, verificar que cada um tem o seu `catch` (ou `finally`).
+3. Antes de concluir alterações em ficheiros `.js`, validar sintaxe com `node -c caminho/ficheiro.js`.
+
+## Ficheiros críticos já blindados
+
+- `js/pecas.js` — todos os try têm catch (incl. openModalMes, init, etc.).

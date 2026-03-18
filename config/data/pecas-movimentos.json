@@ -1,0 +1,29 @@
+[
+  {
+    "id": "mov-1773648998620",
+    "pecaId": "peca-1773648702605",
+    "tipo": "entrada",
+    "produto": "TS CLEANER",
+    "quantidade": 97,
+    "observacao": "Cadastro/entrada",
+    "dataHora": "2026-03-16T08:16:38.620Z"
+  },
+  {
+    "id": "mov-1773648702605",
+    "pecaId": "peca-1773648702605",
+    "tipo": "entrada",
+    "produto": "TS CLEANER",
+    "quantidade": 100,
+    "observacao": "Entrada via WhatsApp",
+    "dataHora": "2026-03-16T08:11:42.605Z"
+  },
+  {
+    "id": "mov-1773648634074",
+    "pecaId": "peca-1773648634074",
+    "tipo": "entrada",
+    "produto": "TS CLEANER",
+    "quantidade": 800,
+    "observacao": "Cadastro inicial",
+    "dataHora": "2026-03-16T08:10:34.074Z"
+  }
+]

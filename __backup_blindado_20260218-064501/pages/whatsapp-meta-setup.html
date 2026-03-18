@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AXIS – Configurar Bot na Meta (Cloud API)</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            min-height: 100vh;
+            margin: 0;
+            padding: 24px;
+        }
+        .container { max-width: 640px; margin: 0 auto; }
+        h1 { font-size: 24px; margin: 0 0 8px; }
+        .sub { color: #94a3b8; margin-bottom: 24px; font-size: 14px; }
+        .card {
+            background: rgba(255,255,255,.08);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,.2);
+        }
+        .card h2 { font-size: 16px; margin: 0 0 12px; color: #00e5ff; }
+        .card p { margin: 0 0 12px; font-size: 14px; line-height: 1.6; color: #e2e8f0; }
+        .copy-box {
+            background: rgba(0,0,0,.3);
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-family: monospace;
+            font-size: 13px;
+            word-break: break-all;
+            margin: 12px 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .copy-box span { flex: 1; }
+        .copy-box button {
+            background: #00e5ff;
+            color: #0f172a;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 12px;
+        }
+        .copy-box button:hover { background: #67e8f9; }
+        ol { margin: 0; padding-left: 20px; }
+        li { margin-bottom: 10px; line-height: 1.5; }
+        a { color: #00e5ff; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .btn {
+            display: inline-block;
+            background: #25D366;
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-weight: 600;
+            margin-top: 12px;
+            border: none;
+            cursor: pointer;
+        }
+        .btn:hover { background: #20bd5a; }
+        .status-ok { color: #4ade80; }
+        .status-pendente { color: #fbbf24; }
+        #statusCloud { margin-top: 16px; padding: 12px; border-radius: 8px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1><i class="fab fa-whatsapp" style="color:#25D366;"></i> AXIS INTEGRAÇÃO</h1>
+        <p class="sub">Configurar o bot na Meta (WhatsApp Cloud API) – funciona 24h sem QR</p>
+
+        <div class="card">
+            <h2>Passo 1: Criar app na Meta</h2>
+            <p>Acesse o painel de desenvolvedores da Meta e crie um app (ou use um existente):</p>
+            <a href="https://developers.facebook.com/apps/" target="_blank" rel="noopener" class="btn">
+                <i class="fas fa-external-link-alt"></i> developers.facebook.com/apps
+            </a>
+            <ol>
+                <li>Clique em <strong>Criar app</strong> → <strong>Outros</strong> → <strong>Consumidor</strong></li>
+                <li>Preencha nome (ex: AXIS Bot) e e-mail</li>
+                <li>Adicione o produto <strong>WhatsApp</strong> no app</li>
+            </ol>
+        </div>
+
+        <div class="card">
+            <h2>Passo 2: Configurar Webhook</h2>
+            <p>No app, vá em <strong>WhatsApp</strong> → <strong>Configuração</strong> → <strong>Webhook</strong>.</p>
+            <p>Clique em <strong>Editar</strong> ou <strong>Configurar</strong> e informe:</p>
+            <p><strong>URL de retorno de chamada:</strong></p>
+            <div class="copy-box">
+                <span id="webhookUrl">https://SEU-DOMINIO.com/api/whatsapp/cloud-webhook</span>
+                <button type="button" onclick="copy('webhookUrl')">Copiar</button>
+            </div>
+            <p style="font-size:12px;opacity:0.9"><strong>Importante:</strong> Use sua URL pública HTTPS (ex: https://seu-app.onrender.com). Localhost não funciona com a Meta.</p>
+            <p><strong>Token de verificação:</strong></p>
+            <div class="copy-box">
+                <span id="verifyToken">axis-packing-bot</span>
+                <button type="button" onclick="copy('verifyToken')">Copiar</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Passo 3: Inscrever-se em mensagens</h2>
+            <p>Após salvar o webhook, em <strong>Campos de webhook</strong> marque:</p>
+            <ul style="list-style:none;padding:0">
+                <li>☑ <strong>messages</strong></li>
+            </ul>
+        </div>
+
+        <div class="card">
+            <h2>Passo 4: Obter Token e Phone Number ID</h2>
+            <p>Na mesma tela WhatsApp → Configuração:</p>
+            <ol>
+                <li><strong>Token de acesso temporário:</strong> clique em "Gerar" e copie</li>
+                <li><strong>Phone number ID:</strong> aparece em "De" – copie o ID numérico</li>
+            </ol>
+            <p>Para produção, crie um token permanente em <strong>Configurações do sistema</strong> → Usuário do sistema.</p>
+        </div>
+
+        <div class="card">
+            <h2>Passo 5: Adicionar ao .env</h2>
+            <p>Crie ou edite o arquivo <code>.env</code> na raiz do projeto e adicione:</p>
+            <div class="copy-box">
+                <span id="envVars">WA_CLOUD_API_ACCESS_TOKEN=seu_token_aqui
+WA_PHONE_NUMBER_ID=seu_phone_number_id
+WA_WEBHOOK_VERIFY_TOKEN=axis-packing-bot</span>
+                <button type="button" onclick="copy('envVars')">Copiar</button>
+            </div>
+            <p>Substitua <code>seu_token_aqui</code> e <code>seu_phone_number_id</code> pelos valores do Passo 4.</p>
+            <p>Reinicie o servidor: <code>npm start</code></p>
+        </div>
+
+        <div class="card">
+            <h2>Status da Cloud API</h2>
+            <div id="statusCloud">Verificando...</div>
+        </div>
+
+        <p style="margin-top: 24px; font-size: 13px;">
+            <a href="whatsapp-qr.html">← Voltar ao QR Code</a> &nbsp;|&nbsp;
+            <a href="packing_machine.html">Packing Machine</a>
+        </p>
+    </div>
+
+    <script>
+        function copy(id) {
+            var el = document.getElementById(id);
+            var text = el.textContent || el.innerText;
+            navigator.clipboard && navigator.clipboard.writeText(text).then(function() {
+                var btn = el.parentElement.querySelector('button');
+                var orig = btn.textContent;
+                btn.textContent = 'Copiado!';
+                setTimeout(function() { btn.textContent = orig; }, 1500);
+            });
+        }
+
+        var base = window.location.origin || (window.location.protocol + '//' + window.location.host);
+        var webhookFull = base + '/api/whatsapp/cloud-webhook';
+        if (base.indexOf('localhost') === -1 && base.indexOf('127.0.0.1') === -1) {
+            document.getElementById('webhookUrl').textContent = webhookFull;
+        }
+
+        fetch(base + '/api/whatsapp/status')
+            .then(function(r) { return r.json(); })
+            .then(function(d) {
+                var box = document.getElementById('statusCloud');
+                if (d.cloudApi && d.connected) {
+                    box.innerHTML = '<span class="status-ok"><i class="fas fa-check-circle"></i> Cloud API configurada! O bot está ativo 24/7.</span>';
+                } else if (d.connected) {
+                    box.innerHTML = '<span class="status-ok"><i class="fas fa-check-circle"></i> Bot conectado (Baileys).</span>';
+                } else {
+                    box.innerHTML = '<span class="status-pendente"><i class="fas fa-exclamation-triangle"></i> Cloud API não configurada. Complete os passos acima e adicione as variáveis ao .env</span>';
+                }
+            })
+            .catch(function() {
+                document.getElementById('statusCloud').innerHTML = '<span class="status-pendente">Servidor offline. Execute npm start.</span>';
+            });
+    </script>
+</body>
+</html>

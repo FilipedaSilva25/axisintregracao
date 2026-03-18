@@ -1,0 +1,31 @@
+---
+description: Regras de sintaxe em script.js para evitar SyntaxError e perda de funções (perfil, admin, 2FA)
+globs: js/script.js
+alwaysApply: false
+---
+
+# script.js — regras de sintaxe obrigatórias
+
+O ficheiro `js/script.js` é crítico. Erros de sintaxe impedem o carregamento de todo o site (perfil, menu Administração, 2FA, robô).
+
+## O que NUNCA fazer
+
+1. **Optional chaining (`?.`)**  
+   Não usar. Em alguns contextos gera `Unexpected token '?'`.  
+   Usar em vez disso: `(obj && obj.prop)` ou `obj ? obj.prop : undefined`.
+
+2. **`return` em `.then()` sem ponto e vírgula**  
+   Em cadeias como `.then(function(r) { return r.json().then(...).catch(...); })` o `return` deve terminar com `;` antes do `});` que fecha o `.then()`.  
+   Caso contrário pode dar `SyntaxError: Unexpected token ';'` (linha ~1719).
+
+## Ao editar script.js
+
+- Evitar `?.` e `??` em cadeias longas; preferir verificações explícitas.
+- Em Promises, quebrar o primeiro `.then()` em várias linhas se tiver `return` com outra Promise dentro, e fechar com `});` na linha seguinte.
+- Após alterações, executar `node -c js/script.js` para validar sintaxe.
+
+## Funções blindadas (não remover try/catch)
+
+- Inicialização `DOMContentLoaded`: bloco inteiro em `try/catch`; no `catch` chama-se `aplicarPerfilEMenuAdminSeLogado` e mostra-se `main-content` se houver utilizador.
+- `aplicarPerfilEMenuAdminSeLogado()`: corpo em `try/catch`.
+- `atualizarPerfilNav()`: corpo em `try/catch`.
