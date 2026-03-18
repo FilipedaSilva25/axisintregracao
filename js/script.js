@@ -109,15 +109,23 @@ const CSSClasses = {
 
 // ================= 1. INICIALIZAÇÃO DO SISTEMA =================
 document.addEventListener('DOMContentLoaded', () => {
-    // Ao abrir o site pela raiz (ex.: axisintegracao.com.br), forçar tela de login para pedir usuário e senha
+    // Ao abrir o site pela raiz (ex.: axisintegracao.com.br), forçar tela de login — mas NÃO em reload (ex.: após atualização no Render)
     var path = (window.location.pathname || '/').replace(/\/+$/, '') || '/';
     var isRoot = path === '' || path === '/' || path === '/index.html';
     var search = window.location.search || '';
     if (isRoot && search.indexOf('tela=login') === -1) {
+        var isReload = false;
         try {
-            window.location.replace((window.location.pathname || '/') + '?tela=login#login');
-            return;
+            var navEntries = performance.getEntriesByType && performance.getEntriesByType('navigation');
+            if (navEntries && navEntries.length > 0 && navEntries[0].type === 'reload') isReload = true;
         } catch (_) {}
+        if (!isReload) {
+            try {
+                sessionStorage.setItem('axis_redirected_to_login', '1');
+                window.location.replace((window.location.pathname || '/') + '?tela=login#login');
+                return;
+            } catch (_) {}
+        }
     }
 
     // Ao sair ou recarregar: guardar página atual para reabrir na mesma
@@ -127,20 +135,25 @@ document.addEventListener('DOMContentLoaded', () => {
         else if (activePage) localStorage.setItem('axis-current-page', activePage);
     });
     
-    // Se a URL tiver ?tela=login#login (ex.: link do script), forçar tela de login e limpar sessão.
+    // Se a URL tiver ?tela=login#login: forçar tela de login. Só limpar sessão se acabámos de redirecionar da raiz (visita nova), não em reload.
     const hashLower = (window.location.hash || '').toLowerCase().replace(/\/+$/, '');
     const searchLower = (window.location.search || '').toLowerCase();
     const explicitLoginUrl = hashLower === '#login' || hashLower.startsWith('#login') || searchLower.indexOf('tela=login') !== -1;
     const forceLogin = explicitLoginUrl;
+    var justRedirectedToLogin = false;
+    try { justRedirectedToLogin = sessionStorage.getItem('axis_redirected_to_login') === '1'; } catch (_) {}
     if (forceLogin) {
-        try {
-            localStorage.removeItem('user_logged_in');
-            localStorage.removeItem('current_user');
-            localStorage.removeItem('current_user_login');
-            localStorage.removeItem('axis-current-page');
-            sessionStorage.removeItem('just_logged_in');
-            sessionStorage.setItem('axis_force_login_session', '1');
-        } catch (_) {}
+        if (justRedirectedToLogin) {
+            try {
+                sessionStorage.removeItem('axis_redirected_to_login');
+                localStorage.removeItem('user_logged_in');
+                localStorage.removeItem('current_user');
+                localStorage.removeItem('current_user_login');
+                localStorage.removeItem('axis-current-page');
+                sessionStorage.removeItem('just_logged_in');
+                sessionStorage.setItem('axis_force_login_session', '1');
+            } catch (_) {}
+        }
         try {
             window.history.replaceState({}, '', (window.location.pathname || '/') + '?tela=login#login');
         } catch (_) {}
@@ -369,17 +382,11 @@ document.addEventListener('DOMContentLoaded', () => {
             try { window.history.replaceState({}, '', (window.location.pathname || '/') + '?tela=login#login'); } catch (_) {}
             return;
         }
-        // Se a URL tiver ?tela=login ou #login, forçar login (mostrar auth e esconder main)
+        // Se a URL tiver ?tela=login ou #login, mostrar login (NÃO limpar localStorage aqui — evita "sair do site" ao recarregar)
         var hash = (window.location.hash || '').toLowerCase();
         var search = (window.location.search || '').toLowerCase();
         var urlIsLogin = hash === '#login' || hash.indexOf('#login') === 0 || search.indexOf('tela=login') !== -1;
         if (urlIsLogin) {
-            try {
-                localStorage.removeItem('user_logged_in');
-                localStorage.removeItem('current_user');
-                localStorage.removeItem('current_user_login');
-                localStorage.removeItem('axis-current-page');
-            } catch (_) {}
             var au = document.getElementById('auth-screen');
             var mn = document.getElementById('main-content');
             if (au) { au.style.display = 'flex'; au.style.opacity = '1'; au.style.visibility = 'visible'; }
