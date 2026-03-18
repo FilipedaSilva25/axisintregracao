@@ -18,14 +18,29 @@ if (typeof window.currentUserProfile === 'undefined') {
     window.currentUserProfile = currentUserProfile;
 }
 
-// Base da API AXIS (2FA / auth): se a página estiver noutra porta (ex: 1026), chamar sempre 3006/3007
+// Base da API AXIS (2FA / auth)
+// - Em produção (HTTPS / domínio), a API roda no MESMO origin (sem chamar localhost).
+// - Em desenvolvimento local, se a UI estiver noutra porta, usar 3006.
 function getAxisApiBase() {
     try {
-        var port = parseInt(window.location.port, 10);
+        var origin = window.location.origin || '';
+        var protocol = window.location.protocol || 'http:';
         var host = window.location.hostname || 'localhost';
-        if (port === 3006 || port === 3007) return window.location.origin || ('http://' + host + ':' + port);
-        return 'http://' + host + ':3006';
-    } catch (_) { return 'http://localhost:3006'; }
+        var port = window.location.port ? parseInt(window.location.port, 10) : null;
+        var isLocal = (host === 'localhost' || host === '127.0.0.1');
+
+        // Cloud / domínio: sempre usar o próprio origin (evita Mixed Content e bloqueio do browser)
+        if (!isLocal) return origin || (protocol + '//' + host);
+
+        // Local: se já estiver em 3006/3007, usar o origin atual
+        if (port === 3006 || port === 3007) return origin || (protocol + '//' + host + ':' + String(port));
+
+        // Local: UI em outra porta (ex.: 1026) → API em 3006
+        return protocol + '//' + host + ':3006';
+    } catch (_) {
+        try { return (window.location && window.location.origin) ? window.location.origin : 'http://localhost:3006'; } catch (e) {}
+        return 'http://localhost:3006';
+    }
 }
 window.getAxisApiBase = getAxisApiBase;
 
@@ -420,8 +435,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (!loginPersist) { showMainPersist(); return; }
         var loginParaTotp = (typeof getTotpLoginNormalized === 'function' ? getTotpLoginNormalized() : null) || loginPersist;
-        var apiBaseP = (typeof getAxisApiBase === 'function' ? getAxisApiBase() : '') || window.location.origin || 'http://localhost:3006';
-        if (!/^https?:\/\//i.test(apiBaseP)) apiBaseP = 'http://localhost:3006';
+        var apiBaseP = (typeof getAxisApiBase === 'function' ? getAxisApiBase() : '') || (window.location && window.location.origin) || '';
+        if (!/^https?:\/\//i.test(apiBaseP)) apiBaseP = (window.location && window.location.origin) ? window.location.origin : '';
         fetch(apiBaseP.replace(/\/+$/, '') + '/api/auth/totp-required?login=' + encodeURIComponent(loginParaTotp))
             .then(function(r) { return r.json(); })
             .catch(function() { return {}; })
@@ -1822,8 +1837,8 @@ function showModalTotpReset() {
         }
         submitBtn.disabled = true;
         errEl.style.display = 'none';
-        var apiBase = (typeof getAxisApiBase === 'function' ? getAxisApiBase() : null) || window.location.origin || 'http://localhost:3006';
-        if (!/^https?:\/\//i.test(apiBase)) apiBase = 'http://localhost:3006';
+        var apiBase = (typeof getAxisApiBase === 'function' ? getAxisApiBase() : null) || (window.location && window.location.origin) || '';
+        if (!/^https?:\/\//i.test(apiBase)) apiBase = (window.location && window.location.origin) ? window.location.origin : '';
         fetch(apiBase.replace(/\/+$/, '') + '/api/auth/totp-reset', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -2021,8 +2036,8 @@ function confirmarTotp2FA() {
     if (errP) { errP.style.display = 'none'; errP.textContent = ''; }
     if (confirmBtn) { confirmBtn.disabled = true; confirmBtn.textContent = 'A verificar...'; }
     _totpConfirmInFlight = true;
-    var apiBase = (typeof getAxisApiBase === 'function' ? getAxisApiBase() : null) || (typeof window !== 'undefined' && window.location && window.location.origin) || 'http://localhost:3006';
-    if (!apiBase || !/^https?:\/\//i.test(apiBase)) apiBase = (typeof window !== 'undefined' && window.location && window.location.origin) || 'http://localhost:3006';
+    var apiBase = (typeof getAxisApiBase === 'function' ? getAxisApiBase() : null) || (typeof window !== 'undefined' && window.location && window.location.origin) || '';
+    if (!apiBase || !/^https?:\/\//i.test(apiBase)) apiBase = (typeof window !== 'undefined' && window.location && window.location.origin) || '';
     var confirmUrl = apiBase.replace(/\/+$/, '') + '/api/auth/totp-confirm';
     fetch(confirmUrl, {
         method: 'POST',
@@ -2096,8 +2111,8 @@ function refreshTotpSettings() {
     enableBtn.style.visibility = 'visible';
     resetBtn.style.display = 'none';
     if (setupArea) setupArea.style.display = 'none';
-    var apiBase = (typeof getAxisApiBase === 'function' ? getAxisApiBase() : null) || window.location.origin || 'http://localhost:3006';
-    if (!/^https?:\/\//i.test(apiBase)) apiBase = 'http://localhost:3006';
+    var apiBase = (typeof getAxisApiBase === 'function' ? getAxisApiBase() : null) || (window.location && window.location.origin) || '';
+    if (!/^https?:\/\//i.test(apiBase)) apiBase = (window.location && window.location.origin) ? window.location.origin : '';
     fetch(apiBase.replace(/\/+$/, '') + '/api/auth/totp-status?login=' + encodeURIComponent(login))
         .then(function(r) {
             if (!r.ok) return { enabled: false };
