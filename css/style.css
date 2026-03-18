@@ -4286,6 +4286,74 @@ tr:hover .row-actions {
     cursor: pointer;
     transition: transform 0.15s ease, box-shadow 0.2s ease;
 }
+
+/* CTA estilo Google Authenticator (Configurações) */
+.axis-btn-cta {
+    min-width: 160px;
+    height: 48px;
+    padding: 0 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border-radius: 14px;
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    border: none;
+    background: linear-gradient(135deg, var(--accent-blue, #007aff) 0%, #0051d5 100%);
+    color: #fff !important;
+    box-shadow: 0 4px 14px rgba(0, 122, 255, 0.4), 0 2px 6px rgba(0,0,0,0.08);
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.2s ease, filter 0.2s ease;
+}
+.axis-btn-cta:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(0, 122, 255, 0.45), 0 4px 12px rgba(0,0,0,0.1);
+}
+.axis-btn-cta:active {
+    transform: translateY(0);
+    filter: brightness(0.98);
+}
+[data-theme="dark"] .axis-btn-cta {
+    background: linear-gradient(135deg, #0a84ff 0%, #0066cc 100%);
+    box-shadow: 0 4px 14px rgba(10, 132, 255, 0.35);
+}
+
+.axis-btn-cta-secondary {
+    min-width: 160px;
+    height: 48px;
+    padding: 0 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border-radius: 14px;
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    background: rgba(0, 122, 255, 0.08);
+    color: var(--accent-blue) !important;
+    border: 1px solid rgba(0, 122, 255, 0.22);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+.axis-btn-cta-secondary:hover {
+    transform: translateY(-1px);
+    background: rgba(0, 122, 255, 0.14);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+}
+.axis-btn-cta-secondary:active {
+    transform: translateY(0);
+}
+[data-theme="dark"] .axis-btn-cta-secondary {
+    background: rgba(10, 132, 255, 0.18);
+    border-color: rgba(10, 132, 255, 0.35);
+    color: #d7ecff !important;
+}
 #totp-settings-card .totp-btn-enable:hover,
 .settings-card .setting-control .totp-btn-enable:hover {
     transform: translateY(-1px);

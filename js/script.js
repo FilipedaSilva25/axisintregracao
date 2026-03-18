@@ -1226,6 +1226,119 @@ function updateTimeFormat() {
     localStorage.setItem('axis-time-format', v);
     showToast('Formato de hora atualizado', 'info');
 }
+
+// ================= IDIOMA (PT/ES) =================
+var AXIS_LANGS = ['pt-BR', 'es-AR'];
+function axisDetectLang() {
+    try {
+        var nav = (navigator.language || navigator.userLanguage || 'pt-BR');
+        nav = String(nav || '').toLowerCase();
+        if (nav.indexOf('es') === 0) return 'es-AR';
+    } catch (_) {}
+    return 'pt-BR';
+}
+function axisGetLang() {
+    var v = '';
+    try { v = String(localStorage.getItem('axis-lang') || '').trim(); } catch (_) { v = ''; }
+    if (!v || v === 'auto') return axisDetectLang();
+    return AXIS_LANGS.indexOf(v) >= 0 ? v : 'pt-BR';
+}
+function updateAxisLanguage() {
+    var el = document.getElementById('axis-language-setting');
+    var v = el ? String(el.value || 'auto') : 'auto';
+    try { localStorage.setItem('axis-lang', v); } catch (_) {}
+    axisApplyLanguage();
+    showToast('Idioma atualizado', 'info');
+}
+window.updateAxisLanguage = updateAxisLanguage;
+
+function axisT(key) {
+    var lang = axisGetLang();
+    var dict = {
+        'pt-BR': {
+            'settings.title': '⚙️ Configurações do Sistema',
+            'settings.subtitle': 'Personalize sua experiência no AXIS',
+            'settings.appearance': 'Aparência',
+            'settings.security': 'Segurança',
+            'settings.account': 'Conta',
+            'settings.langRegion': 'Idioma e Região',
+            'settings.lang': 'Idioma do sistema',
+            'settings.langDesc': 'Defina o idioma do AXIS (detecção automática pelo navegador)',
+            '2fa.configure': '🔐 CONFIGURAR GOOGLE AUTHENTICATOR',
+            '2fa.reset': 'REDEFINIR 2FA',
+            'pwd.save': 'SALVAR NOVA SENHA',
+            'pwd.clear': 'LIMPAR'
+        },
+        'es-AR': {
+            'settings.title': '⚙️ Configuración del sistema',
+            'settings.subtitle': 'Personalizá tu experiencia en AXIS',
+            'settings.appearance': 'Apariencia',
+            'settings.security': 'Seguridad',
+            'settings.account': 'Cuenta',
+            'settings.langRegion': 'Idioma y región',
+            'settings.lang': 'Idioma del sistema',
+            'settings.langDesc': 'Definí el idioma de AXIS (detección automática por el navegador)',
+            '2fa.configure': '🔐 CONFIGURAR GOOGLE AUTHENTICATOR',
+            '2fa.reset': 'RESTABLECER 2FA',
+            'pwd.save': 'GUARDAR NUEVA CONTRASEÑA',
+            'pwd.clear': 'LIMPIAR'
+        }
+    };
+    return (dict[lang] && dict[lang][key]) ? dict[lang][key] : ((dict['pt-BR'] && dict['pt-BR'][key]) ? dict['pt-BR'][key] : key);
+}
+
+function axisApplyLanguage() {
+    try {
+        var lang = axisGetLang();
+        try { document.documentElement.lang = (lang === 'es-AR' ? 'es' : 'pt-BR'); } catch (_) {}
+
+        // Sincronizar select
+        var sel = document.getElementById('axis-language-setting');
+        if (sel) {
+            var raw = '';
+            try { raw = String(localStorage.getItem('axis-lang') || '').trim(); } catch (_) { raw = ''; }
+            sel.value = raw || 'auto';
+        }
+
+        // Configurações: título/subtítulo
+        var h2 = document.querySelector('#page-configuracoes .section-header h2');
+        var sub = document.querySelector('#page-configuracoes .section-header .section-subtitle');
+        if (h2) h2.textContent = axisT('settings.title');
+        if (sub) sub.textContent = axisT('settings.subtitle');
+
+        // Cards (títulos)
+        var cards = document.querySelectorAll('#page-configuracoes .settings-card > h3');
+        if (cards && cards.length) {
+            cards.forEach(function(el) {
+                var t = (el.textContent || '').trim().toLowerCase();
+                if (t === 'aparência') el.textContent = axisT('settings.appearance');
+                if (t === 'segurança') el.textContent = axisT('settings.security');
+                if (t === 'conta') el.textContent = axisT('settings.account');
+                if (t === 'idioma e região') el.textContent = axisT('settings.langRegion');
+            });
+        }
+
+        // Item de idioma
+        var langH4 = document.querySelector('#page-configuracoes #axis-language-setting') ? document.querySelector('#page-configuracoes #axis-language-setting').closest('.setting-item').querySelector('.setting-info h4') : null;
+        var langP = document.querySelector('#page-configuracoes #axis-language-setting') ? document.querySelector('#page-configuracoes #axis-language-setting').closest('.setting-item').querySelector('.setting-info p') : null;
+        if (langH4) langH4.textContent = axisT('settings.lang');
+        if (langP) langP.textContent = axisT('settings.langDesc');
+
+        // Botões principais
+        var b1 = document.getElementById('totp-enable-btn');
+        var b2 = document.getElementById('totp-reset-btn');
+        var b3 = document.getElementById('axis-change-password-btn');
+        var secBtns = document.querySelectorAll('#account-settings-card .axis-btn-cta-secondary');
+        if (b1) b1.textContent = axisT('2fa.configure');
+        if (b2) b2.textContent = axisT('2fa.reset');
+        if (b3) b3.textContent = axisT('pwd.save');
+        if (secBtns && secBtns.length) secBtns.forEach(function(btn) { if ((btn.textContent || '').trim().toUpperCase() === 'LIMPAR' || (btn.textContent || '').trim().toUpperCase() === 'LIMPIAR') btn.textContent = axisT('pwd.clear'); });
+    } catch (e) {
+        if (typeof console !== 'undefined' && console.warn) console.warn('axisApplyLanguage:', e);
+    }
+}
+window.axisApplyLanguage = axisApplyLanguage;
+try { document.addEventListener('DOMContentLoaded', axisApplyLanguage); } catch (_) {}
 function startInactivityTimer() {
     if (axisLogoutTimeoutId) clearInterval(axisLogoutTimeoutId);
     axisLogoutTimeoutId = null;
