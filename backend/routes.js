@@ -15,6 +15,10 @@ const PECAS_ESTOQUE_FILE = path.join(DATA_DIR, 'pecas-estoque.json');
 const PECAS_MOVIMENTOS_FILE = path.join(DATA_DIR, 'pecas-movimentos.json');
 const REGISTRO_CHAMADOS_FILE = path.join(DATA_DIR, 'registro-chamados.json');
 
+// Evita responder 2x à mesma mensagem do webhook Cloud API (Meta às vezes reenvia)
+const CLOUD_WEBHOOK_PROCESSED_IDS = new Set();
+const CLOUD_WEBHOOK_MAX_IDS = 5000;
+
 function sendJson(res, obj) {
     res.writeHead(200, { ...HEADERS, 'Content-Type': 'application/json; charset=utf-8' });
     res.end(JSON.stringify(obj), 'utf-8');
@@ -909,8 +913,13 @@ poll();setInterval(poll,3000);
         setImmediate(async () => {
             const messages = cloudApi.parseWebhookMessages(body);
             const { handleIncoming } = require('./whatsapp-packing-bot');
-            for (const { from, text } of messages) {
+            for (const { from, text, id } of messages) {
                 if (!text) continue;
+                if (id && CLOUD_WEBHOOK_PROCESSED_IDS.has(id)) continue; // já processada = não responder de novo
+                if (id) {
+                    if (CLOUD_WEBHOOK_PROCESSED_IDS.size >= CLOUD_WEBHOOK_MAX_IDS) CLOUD_WEBHOOK_PROCESSED_IDS.clear();
+                    CLOUD_WEBHOOK_PROCESSED_IDS.add(id);
+                }
                 try {
                     const reply = await handleIncoming(
                         { from, body: text },

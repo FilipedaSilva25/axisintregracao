@@ -133,7 +133,8 @@ async function startConnector() {
         });
 
         sock.ev.on('messages.upsert', async ({ messages, type }) => {
-            if (type !== 'notify' && type !== 'append') return;
+            // Só processar mensagem NOVA (notify). Ignorar 'append' = mesma mensagem de novo = evita enviar 2 respostas
+            if (type !== 'notify') return;
             let handleIncoming, readJsonSync, writeJson;
             try {
                 handleIncoming = require('./whatsapp-packing-bot').handleIncoming;

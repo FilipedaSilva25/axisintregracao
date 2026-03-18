@@ -74,7 +74,7 @@ async function sendMessage(to, text) {
 /**
  * Extrai mensagens do payload do webhook da Meta
  * @param {object} body - Corpo JSON do POST
- * @returns {Array<{from: string, text: string}>}
+ * @returns {Array<{from: string, text: string, id: string}>}
  */
 function parseWebhookMessages(body) {
     const out = [];
@@ -93,7 +93,8 @@ function parseWebhookMessages(body) {
                     else if (msg.type === 'button' && msg.button?.text) text = msg.button.text;
                     else if (msg.type === 'interactive' && msg.interactive?.button_reply?.title) text = msg.interactive.button_reply.title;
                     else if (msg.type === 'interactive' && msg.interactive?.list_reply?.title) text = msg.interactive.list_reply.title;
-                    out.push({ from, text: String(text || '').trim() });
+                    const id = msg.id || (from + '-' + Date.now());
+                    out.push({ from, text: String(text || '').trim(), id });
                 }
             }
         }
