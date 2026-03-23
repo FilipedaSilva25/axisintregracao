@@ -261,6 +261,13 @@
                 if (s) goTo(s);
                 if (nav) nav.classList.remove('open');
             });
+            el.addEventListener('keydown', function (e) {
+                var k = e.key;
+                if (k === 'Enter' || k === ' ') {
+                    e.preventDefault();
+                    el.click();
+                }
+            });
         });
 
         if (menuToggle && nav) {
@@ -286,6 +293,55 @@
             if (key === 'c') { goTo('certificados'); e.preventDefault(); return; }
             if (key === 'a') { goTo('atas'); e.preventDefault(); return; }
         });
+    }
+
+    function initInicioPro() {
+        var refreshBtn = document.getElementById('selbetti-inicio-refresh');
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', function () {
+                if (typeof window.selbettiRefreshDashboard === 'function') {
+                    window.selbettiRefreshDashboard();
+                }
+                showToast('Painel atualizado.', 'success');
+            });
+        }
+        var copyBtn = document.getElementById('selbetti-copy-api-base');
+        if (copyBtn) {
+            copyBtn.addEventListener('click', function () {
+                var text = '';
+                try {
+                    text = window.location.origin || '';
+                } catch (e1) { text = ''; }
+                if (!text) {
+                    showToast('Não foi possível obter a URL.', 'error');
+                    return;
+                }
+                function done() {
+                    showToast('URL base copiada para a área de transferência.', 'success');
+                }
+                function fallback() {
+                    try {
+                        var ta = document.createElement('textarea');
+                        ta.value = text;
+                        ta.setAttribute('readonly', '');
+                        ta.style.position = 'fixed';
+                        ta.style.left = '-9999px';
+                        document.body.appendChild(ta);
+                        ta.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(ta);
+                        done();
+                    } catch (e2) {
+                        showToast('Copie manualmente: ' + text, 'info');
+                    }
+                }
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text).then(done).catch(fallback);
+                } else {
+                    fallback();
+                }
+            });
+        }
     }
 
     // --- Orçamento de Peças (biblioteca de imagens/PDF com pré-visualização) ---
@@ -1894,6 +1950,7 @@
         initTheme();
         initDashboard();
         initNav();
+        initInicioPro();
         initOrcamento();
         initFerramentas();
         initCertificados();

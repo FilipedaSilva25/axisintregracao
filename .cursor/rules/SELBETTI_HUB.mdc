@@ -1,0 +1,16 @@
+---
+description: Hub SELBETTI (pages/selbetti.html) — invariants; não quebrar rotas nem storage
+globs: pages/selbetti.html,css/selbetti.css,js/selbetti-hub.js,js/selbetti-portal-links-admin.js
+alwaysApply: false
+---
+
+# Hub SELBETTI — proteção de implementação
+
+- **Entrada:** `pages/selbetti.html` carrega só `js/selbetti-hub.js` (SPA por `location.hash`). Não substituir por `pages/selbetti.js` sem atualizar o HTML.
+- **Rotas:** `#/home`, `#/digital`, `#/orcamentos`, `#/orcamentos/ANO/MES`, `#/atas`, `#/atas/ANO/MES`, `#/certificados`, `#/ferramentas/estoque`, `#/lixeira`. Manter `parseRoute()` e `setRoute()` coerentes com o menu em `buildNavHtml()`.
+- **Storage:** prefixo `axis_selbetti_hub_v1` em `localStorage` (documentos, URLs digitais, lixeira, tema). Não renomear chaves sem migração ou os utilizadores perdem dados.
+- **Portais digitais:** URLs personalizáveis via AXIS → Administração → modal em `index.html` + `js/selbetti-portal-links-admin.js` (chave `axis_selbetti_hub_v1_digital_urls`).
+- **Documentos:** ainda em `localStorage` (data URL), não no servidor; limite por ficheiro definido por `MAX_FILE_BYTES` em `selbetti-hub.js`.
+- **Cache bust:** ao alterar `selbetti-hub.js` ou `selbetti.css`, incrementar `?v=` em `pages/selbetti.html`.
+
+Alterações nestes ficheiros devem ser mínimas e testadas em `#/home`, menu lateral, painéis Orçamentos/Atas e vista de mês.

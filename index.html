@@ -18,10 +18,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
     <!-- CSS PRINCIPAL (v=axis2025 evita cache e garante atualizações visíveis) -->
-    <link rel="stylesheet" href="css/style.css?v=axis2026">
+    <link rel="stylesheet" href="css/style.css?v=axis2026f">
     <link rel="stylesheet" href="css/suporte-tecnico.css">
     <!-- Robô assistente em holograma -->
-    <link rel="stylesheet" href="css/axis-robot-assistant.css">
+    <link rel="stylesheet" href="css/axis-robot-assistant.css?v=axis2026robot1">
     
     <!-- WhatsApp Alerts CSS -->
     <!-- WhatsApp descontinuado - CSS removido -->
@@ -72,6 +72,13 @@
             margin-bottom: 12px;
             animation: pulse 2s ease-in-out infinite;
             filter: drop-shadow(0 2px 4px rgba(253, 126, 20, 0.3));
+        }
+
+        /* Título numa só linha, no mesmo estilo dos outros cards longos (ex.: REGISTRO DE CHAMADOS) */
+        .mod-card.preventiva-master .mod-content h3 {
+            white-space: nowrap;
+            font-size: clamp(0.72rem, 0.42rem + 1.65vw, 1.2rem);
+            letter-spacing: 0.02em;
         }
 
         @keyframes pulse {
@@ -1365,6 +1372,30 @@
 </head>
 
 <body>
+    <!-- Filtra erro de extensão no F12 (não é do AXIS) -->
+    <script>
+    (function axisSilenciarErroExtensaoChrome() {
+      function isErroExtensao(msg, src) {
+        var t = String(msg || '').toLowerCase();
+        var s = String(src || '').toLowerCase();
+        var ehCanal = t.indexOf('message channel closed') !== -1 || t.indexOf('asynchronous response') !== -1;
+        var ehExt = s.indexOf('chrome-extension://') === 0 || t.indexOf('chrome-extension://') !== -1;
+        return ehCanal || ehExt;
+      }
+      window.addEventListener('error', function(e) {
+        if (isErroExtensao(e && e.message, e && e.filename)) {
+          try { e.preventDefault(); } catch (_) {}
+        }
+      }, true);
+      window.addEventListener('unhandledrejection', function(e) {
+        var r = e && e.reason;
+        var msg = (r && (r.message || r.toString && r.toString())) || '';
+        if (isErroExtensao(msg, '')) {
+          try { e.preventDefault(); } catch (_) {}
+        }
+      });
+    })();
+    </script>
     <!--
       BLINDAGEM VOLTAR MANUTENÇÕES - NÃO REMOVER
       Garante que "Voltar para Dashboard" em Manutenções Preventivas
@@ -1373,17 +1404,17 @@
     -->
     <script>
     (function() {
-      var user, fromParam = false, fromFlag = false;
+      var user, fromParam = false;
       try {
         var q = (typeof location !== 'undefined' && location.search) ? location.search : '';
         fromParam = q.indexOf('axis_voltar=1') >= 0;
-        try { fromFlag = sessionStorage.getItem('axis_voltar_force_main') === '1'; } catch (_) {}
         try { user = localStorage.getItem('current_user'); } catch (_) { user = null; }
         if (!user) user = null;
-        if ((fromParam || fromFlag) && user) {
+        if (fromParam && user) {
           try { localStorage.setItem('user_logged_in', 'true'); } catch (_) {}
           try { localStorage.setItem('axis-current-page', 'page-home'); } catch (_) {}
           try { sessionStorage.setItem('axis_voltar_force_main', '1'); } catch (_) {}
+          try { sessionStorage.setItem('axis_voltar_force_main_ts', String(Date.now())); } catch (_) {}
           try {
             if (typeof history !== 'undefined' && history.replaceState) {
               history.replaceState(null, '', (location.pathname || '/') + '#page-home');
@@ -1427,51 +1458,100 @@
          TELA DE AUTENTICAÇÃO
          ============================================ -->
     <div id="auth-screen">
-        <div class="auth-card fade-in">
-            <div class="logo-area">
-                <img src="assets/IMAGENS/Nova_Logo_Sem_Fundo_1.2.png" alt="AXIS - Sistema de Gestão" class="main-auth-logo">
+        <div class="auth-card auth-card--tabs fade-in">
+            <div class="auth-card-brand">
+                <div class="logo-area">
+                    <img src="assets/IMAGENS/Nova_Logo_Sem_Fundo_1.2.png" alt="AXIS - Sistema de Gestão" class="main-auth-logo">
+                </div>
             </div>
 
-            <!-- Área de cadastro removida - usuários são criados pela equipe de T.I -->
-
-            <!-- Campos de Login -->
-            <div class="input-group">
-                <label for="username">Usuário</label>
-                <input type="text" 
-                       id="username" 
-                       placeholder="Ex: joao.silva (login do cadastro)"
-                       autocomplete="username"
-                       aria-required="true"
-                       onkeypress="if(event.key === 'Enter') document.getElementById('password').focus()">
-            </div>
-
-            <div class="input-group password-container">
-                <label for="password">Senha</label>
-                <input type="password" 
-                       id="password" 
-                       placeholder="Digite sua senha"
-                       autocomplete="current-password"
-                       aria-required="true"
-                       onkeypress="if(event.key === 'Enter') handleAuth()">
-                <!-- ⚠️ BOTÃO PROTEGIDO - NÃO MODIFICAR O ONCLICK -->
-                <button type="button" 
-                        class="eye-toggle" 
-                        onclick="if(typeof togglePassword === 'function') { togglePassword(); } else { console.error('togglePassword não encontrada'); } return false;"
-                        aria-label="Mostrar/Ocultar senha"
-                        data-protected="true">
-                    <span id="eye-icon">👁️</span>
+            <div class="auth-entry-tabs" role="tablist" aria-label="Forma de entrada no AXIS">
+                <button type="button"
+                        role="tab"
+                        id="auth-tab-manual"
+                        class="auth-entry-tab auth-entry-tab--active"
+                        aria-selected="true"
+                        aria-controls="auth-panel-manual"
+                        tabindex="0"
+                        onclick="if(typeof axisSwitchAuthEntryTab==='function')axisSwitchAuthEntryTab('manual'); return false;">
+                    ENTRADA MANUAL
+                </button>
+                <button type="button"
+                        role="tab"
+                        id="auth-tab-face"
+                        class="auth-entry-tab"
+                        aria-selected="false"
+                        aria-controls="auth-panel-face"
+                        tabindex="-1"
+                        onclick="if(typeof axisSwitchAuthEntryTab==='function')axisSwitchAuthEntryTab('face'); return false;">
+                    ENTRADA FACIAL
                 </button>
             </div>
 
-            <!-- ⚠️ BOTÃO PROTEGIDO - NÃO MODIFICAR O ONCLICK -->
-            <button onclick="if(typeof handleAuth === 'function') { handleAuth(); } else { console.error('handleAuth não encontrada'); alert('Erro: Sistema ainda carregando. Aguarde alguns segundos e tente novamente.'); } return false;" 
-                    id="auth-main-btn" 
-                    class="btn-primary-auth"
-                    aria-label="Acessar sistema"
-                    type="button"
-                    data-protected="true">
-                Acessar AXIS
-            </button>
+            <div id="auth-panel-manual"
+                 class="auth-tab-panel"
+                 role="tabpanel"
+                 aria-labelledby="auth-tab-manual">
+
+                <div class="input-group">
+                    <label for="username">Usuário</label>
+                    <input type="text"
+                           id="username"
+                           placeholder="Ex: joao.silva (login do cadastro)"
+                           autocomplete="username"
+                           aria-required="true"
+                           onkeypress="if(event.key === 'Enter') document.getElementById('password').focus()">
+                </div>
+
+                <div class="input-group password-container">
+                    <label for="password">Senha</label>
+                    <input type="password"
+                           id="password"
+                           placeholder="Digite sua senha"
+                           autocomplete="current-password"
+                           aria-required="true"
+                           onkeypress="if(event.key === 'Enter') handleAuth()">
+                    <button type="button"
+                            class="eye-toggle"
+                            onclick="if(typeof togglePassword === 'function') { togglePassword(); } else { console.error('togglePassword não encontrada'); } return false;"
+                            aria-label="Mostrar/Ocultar senha"
+                            data-protected="true">
+                        <span id="eye-icon">👁️</span>
+                    </button>
+                </div>
+
+                <button onclick="if(typeof handleAuth === 'function') { handleAuth(); } else { console.error('handleAuth não encontrada'); alert('Erro: Sistema ainda carregando. Aguarde alguns segundos e tente novamente.'); } return false;"
+                        id="auth-main-btn"
+                        class="btn-primary-auth"
+                        aria-label="Acessar sistema"
+                        type="button"
+                        data-protected="true">
+                    Acessar AXIS
+                </button>
+            </div>
+
+            <div id="auth-panel-face"
+                 class="auth-tab-panel"
+                 role="tabpanel"
+                 aria-labelledby="auth-tab-face"
+                 hidden>
+                <div class="auth-face-block auth-face-block--login">
+                    <p class="auth-face-title auth-face-title--login">Reconhecimento facial</p>
+                    <p class="auth-face-tagline">Webcam · Configurações</p>
+                    <ul class="auth-face-bullets" aria-label="Como funciona o acesso por rosto">
+                        <li>Compara o seu rosto ao registo guardado em Configurações.</li>
+                        <li>Análise por imagem (não é íris nem retina); menos seguro que senha.</li>
+                        <li>Pode falhar com fotografia. Na 1.ª vez precisa de Internet para os modelos.</li>
+                    </ul>
+                    <video id="face-login-video" class="auth-face-video" playsinline webkit-playsinline muted width="280" height="210" style="display:none" aria-hidden="true"></video>
+                    <div class="auth-face-actions auth-face-actions--login">
+                        <button type="button" class="btn-secondary-auth auth-face-btn auth-face-btn--accent" id="face-login-start">Abrir câmera</button>
+                        <button type="button" class="btn-secondary-auth auth-face-btn" id="face-login-capture" disabled>Capturar e entrar</button>
+                        <button type="button" class="btn-secondary-auth auth-face-btn auth-face-btn--ghost auth-face-close" id="face-login-close">Fechar câmera</button>
+                    </div>
+                    <p id="face-login-status" class="auth-face-status auth-face-status--login" role="status"></p>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -1481,6 +1561,25 @@
         <div class="modal-bem-vindo-glass">
             <p class="modal-bem-vindo-title">Bem-vindo, <span id="modal-bem-vindo-nome">Usuário</span>!</p>
             <p class="modal-bem-vindo-sub">Você está conectado ao AXIS.</p>
+        </div>
+    </div>
+
+    <!-- Troca obrigatória da senha temporária (após Bem-vindo) — estilo vidro -->
+    <div id="modal-senha-temporaria" class="modal-senha-temp-wrap" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="modal-senha-temp-title">
+        <div class="modal-senha-temp-overlay" aria-hidden="true"></div>
+        <div class="modal-senha-temp-glass" onclick="event.stopPropagation();">
+            <div class="modal-senha-temp-icon-wrap" aria-hidden="true"><span class="modal-senha-temp-icon">🔐</span></div>
+            <h2 id="modal-senha-temp-title" class="modal-senha-temp-title">Defina a sua senha no AXIS</h2>
+            <p class="modal-senha-temp-lead">A sua conta foi criada com uma <strong>senha temporária</strong> pela administração. Por segurança e privacidade do ambiente, precisa escolher agora uma <strong>senha pessoal</strong> antes de continuar a utilizar o sistema.</p>
+            <p class="modal-senha-temp-note">Os dados de acesso são privativos do AXIS. Evite reutilizar senhas de outros serviços.</p>
+            <form id="axis-senha-temp-form" class="modal-senha-temp-form">
+                <label class="modal-senha-temp-label" for="axis-senha-temp-nova">Nova senha</label>
+                <input type="password" id="axis-senha-temp-nova" class="modal-senha-temp-input" autocomplete="new-password" minlength="6" required placeholder="Mínimo 6 caracteres">
+                <label class="modal-senha-temp-label" for="axis-senha-temp-confirma">Confirmar nova senha</label>
+                <input type="password" id="axis-senha-temp-confirma" class="modal-senha-temp-input" autocomplete="new-password" minlength="6" required placeholder="Repita a senha">
+                <p id="axis-senha-temp-erro" class="modal-senha-temp-erro" role="alert"></p>
+                <button type="submit" id="axis-senha-temp-submit" class="modal-senha-temp-submit">Guardar e continuar</button>
+            </form>
         </div>
     </div>
 
@@ -1566,11 +1665,12 @@
                                 <span class="axis-profile-initial" id="axis-profile-initial">U</span>
                             </span>
                             <span class="axis-profile-name-short" id="axis-profile-name-short">Usuário</span>
+                            <span class="axis-profile-nav-matricula" id="axis-profile-nav-matricula" style="display: none;" title="Matrícula AXIS"></span>
                             <span id="nav-2fa-badge" class="nav-2fa-badge" style="display: none;" title="Verificação em duas etapas ativa">🔐 2FA</span>
                         </button>
                         <div class="axis-profile-dropdown wa-profile" id="axis-profile-dropdown" aria-hidden="true">
                             <div class="wa-profile-header">
-                                <span class="wa-profile-photo-wrap axis-profile-photo-click" id="axis-profile-photo-click" title="Clique para ver e gerir a foto">
+                                <span class="wa-profile-photo-wrap axis-profile-photo-click" id="axis-profile-photo-click" title="Gerir foto: escolher ficheiro e «Guardar no perfil»">
                                     <span class="wa-profile-photo" id="axis-profile-upload-preview">
                                         <img src="" alt="" class="wa-profile-photo-img" id="axis-profile-dropdown-avatar">
                                         <span class="wa-profile-initial" id="axis-profile-dropdown-initial">U</span>
@@ -1594,6 +1694,10 @@
                                     <input type="text" id="axis-profile-mini-setor" class="wa-profile-input" placeholder="Ex: TI, Suporte">
                                 </div>
                                 <div class="wa-profile-row wa-profile-row-readonly">
+                                    <span class="wa-profile-label">Matrícula AXIS</span>
+                                    <span class="wa-profile-value" id="axis-profile-mini-matricula">—</span>
+                                </div>
+                                <div class="wa-profile-row wa-profile-row-readonly">
                                     <span class="wa-profile-label">Expiração da Senha</span>
                                     <span class="wa-profile-value wa-profile-dias" id="axis-profile-dropdown-dias">—</span>
                                 </div>
@@ -1614,7 +1718,7 @@
                             <div class="axis-profile-photo-modal-actions">
                                 <button type="button" class="axis-profile-photo-modal-btn" id="axis-profile-photo-btn-atualizar">Atualizar Imagem</button>
                                 <button type="button" class="axis-profile-photo-modal-btn" id="axis-profile-photo-btn-visualizar">Visualizar a Imagem</button>
-                                <button type="button" class="axis-profile-photo-modal-btn" id="axis-profile-photo-btn-salvar">Salvar a Imagem</button>
+                                <button type="button" class="axis-profile-photo-modal-btn" id="axis-profile-photo-btn-salvar">Guardar no perfil</button>
                             </div>
                             <button type="button" class="axis-profile-photo-modal-close" onclick="if(window.fecharModalFotoPerfil) window.fecharModalFotoPerfil();" aria-label="Fechar">×</button>
                         </div>
@@ -1679,8 +1783,8 @@
                  PÁGINA INICIAL - DASHBOARD
                  ============================================ -->
             <section id="page-home" class="main-section active">
-                <!-- 1. Hero em vidro: saudação + relógio + data -->
-                <div class="home-hero home-hero-glass" id="home-hero">
+                <!-- Visão Rápida (hero moderno) -->
+                <div class="home-hero" id="home-hero">
                     <div class="home-hero-content">
                         <div class="home-hero-greeting">
                             <span class="home-hero-salute" id="home-hero-salute">BEM-VINDO AO AXIS</span>, <span class="home-hero-name" id="home-hero-name">usuário</span>
@@ -1689,7 +1793,7 @@
                     </div>
                     <div class="home-hero-stats" id="home-hero-stats">
                         <div class="home-hero-stat">
-                            <span class="home-hero-stat-value" id="home-hero-stat-modules">14</span>
+                            <span class="home-hero-stat-value" id="home-hero-stat-modules">10</span>
                             <span class="home-hero-stat-label">Módulos</span>
                         </div>
                         <div class="home-hero-stat">
@@ -1699,33 +1803,129 @@
                     </div>
                 </div>
 
-                <!-- 2. Barra de comando / busca -->
-                <div class="home-command-bar">
-                    <label for="home-search-input" class="sr-only">O que você quer fazer?</label>
-                    <input type="search" id="home-search-input" class="home-search-input" placeholder="O que você quer fazer? Pesquise um módulo..." autocomplete="off" />
-                    <span class="home-search-icon" aria-hidden="true">🔍</span>
-                </div>
-
-                <!-- 3. Favoritos (pinned) -->
-                <div class="home-favorites-wrap" id="home-favorites-wrap">
-                    <h3 class="home-favorites-title">⭐ Favoritos</h3>
-                    <div class="home-favorites-list" id="home-favorites-list"></div>
-                </div>
-
-                <!-- 4. Abas por categoria -->
-                <div class="home-tabs-wrap">
-                    <div class="home-tabs" role="tablist">
-                        <button type="button" class="home-tab active" data-category="todos" role="tab">Todos</button>
-                        <button type="button" class="home-tab" data-category="gestao" role="tab">Gestão</button>
-                        <button type="button" class="home-tab" data-category="tecnico" role="tab">Técnico</button>
-                        <button type="button" class="home-tab" data-category="admin" role="tab">Administração</button>
+                <div class="dashboard-header">
+                    <div class="welcome-text">
+                        <h1>MÓDULOS TÉCNICOS</h1>
+                        <p>Gestão centralizada de ativos e vistorias técnicas.</p>
                     </div>
                 </div>
 
-                <!-- 5. Bento grid em vidro (módulos injetados por JS) -->
-                <div class="home-bento-wrap">
-                    <div class="home-bento-grid" id="home-bento-grid"></div>
-                    <p class="home-no-results" id="home-no-results" style="display:none;">Nenhum módulo encontrado. Tente outra busca ou abas.</p>
+                <!-- Grid de Módulos -->
+                <div class="dashboard-grid">
+                    <!-- Card Inventário -->
+                    <div class="mod-card inventario-master" onclick="if(typeof navigate === 'function') { navigate('page-inventario'); } else { console.error('navigate não encontrada'); alert('Erro: Função de navegação não encontrada. Recarregue a página.'); } return false;" tabindex="0" role="button" style="cursor: pointer;">
+                        <div class="mod-icon">📦</div>
+                        <div class="mod-content">
+                            <h3 class="txt-axis-gradient">INVENTÁRIO</h3>
+                        </div>
+                    </div>
+
+                    <!-- Card Rondas -->
+                    <div class="mod-card rondas-master" onclick="if(typeof navigate === 'function') { navigate('page-rondas'); } else { console.error('navigate não encontrada'); alert('Erro: Função de navegação não encontrada. Recarregue a página.'); } return false;" tabindex="0" role="button" style="cursor: pointer;">
+                        <div class="mod-icon">🛡️</div>
+                        <div class="mod-content">
+                            <h3 class="txt-axis-gradient">RONDAS</h3>
+                        </div>
+                    </div>
+
+                    <!-- Card Manutenção Preventiva (DESTAQUE) -->
+                    <div class="mod-card preventiva-master" 
+                         onclick="window.location.href='pages/manutenção_preventiva.html'" 
+                         tabindex="0" 
+                         role="button">
+                        <div class="mod-icon">🖨️</div>
+                        <div class="mod-content">
+                            <h3 class="txt-axis-gradient">MANUTENÇÃO PREVENTIVA</h3>
+                        </div>
+                    </div>
+
+                    <!-- Card Suporte -->
+                    <div class="mod-card suporte-master" onclick="if(typeof navigate === 'function') { navigate('page-suporte'); } else { console.error('navigate não encontrada'); alert('Erro: Função de navegação não encontrada. Recarregue a página.'); } return false;" tabindex="0" role="button" style="cursor: pointer;">
+                        <div class="mod-icon">💬</div>
+                        <div class="mod-content">
+                            <h3 class="txt-axis-gradient">SUPORTE TÉCNICO</h3>
+                        </div>
+                    </div>
+
+                    <!-- Card Notas Fiscais -->
+                    <div class="mod-card notas-master" onclick="window.location.href='pages/notas_fiscais.html'" tabindex="0" role="button">
+                        <div class="mod-icon">📄</div>
+                        <div class="mod-content">
+                            <h3 class="txt-axis-gradient">NOTAS FISCAIS</h3>
+                        </div>
+                    </div>
+
+                    <!-- Card Bloco de Notas -->
+                    <div class="mod-card bloco-master" onclick="window.location.href='pages/bloco_de_notas_apple.html'" tabindex="0" role="button">
+                        <div class="mod-icon">📝</div>
+                        <div class="mod-content">
+                            <h3 class="txt-axis-gradient">BLOCO DE NOTAS</h3>
+                        </div>
+                    </div>
+
+                    <!-- Card Registro de Chamados (design vidro, cores do site) -->
+                    <div class="mod-card chamados-master" onclick="window.location.href='pages/registro_chamados.html'" tabindex="0" role="button">
+                        <div class="mod-icon">📋</div>
+                        <div class="mod-content">
+                            <h3 class="txt-axis-gradient">REGISTRO DE CHAMADOS</h3>
+                        </div>
+                    </div>
+
+                    <!-- Card Peças -->
+                    <div class="mod-card pecas-master" onclick="window.location.href='pages/pecas.html'" tabindex="0" role="button">
+                        <div class="mod-icon">🔧</div>
+                        <div class="mod-content">
+                            <h3 class="txt-axis-gradient">PEÇAS</h3>
+                        </div>
+                    </div>
+
+                    <!-- Card Packing Machine -->
+                    <div class="mod-card packing-master" onclick="window.location.href='pages/packing_machine.html'" tabindex="0" role="button">
+                        <div class="mod-icon">🏭</div>
+                        <div class="mod-content">
+                            <h3 class="txt-axis-gradient">PACKING MACHINE</h3>
+                        </div>
+                    </div>
+
+                    <!-- Card Status de Bancada -->
+                    <div class="mod-card status-bancada-master" onclick="window.location.href='pages/status_bancada.html'" tabindex="0" role="button">
+                        <div class="mod-icon">📊</div>
+                        <div class="mod-content">
+                            <h3 class="txt-axis-gradient">STATUS DE BANCADA</h3>
+                        </div>
+                    </div>
+
+                    <!-- Card SAURON -->
+                    <div class="mod-card sauron-master" onclick="window.location.href='pages/sauron.html'" tabindex="0" role="button">
+                        <div class="mod-icon">👁</div>
+                        <div class="mod-content">
+                            <h3 class="txt-axis-gradient">SAURON</h3>
+                        </div>
+                    </div>
+
+                    <!-- Card Jovem Aprendiz -->
+                    <div class="mod-card jovem-aprendiz-master" onclick="window.location.href='pages/jovem-aprendiz.html'" tabindex="0" role="button">
+                        <div class="mod-icon">🎓</div>
+                        <div class="mod-content">
+                            <h3 class="txt-axis-gradient">JOVEM APRENDIZ</h3>
+                        </div>
+                    </div>
+
+                    <!-- Card Selbetti — Hub do técnico (pages/selbetti.html) -->
+                    <div class="mod-card selbetti-master" onclick="window.location.href='pages/selbetti.html'" tabindex="0" role="button" style="cursor: pointer;">
+                        <div class="mod-icon"><img src="assets/IMAGENS/Robo_Selbetti_Card.png" alt="SELBETTI" onerror="this.style.display='none';this.nextElementSibling.style.display='block';" /><span style="display:none;font-size:38px;">🏭</span></div>
+                        <div class="mod-content">
+                            <h3 class="txt-axis-gradient">SELBETTI</h3>
+                        </div>
+                    </div>
+
+                    <!-- Card Configurações -->
+                    <div class="mod-card config-master" onclick="if(typeof navigate === 'function') { navigate('page-configuracoes'); } else { console.error('navigate não encontrada'); alert('Erro: Função de navegação não encontrada. Recarregue a página.'); } return false;" tabindex="0" role="button" style="cursor: pointer;">
+                        <div class="mod-icon">⚙️</div>
+                        <div class="mod-content">
+                            <h3 class="txt-axis-gradient">CONFIGURAÇÕES</h3>
+                        </div>
+                    </div>
                 </div>
             </section>
 
@@ -2028,7 +2228,7 @@
                         <div class="mod-content">
                             <h3>Abrir Ticket</h3>
                             <p>Criar um novo chamado de suporte.</p>
-                            <span class="mod-link">Novo Ticket</span>
+                            <span class="mod-link mod-link-suporte-action">Novo ticket</span>
                         </div>
                     </div>
 
@@ -2037,7 +2237,7 @@
                         <div class="mod-content">
                             <h3>Meus Tickets</h3>
                             <p>Visualizar seus chamados de suporte.</p>
-                            <span class="mod-link">Ver Tickets →</span>
+                            <span class="mod-link mod-link-suporte-action">Ver tickets</span>
                         </div>
                     </div>
 
@@ -2046,7 +2246,7 @@
                         <div class="mod-content">
                             <h3>Documentação</h3>
                             <p>Acessar guias e tutoriais do sistema.</p>
-                            <span class="mod-link">Ver Docs</span>
+                            <span class="mod-link mod-link-suporte-action">Ver docs</span>
                         </div>
                     </div>
 
@@ -2055,7 +2255,7 @@
                         <div class="mod-content">
                             <h3>FAQ</h3>
                             <p>Perguntas frequentes e soluções.</p>
-                            <span class="mod-link">Ver FAQ</span>
+                            <span class="mod-link mod-link-suporte-action">Ver FAQ</span>
                         </div>
                     </div>
                 </div>
@@ -2121,14 +2321,16 @@
                 <div class="section-header doc-header">
                     <div class="doc-header-top">
                         <h2>📚 Documentação AXIS</h2>
-                        <button class="btn-back-doc" onclick="navigate('page-suporte')" title="Voltar ao Suporte">Voltar</button>
                     </div>
                     <p class="section-subtitle">Manuais, firmware de impressoras, passo a passo e guias técnicos</p>
                 </div>
 
-                <!-- Filtros por categoria -->
+                <!-- Filtros por categoria; VOLTAR alinhado por baixo do separador Todos -->
                 <div class="doc-tabs">
-                    <button class="doc-tab active" data-categoria="todos">Todos</button>
+                    <div class="doc-tab-stack">
+                        <button class="doc-tab active" data-categoria="todos">Todos</button>
+                        <button type="button" class="btn-back-doc btn-back-doc--tabs" onclick="navigate('page-suporte')" title="Voltar ao Suporte Técnico">VOLTAR</button>
+                    </div>
                     <button class="doc-tab" data-categoria="manuais">📖 Manuais</button>
                     <button class="doc-tab" data-categoria="firmware">⚙️ Firmware</button>
                     <button class="doc-tab" data-categoria="passo-a-passo">📋 Passo a passo</button>
@@ -2140,6 +2342,7 @@
                 <!-- Botão adicionar + busca -->
                 <div class="doc-toolbar">
                     <input type="text" id="doc-busca" class="doc-busca" placeholder="Buscar na documentação..." />
+                    <button type="button" class="doc-btn doc-btn-secondary btn-zpl-editor" onclick="abrirModalZplEditor()" title="Escrever ou colar ZPL e ver a imagem (não substitui o ZebraDesigner no PC)">🏷️ Editor ZPL</button>
                     <button class="btn-primary btn-add-doc" onclick="abrirModalDocumento()">+ Adicionar documento</button>
                 </div>
 
@@ -2173,15 +2376,22 @@
                                 <input type="text" id="doc-titulo" required placeholder="Ex: Manual ZT411" class="doc-input" />
                             </div>
                             <div class="doc-form-group">
-                                <label for="doc-categoria">Categoria <span class="doc-label-required">*</span></label>
-                                <select id="doc-categoria" required class="doc-input doc-select">
-                                    <option value="manuais">📖 Manuais</option>
-                                    <option value="firmware">⚙️ Firmware</option>
-                                    <option value="passo-a-passo">📋 Passo a passo</option>
-                                    <option value="orcamentos">💰 Orçamentos</option>
-                                    <option value="documentos">📄 Documentos</option>
-                                    <option value="etiquetas">🏷️ Etiquetas</option>
-                                </select>
+                                <label for="doc-categoria-trigger">Categoria <span class="doc-label-required">*</span></label>
+                                <div class="doc-select-glass" data-select-id="doc-categoria">
+                                    <select id="doc-categoria" required class="doc-input doc-select doc-select-native" aria-hidden="true" tabindex="-1">
+                                        <option value="manuais">📖 Manuais</option>
+                                        <option value="firmware">⚙️ Firmware</option>
+                                        <option value="passo-a-passo">📋 Passo a passo</option>
+                                        <option value="orcamentos">💰 Orçamentos</option>
+                                        <option value="documentos">📄 Documentos</option>
+                                        <option value="etiquetas">🏷️ Etiquetas</option>
+                                    </select>
+                                    <button type="button" class="doc-select-glass-trigger" id="doc-categoria-trigger" aria-expanded="false" aria-haspopup="listbox">
+                                        <span class="doc-select-glass-value">📖 Manuais</span>
+                                        <span class="doc-select-glass-chevron" aria-hidden="true">▼</span>
+                                    </button>
+                                    <div class="doc-select-glass-dropdown" role="listbox" id="doc-categoria-dropdown"></div>
+                                </div>
                             </div>
                         </div>
                         <div class="doc-form-group">
@@ -2189,19 +2399,42 @@
                             <textarea id="doc-descricao" rows="2" placeholder="Breve descrição do documento (opcional)" class="doc-input doc-textarea"></textarea>
                         </div>
                         <div class="doc-form-group">
-                            <label for="doc-tipo">Tipo de conteúdo</label>
-                            <select id="doc-tipo" class="doc-input doc-select doc-select-tipo">
-                                <option value="arquivo">📁 Enviar arquivo (PDF, ZIP, etc.)</option>
-                                <option value="texto">📝 Conteúdo em texto (passo a passo)</option>
-                            </select>
+                            <label for="doc-tipo-trigger">Tipo de conteúdo</label>
+                            <div class="doc-select-glass" data-select-id="doc-tipo">
+                                <select id="doc-tipo" class="doc-input doc-select doc-select-tipo doc-select-native" aria-hidden="true" tabindex="-1">
+                                    <option value="arquivo">📁 Enviar arquivo (PDF, Zebra, ZIP…)</option>
+                                    <option value="texto">📝 Conteúdo em texto (passo a passo)</option>
+                                </select>
+                                <button type="button" class="doc-select-glass-trigger" id="doc-tipo-trigger" aria-expanded="false" aria-haspopup="listbox">
+                                    <span class="doc-select-glass-value">📁 Enviar arquivo (PDF, Zebra, ZIP…)</span>
+                                    <span class="doc-select-glass-chevron" aria-hidden="true">▼</span>
+                                </button>
+                                <div class="doc-select-glass-dropdown" role="listbox" id="doc-tipo-dropdown"></div>
+                            </div>
                         </div>
                         <div class="doc-form-group doc-arquivo-group">
                             <label class="doc-file-label">Arquivo <span class="doc-label-required">*</span></label>
-                            <div class="doc-file-zone" id="doc-file-zone" onclick="document.getElementById('doc-arquivo').click()">
-                                <input type="file" id="doc-arquivo" accept="*/*" class="doc-file-input" />
-                                <span class="doc-file-icon">📁</span>
-                                <span class="doc-file-text" id="doc-file-text">Clique ou arraste o arquivo aqui</span>
-                                <span class="doc-file-hint">Todos os tipos de arquivo aceites — máx. recomendado 100 MB</span>
+                            <div class="doc-file-zone" id="doc-file-zone" onclick="if(!event.target.closest('.doc-file-preview-clear')) document.getElementById('doc-arquivo').click()">
+                                <input type="file" id="doc-arquivo" accept=".pdf,.PDF,.txt,.TXT,.zeb,.ZEB,.zpl,.ZPL,.zip,.ZIP,.rar,.RAR,.7z,.doc,.docx,.xls,.xlsx,.nlbl,.NLBL,.lbl,.LBL,application/pdf,text/plain,application/octet-stream" class="doc-file-input" />
+                                <div class="doc-file-zone-empty" id="doc-file-zone-empty">
+                                    <span class="doc-file-icon">📁</span>
+                                    <span class="doc-file-text" id="doc-file-text">Clique ou arraste o arquivo aqui</span>
+                                    <span class="doc-file-hint">PDF, TXT, Zebra (.zeb, ZPL), Designer (.lbl), ZIP e outros — máx. recomendado 100 MB</span>
+                                </div>
+                                <div class="doc-file-preview-card doc-file-preview-hidden" id="doc-file-preview-card" aria-live="polite">
+                                    <div class="doc-file-preview-chrome">
+                                        <span class="doc-file-preview-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+                                        <span class="doc-file-preview-title" id="doc-file-preview-name">—</span>
+                                        <button type="button" class="doc-file-preview-clear" id="doc-file-preview-clear" title="Remover arquivo" aria-label="Remover arquivo">×</button>
+                                    </div>
+                                    <div class="doc-file-preview-body">
+                                        <span class="doc-file-preview-icon" id="doc-file-preview-icon" aria-hidden="true">📄</span>
+                                        <div class="doc-file-preview-meta">
+                                            <span class="doc-file-preview-ext" id="doc-file-preview-ext">—</span>
+                                            <span class="doc-file-preview-size" id="doc-file-preview-size"></span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div class="doc-form-group doc-texto-group" style="display: none;">
@@ -2226,12 +2459,105 @@
                     <div class="doc-modal-body">
                         <p id="doc-view-descricao" class="doc-view-desc"></p>
                         <div id="doc-view-arquivo-area" class="doc-view-iframe-wrap" style="display: none;">
-                            <iframe id="doc-view-iframe" sandbox="allow-same-origin allow-scripts" title="Preview do documento"></iframe>
+                            <div id="doc-view-preview-fallback" class="doc-view-preview-fallback doc-view-preview-hidden" role="status"></div>
+                            <div id="doc-view-label-card" class="doc-view-label-card doc-view-preview-hidden" role="region" aria-label="Etiqueta ZebraDesigner">
+                                <div class="doc-view-label-card-inner">
+                                    <span class="doc-view-label-card-icon" aria-hidden="true">🏷️</span>
+                                    <h4 class="doc-view-label-card-title">Pré-visualização da etiqueta</h4>
+                                    <p id="doc-view-label-card-msg" class="doc-view-label-card-msg"></p>
+                                    <p id="doc-view-label-card-hint" class="doc-view-label-card-hint"></p>
+                                </div>
+                            </div>
+                            <img id="doc-view-preview-image" class="doc-view-preview-image doc-view-preview-hidden" alt="Pré-visualização do documento" />
+                            <p id="doc-view-zebra-note" class="doc-view-zebra-note doc-view-preview-hidden" role="note"></p>
+                            <pre id="doc-view-preview-text" class="doc-view-preview-text doc-view-preview-hidden" aria-label="Conteúdo do ficheiro em texto"></pre>
+                            <iframe id="doc-view-iframe" class="doc-view-preview-iframe" title="Preview do documento (PDF ou browser)"></iframe>
                             <a id="doc-view-download" href="#" download class="btn-primary doc-download-btn">⬇ Baixar arquivo</a>
                         </div>
                         <div id="doc-view-conteudo" class="doc-view-conteudo" style="display: none;"></div>
+                        <div id="doc-view-ia-wrap" class="doc-view-ia-wrap doc-view-preview-hidden">
+                            <button type="button" id="doc-view-ia-btn" class="doc-view-ia-btn">✨ Resumo com IA (AXIS)</button>
+                            <div id="doc-view-ia-status" class="doc-view-ia-status doc-view-preview-hidden" aria-live="polite"></div>
+                            <div id="doc-view-ia-result" class="doc-view-ia-result doc-view-preview-hidden"></div>
+                        </div>
                     </div>
                 </div>
+            </div>
+
+            <!-- Editor ZPL simples (pré-visualização online; ZebraDesigner continua no PC) -->
+            <div id="modal-zpl-editor" class="doc-modal" role="dialog" style="display: none;" aria-labelledby="zpl-editor-title">
+                <div class="doc-modal-content doc-modal-view doc-modal-zpl-editor">
+                    <div class="doc-modal-header">
+                        <h3 id="zpl-editor-title">Editor ZPL (pré-visualização)</h3>
+                        <button type="button" class="doc-modal-close" onclick="fecharModalZplEditor()" aria-label="Fechar">×</button>
+                    </div>
+                    <div class="doc-modal-body">
+                        <p class="doc-zpl-editor-note">O <strong>ZebraDesigner</strong> é um programa para Windows da Zebra — <strong>não existe versão web</strong> para embutir no AXIS. Aqui pode escrever ou colar comandos <strong>ZPL</strong> e ver uma imagem aproximada da etiqueta (serviço Labelary na Internet).</p>
+                        <label for="zpl-editor-textarea" class="doc-zpl-editor-label">Comandos ZPL (^XA … ^XZ)</label>
+                        <textarea id="zpl-editor-textarea" class="doc-zpl-editor-textarea" rows="14" spellcheck="false" aria-label="ZPL">^XA
+^FO50,50^ADN,36,20^FDAxis Integracao^FS
+^XZ</textarea>
+                        <div class="doc-zpl-editor-actions">
+                            <button type="button" class="doc-btn doc-btn-primary" onclick="docZplEditorPreview()">Pré-visualizar</button>
+                        </div>
+                        <p id="zpl-editor-status" class="doc-zpl-editor-status doc-view-preview-hidden" role="status"></p>
+                        <img id="zpl-editor-preview-img" class="doc-zpl-editor-preview-img doc-view-preview-hidden" alt="Pré-visualização ZPL" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal cadastro facial: visual inspirado no assistente Face ID (ecrã cheio escuro) -->
+            <div id="modal-face-enroll" class="modal-face-enroll modal-face-enroll--faceid" role="dialog" aria-modal="true" aria-labelledby="face-enroll-fid-hero-title" style="display: none;">
+                <div class="face-enroll-faceid-bg" aria-hidden="true"></div>
+                <div class="face-enroll-faceid-frame">
+                    <header class="face-enroll-fid-header">
+                        <button type="button" class="face-enroll-fid-cancel" id="face-enroll-modal-x" aria-label="Cancelar cadastro facial">Cancelar</button>
+                    </header>
+
+                    <div class="face-enroll-fid-circle-outer">
+                        <div class="face-enroll-circle-stage face-enroll-fid-stage">
+                            <div class="face-enroll-video-circle">
+                                <video id="face-enroll-video" class="face-enroll-video-inner face-enroll-video-inner--circle" playsinline webkit-playsinline muted width="720" height="720" aria-label="Pré-visualização da câmara para cadastro facial" style="display:none"></video>
+                            </div>
+                            <div id="face-enroll-fid-intro-graphic" class="face-enroll-fid-intro-graphic">
+                                <svg class="face-enroll-fid-face-svg" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+                                    <circle cx="50" cy="52" r="28" fill="none" stroke="rgba(255,255,255,0.95)" stroke-width="2.2"/>
+                                    <circle cx="40" cy="46" r="3.2" fill="rgba(255,255,255,0.95)"/>
+                                    <circle cx="60" cy="46" r="3.2" fill="rgba(255,255,255,0.95)"/>
+                                    <path d="M 36 58 Q 50 72 64 58" fill="none" stroke="rgba(255,255,255,0.95)" stroke-width="2.2" stroke-linecap="round"/>
+                                </svg>
+                            </div>
+                            <div id="face-enroll-overlay" class="face-enroll-overlay face-enroll-overlay-apple face-enroll-fid-overlay" data-motion="front">
+                                <svg id="face-enroll-radial-svg" class="face-enroll-radial-svg face-enroll-radial-svg--faceid" viewBox="-1.08 -1.08 2.16 2.16" role="img" aria-label="Progresso do enquadramento"></svg>
+                                <div id="face-enroll-ring" class="face-enroll-ring face-enroll-ring--logic-only"></div>
+                                <div id="face-enroll-motion" class="face-enroll-motion-wrap face-enroll-motion-legacy">
+                                    <svg class="face-enroll-motion-svg face-enroll-motion-layer face-enroll-motion-front" viewBox="0 0 100 100" aria-hidden="true">
+                                        <circle cx="50" cy="50" r="6" fill="rgba(255,255,255,0.92)" class="face-enroll-pulse-dot"/>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="face-enroll-phase-intro" class="face-enroll-fid-phase face-enroll-fid-phase--intro">
+                        <h2 id="face-enroll-fid-hero-title" class="face-enroll-fid-hero-title">Como configurar o reconhecimento facial</h2>
+                        <p class="face-enroll-fid-hero-lead">Posicione o rosto na moldura da câmara. Mova a cabeça em círculo para mostrar todos os ângulos do rosto.</p>
+                        <p class="face-enroll-fid-privacy">Os dados ficam só neste aparelho como mapa numérico, não como fotografia.</p>
+                        <button type="button" class="face-enroll-fid-btn-primary" id="face-enroll-fid-start">Começar</button>
+                    </div>
+
+                    <div id="face-enroll-phase-scan" class="face-enroll-fid-phase face-enroll-fid-phase--scan" hidden>
+                        <div id="face-enroll-wizard-ui" class="face-enroll-wizard-ui face-enroll-wizard-faceid">
+                            <p id="face-enroll-step-title" class="face-enroll-step-title face-enroll-step-title-anim">—</p>
+                            <p id="face-enroll-step-hint" class="face-enroll-step-hint">—</p>
+                            <div id="face-enroll-dots" class="face-enroll-dots face-enroll-dots-ios face-enroll-dots--faceid" role="progressbar" aria-valuemin="1" aria-valuemax="4" aria-valuenow="1" aria-label="Etapa do cadastro facial"></div>
+                            <p id="face-enroll-progress-label" class="face-enroll-progress-label face-enroll-progress-faceid"></p>
+                        </div>
+                        <button type="button" class="face-enroll-fid-btn-ghost" id="face-enroll-close">Fechar câmera</button>
+                        <button type="button" class="face-enroll-fid-a11y" id="face-enroll-fid-a11y">Opções de Acessibilidade</button>
+                    </div>
+                </div>
+                <div class="face-enroll-fid-home-indicator" aria-hidden="true"></div>
             </div>
 
             <!-- ============================================
@@ -2283,6 +2609,30 @@
                             <h3>Cadastrar Novo Usuário</h3>
                             <p>Crie novas contas de acesso ao sistema.</p>
                             <button type="button" class="admin-card-btn" onclick="event.stopPropagation(); abrirCadastrarUsuario();">Cadastrar Usuário</button>
+                        </div>
+                    </div>
+
+                    <!-- Card: Conector WhatsApp (QR só aqui — administrador) -->
+                    <div class="admin-dashboard-card admin-card-whatsapp" onclick="if(typeof abrirWhatsappBotAdmin === 'function') abrirWhatsappBotAdmin();">
+                        <div class="admin-card-icon-wrapper">
+                            <div class="admin-card-icon" aria-hidden="true">📲</div>
+                        </div>
+                        <div class="admin-card-content">
+                            <h3>Conector WhatsApp (Bot)</h3>
+                            <p>Abre a página de pareamento (QR) e estado do bot. Use apenas em ambiente seguro.</p>
+                            <button type="button" class="admin-card-btn" onclick="event.stopPropagation(); if(typeof abrirWhatsappBotAdmin === 'function') abrirWhatsappBotAdmin();">Abrir conector</button>
+                        </div>
+                    </div>
+
+                    <!-- Card: Links portais SELBETTI (só administrador — evita troca maliciosa por colaboradores) -->
+                    <div class="admin-dashboard-card admin-card-selbetti-portais" onclick="if(typeof abrirSelbettiLinksPortaisAdmin === 'function') abrirSelbettiLinksPortaisAdmin();">
+                        <div class="admin-card-icon-wrapper">
+                            <div class="admin-card-icon" aria-hidden="true">🔗</div>
+                        </div>
+                        <div class="admin-card-content">
+                            <h3>Links SELBETTI (portais)</h3>
+                            <p>Altere aqui as URLs dos portais do hub (SmartShare, Feedz, Teams, etc.). Apenas administradores.</p>
+                            <button type="button" class="admin-card-btn" onclick="event.stopPropagation(); if(typeof abrirSelbettiLinksPortaisAdmin === 'function') abrirSelbettiLinksPortaisAdmin();">Abrir editor de links</button>
                         </div>
                     </div>
 
@@ -2372,6 +2722,7 @@
                                         <tr>
                                             <th>Nome</th>
                                             <th>Login</th>
+                                            <th>Matrícula</th>
                                             <th>Perfil</th>
                                             <th>Data Cadastro</th>
                                             <th>Último Acesso</th>
@@ -2401,14 +2752,14 @@
                                         </div>
                                         <div class="input-group">
                                             <label for="novo-usuario-login">Login (Usuário) *</label>
-                                            <input type="text" id="novo-usuario-login" required placeholder="Ex: JOAO.SILVA" style="text-transform: uppercase;">
+                                            <input type="text" id="novo-usuario-login" required placeholder="Ex: joao.silva (gerado a partir do nome)" autocomplete="username">
                                         </div>
                                     </div>
                                     
                                     <div class="form-row">
                                         <div class="input-group">
                                             <label for="novo-usuario-senha">Senha *</label>
-                                            <input type="password" id="novo-usuario-senha" required placeholder="Mínimo 6 caracteres" minlength="6">
+                                            <input type="text" id="novo-usuario-senha" required placeholder="Mínimo 6 caracteres" minlength="6" autocomplete="off" spellcheck="false" data-lpignore="true" data-form-type="other">
                                         </div>
                                         <div class="input-group">
                                             <label for="novo-usuario-perfil">Perfil *</label>
@@ -2419,6 +2770,7 @@
                                                     <option value="tecnico">Técnico</option>
                                                     <option value="operador">Operador</option>
                                                     <option value="visualizador">Visualizador</option>
+                                                    <option value="aprendiz">Aprendiz</option>
                                                 </select>
                                                 <button type="button" class="perfil-select-trigger" id="perfil-select-trigger-cadastro" aria-expanded="false" aria-haspopup="listbox">
                                                     <span class="perfil-select-value" id="perfil-select-value-cadastro">Selecione um perfil</span>
@@ -2432,6 +2784,7 @@
                                                     <div class="perfil-select-option" data-value="tecnico" role="option"><span class="perfil-option-icon perfil-tecnico">🔧</span>Técnico</div>
                                                     <div class="perfil-select-option" data-value="operador" role="option"><span class="perfil-option-icon perfil-operador">👤</span>Operador</div>
                                                     <div class="perfil-select-option" data-value="visualizador" role="option"><span class="perfil-option-icon perfil-visualizador">👁️</span>Visualizador</div>
+                                                    <div class="perfil-select-option" data-value="aprendiz" role="option"><span class="perfil-option-icon perfil-aprendiz">📚</span>Aprendiz</div>
                                                 </div>
                                             </div>
                                         </div>
@@ -2441,8 +2794,8 @@
                                         <button type="button" class="btn-secondary" onclick="limparFormularioUsuario()">Limpar</button>
                                         <button type="submit" class="btn-primary">Cadastrar Usuário</button>
                                     </div>
+                                    <div id="cadastro-senha-expiracao" class="cadastro-senha-expiracao" style="display: none;"></div>
                                 </form>
-                                <div id="cadastro-senha-expiracao" class="cadastro-senha-expiracao" style="display: none;"></div>
                         </div>
                     </div>
                 </div>
@@ -2491,6 +2844,7 @@
                                                 <div class="perfil-select-option" data-value="tecnico" role="option"><span class="perfil-option-icon perfil-tecnico">🔧</span>Técnico</div>
                                                 <div class="perfil-select-option" data-value="operador" role="option"><span class="perfil-option-icon perfil-operador">👤</span>Operador</div>
                                                 <div class="perfil-select-option" data-value="visualizador" role="option"><span class="perfil-option-icon perfil-visualizador">👁️</span>Visualizador</div>
+                                                <div class="perfil-select-option" data-value="aprendiz" role="option"><span class="perfil-option-icon perfil-aprendiz">📚</span>Aprendiz</div>
                                             </div>
                                         </div>
                                     </div>
@@ -2514,6 +2868,12 @@
                                                 <div class="perfil-select-option" data-value="Sauron" role="option"><span class="perfil-option-icon">🔮</span>Sauron</div>
                                             </div>
                                         </div>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="input-group">
+                                        <label for="editar-usuario-matricula">Matrícula AXIS</label>
+                                        <input type="text" id="editar-usuario-matricula" readonly class="input-readonly" placeholder="Atribuída automaticamente" title="Gerada automaticamente ao criar o usuário; ajuda administradores a localizar colaboradores.">
                                     </div>
                                 </div>
                                 <div class="editar-senha-section">
@@ -2554,78 +2914,111 @@
                     </div>
                 </div>
 
+                <!-- Modal: links dos portais SELBETTI (mesmo localStorage que o hub SELBETTI) -->
+                <div id="modal-selbetti-portais-links" class="admin-modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="modal-selbetti-portais-title">
+                    <div class="admin-modal-content admin-modal-content-wide">
+                        <div class="admin-modal-header">
+                            <h3 id="modal-selbetti-portais-title">🔗 Links dos portais SELBETTI</h3>
+                            <button type="button" class="admin-modal-close" id="modal-selbetti-portais-close" aria-label="Fechar">×</button>
+                        </div>
+                        <div class="admin-modal-body">
+                            <p class="axis-portal-links-lead">Cole a URL completa (<code>https://…</code>) de cada ferramenta. Os links abrem em nova aba no hub SELBETTI. As alterações ficam guardadas neste navegador.</p>
+                            <div id="axis-portal-links-form" class="axis-portal-links-form"></div>
+                            <div class="form-actions axis-portal-links-actions">
+                                <button type="button" class="btn-secondary" id="axis-portal-links-reset">Restaurar links Selbetti / padrão</button>
+                                <button type="button" class="btn-primary" id="axis-portal-links-save">Guardar links</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Modal Termos de Uso (Configurações > Sobre) -->
                 <div id="modal-termos-uso" class="admin-modal" style="display: none;">
-                    <div class="admin-modal-content" style="max-width: 560px;">
+                    <div class="admin-modal-content">
                         <div class="admin-modal-header">
                             <h3>📄 Termos de Uso</h3>
                             <button type="button" class="admin-modal-close" onclick="document.getElementById('modal-termos-uso').style.display='none'">×</button>
                         </div>
                         <div class="admin-modal-body" style="max-height: 70vh; overflow-y: auto;">
-                            <div class="doc-legal">
-                                <h4>TERMO DE USO – SISTEMA AXIS (INTEGRAÇÃO E OPERAÇÃO)</h4>
-                                <p><strong>Instrumento com caráter vinculante:</strong> ao acessar e utilizar o AXIS, o Usuário declara ciência e concordância integral com este Termo. O descumprimento poderá resultar em <strong>bloqueio de acesso</strong>, medidas disciplinares internas e demais providências cabíveis.</p>
-                                <p><strong>Nota técnica:</strong> este texto é um <strong>modelo robusto</strong> para publicação. Para adequação final ao seu contexto (CNPJ, Controlador/Operador, Encarregado/DPO, políticas corporativas e particularidades setoriais), recomenda-se validação jurídica.</p>
+                            <div class="termos-paper">
+                                <div class="termos-capa">
+                                    <h4>TERMO DE USO DO SISTEMA AXIS</h4>
+                                    <p class="termos-meta">Versão 1.0 | Vigência imediata | Documento institucional</p>
+                                </div>
 
-                                <h5>1. Identificação</h5>
-                                <p><strong>Sistema:</strong> AXIS – Sistema de Gestão e Integração Operacional (inventário, rotinas técnicas, documentação e assistentes).</p>
-                                <p><strong>Responsável pela instância:</strong> a organização que opera esta instalação do AXIS (“Organização”).</p>
-                                <p><strong>Usuário:</strong> toda pessoa que acessa o AXIS mediante credenciais autorizadas (colaboradores, prestadores ou terceiros autorizados).</p>
+                                <div class="termos-secao">
+                                    <h5>1. OBJETO E FINALIDADE</h5>
+                                    <p>O presente Termo regula as condições de acesso e uso do sistema AXIS, plataforma interna de gestão operacional, inventário, chamados técnicos, documentação, integrações e rotinas administrativas da Organização. Ao utilizar o sistema, o Usuário declara ciência e concordância integral com este instrumento.</p>
+                                </div>
 
-                                <h5>2. Definições</h5>
-                                <p><strong>Dados pessoais</strong>, <strong>tratamento</strong>, <strong>controlador</strong> e <strong>operador</strong> têm o significado atribuído pela Lei nº 13.709/2018 (LGPD).</p>
-                                <p><strong>Conteúdo</strong>: informações inseridas no AXIS, incluindo dados operacionais, registros técnicos, anexos e mensagens de integrações.</p>
+                                <div class="termos-secao">
+                                    <h5>2. DEFINIÇÕES</h5>
+                                    <p>Para fins deste Termo: (i) <strong>Organização</strong> é a pessoa jurídica responsável pela operação desta instância do AXIS; (ii) <strong>Usuário</strong> é toda pessoa autorizada a acessar o sistema por credenciais válidas; (iii) <strong>Dados</strong> são informações inseridas, processadas ou armazenadas no ambiente do AXIS.</p>
+                                </div>
 
-                                <h5>2. Aceite e finalidade</h5>
-                                <p>Ao acessar o AXIS, o Usuário declara ter lido e aceito estes Termos. O AXIS destina-se ao apoio de processos técnicos e administrativos, incluindo registro e consulta de informações operacionais, rotinas de manutenção, status de bancadas, documentação e integrações (ex.: WhatsApp e assistentes de IA), conforme habilitado pela Organização.</p>
+                                <div class="termos-secao">
+                                    <h5>3. CONDIÇÕES DE ACESSO</h5>
+                                    <p>O acesso depende de autorização prévia e de credenciais individuais. As credenciais são pessoais, intransferíveis e de responsabilidade exclusiva do Usuário, que deverá mantê-las sob sigilo, comunicando imediatamente qualquer suspeita de uso indevido.</p>
+                                </div>
 
-                                <h5>3. Regras de uso e conduta</h5>
-                                <p>O Usuário compromete-se a:</p>
-                                <ul>
-                                    <li>utilizar o sistema apenas para fins autorizados pela Organização;</li>
-                                    <li>não inserir, transmitir ou armazenar conteúdo ilícito, ofensivo, discriminatório ou que viole direitos de terceiros;</li>
-                                    <li>não tentar burlar autenticação, controles de acesso, auditoria ou quaisquer mecanismos de segurança;</li>
-                                    <li>manter sigilo das credenciais e não as compartilhar;</li>
-                                    <li>comunicar imediatamente incidentes suspeitos (ex.: acesso indevido, vazamento, perda de dispositivo).</li>
-                                </ul>
+                                <div class="termos-secao">
+                                    <h5>4. DEVERES DO USUÁRIO</h5>
+                                    <ul>
+                                        <li>utilizar o sistema exclusivamente para atividades institucionais autorizadas;</li>
+                                        <li>respeitar as políticas internas de segurança da informação e privacidade;</li>
+                                        <li>não inserir conteúdo ilícito, fraudulento, ofensivo ou em desacordo com a legislação vigente;</li>
+                                        <li>não tentar burlar mecanismos de autenticação, trilhas de auditoria ou controles de permissão.</li>
+                                    </ul>
+                                </div>
 
-                                <h5>4. Contas, credenciais e segurança</h5>
-                                <p>As credenciais são pessoais e intransferíveis. A Organização pode impor requisitos adicionais (ex.: verificação em duas etapas – TOTP/Google Authenticator). O Usuário é responsável por toda atividade realizada com sua conta, salvo prova de comprometimento por falha sistêmica.</p>
-                                <p>É vedado ao Usuário: (i) compartilhar senhas; (ii) utilizar credenciais de terceiros; (iii) tentar obter acesso a recursos não autorizados. O acesso pode ser suspenso preventivamente em caso de risco à segurança.</p>
+                                <div class="termos-secao">
+                                    <h5>5. SEGURANÇA E AUTENTICAÇÃO</h5>
+                                    <p>A Organização poderá exigir mecanismos adicionais de segurança, incluindo autenticação em dois fatores (Google Authenticator), bloqueio preventivo de sessão e revisão periódica de permissões. O descumprimento de requisitos de segurança pode resultar em suspensão imediata de acesso.</p>
+                                </div>
 
-                                <h5>5. Registros, auditoria e integridade</h5>
-                                <p>Para fins de segurança, conformidade e melhoria contínua, o AXIS pode registrar eventos (ex.: logins, alterações e ações relevantes). O Usuário reconhece que tais registros podem ser utilizados para auditoria interna, investigação de incidentes e cumprimento de obrigações legais.</p>
+                                <div class="termos-secao">
+                                    <h5>6. REGISTROS E AUDITORIA</h5>
+                                    <p>O AXIS poderá registrar eventos de uso, tais como autenticação, alterações de dados e ações críticas, para fins de rastreabilidade, auditoria, prevenção a incidentes e cumprimento de obrigações legais e regulatórias.</p>
+                                </div>
 
-                                <h5>6. Integrações (WhatsApp e assistentes de IA)</h5>
-                                <p>Quando habilitadas, integrações podem processar mensagens e comandos enviados pelo Usuário, com o objetivo de executar fluxos operacionais (ex.: registro de troca, status e chamados). O Usuário deve evitar o envio de dados excessivos e de conteúdo sensível sem necessidade operacional.</p>
-                                <p>O Usuário reconhece que provedores de integração (ex.: Meta/WhatsApp) podem aplicar seus próprios termos. A Organização não se responsabiliza por indisponibilidades, bloqueios, limitações ou alterações unilaterais de serviços de terceiros.</p>
+                                <div class="termos-secao">
+                                    <h5>7. CONFIDENCIALIDADE E PROTEÇÃO DE DADOS</h5>
+                                    <p>As informações acessadas no AXIS podem possuir natureza confidencial. O Usuário compromete-se a não divulgar, copiar, extrair ou compartilhar dados sem autorização formal da Organização. O tratamento de dados pessoais observará, quando aplicável, a Lei nº 13.709/2018 (LGPD).</p>
+                                </div>
 
-                                <h5>7. Propriedade intelectual</h5>
-                                <p>O AXIS, sua identidade visual, fluxos e conteúdos autorais podem estar protegidos por direitos de propriedade intelectual. O Usuário não pode copiar, redistribuir, vender ou explorar comercialmente o sistema sem autorização da Organização e/ou titulares.</p>
+                                <div class="termos-secao">
+                                    <h5>8. INTEGRAÇÕES E SERVIÇOS DE TERCEIROS</h5>
+                                    <p>O uso de integrações (ex.: WhatsApp/Meta e serviços correlatos) poderá sujeitar o Usuário a políticas e termos próprios de terceiros. A Organização não se responsabiliza por indisponibilidades, bloqueios, limitações técnicas ou alterações unilaterais desses provedores externos.</p>
+                                </div>
 
-                                <h5>8. Disponibilidade e limitações</h5>
-                                <p>O AXIS é fornecido “como está”, podendo sofrer interrupções para manutenção, atualização ou por fatores externos (rede, energia, terceiros). A Organização envidará esforços razoáveis para manter o serviço disponível, sem garantia absoluta de continuidade.</p>
+                                <div class="termos-secao">
+                                    <h5>9. PROPRIEDADE INTELECTUAL</h5>
+                                    <p>O sistema AXIS, sua arquitetura, identidade visual, fluxos, documentação e demais elementos estão protegidos por direitos de propriedade intelectual. É vedada a reprodução, distribuição ou exploração não autorizada, total ou parcial.</p>
+                                </div>
 
-                                <h5>9. Responsabilidades</h5>
-                                <p>O Usuário responde por uso indevido, violação de políticas internas e por danos decorrentes de condutas ilícitas. A Organização poderá aplicar medidas disciplinares e bloqueio de acesso conforme suas políticas.</p>
-                                <p>Na extensão permitida pela lei, a Organização não será responsável por perdas indiretas, lucros cessantes ou danos decorrentes de mau uso, credenciais comprometidas por culpa do Usuário, ou eventos externos fora do controle razoável (força maior, falhas de terceiros, interrupções de rede).</p>
+                                <div class="termos-secao">
+                                    <h5>10. LIMITAÇÃO DE RESPONSABILIDADE</h5>
+                                    <p>O sistema é disponibilizado para uso institucional, podendo sofrer interrupções programadas ou não, por manutenção, atualização, falhas de infraestrutura ou eventos externos. Na extensão permitida pela legislação, a Organização não responde por danos indiretos, lucros cessantes ou perdas decorrentes de uso indevido por parte do Usuário.</p>
+                                </div>
 
-                                <h5>10. Confidencialidade</h5>
-                                <p>Informações acessadas no AXIS podem constituir dados confidenciais e estratégicos da Organização. O Usuário compromete-se a não divulgar, copiar ou transportar dados para fora do ambiente autorizado sem permissão formal.</p>
+                                <div class="termos-secao">
+                                    <h5>11. PENALIDADES</h5>
+                                    <p>O descumprimento deste Termo ou das políticas internas poderá ensejar medidas administrativas, incluindo advertência, bloqueio de acesso, abertura de procedimento disciplinar e comunicação às autoridades competentes, quando cabível.</p>
+                                </div>
 
-                                <h5>10. Base normativa e referências (Brasil)</h5>
-                                <p>Sem prejuízo de outras normas aplicáveis, este Termo observa, quando pertinente:</p>
-                                <ul>
-                                    <li>Lei nº 13.709/2018 (Lei Geral de Proteção de Dados – LGPD);</li>
-                                    <li>Lei nº 12.965/2014 (Marco Civil da Internet) e Decreto nº 8.771/2016;</li>
-                                    <li>Normas internas de segurança da informação e políticas corporativas da Organização.</li>
-                                </ul>
+                                <div class="termos-secao">
+                                    <h5>12. ALTERAÇÕES DO TERMO</h5>
+                                    <p>Este Termo pode ser alterado a qualquer tempo para adequações legais, técnicas ou operacionais. A versão vigente permanecerá disponível no próprio sistema, e o uso continuado após atualização será interpretado como aceite do novo conteúdo.</p>
+                                </div>
 
-                                <h5>11. Alterações destes Termos</h5>
-                                <p>Estes Termos podem ser atualizados. A Organização poderá notificar sobre mudanças relevantes dentro do próprio sistema. O uso continuado após alterações representa aceite do texto vigente.</p>
+                                <div class="termos-secao">
+                                    <h5>13. LEGISLAÇÃO E FORO</h5>
+                                    <p>Aplica-se a legislação brasileira, especialmente o Marco Civil da Internet e a LGPD, quando pertinente. Fica eleito o foro do domicílio da Organização para dirimir controvérsias, salvo disposição legal diversa.</p>
+                                </div>
 
-                                <h5>12. Foro e legislação aplicável</h5>
-                                <p>Aplica-se a legislação brasileira. Fica eleito o foro do domicílio da Organização, com renúncia a qualquer outro, salvo disposição legal em contrário.</p>
+                                <div class="termos-assinatura">
+                                    <p><strong>Declaração de ciência:</strong> ao acessar e utilizar o AXIS, o Usuário confirma que leu, compreendeu e aceita integralmente os presentes Termos de Uso.</p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -2633,65 +3026,101 @@
 
                 <!-- Modal Política de Privacidade (Configurações > Sobre) -->
                 <div id="modal-politica-privacidade" class="admin-modal" style="display: none;">
-                    <div class="admin-modal-content" style="max-width: 560px;">
+                    <div class="admin-modal-content">
                         <div class="admin-modal-header">
                             <h3>🔒 Política de Privacidade</h3>
                             <button type="button" class="admin-modal-close" onclick="document.getElementById('modal-politica-privacidade').style.display='none'">×</button>
                         </div>
                         <div class="admin-modal-body" style="max-height: 70vh; overflow-y: auto;">
-                            <div class="doc-legal">
-                                <h4>POLÍTICA DE PRIVACIDADE – SISTEMA AXIS</h4>
-                                <p><strong>Compromisso:</strong> a Organização trata dados pessoais com seriedade, adotando medidas compatíveis com a natureza do sistema e os riscos envolvidos. Esta Política descreve, de forma objetiva, como o AXIS trata dados no ambiente organizacional.</p>
-                                <p><strong>Nota técnica:</strong> este texto é um <strong>modelo robusto</strong>. Recomenda-se validação jurídica para completar campos da Organização (Controlador), Encarregado (DPO) e canais oficiais.</p>
+                            <div class="termos-paper">
+                                <div class="termos-capa">
+                                    <h4>POLÍTICA DE PRIVACIDADE DO SISTEMA AXIS</h4>
+                                    <p class="termos-meta">Versão 1.0 | Tratamento de dados pessoais no uso institucional</p>
+                                </div>
 
-                                <h5>1. Escopo</h5>
-                                <p>Esta Política descreve como o AXIS trata dados pessoais no contexto de uso organizacional. Aplica-se a Usuários que acessam o sistema e a titulares cujos dados possam ser inseridos para fins operacionais (ex.: registros técnicos, chamados e integrações).</p>
+                                <div class="termos-secao">
+                                    <h5>1. INTRODUÇÃO E COMPROMISSO</h5>
+                                    <p>Esta Política descreve como a Organização trata dados pessoais no contexto do sistema AXIS, em conformidade com os princípios da Lei Geral de Proteção de Dados (Lei nº 13.709/2018 – LGPD) e demais normas aplicáveis.</p>
+                                </div>
 
-                                <h5>2. Papéis (LGPD)</h5>
-                                <p><strong>Controlador:</strong> a Organização que define as finalidades e meios do tratamento nesta instância.</p>
-                                <p><strong>Operador:</strong> prestadores/fornecedores que tratam dados em nome do Controlador, quando houver.</p>
+                                <div class="termos-secao">
+                                    <h5>2. ÂMBITO DE APLICAÇÃO</h5>
+                                    <p>Aplica-se a todos os Usuários autorizados a acessar o AXIS e, quando pertinente, a titulares cujos dados sejam inseridos para fins operacionais (registros técnicos, chamados, inventário, documentação e integrações habilitadas pela Organização).</p>
+                                </div>
 
-                                <h5>3. Dados tratados</h5>
-                                <ul>
-                                    <li><strong>Dados de conta:</strong> login, nome, setor/perfil, preferências e foto de perfil (se fornecida);</li>
-                                    <li><strong>Dados de uso:</strong> logs de acesso, auditoria e ações no sistema;</li>
-                                    <li><strong>Dados operacionais:</strong> informações técnicas de inventário, status, documentação e registros correlatos;</li>
-                                    <li><strong>Integrações:</strong> números de telefone e mensagens necessárias ao fluxo do bot (WhatsApp), quando utilizado.</li>
-                                </ul>
+                                <div class="termos-secao">
+                                    <h5>3. PAPÉIS NO TRATAMENTO (LGPD)</h5>
+                                    <p><strong>Controlador:</strong> a Organização titular desta instância do AXIS, responsável por definir as finalidades e os meios do tratamento.</p>
+                                    <p><strong>Operador(es):</strong> fornecedores ou prestadores que, quando contratados, tratem dados em nome do Controlador, nos limites das instruções recebidas e da legislação.</p>
+                                </div>
 
-                                <h5>4. Finalidades</h5>
-                                <ul>
-                                    <li>autenticação e controle de acesso;</li>
-                                    <li>segurança, auditoria e prevenção a incidentes;</li>
-                                    <li>execução de rotinas operacionais (inventário, chamados, manutenção e status);</li>
-                                    <li>suporte interno, melhoria e continuidade do serviço.</li>
-                                </ul>
+                                <div class="termos-secao">
+                                    <h5>4. DADOS PESSOAIS TRATADOS</h5>
+                                    <p>Conforme as funcionalidades utilizadas, poderão ser tratados, entre outros:</p>
+                                    <ul>
+                                        <li><strong>Identificação e conta:</strong> login, nome, setor, perfil de acesso, preferências de interface e foto de perfil, quando fornecida;</li>
+                                        <li><strong>Uso e segurança:</strong> registros de acesso, auditoria, logs de eventos e medidas antifraude;</li>
+                                        <li><strong>Operacionais:</strong> dados técnicos vinculados a inventário, status, manutenção, documentos e formulários preenchidos no sistema;</li>
+                                        <li><strong>Integrações:</strong> identificadores e conteúdo de mensagens necessários ao fluxo de integrações (ex.: WhatsApp), quando ativadas.</li>
+                                    </ul>
+                                </div>
 
-                                <h5>5. Bases legais</h5>
-                                <p>O tratamento pode se apoiar, conforme o caso, em bases legais da LGPD, incluindo: execução de contrato/procedimentos preliminares, cumprimento de obrigação legal/regulatória, legítimo interesse e segurança, quando aplicáveis.</p>
+                                <div class="termos-secao">
+                                    <h5>5. FINALIDADES DO TRATAMENTO</h5>
+                                    <ul>
+                                        <li>autenticação, autorização e gestão de perfis de acesso;</li>
+                                        <li>segurança da informação, prevenção a incidentes e cumprimento de obrigações legais e regulatórias;</li>
+                                        <li>execução de processos internos apoiados pelo AXIS (inventário, chamados, rondas, documentação, entre outros configurados);</li>
+                                        <li>suporte, melhoria técnica e continuidade do serviço, observado o mínimo necessário.</li>
+                                    </ul>
+                                </div>
 
-                                <h5>6. Compartilhamento</h5>
-                                <p>O AXIS não compartilha dados com terceiros para fins de marketing. Pode haver compartilhamento com provedores estritamente necessários (infra/hospedagem e integrações ativas, como WhatsApp Cloud API), bem como por obrigações legais.</p>
-                                <p>Quando houver transferência internacional (ex.: provedores de nuvem/integrações), a Organização buscará adotar salvaguardas adequadas e medidas de segurança compatíveis.</p>
+                                <div class="termos-secao">
+                                    <h5>6. BASES LEGAIS</h5>
+                                    <p>O tratamento poderá fundamentar-se, conforme a hipótese concreta, nas bases previstas no art. 7º da LGPD, incluindo execução de contrato ou de procedimentos preliminares, cumprimento de obrigação legal ou regulatória, exercício regular de direitos, proteção da vida ou da tutela da saúde, legítimo interesse (com avaliação de ponderação) e consentimento, quando exigido.</p>
+                                </div>
 
-                                <h5>7. Segurança</h5>
-                                <p>São adotadas medidas técnicas e administrativas razoáveis para proteger dados contra acessos não autorizados, perda e alteração. Recomenda-se o uso de verificação em duas etapas (Google Authenticator) quando disponível.</p>
-                                <p>Apesar dos esforços, nenhum sistema é absolutamente seguro. Em caso de incidente relevante, a Organização poderá adotar medidas de contenção e comunicação conforme exigido pela legislação aplicável.</p>
+                                <div class="termos-secao">
+                                    <h5>7. COMPARTILHAMENTO E TRANSFERÊNCIAS</h5>
+                                    <p>Não há compartilhamento de dados para fins de publicidade ou marketing. O compartilhamento poderá ocorrer com prestadores necessários à infraestrutura, hospedagem ou integrações contratadas, bem como com autoridades quando houver determinação legal.</p>
+                                    <p>Transferências internacionais, quando houver, deverão observar os requisitos da LGPD e instrumentos aptos de garantia, conforme definidos pelo Controlador.</p>
+                                </div>
 
-                                <h5>8. Retenção</h5>
-                                <p>Os dados são mantidos pelo tempo necessário às finalidades e obrigações aplicáveis. Logs e auditorias podem ter retenção ampliada para fins de segurança e conformidade.</p>
+                                <div class="termos-secao">
+                                    <h5>8. MEDIDAS DE SEGURANÇA</h5>
+                                    <p>São adotadas medidas técnicas e organizacionais compatíveis com o risco, incluindo controles de acesso, registro de eventos relevantes e estímulo ao uso de autenticação em duas etapas quando disponível. Nenhum ambiente é invulnerável; eventual incidente poderá ser objeto de análise e comunicação nos termos da lei.</p>
+                                </div>
 
-                                <h5>9. Direitos do titular</h5>
-                                <p>Quando aplicável, titulares podem solicitar confirmação de tratamento, acesso, correção e eliminação, observadas as limitações legais. As solicitações devem ser encaminhadas ao canal definido pela Organização.</p>
+                                <div class="termos-secao">
+                                    <h5>9. RETENÇÃO E ELIMINAÇÃO</h5>
+                                    <p>Os dados serão mantidos pelo tempo necessário ao cumprimento das finalidades, inclusive para cumprimento de obrigações legais e resolução de disputas. Registros de segurança e auditoria podem ser conservados por prazos mais longos quando justificado por lei ou política interna documentada.</p>
+                                </div>
 
-                                <h5>10. Cookies e armazenamento local</h5>
-                                <p>O AXIS pode utilizar armazenamento local do navegador para preferências e funcionamento (ex.: tema, idioma, notificações e sessão), sem finalidade publicitária. A limpeza do cache pode redefinir preferências.</p>
+                                <div class="termos-secao">
+                                    <h5>10. DIREITOS DOS TITULARES</h5>
+                                    <p>Nos termos do art. 18 da LGPD e normas correlatas, quando aplicável, o titular poderá solicitar confirmação de existência de tratamento, acesso, correção, anonimização, portabilidade, eliminação dos dados tratados com consentimento ou informação sobre compartilhamentos e sobre a possibilidade de não fornecer consentimento.</p>
+                                    <p>Os pedidos deverão ser encaminhados ao canal oficial indicado pela Organização (ex.: e-mail do Encarregado de Dados ou setor de compliance). Serão atendidas no prazo legal, observadas exceções previstas em lei.</p>
+                                </div>
 
-                                <h5>11. Referências legais (Brasil)</h5>
-                                <ul>
-                                    <li>Lei nº 13.709/2018 (LGPD);</li>
-                                    <li>Lei nº 12.965/2014 (Marco Civil da Internet) e Decreto nº 8.771/2016.</li>
-                                </ul>
+                                <div class="termos-secao">
+                                    <h5>11. COOKIES E ARMAZENAMENTO LOCAL</h5>
+                                    <p>O AXIS pode utilizar armazenamento local do navegador para funcionalidade essencial (sessão, preferências de tema, idioma e configurações operacionais), sem finalidade de publicidade comportamental. A exclusão de dados locais pode afetar o funcionamento ou as preferências do sistema.</p>
+                                </div>
+
+                                <div class="termos-secao">
+                                    <h5>12. ATUALIZAÇÕES DESTA POLÍTICA</h5>
+                                    <p>A Organização poderá revisar este documento para refletir mudanças legais, técnicas ou organizacionais. A versão em vigor permanecerá disponível no próprio sistema; o uso continuado após a atualização poderá ser interpretado como ciência da nova redação, quando compatível com a legislação aplicável.</p>
+                                </div>
+
+                                <div class="termos-secao">
+                                    <h5>13. LEGISLAÇÃO E CONTATO</h5>
+                                    <p>Para questões sobre privacidade e proteção de dados, o titular ou o Usuário deve utilizar o canal oficial da Organização (a ser indicado pelo Controlador, inclusive Encarregado de Dados — DPO, se nomeado).</p>
+                                    <p><strong>Referências:</strong> Lei nº 13.709/2018 (LGPD); Lei nº 12.965/2014 (Marco Civil da Internet) e regulamentação correlata.</p>
+                                </div>
+
+                                <div class="termos-assinatura">
+                                    <p><strong>Transparência:</strong> esta Política integra o conjunto de documentos de governança do AXIS. Recomenda-se validação jurídica para inserção de dados identificadores da Organização, do Encarregado (DPO) e dos canais formais de atendimento ao titular.</p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -2743,6 +3172,7 @@
                                                 <th>Data/Hora</th>
                                                 <th>Evento</th>
                                                 <th>Usuário</th>
+                                                <th>Dispositivo</th>
                                             </tr>
                                         </thead>
                                         <tbody id="logs-tbody">
@@ -2853,6 +3283,31 @@
                                 <button type="button" class="axis-btn totp-btn-confirm" id="totp-confirm-btn" onclick="if(window.confirmarTotp2FA)window.confirmarTotp2FA();return false;">CONFIRMAR E ATIVAR</button>
                                 <button type="button" class="axis-btn totp-btn-cancel" id="totp-setup-cancel">CANCELAR</button>
                             </div>
+                        </div>
+                    </div>
+
+                    <div class="settings-card face-auth-settings-card" id="face-auth-settings-card">
+                        <div class="face-auth-settings-head">
+                            <h3>Reconhecimento facial</h3>
+                            <p class="face-auth-settings-tagline">Login opcional com a webcam — rápido e só neste aparelho</p>
+                        </div>
+                        <div class="setting-item face-auth-settings-body">
+                            <div class="setting-info face-auth-settings-copy">
+                                <h4>Por que usar o rosto para entrar?</h4>
+                                <ul class="face-auth-why-list">
+                                    <li><strong>Menos fricção:</strong> em vez de digitar senha, a câmera confirma que é você (opcional).</li>
+                                    <li><strong>Privacidade:</strong> guardamos só um <strong>mapa numérico</strong> no seu navegador — não enviamos fotos nem vídeo ao servidor AXIS.</li>
+                                    <li><strong>Segurança em camadas:</strong> se o 2FA estiver ativo, o código do autenticador continua a ser pedido depois do reconhecimento.</li>
+                                    <li><strong>Onde fica o dado:</strong> só neste navegador (localStorage). Outro computador ou celular precisa de novo cadastro.</li>
+                                </ul>
+                                <p class="face-auth-tech-note">A permissão da <strong>câmera</strong> é pedida pelo navegador. O assistente de cadastro abre ao centro, com passos guiados.</p>
+                                <p id="face-enroll-status-short" class="face-enroll-status-short-line">—</p>
+                            </div>
+                            <div class="face-enroll-btns face-enroll-btns-row" role="group" aria-label="Ações do reconhecimento facial">
+                                <button type="button" class="axis-btn axis-btn-cta-secondary face-enroll-settings-btn" id="face-enroll-start">Abrir câmera</button>
+                                <button type="button" class="axis-btn axis-btn-cta-secondary face-enroll-settings-btn face-enroll-settings-btn--danger" id="face-enroll-remove">Remover cadastro facial</button>
+                            </div>
+                            <p id="face-enroll-status" class="auth-face-status face-enroll-settings-status" role="status"></p>
                         </div>
                     </div>
 
@@ -3111,7 +3566,7 @@
                                 <p>Plataforma de integração e gestão</p>
                             </div>
                             <div class="setting-control">
-                                <span class="setting-version" id="axis-version-display">1.0.0</span>
+                                <span class="setting-version" id="axis-version-display" title="Versão reportada pelo servidor">—</span>
                             </div>
                         </div>
                         <div class="setting-item setting-item-actions">
@@ -3595,9 +4050,12 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
     <!-- Script principal PRIMEIRO: define navigate, filtrarInventario, etc. -->
-    <script src="js/script.js?v=axis2026"></script>
+    <script src="js/script.js?v=axis2026h"></script>
+    <script src="js/selbetti-portal-links-admin.js?v=1"></script>
+    <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+    <script src="js/axis-face-auth.js?v=axis2026r"></script>
     <!-- Robô assistente AXIS (holograma + IA) -->
-    <script src="js/axis-robot-assistant.js"></script>
+    <script src="js/axis-robot-assistant.js?v=axis2026robot1"></script>
     
     <!-- Placeholders só se script.js não definiu; não sobrescreve as reais (silenciosos) -->
     <script>
@@ -3660,166 +4118,8 @@
         };
     </script>
     
-    <!-- Script de Autenticação INLINE - GARANTE FUNCIONAMENTO IMEDIATO -->
+    <!-- Login: handleAuth vem de js/script.js (inclui pontos no login, TOTP e mesmo critério que o cadastro). -->
     <script>
-        // FUNÇÃO DE AUTENTICAÇÃO DIRETA NO HTML - GARANTE QUE FUNCIONE
-        function handleAuth() {
-            const adminKey = 'db_admin_filipe_silva';
-            if (!localStorage.getItem(adminKey)) {
-                const adminData = {
-                    name: 'Filipe da Silva',
-                    pass: '123456',
-                    dataCadastro: new Date().toISOString(),
-                    perfil: 'admin',
-                    ultimoAcesso: new Date().toISOString()
-                };
-                localStorage.setItem(adminKey, JSON.stringify(adminData));
-            }
-            const userField = document.getElementById('username');
-            const passField = document.getElementById('password');
-            if (!userField || !passField) {
-                alert('Erro: Campos de login não encontrados. Recarregue a página.');
-                return;
-            }
-            const userInput = userField.value.trim();
-            const pass = passField.value;
-            if (!userInput || !pass) {
-                alert('Preencha todos os campos!');
-                return;
-            }
-            const loginNormalizado = userInput.toLowerCase().replace(/\s+/g, '_');
-            const dbKey = 'db_' + loginNormalizado;
-            const dbRaw = localStorage.getItem(dbKey);
-            if (dbRaw) {
-                try {
-                    const db = JSON.parse(dbRaw);
-                    if (db.pass === pass) {
-                        // Salva estado de login
-                        localStorage.setItem('current_user', db.name || userInput);
-                        localStorage.setItem('current_user_login', loginNormalizado);
-                        localStorage.setItem('user_logged_in', 'true');
-                        sessionStorage.setItem('just_logged_in', 'true');
-                        try { sessionStorage.removeItem('axis_force_login_session'); } catch (_) {}
-                        // Atualiza último acesso
-                        db.ultimoAcesso = new Date().toISOString();
-                        localStorage.setItem(dbKey, JSON.stringify(db));
-                        
-                        // Transição de telas
-                        const authScreen = document.getElementById('auth-screen');
-                        const mainContent = document.getElementById('main-content');
-                        
-                        if (authScreen) {
-                            authScreen.style.opacity = '0';
-                            authScreen.style.transform = 'translateY(-20px)';
-                        }
-                        
-                        setTimeout(() => {
-                            if (authScreen) authScreen.style.display = 'none';
-                            if (mainContent) {
-                                mainContent.style.display = 'block';
-                                mainContent.style.opacity = '0';
-                                mainContent.style.transform = 'translateY(20px)';
-                                
-                                setTimeout(() => {
-                                    mainContent.style.opacity = '1';
-                                    mainContent.style.transform = 'translateY(0)';
-                                }, 50);
-                            }
-                            
-                            // Atualiza nome no header
-                            const userDisplay = document.getElementById('user-display-name');
-                            if (userDisplay) userDisplay.innerText = db.name || userInput;
-                            
-                            // Mostra menu admin e inicia atualização automática de stats se for admin
-                            const menuAdmin = document.getElementById('menu-admin');
-                            if (menuAdmin && db.perfil === 'admin') {
-                                menuAdmin.style.display = 'block';
-                                if (typeof iniciarAtualizacaoAdminStats === 'function') iniciarAtualizacaoAdminStats();
-                            }
-                            
-                            // Ao fazer login: sempre vai para Início (Home), nunca para página salva
-                            localStorage.setItem('axis-current-page', 'page-home');
-                            
-                            const navigateToPage = function(pageId) {
-                                const targetPage = document.getElementById(pageId) || document.getElementById('page-home');
-                                if (targetPage) {
-                                    document.querySelectorAll('.main-section').forEach(s => {
-                                        s.classList.remove('active');
-                                        s.style.display = 'none';
-                                    });
-                                    targetPage.classList.add('active');
-                                    targetPage.style.display = 'block';
-                                }
-                            };
-                            setTimeout(() => {
-                                if (typeof navigate === 'function') {
-                                    try {
-                                        navigate('page-home');
-                                    } catch (e) {
-                                        navigateToPage('page-home');
-                                        try { window.location.hash = 'page-home'; } catch (_) {}
-                                        if (typeof loadDashboardData === 'function') loadDashboardData();
-                                        if (typeof updateHomeHero === 'function') updateHomeHero();
-                                    }
-                                } else {
-                                    navigateToPage('page-home');
-                                    try { window.location.hash = 'page-home'; } catch (_) {}
-                                    if (typeof loadDashboardData === 'function') loadDashboardData();
-                                    if (typeof updateHomeHero === 'function') updateHomeHero();
-                                }
-                                // Garantir que o perfil do usuário apareça logo após o login (sem precisar recarregar)
-                                var navWelcome = document.getElementById('nav-welcome-text');
-                                var profileWrap = document.getElementById('axis-profile-wrap');
-                                if (navWelcome) { navWelcome.style.display = 'block'; }
-                                if (profileWrap) {
-                                    profileWrap.style.display = 'flex';
-                                    profileWrap.style.visibility = 'visible';
-                                }
-                                if (typeof atualizarPerfilNav === 'function') atualizarPerfilNav();
-                                // Reaplicar após um frame para garantir que a UI já foi atualizada
-                                requestAnimationFrame(function() {
-                                    if (profileWrap) { profileWrap.style.display = 'flex'; profileWrap.style.visibility = 'visible'; }
-                                    if (typeof atualizarPerfilNav === 'function') atualizarPerfilNav();
-                                });
-                                // Garantir que o conteúdo da home apareça logo (evita tela em branco; dispensa recarregar)
-                                requestAnimationFrame(function() {
-                                    var homeSection = document.getElementById('page-home');
-                                    if (homeSection) {
-                                        homeSection.classList.add('active');
-                                        homeSection.style.display = 'block';
-                                    }
-                                    if (document.body) document.body.setAttribute('data-current-page', 'page-home');
-                                    if (typeof updateHomeHero === 'function') updateHomeHero();
-                                    if (typeof loadDashboardData === 'function') loadDashboardData();
-                                });
-                                setTimeout(function() {
-                                    if (typeof updateHomeHero === 'function') updateHomeHero();
-                                    if (typeof loadDashboardData === 'function') loadDashboardData();
-                                    if (typeof aplicarPermissoesModulos === 'function') aplicarPermissoesModulos();
-                                }, 80);
-                            }, 300);
-                            setTimeout(function() {
-                                if (typeof showBemVindoModal === 'function') {
-                                    showBemVindoModal(db.name || userInput);
-                                }
-                            }, 120);
-                        }, 300);
-                        
-                    } else {
-                        passField.classList.add('shake-animation');
-                        setTimeout(() => passField.classList.remove('shake-animation'), 500);
-                        if (typeof showModalErroLogin === 'function') showModalErroLogin('Senha incorreta', 'Verifique a senha e tente novamente.'); else alert('Senha incorreta.');
-                    }
-                } catch (error) {
-                    if (typeof showModalErroLogin === 'function') showModalErroLogin('Erro', 'Erro ao processar dados do usuário.'); else alert('Erro ao processar dados do usuário.');
-                }
-            } else {
-                userField.classList.add('shake-animation');
-                setTimeout(() => userField.classList.remove('shake-animation'), 500);
-                if (typeof showModalErroLogin === 'function') showModalErroLogin('Usuário não encontrado', 'Verifique se o usuário foi criado corretamente.'); else alert('Usuário não encontrado. Verifique se o usuário foi criado corretamente.');
-            }
-        }
-        
         // ============================================
         // 🔒 FUNÇÃO PROTEGIDA: togglePassword
         // NÃO MODIFICAR - ESSENCIAL PARA VISUALIZAR SENHA
@@ -4003,7 +4303,17 @@
       }
       try {
         if (sessionStorage.getItem('axis_voltar_force_main') !== '1') return;
-        try { sessionStorage.removeItem('axis_voltar_force_main'); } catch (_) {}
+        var ts = 0;
+        try { ts = parseInt(sessionStorage.getItem('axis_voltar_force_main_ts') || '0', 10) || 0; } catch (_) {}
+        var fresh = ts > 0 && (Date.now() - ts) < 15000;
+        var h = '';
+        try { h = (location.hash || '').replace(/^#/, '').trim(); } catch (_) {}
+        var hashJaEhPagina = h.indexOf('page-') === 0;
+        try {
+          sessionStorage.removeItem('axis_voltar_force_main');
+          sessionStorage.removeItem('axis_voltar_force_main_ts');
+        } catch (_) {}
+        if (!fresh || hashJaEhPagina) return;
         aplica();
         setTimeout(aplica, 80);
         setTimeout(aplica, 250);
@@ -4112,7 +4422,9 @@
          ============================================ -->
     <script>
         (function ultraRobustPersistence() {
-            
+            // Desativado: concorria com o fluxo principal do script.js e podia deixar área branca entre trocas de página.
+            return;
+
             // 1. Previne qualquer navegação para fora do site
             const originalLocationHref = window.location.href;
             const originalLocationReplace = window.location.replace;
@@ -4172,10 +4484,19 @@
                         }
                     }
                     
-                    // Restaura a página
+                    // Restaura a página (uma vez + retry — navigate() aplica secção e inits)
                     if (pageToRestore) {
+                        var restoreAttempts = 0;
                         const restorePage = () => {
+                            restoreAttempts++;
                             const targetSection = document.getElementById(pageToRestore);
+                            if (typeof window.navigate === 'function' && targetSection) {
+                                try {
+                                    window.navigate(pageToRestore);
+                                    if (window.activePage !== undefined) window.activePage = pageToRestore;
+                                    return;
+                                } catch (e) {}
+                            }
                             if (targetSection) {
                                 document.querySelectorAll('.main-section').forEach(s => {
                                     s.classList.remove('active');
@@ -4183,32 +4504,13 @@
                                 });
                                 targetSection.classList.add('active');
                                 targetSection.style.display = 'block';
-                                
-                                if (window.activePage !== undefined) {
-                                    window.activePage = pageToRestore;
-                                }
-                                
-                                
-                                // Chama inicialização específica se necessário
-                                if (pageToRestore === 'page-inventario' && typeof window.inicializarInventario === 'function') {
-                                    setTimeout(() => {
-                                        try {
-                                            window.inicializarInventario();
-                                        } catch (e) {
-                                        }
-                                    }, 200);
-                                }
-                            } else {
-                                setTimeout(restorePage, 500);
+                                if (window.activePage !== undefined) window.activePage = pageToRestore;
+                            } else if (restoreAttempts < 8) {
+                                setTimeout(restorePage, 400);
                             }
                         };
-                        
-                        // Tenta restaurar imediatamente
                         restorePage();
-                        
-                        // Tenta novamente após um delay (caso DOM não esteja pronto)
-                        setTimeout(restorePage, 300);
-                        setTimeout(restorePage, 1000);
+                        setTimeout(restorePage, 450);
                     }
                 }, 100);
             });
@@ -4319,6 +4621,8 @@
          ============================================ -->
     <script>
         (function absoluteGuarantee() {
+            // Desativado: sobrescrevia navigate/funções e causava tela branca em páginas específicas.
+            return;
             setInterval(function() {
                 var mustHaveFunctions = {
                     'filtrarInventario': function() {
@@ -4990,8 +5294,10 @@
                         var mainContent = document.getElementById('main-content');
                         if (mainContent) { mainContent.style.display = 'block'; mainContent.style.opacity = '1'; mainContent.style.visibility = 'visible'; }
                         if (introOverlay) introOverlay.style.display = 'none';
-                        var sp = localStorage.getItem('axis-current-page') || 'page-home';
+                        var hashSp = (window.location.hash || '').replace(/^#/, '').trim();
+                        var sp = (hashSp && hashSp.indexOf('page-') === 0) ? hashSp : (localStorage.getItem('axis-current-page') || 'page-home');
                         if (!sp || sp.indexOf('page-') !== 0) sp = 'page-home';
+                        try { localStorage.setItem('axis-current-page', sp); } catch (e) {}
                         var targetSection = document.getElementById(sp);
                         if (targetSection && targetSection.classList && targetSection.classList.contains('main-section')) {
                             var sections = document.querySelectorAll('.main-section');

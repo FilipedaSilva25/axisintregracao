@@ -1,585 +1,67 @@
 <!DOCTYPE html>
-<!-- AXIS | SELBETTI - Biblioteca do Técnico Resident (Mercado Livre / Selbetti) -->
-<html lang="pt-BR">
+<html lang="pt-BR" data-selbetti-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AXIS | SELBETTI - Biblioteca do Técnico</title>
+    <title>AXIS | SELBETTI — Hub do técnico</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600;700;800&family=Roboto+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../css/selbetti.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/selbetti.css?v=hub31">
 </head>
-<body class="selbetti-page" id="selbetti-body">
-    <!-- Fundo: grid sutil (novo visual) -->
-    <div class="selbetti-bg" aria-hidden="true">
-        <div class="selbetti-bg-grid"></div>
-        <div class="selbetti-bg-image"></div>
-        <div class="selbetti-bg-overlay"></div>
-    </div>
+<body class="selbetti-hub-body">
+    <!-- Overlay vidro (menu aberto) -->
+    <div class="selbetti-overlay" id="selbetti-overlay" aria-hidden="true" hidden></div>
 
-    <!-- Top bar — barra escura full-width (redesign visível) -->
-    <header class="selbetti-header selbetti-header-v2 selbetti-header-dark">
-        <a href="../index.html#page-home" class="selbetti-back-btn"><i class="fas fa-arrow-left"></i> AXIS</a>
-        <div class="selbetti-header-brand">
-            <span class="selbetti-logo-icon"><i class="fas fa-database"></i></span>
-            <div class="selbetti-header-title">
-                <h1>SELBETTI</h1>
-                <p>Biblioteca de Dados · Técnico Resident</p>
+    <!-- Menu lateral (fundo transparente + vidro) -->
+    <aside class="selbetti-drawer" id="selbetti-drawer" aria-label="Menu principal SELBETTI" hidden>
+        <div class="selbetti-drawer-inner glass-panel">
+            <div class="selbetti-drawer-head">
+                <span class="selbetti-drawer-brand">SELBETTI</span>
+                <button type="button" class="selbetti-icon-btn" id="selbetti-drawer-close" aria-label="Fechar menu"><i class="fas fa-times"></i></button>
             </div>
+            <nav class="selbetti-nav" id="selbetti-nav-root"></nav>
         </div>
-        <div class="selbetti-header-search-wrap">
-            <i class="fas fa-search selbetti-search-icon"></i>
-            <input type="search" id="selbetti-global-search" class="selbetti-global-search" placeholder="Pesquisar em toda a biblioteca…" aria-label="Pesquisa global">
+    </aside>
+
+    <input type="file" id="selbetti-file-input" hidden multiple accept=".pdf,.png,.jpg,.jpeg,.webp,.heic,.heif,.doc,.docx,.xls,.xlsx,.txt,.csv,.mp4,.webm,.mov,.mkv,video/*,image/*">
+
+    <header class="selbetti-topbar glass-panel">
+        <div class="selbetti-topbar-left">
+            <button type="button" class="selbetti-icon-btn selbetti-menu-btn" id="selbetti-menu-open" aria-label="Abrir menu" aria-expanded="false">
+                <i class="fas fa-bars"></i>
+            </button>
         </div>
-        <div class="selbetti-header-actions">
-            <button type="button" class="selbetti-btn-icon" id="selbetti-sync-btn" title="Sincronizar com backend"><i class="fas fa-cloud-upload-alt"></i><span class="selbetti-sync-status" id="selbetti-sync-status"></span></button>
-            <div class="selbetti-dropdown-wrap">
-                <button type="button" class="selbetti-btn-icon" id="selbetti-export-import-toggle" title="Exportar / Importar"><i class="fas fa-file-export"></i></button>
-                <div class="selbetti-dropdown glass" id="selbetti-export-import-menu">
-                    <button type="button" class="selbetti-dropdown-item" id="selbetti-export-all"><i class="fas fa-download"></i> Exportar biblioteca (JSON)</button>
-                    <label class="selbetti-dropdown-item selbetti-import-label"><i class="fas fa-upload"></i> Importar biblioteca<input type="file" id="selbetti-import-file" accept=".json" hidden></label>
-                </div>
-            </div>
-            <button type="button" class="selbetti-btn-icon" id="selbetti-settings-btn" title="Configurações e sincronização"><i class="fas fa-cog"></i></button>
-            <button type="button" class="selbetti-theme-toggle glass" id="selbetti-theme-toggle" aria-label="Tema"><i class="fas fa-moon"></i></button>
-            <button type="button" class="selbetti-menu-toggle" id="selbetti-menu-toggle" aria-label="Menu"><i class="fas fa-bars"></i></button>
+        <div class="selbetti-topbar-center">
+            <h1 class="selbetti-logo-title">SELBETTI</h1>
+        </div>
+        <div class="selbetti-topbar-right">
+            <button type="button" class="selbetti-icon-btn" id="selbetti-theme-toggle" aria-label="Tema claro ou escuro"><i class="fas fa-moon" id="selbetti-theme-icon"></i></button>
         </div>
     </header>
-    <!-- Resultados da pesquisa global (overlay) -->
-    <div class="selbetti-global-search-overlay glass" id="selbetti-search-overlay" style="display:none;">
-        <div class="selbetti-search-results" id="selbetti-search-results"></div>
-    </div>
-    <!-- Modal Configurações: o que sincronizar (ideia 6) -->
-    <div class="selbetti-modal-backdrop" id="selbetti-settings-modal" style="display:none;">
-        <div class="selbetti-modal glass">
-            <div class="selbetti-modal-header">
-                <h3><i class="fas fa-cog"></i> Configurações · O que sincronizar</h3>
-                <button type="button" class="selbetti-modal-close" id="selbetti-settings-close"><i class="fas fa-times"></i></button>
+
+    <main class="selbetti-main" id="selbetti-main">
+        <!-- Preenchido por selbetti-hub.js -->
+    </main>
+
+    <div class="selbetti-toast" id="selbetti-toast" role="status" aria-live="polite" hidden></div>
+
+    <!-- Pré-visualização PDF / imagem (fundo vidro, estilo documentação Suporte) -->
+    <div class="selbetti-doc-preview-backdrop" id="selbetti-doc-preview" hidden>
+        <div class="selbetti-doc-preview-dialog glass-panel" id="selbetti-doc-preview-dialog" role="dialog" aria-modal="true" aria-labelledby="selbetti-doc-preview-title">
+            <div class="selbetti-doc-preview-head">
+                <h3 id="selbetti-doc-preview-title"></h3>
+                <button type="button" class="selbetti-icon-btn" id="selbetti-doc-preview-close" aria-label="Fechar"><i class="fas fa-times"></i></button>
             </div>
-            <div class="selbetti-modal-body">
-                <p class="selbetti-desc">Quando a sincronização com backend estiver ativa, escolha que dados enviar.</p>
-                <label class="selbetti-check-wrap"><input type="checkbox" id="selbetti-sync-orcamento" checked> Orçamentos</label>
-                <label class="selbetti-check-wrap"><input type="checkbox" id="selbetti-sync-certificados" checked> Certificados</label>
-                <label class="selbetti-check-wrap"><input type="checkbox" id="selbetti-sync-backup" checked> Backup operacional</label>
-                <label class="selbetti-check-wrap"><input type="checkbox" id="selbetti-sync-atas" checked> Atas e reuniões</label>
-                <label class="selbetti-check-wrap"><input type="checkbox" id="selbetti-sync-ferramentas" checked> Ferramentas</label>
-                <hr style="margin: 16px 0; border: none; border-top: 1px solid rgba(0,0,0,0.08);">
-                <p class="selbetti-desc">Cor de destaque (ideia 69)</p>
-                <div class="selbetti-accent-picker">
-                    <button type="button" class="selbetti-accent-dot" data-accent="blue" title="Azul" style="background: #0ea5e9;"></button>
-                    <button type="button" class="selbetti-accent-dot" data-accent="green" title="Verde" style="background: #10b981;"></button>
-                    <button type="button" class="selbetti-accent-dot" data-accent="violet" title="Violeta" style="background: #8b5cf6;"></button>
-                    <button type="button" class="selbetti-accent-dot" data-accent="rose" title="Rosa" style="background: #f43f5e;"></button>
-                </div>
-                <label class="selbetti-check-wrap" style="margin-top: 12px;"><input type="checkbox" id="selbetti-compact-mode"> Modo compacto (ideia 62)</label>
+            <div class="selbetti-doc-preview-body">
+                <iframe id="selbetti-doc-preview-iframe" class="selbetti-doc-preview-frame" title="Pré-visualização do documento"></iframe>
+                <img id="selbetti-doc-preview-img" class="selbetti-doc-preview-img" alt="" hidden>
+                <p id="selbetti-doc-preview-fallback" class="selbetti-doc-preview-fallback" hidden></p>
             </div>
         </div>
     </div>
 
-    <!-- Breadcrumbs (ideia 63) -->
-    <nav class="selbetti-breadcrumb glass" id="selbetti-breadcrumb" aria-label="Navegação"><span class="selbetti-breadcrumb-item">Início</span></nav>
-
-    <div class="selbetti-layout">
-        <!-- Menu lateral — barra escura fixa (redesign visível) -->
-        <nav class="selbetti-nav selbetti-nav-dark" id="selbetti-nav">
-            <ul class="selbetti-nav-list">
-                <li><button type="button" class="selbetti-nav-item active" data-section="inicio"><i class="fas fa-home"></i><span>Início</span></button></li>
-                <li><button type="button" class="selbetti-nav-item" data-section="orcamento"><i class="fas fa-file-invoice-dollar"></i><span>Orçamento de Peças</span></button></li>
-                <li><button type="button" class="selbetti-nav-item" data-section="ferramentas"><i class="fas fa-tools"></i><span>Ferramentas Anotadas</span></button></li>
-                <li><button type="button" class="selbetti-nav-item" data-section="certificados"><i class="fas fa-certificate"></i><span>Certificados</span></button></li>
-                <li><button type="button" class="selbetti-nav-item" data-section="backup"><i class="fas fa-boxes-stacked"></i><span>Pedido Backup Operacional</span></button></li>
-                <li class="selbetti-nav-sub open">
-                    <button type="button" class="selbetti-nav-item" data-section="atas" id="selbetti-nav-atas"><i class="fas fa-clipboard-list"></i><span>Atas e Reuniões</span><i class="fas fa-chevron-down selbetti-chevron"></i></button>
-                    <ul class="selbetti-submenu" id="selbetti-submenu-atas">
-                        <li><button type="button" class="selbetti-nav-item" data-section="atas-semanais"><i class="fas fa-calendar-week"></i><span>Semanais</span></button></li>
-                        <li><button type="button" class="selbetti-nav-item" data-section="atas-mensais"><i class="fas fa-calendar-alt"></i><span>Mensais</span></button></li>
-                        <li><button type="button" class="selbetti-nav-item" data-section="atas-anuais"><i class="fas fa-calendar"></i><span>Anuais</span></button></li>
-                    </ul>
-                </li>
-            </ul>
-        </nav>
-
-        <!-- Conteúdo principal -->
-        <main class="selbetti-main">
-            <!-- Secção: Início — Biblioteca de Dados (visual tecnológico + API) -->
-            <section class="selbetti-section active" id="section-inicio">
-                <div class="selbetti-card glass selbetti-card-inicio">
-                    <div class="selbetti-inicio-header">
-                        <h2><i class="fas fa-database"></i> Biblioteca de Dados</h2>
-                        <p class="selbetti-desc">Centro de dados do técnico residente. Storage local, fontes de dados e APIs disponíveis abaixo.</p>
-                    </div>
-
-                    <!-- Bloco: Biblioteca de Dados + Storage -->
-                    <div class="selbetti-data-library glass">
-                        <div class="selbetti-data-library-header">
-                            <span class="selbetti-data-library-title"><i class="fas fa-layer-group"></i> Fontes de dados</span>
-                            <span class="selbetti-storage-badge" id="selbetti-storage-badge"><code>0 KB</code> usado</span>
-                            <span class="selbetti-quota-warning glass" id="selbetti-quota-warning" style="display:none;"><i class="fas fa-exclamation-triangle"></i> Storage quase cheio · <a href="#" id="selbetti-quota-help">Limpar ou exportar</a></span>
-                        </div>
-                        <div class="selbetti-data-sources" id="selbetti-data-sources">
-                            <div class="selbetti-ds-item" data-section="orcamento">
-                                <span class="selbetti-ds-icon"><i class="fas fa-file-invoice-dollar"></i></span>
-                                <span class="selbetti-ds-name">Orçamentos</span>
-                                <span class="selbetti-ds-count" id="selbetti-ds-orcamento">0</span>
-                            </div>
-                            <div class="selbetti-ds-item" data-section="certificados">
-                                <span class="selbetti-ds-icon"><i class="fas fa-certificate"></i></span>
-                                <span class="selbetti-ds-name">Certificados</span>
-                                <span class="selbetti-ds-count" id="selbetti-ds-certificados">0</span>
-                            </div>
-                            <div class="selbetti-ds-item" data-section="backup">
-                                <span class="selbetti-ds-icon"><i class="fas fa-boxes-stacked"></i></span>
-                                <span class="selbetti-ds-name">Backup operacional</span>
-                                <span class="selbetti-ds-count" id="selbetti-ds-backup">0</span>
-                            </div>
-                            <div class="selbetti-ds-item" data-section="atas">
-                                <span class="selbetti-ds-icon"><i class="fas fa-clipboard-list"></i></span>
-                                <span class="selbetti-ds-name">Atas e reuniões</span>
-                                <span class="selbetti-ds-count" id="selbetti-ds-atas">0</span>
-                            </div>
-                            <div class="selbetti-ds-item" data-section="ferramentas">
-                                <span class="selbetti-ds-icon"><i class="fas fa-tools"></i></span>
-                                <span class="selbetti-ds-name">Ferramentas</span>
-                                <span class="selbetti-ds-count" id="selbetti-ds-ferramentas">0</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Painel API / Integrações -->
-                    <div class="selbetti-api-panel glass">
-                        <div class="selbetti-api-panel-header">
-                            <span><i class="fas fa-plug"></i> API &amp; Integrações</span>
-                            <span class="selbetti-api-status" id="selbetti-api-status"><i class="fas fa-circle selbetti-status-dot"></i> Online</span>
-                        </div>
-                        <div class="selbetti-api-list">
-                            <div class="selbetti-api-row"><code>GET</code> <span class="selbetti-api-path">/data/orcamentos</span> <span class="selbetti-api-badge ok">OCR</span></div>
-                            <div class="selbetti-api-row"><code>GET</code> <span class="selbetti-api-path">/data/certificados</span> <span class="selbetti-api-badge ok">OCR</span></div>
-                            <div class="selbetti-api-row"><code>POST</code> <span class="selbetti-api-path">/data/backup</span> <span class="selbetti-api-badge ok">PDF · Excel</span></div>
-                            <div class="selbetti-api-row"><code>POST</code> <span class="selbetti-api-path">/data/atas</span> <span class="selbetti-api-badge ok">Voz → texto</span></div>
-                            <div class="selbetti-api-row"><code>GET</code> <span class="selbetti-api-path">/export/pdf</span> <span class="selbetti-api-badge">Export</span></div>
-                            <div class="selbetti-api-row"><code>GET</code> <span class="selbetti-api-path">/export/xlsx</span> <span class="selbetti-api-badge">Export</span></div>
-                        </div>
-                    </div>
-
-                    <!-- Dashboard: cards de status rápido (mantidos, visual mais tech) -->
-                    <div class="selbetti-dashboard-cards">
-                        <div class="selbetti-dash-card glass" id="selbetti-dash-pedidos">
-                            <div class="selbetti-dash-icon"><i class="fas fa-boxes-stacked"></i></div>
-                            <div class="selbetti-dash-value" id="selbetti-dash-pedidos-n">—</div>
-                            <div class="selbetti-dash-label">Pedidos (pendentes / total)</div>
-                            <button type="button" class="selbetti-dash-action" data-section="backup">Ver Backup</button>
-                        </div>
-                        <div class="selbetti-dash-card glass" id="selbetti-dash-cert">
-                            <div class="selbetti-dash-icon"><i class="fas fa-certificate"></i></div>
-                            <div class="selbetti-dash-value" id="selbetti-dash-cert-text">—</div>
-                            <div class="selbetti-dash-label">Próximo certificado</div>
-                            <button type="button" class="selbetti-dash-action" data-section="certificados">Ver Certificados</button>
-                        </div>
-                        <div class="selbetti-dash-card glass" id="selbetti-dash-ata">
-                            <div class="selbetti-dash-icon"><i class="fas fa-clipboard-list"></i></div>
-                            <div class="selbetti-dash-value selbetti-dash-ata-title" id="selbetti-dash-ata-text">—</div>
-                            <div class="selbetti-dash-label">Última ata</div>
-                            <button type="button" class="selbetti-dash-action" data-section="atas">Ver Atas</button>
-                        </div>
-                    </div>
-                    <div class="selbetti-quick-cards">
-                        <button type="button" class="selbetti-quick-card glass" data-section="orcamento"><i class="fas fa-file-invoice-dollar"></i><span>Orçamento</span></button>
-                        <button type="button" class="selbetti-quick-card glass" data-section="ferramentas"><i class="fas fa-tools"></i><span>Ferramentas</span></button>
-                        <button type="button" class="selbetti-quick-card glass" data-section="certificados"><i class="fas fa-certificate"></i><span>Certificados</span></button>
-                        <button type="button" class="selbetti-quick-card glass" data-section="backup"><i class="fas fa-boxes-stacked"></i><span>Backup</span></button>
-                        <button type="button" class="selbetti-quick-card glass" data-section="atas"><i class="fas fa-clipboard-list"></i><span>Atas</span></button>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Secção: Orçamento de Peças (biblioteca inteligente de imagens/PDF) -->
-            <section class="selbetti-section" id="section-orcamento">
-                <div class="selbetti-card glass selbetti-orc-card">
-                    <h2><i class="fas fa-images"></i> Orçamento de Peças</h2>
-                    <p class="selbetti-desc">Gerenciador inteligente de orçamentos (fotos/PDF) por Ano &gt; Mês &gt; Dia &gt; SELB, com visualização em vidro e preparação para IA.</p>
-
-                    <!-- Layout em 2 colunas: árvore + conteúdo -->
-                    <div class="selbetti-orc-layout">
-                        <!-- Coluna: árvore de navegação (Ano > Mês > Dia > SELB) -->
-                        <aside class="selbetti-orc-tree glass" id="selbetti-orc-tree">
-                            <div class="selbetti-orc-tree-header">
-                                <span><i class="fas fa-folder-tree"></i> Biblioteca por data</span>
-                            </div>
-                            <div class="selbetti-orc-tree-body" id="selbetti-orc-tree-body">
-                                <!-- Preenchido via JS -->
-                                <p class="selbetti-empty">Nenhum ficheiro ainda. Envie orçamentos na área ao lado.</p>
-                            </div>
-                        </aside>
-
-                        <!-- Coluna: upload, filtros e visualização -->
-                        <div class="selbetti-orc-main">
-                            <!-- Barra de contexto: SELB + Modelo + destino -->
-                            <div class="selbetti-orc-meta glass">
-                                <div class="selbetti-orc-meta-fields">
-                                    <div>
-                                        <label for="selbetti-orc-selb">SELB</label>
-                                        <input type="text" id="selbetti-orc-selb" class="selbetti-input glass selbetti-input-code" placeholder="Ex: SELB_4567">
-                                    </div>
-                                    <div>
-                                        <label for="selbetti-orc-modelo">Modelo da impressora</label>
-                                        <select id="selbetti-orc-modelo" class="selbetti-input glass">
-                                            <option value="">Escolha o modelo</option>
-                                            <option value="ZT411">ZT411</option>
-                                            <option value="ZD421">ZD421</option>
-                                            <option value="ZQ630 Plus">ZQ630 Plus</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="selbetti-orc-meta-destino">
-                                    <span class="selbetti-orc-destino-label">Destino automático:</span>
-                                    <span class="selbetti-orc-destino-path" id="selbetti-orc-destino-path">AAAA › Mês › Dia › SELB_XXXX</span>
-                                </div>
-                            </div>
-
-                            <!-- Upload (ideia 4: compressão de imagens) -->
-                            <div class="selbetti-upload-zone glass" id="selbetti-orcamento-drop">
-                                <input type="file" id="selbetti-orcamento-file" accept="image/*,.pdf" multiple hidden>
-                                <label for="selbetti-orcamento-file" class="selbetti-upload-label">
-                                    <i class="fas fa-cloud-upload-alt"></i>
-                                    <span>Arraste orçamentos aqui ou clique para escolher</span>
-                                    <small>Imagens (JPG, PNG) ou PDF · organizado em Ano › Mês › Dia › SELB</small>
-                                </label>
-                                <label class="selbetti-upload-option"><input type="checkbox" id="selbetti-orcamento-compress" checked> Comprimir imagens para poupar espaço</label>
-                            </div>
-                            <!-- Filtros avançados (ideia 10) + Vista galeria/listagem (ideia 21) + Comparar (ideia 22) + OCR em lote (ideia 11) -->
-                            <div class="selbetti-orc-toolbar glass">
-                                <div class="selbetti-view-toggle">
-                                    <button type="button" class="selbetti-view-btn active" data-view="list" title="Lista"><i class="fas fa-list"></i></button>
-                                    <button type="button" class="selbetti-view-btn" data-view="grid" title="Galeria"><i class="fas fa-th-large"></i></button>
-                                    <button type="button" class="selbetti-view-btn" data-view="timeline" title="Timeline por SELB"><i class="fas fa-stream"></i></button>
-                                </div>
-                                <button type="button" class="selbetti-btn selbetti-btn-secondary selbetti-btn-sm" id="selbetti-orcamento-compare-btn" title="Comparar dois orçamentos"><i class="fas fa-columns"></i> Comparar</button>
-                                <button type="button" class="selbetti-btn selbetti-btn-secondary selbetti-btn-sm" id="selbetti-orcamento-ocr-batch" title="OCR em todos os selecionados"><i class="fas fa-bolt"></i> OCR em lote</button>
-                                <div class="selbetti-filters-advanced" id="selbetti-orc-filters">
-                                    <span class="selbetti-filters-label"><i class="fas fa-filter"></i> Filtros</span>
-                                    <input type="text" id="selbetti-orc-filter-selb" class="selbetti-input selbetti-input-sm" placeholder="SELB">
-                                    <input type="date" id="selbetti-orc-filter-date-from" class="selbetti-input selbetti-input-sm" placeholder="De">
-                                    <input type="date" id="selbetti-orc-filter-date-to" class="selbetti-input selbetti-input-sm" placeholder="Até">
-                                    <select id="selbetti-orc-filter-type" class="selbetti-input selbetti-input-sm"><option value="">Tipo</option><option value="image">Imagem</option><option value="pdf">PDF</option></select>
-                                </div>
-                            </div>
-
-                            <!-- Filtros rápidos por modelo -->
-                            <div class="selbetti-orc-filtros">
-                                <button type="button" class="selbetti-orc-chip selbetti-orc-chip-active" data-modelo="">Todos</button>
-                                <button type="button" class="selbetti-orc-chip" data-modelo="ZT411">ZT411</button>
-                                <button type="button" class="selbetti-orc-chip" data-modelo="ZD421">ZD421</button>
-                                <button type="button" class="selbetti-orc-chip" data-modelo="ZQ630 Plus">ZQ630 Plus</button>
-                            </div>
-
-                            <!-- Breadcrumb do nó selecionado -->
-                            <div class="selbetti-orc-breadcrumb" id="selbetti-orc-breadcrumb">
-                                <!-- Preenchido via JS -->
-                                <span>Todos os orçamentos</span>
-                            </div>
-
-                            <!-- Barra OCR -->
-                            <div class="selbetti-ocr-bar glass">
-                                <span class="selbetti-ocr-label"><i class="fas fa-search"></i> Extração automática (OCR)</span>
-                                <button type="button" class="selbetti-btn selbetti-btn-secondary" id="selbetti-orcamento-ocr" title="Ler texto da imagem/PDF"><i class="fas fa-file-alt"></i> Extrair texto (OCR)</button>
-                                <span class="selbetti-ocr-hint">Selecione um ficheiro na biblioteca para extrair valores e datas.</span>
-                            </div>
-
-                            <!-- Ideias 26–30: status, notas, partilha, carimbo, e-mail -->
-                            <div class="selbetti-orc-actions-bar glass">
-                                <span class="selbetti-actions-label">Por ficheiro:</span>
-                                <button type="button" class="selbetti-btn selbetti-btn-secondary selbetti-btn-sm" id="selbetti-orc-share-link" title="Partilhar por link temporário (ideia 28)"><i class="fas fa-link"></i> Partilhar link</button>
-                                <button type="button" class="selbetti-btn selbetti-btn-secondary selbetti-btn-sm" id="selbetti-orc-send-email" title="Enviar por e-mail (ideia 30)"><i class="fas fa-envelope"></i> Enviar por e-mail</button>
-                            </div>
-                            <div class="selbetti-preview-grid glass" id="selbetti-orcamento-preview">
-                                <p class="selbetti-empty" id="selbetti-orcamento-empty">Nenhum ficheiro. Envie orçamentos acima.</p>
-                                <div class="selbetti-preview-inner" id="selbetti-orcamento-inner"></div>
-                            </div>
-
-                            <!-- Resultado de OCR (ideias 12–15, 18: campos extraídos, idioma, tabela→Excel, sugestão, traduzir) -->
-                            <div class="selbetti-ocr-result glass" id="selbetti-orcamento-ocr-result" style="display:none;">
-                                <div class="selbetti-ocr-result-header">
-                                    <h4>Texto extraído (OCR)</h4>
-                                    <span class="selbetti-ocr-lang-badge" id="selbetti-orc-ocr-lang" style="display:none;">PT</span>
-                                    <button type="button" class="selbetti-btn selbetti-btn-secondary selbetti-btn-sm" id="selbetti-orc-ocr-translate" title="Traduzir"><i class="fas fa-language"></i></button>
-                                    <button type="button" class="selbetti-btn selbetti-btn-secondary selbetti-btn-sm" id="selbetti-orc-ocr-table" title="Extrair tabela para Excel"><i class="fas fa-table"></i> Tabela → Excel</button>
-                                </div>
-                                <div class="selbetti-ocr-fields" id="selbetti-orc-ocr-fields" style="display:none;">
-                                    <span>Valor:</span><code id="selbetti-ocr-field-valor">—</code>
-                                    <span>Data:</span><code id="selbetti-ocr-field-data">—</code>
-                                    <span>Fornecedor:</span><code id="selbetti-ocr-field-fornecedor">—</code>
-                                </div>
-                                <pre id="selbetti-orcamento-ocr-text"></pre>
-                                <p class="selbetti-ocr-suggest" id="selbetti-orc-ocr-suggest" style="display:none;">Sugestão: usar modelo <strong id="selbetti-orc-ocr-suggest-modelo"></strong> · <button type="button" class="selbetti-btn-link" id="selbetti-orc-ocr-apply-suggest">Aplicar</button></p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Modal de visualização (spotlight) -->
-                <div class="selbetti-orc-modal-backdrop" id="selbetti-orc-modal" style="display:none;">
-                    <div class="selbetti-orc-modal glass">
-                        <div class="selbetti-orc-modal-header">
-                            <div class="selbetti-orc-modal-info">
-                                <h3 id="selbetti-orc-modal-title">Orçamento</h3>
-                                <p id="selbetti-orc-modal-meta"></p>
-                            </div>
-                            <div class="selbetti-orc-modal-actions">
-                                <button type="button" class="selbetti-btn selbetti-btn-secondary selbetti-btn-sm" id="selbetti-orc-modal-full"><i class="fas fa-expand"></i></button>
-                                <button type="button" class="selbetti-btn selbetti-btn-secondary selbetti-btn-sm" id="selbetti-orc-modal-download"><i class="fas fa-download"></i></button>
-                                <!-- Futuro: gerar pedido de peças automaticamente -->
-                                <button type="button" class="selbetti-btn selbetti-btn-primary selbetti-btn-sm" id="selbetti-orc-modal-close"><i class="fas fa-times"></i> Fechar</button>
-                            </div>
-                        </div>
-                        <div class="selbetti-orc-modal-body">
-                            <div class="selbetti-orc-modal-content" id="selbetti-orc-modal-content"></div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Secção: Ferramentas Anotadas (ideias 51-60: estado, localização, categoria, código, export) -->
-            <section class="selbetti-section" id="section-ferramentas">
-                <div class="selbetti-card glass selbetti-card-ferramentas">
-                    <h2><i class="fas fa-tools"></i> Ferramentas Anotadas</h2>
-                    <p class="selbetti-desc">Liste ferramentas com estado, localização, categoria e código. Exporte para PDF ou impressão.</p>
-                    <div class="selbetti-form-wrap selbetti-form-grid selbetti-ferramentas-form">
-                        <div class="selbetti-fld"><label for="selbetti-ferramenta-nome">Nome</label><input type="text" id="selbetti-ferramenta-nome" class="selbetti-input glass" placeholder="Nome da ferramenta"></div>
-                        <div class="selbetti-fld"><label for="selbetti-ferramenta-estado">Estado (ideia 52)</label><select id="selbetti-ferramenta-estado" class="selbetti-input glass"><option value="disponivel">Disponível</option><option value="em-uso">Em uso</option><option value="manutencao">Em manutenção</option></select></div>
-                        <div class="selbetti-fld"><label for="selbetti-ferramenta-local">Localização (ideia 53)</label><input type="text" id="selbetti-ferramenta-local" class="selbetti-input glass" placeholder="Armário, gaveta, sala"></div>
-                        <div class="selbetti-fld"><label for="selbetti-ferramenta-categoria">Categoria (ideia 56)</label><select id="selbetti-ferramenta-categoria" class="selbetti-input glass"><option value="geral">Geral</option><option value="eletrica">Elétrica</option><option value="pneumatica">Pneumática</option><option value="medicao">Medição</option></select></div>
-                        <div class="selbetti-fld"><label for="selbetti-ferramenta-codigo">Código (ideia 57)</label><input type="text" id="selbetti-ferramenta-codigo" class="selbetti-input glass selbetti-input-code" placeholder="Código ou código de barras"></div>
-                        <div class="selbetti-fld selbetti-fld-full"><label for="selbetti-ferramenta-nota">Anotação / uso</label><textarea id="selbetti-ferramenta-nota" class="selbetti-input glass" rows="2" placeholder="Notas, quem usou, data devolução..."></textarea></div>
-                        <button type="button" class="selbetti-btn selbetti-btn-primary" id="selbetti-ferramenta-add"><i class="fas fa-plus"></i> Adicionar ferramenta</button>
-                    </div>
-                    <div class="selbetti-list-header">
-                        <h3>Lista de ferramentas</h3>
-                        <button type="button" class="selbetti-btn selbetti-btn-secondary selbetti-btn-sm" id="selbetti-ferramentas-export-pdf" title="Export para impressão/PDF (ideia 60)"><i class="fas fa-file-pdf"></i> Exportar PDF</button>
-                    </div>
-                    <div class="selbetti-list-wrap glass selbetti-ferramentas-list" id="selbetti-ferramentas-lista">
-                        <ul id="selbetti-ferramentas-itens"></ul>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Secção: Certificados (ideias 24–25: lembrete renovação, agrupar por curso) -->
-            <section class="selbetti-section" id="section-certificados">
-                <div class="selbetti-card glass">
-                    <h2><i class="fas fa-certificate"></i> Certificados de Cursos</h2>
-                    <p class="selbetti-desc">Registe certificados de cursos Selbetti. Envie imagens ou PDF e visualize no centro.</p>
-                    <div class="selbetti-cert-options glass">
-                        <label class="selbetti-cert-reminder">Lembrete renovação <input type="number" id="selbetti-cert-reminder-days" min="1" max="365" value="30"> dias antes</label>
-                        <label class="selbetti-cert-group"><input type="checkbox" id="selbetti-cert-group-by-course" checked> Agrupar por curso / tipo</label>
-                    </div>
-                    <div class="selbetti-upload-zone glass" id="selbetti-cert-drop">
-                        <input type="file" id="selbetti-cert-file" accept="image/*,.pdf" multiple hidden>
-                        <label for="selbetti-cert-file" class="selbetti-upload-label">
-                            <i class="fas fa-cloud-upload-alt"></i>
-                            <span>Arraste certificados aqui ou clique para escolher</span>
-                            <small>Imagens (JPG, PNG) ou PDF</small>
-                        </label>
-                    </div>
-                    <div class="selbetti-ocr-bar glass">
-                        <span class="selbetti-ocr-label"><i class="fas fa-search"></i> OCR</span>
-                        <button type="button" class="selbetti-btn selbetti-btn-secondary" id="selbetti-cert-ocr" title="Extrair texto do certificado"><i class="fas fa-file-alt"></i> Extrair texto (OCR)</button>
-                    </div>
-                    <div class="selbetti-preview-grid glass" id="selbetti-cert-preview">
-                        <p class="selbetti-empty" id="selbetti-cert-empty">Nenhum certificado. Envie ficheiros acima.</p>
-                        <div class="selbetti-preview-inner" id="selbetti-cert-inner"></div>
-                    </div>
-                    <div class="selbetti-ocr-result glass" id="selbetti-cert-ocr-result" style="display:none;">
-                        <h4>Texto extraído (OCR)</h4>
-                        <pre id="selbetti-cert-ocr-text"></pre>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Secção: Pedido Backup Operacional (ideia 10: filtros avançados; 7–8: duplicar, tags) -->
-            <section class="selbetti-section" id="section-backup">
-                <div class="selbetti-card glass">
-                    <h2><i class="fas fa-boxes-stacked"></i> Pedido de Peças – Backup Operacional</h2>
-                    <p class="selbetti-desc">Anote a OS em que foi pedida a peça, o código da peça, SELB e data de solicitação.</p>
-                    <div class="selbetti-filters-advanced glass selbetti-backup-filters" id="selbetti-backup-filters">
-                        <span class="selbetti-filters-label"><i class="fas fa-filter"></i> Filtros</span>
-                        <input type="text" id="selbetti-backup-filter-os" class="selbetti-input selbetti-input-sm" placeholder="OS">
-                        <input type="text" id="selbetti-backup-filter-selb" class="selbetti-input selbetti-input-sm" placeholder="SELB">
-                        <input type="date" id="selbetti-backup-filter-from" class="selbetti-input selbetti-input-sm" placeholder="Data de">
-                        <input type="date" id="selbetti-backup-filter-to" class="selbetti-input selbetti-input-sm" placeholder="Data até">
-                        <select id="selbetti-backup-filter-status" class="selbetti-input selbetti-input-sm"><option value="">Status</option><option value="pendente">Pendente</option><option value="transito">Em trânsito</option><option value="entregue">Entregue</option></select>
-                    </div>
-                    <div class="selbetti-form-wrap selbetti-form-grid">
-                        <label>OS</label>
-                        <input type="text" id="selbetti-backup-os" class="selbetti-input glass selbetti-input-code" placeholder="Nº da OS">
-                        <label>Código da peça</label>
-                        <input type="text" id="selbetti-backup-codigo" class="selbetti-input glass selbetti-input-code" placeholder="Código da peça">
-                        <label>SELB</label>
-                        <input type="text" id="selbetti-backup-selb" class="selbetti-input glass selbetti-input-code" placeholder="SELB">
-                        <label>Data de solicitação</label>
-                        <input type="date" id="selbetti-backup-data" class="selbetti-input glass">
-                        <label class="selbetti-fld-full">Etiquetas (separar por vírgula)</label>
-                        <input type="text" id="selbetti-backup-tags" class="selbetti-input glass selbetti-fld-full" placeholder="Ex: urgente, ZT411">
-                        <button type="button" class="selbetti-btn selbetti-btn-primary" id="selbetti-backup-pedido"><i class="fas fa-plus"></i> Anotar pedido</button>
-                    </div>
-                    <!-- Ideia 31: Gráfico pedidos ao longo do tempo -->
-                    <div class="selbetti-backup-chart-wrap glass" id="selbetti-backup-chart-wrap">
-                        <h4><i class="fas fa-chart-line"></i> Pedidos por período</h4>
-                        <div class="selbetti-chart-canvas-wrap"><canvas id="selbetti-backup-chart" width="400" height="160"></canvas></div>
-                    </div>
-                    <div class="selbetti-prediction-card glass" id="selbetti-backup-prediction" style="display:none;">
-                        <h4><i class="fas fa-lightbulb"></i> Sugestão do sistema</h4>
-                        <p id="selbetti-backup-prediction-text"></p>
-                    </div>
-                    <!-- Ideia 39: Lembrete em trânsito -->
-                    <div class="selbetti-backup-reminder glass" id="selbetti-backup-reminder" style="display:none;">
-                        <i class="fas fa-truck"></i> <span id="selbetti-backup-reminder-text"></span>
-                    </div>
-                    <div class="selbetti-list-wrap glass" id="selbetti-backup-lista">
-                        <div class="selbetti-list-header">
-                            <h3>Pedidos anotados</h3>
-                            <div class="selbetti-export-actions">
-                                <select id="selbetti-backup-sort" class="selbetti-input selbetti-input-sm" title="Ordenar (ideia 38)"><option value="data-desc">Data (mais recente)</option><option value="data-asc">Data (mais antigo)</option><option value="os">OS</option><option value="selb">SELB</option><option value="codigo">Código</option></select>
-                                <button type="button" class="selbetti-btn selbetti-btn-secondary selbetti-btn-sm" id="selbetti-backup-export-pdf"><i class="fas fa-file-pdf"></i> PDF</button>
-                                <button type="button" class="selbetti-btn selbetti-btn-secondary selbetti-btn-sm" id="selbetti-backup-export-excel"><i class="fas fa-file-excel"></i> Excel</button>
-                                <button type="button" class="selbetti-btn selbetti-btn-secondary selbetti-btn-sm" id="selbetti-backup-export-csv" title="Export CSV (ideia 40)"><i class="fas fa-file-csv"></i> CSV</button>
-                            </div>
-                        </div>
-                        <ul id="selbetti-backup-itens"></ul>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Secção: Atas e Reuniões (gravação por microfone + transcrição) -->
-            <section class="selbetti-section" id="section-atas">
-                <div class="selbetti-card glass">
-                    <h2><i class="fas fa-clipboard-list"></i> Atas e Reuniões</h2>
-                    <p class="selbetti-desc">Grave a reunião com o microfone: o robô transcreve em tempo real para texto (estilo Word). Ou adicione atas/prints manualmente.</p>
-                    <div class="selbetti-tabs">
-                        <button type="button" class="selbetti-tab active" data-ata="semanais">Semanais</button>
-                        <button type="button" class="selbetti-tab" data-ata="mensais">Mensais</button>
-                        <button type="button" class="selbetti-tab" data-ata="anuais">Anuais</button>
-                    </div>
-                    <!-- Gravação por microfone (transcrição em tempo real) -->
-                    <div class="selbetti-ata-gravar glass">
-                        <h3><i class="fas fa-microphone"></i> Gravar reunião (voz → texto)</h3>
-                        <p class="selbetti-desc">Clique em <strong>Iniciar gravação</strong> e fale. O texto aparece em tempo real. Use Chrome para melhor suporte.</p>
-                        <div class="selbetti-ata-mic-actions">
-                            <button type="button" class="selbetti-btn selbetti-btn-primary" id="selbetti-ata-mic-start"><i class="fas fa-microphone"></i> Iniciar gravação</button>
-                            <button type="button" class="selbetti-btn selbetti-btn-danger" id="selbetti-ata-mic-stop" disabled><i class="fas fa-stop"></i> Parar</button>
-                            <button type="button" class="selbetti-btn selbetti-btn-secondary" id="selbetti-ata-record-audio" title="Gravar áudio (ideia 41)"><i class="fas fa-file-audio"></i> Gravar áudio</button>
-                        </div>
-                        <!-- Ideias 48–49: modo apresentação, contagem palavras -->
-                        <div class="selbetti-ata-stats glass" id="selbetti-ata-stats">
-                            <span id="selbetti-ata-word-count">0 palavras</span>
-                            <span id="selbetti-ata-read-time">~0 min leitura</span>
-                            <button type="button" class="selbetti-btn selbetti-btn-secondary selbetti-btn-sm" id="selbetti-ata-presentation" title="Modo apresentação (ideia 48)"><i class="fas fa-expand"></i> Apresentação</button>
-                        </div>
-                        <div class="selbetti-ata-highlights" id="selbetti-ata-highlights" style="display:none;">
-                            <h4><i class="fas fa-bolt"></i> Destaques (comandos de voz)</h4>
-                            <ul id="selbetti-ata-highlights-list"></ul>
-                        </div>
-                        <div class="selbetti-ata-transcript-wrap">
-                            <label>Transcrição em tempo real</label>
-                            <textarea id="selbetti-ata-transcript" class="selbetti-input glass" rows="10" placeholder="O texto da reunião aparecerá aqui ao falar. Diga «IA, anote que a peça X precisa de troca urgente» para criar destaque."></textarea>
-                            <div class="selbetti-ata-actions">
-                                <button type="button" class="selbetti-btn selbetti-btn-secondary selbetti-btn-save" id="selbetti-ata-save-transcript"><i class="fas fa-save"></i> Guardar como ata</button>
-                                <button type="button" class="selbetti-btn selbetti-btn-secondary selbetti-btn-sm" id="selbetti-ata-resumir" title="Resumo automático (ideia 16)"><i class="fas fa-compress-alt"></i> Resumir</button>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Ideias 44–47: template ata, lembrete recorrente, enviar e-mail, calendário -->
-                    <div class="selbetti-ata-options glass">
-                        <label class="selbetti-check-wrap"><input type="checkbox" id="selbetti-ata-recurring"> Lembrete reunião recorrente (ideia 44)</label>
-                        <select id="selbetti-ata-template" class="selbetti-input selbetti-input-sm" title="Template (ideia 45)"><option value="">Sem template</option><option value="padrao">Ordem do dia, Participantes, Conclusões</option></select>
-                    </div>
-                    <!-- Entrada manual de atas -->
-                    <div class="selbetti-form-wrap">
-                        <input type="text" id="selbetti-ata-titulo" class="selbetti-input glass" placeholder="Título da reunião / ata">
-                        <input type="text" id="selbetti-ata-data" class="selbetti-input glass" placeholder="Data (ex: 16/03/2026)">
-                        <textarea id="selbetti-ata-resumo" class="selbetti-input glass" rows="3" placeholder="Resumo ou link para ata/print... (ideia 43: ex. João: enviar relatório até sexta)"></textarea>
-                        <button type="button" class="selbetti-btn selbetti-btn-primary" id="selbetti-ata-add"><i class="fas fa-plus"></i> Adicionar ata / print</button>
-                    </div>
-                    <div class="selbetti-list-wrap glass" id="selbetti-atas-lista">
-                        <div class="selbetti-list-header">
-                            <h3>Atas registadas</h3>
-                            <div class="selbetti-export-actions">
-                                <button type="button" class="selbetti-btn selbetti-btn-secondary selbetti-btn-sm" id="selbetti-atas-export-pdf"><i class="fas fa-file-pdf"></i> PDF</button>
-                                <button type="button" class="selbetti-btn selbetti-btn-secondary selbetti-btn-sm" id="selbetti-atas-export-excel"><i class="fas fa-file-excel"></i> Excel</button>
-                                <button type="button" class="selbetti-btn selbetti-btn-secondary selbetti-btn-sm" id="selbetti-atas-export-md" title="Export Markdown (ideia 50)"><i class="fas fa-file-alt"></i> Markdown</button>
-                                <a href="#" target="_blank" rel="noopener" class="selbetti-btn selbetti-btn-secondary selbetti-btn-sm" id="selbetti-atas-calendar-link" title="Google Calendar (ideia 47)"><i class="fas fa-calendar-plus"></i> Calendário</a>
-                                <button type="button" class="selbetti-btn selbetti-btn-secondary selbetti-btn-sm" id="selbetti-atas-email-send" title="Enviar ata por e-mail (ideia 46)"><i class="fas fa-envelope"></i> Enviar e-mail</button>
-                            </div>
-                        </div>
-                        <ul id="selbetti-atas-itens"></ul>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Secções Atas Semanais / Mensais / Anuais (redirecionam para Atas com tab ativa) -->
-            <section class="selbetti-section" id="section-atas-semanais"><div class="selbetti-card glass"><p>Use o painel <strong>Atas e Reuniões</strong> e filtre por <strong>Semanais</strong>.</p></div></section>
-            <section class="selbetti-section" id="section-atas-mensais"><div class="selbetti-card glass"><p>Use o painel <strong>Atas e Reuniões</strong> e filtre por <strong>Mensais</strong>.</p></div></section>
-            <section class="selbetti-section" id="section-atas-anuais"><div class="selbetti-card glass"><p>Use o painel <strong>Atas e Reuniões</strong> e filtre por <strong>Anuais</strong>.</p></div></section>
-        </main>
-    </div>
-
-    <!-- Modal Comparar dois orçamentos (ideia 22) -->
-    <div class="selbetti-modal-backdrop" id="selbetti-compare-modal" style="display:none;">
-        <div class="selbetti-modal glass selbetti-modal-wide">
-            <div class="selbetti-modal-header">
-                <h3><i class="fas fa-columns"></i> Comparar orçamentos</h3>
-                <button type="button" class="selbetti-modal-close" id="selbetti-compare-close"><i class="fas fa-times"></i></button>
-            </div>
-            <div class="selbetti-modal-body selbetti-compare-body">
-                <div class="selbetti-compare-col" id="selbetti-compare-left"></div>
-                <div class="selbetti-compare-col" id="selbetti-compare-right"></div>
-            </div>
-        </div>
-    </div>
-    <!-- Modo apresentação ata (ideia 48) -->
-    <div class="selbetti-presentation-overlay" id="selbetti-presentation-overlay" style="display:none;">
-        <div class="selbetti-presentation-content" id="selbetti-presentation-content"></div>
-        <button type="button" class="selbetti-presentation-close" id="selbetti-presentation-close" aria-label="Fechar"><i class="fas fa-times"></i></button>
-    </div>
-    <!-- Modal Histórico de versões (ideia 3) -->
-    <div class="selbetti-modal-backdrop" id="selbetti-version-modal" style="display:none;">
-        <div class="selbetti-modal glass">
-            <div class="selbetti-modal-header">
-                <h3><i class="fas fa-history"></i> Histórico de versões</h3>
-                <button type="button" class="selbetti-modal-close" id="selbetti-version-close"><i class="fas fa-times"></i></button>
-            </div>
-            <div class="selbetti-modal-body">
-                <p class="selbetti-desc">Versões anteriores deste item. (Em desenvolvimento: restauro em breve.)</p>
-                <ul class="selbetti-version-list" id="selbetti-version-list"></ul>
-            </div>
-        </div>
-    </div>
-    <!-- Assistente (ideias 17, 20: comandos de voz + chat sobre dados) -->
-    <div class="selbetti-assistant-wrap" id="selbetti-assistant-wrap">
-        <div class="selbetti-assistant-panel glass" id="selbetti-assistant-panel">
-            <div class="selbetti-assistant-header">
-                <span><i class="fas fa-robot"></i> Assistente</span>
-                <button type="button" class="selbetti-assistant-close" id="selbetti-assistant-close" aria-label="Fechar"><i class="fas fa-times"></i></button>
-            </div>
-            <div class="selbetti-assistant-body">
-                <p><strong>Comandos de voz</strong> (durante gravação):</p>
-                <ul class="selbetti-voice-commands">
-                    <li>«IA, anote que a peça X precisa de troca urgente»</li>
-                    <li>«Próxima ata» / «Nova ata»</li>
-                    <li>«Guardar» / «Parar gravação»</li>
-                </ul>
-                <p><strong>Pergunte sobre os seus dados</strong> (ideia 20):</p>
-                <div class="selbetti-assistant-chat">
-                    <input type="text" id="selbetti-assistant-query" class="selbetti-input" placeholder="Ex: Quantos pedidos pendentes?">
-                    <button type="button" class="selbetti-btn selbetti-btn-primary selbetti-btn-sm" id="selbetti-assistant-ask">Perguntar</button>
-                    <div class="selbetti-assistant-answer" id="selbetti-assistant-answer"></div>
-                </div>
-            </div>
-        </div>
-        <button type="button" class="selbetti-assistant-fab glass" id="selbetti-assistant-fab" aria-label="Abrir assistente"><i class="fas fa-robot"></i></button>
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
-    <script src="selbetti.js"></script>
+    <script src="../js/selbetti-hub.js?v=hub33"></script>
 </body>
 </html>
