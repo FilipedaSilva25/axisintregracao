@@ -37,7 +37,7 @@
         { id: 'shop', label: 'SHOP SELBETTI', emoji: '🛒', hint: 'Loja virtual', iconImg: DIGITAL_IMG_BASE + 'satelitti.png.png' },
         { id: 'portal_cliente', label: 'PORTAL DO CLIENTE', emoji: '🤝', hint: 'Canal cliente', iconImg: DIGITAL_IMG_BASE + 'portal_do_cliente.png.png' },
         { id: 'wap', label: 'WAP (CANAL DO TÉCNICO)', emoji: '📱', hint: 'Canal do técnico', iconImg: DIGITAL_IMG_BASE + 'smart_manager_png.png' },
-        { id: 'patrimonio', label: 'O PATRIMÔNIO TA ON', emoji: '📦', hint: 'PTO', iconImg: DIGITAL_IMG_BASE + 'O_Patrimônio_Ta_On.png.png' },
+        { id: 'patrimonio', label: 'O PATRIMÔNIO TA ON', emoji: '📦', hint: 'PTO', iconImg: DIGITAL_IMG_BASE + 'O_Patrimonio_Ta_On.png.png' },
         { id: 'satelitti', label: 'SATELITTI', emoji: '🛰️', hint: 'Suite', iconImg: DIGITAL_IMG_BASE + 'satelitti.png.png' },
         { id: 'feedz', label: 'FEEDZ', emoji: '📊', hint: 'TOTVS RH', iconImg: DIGITAL_IMG_BASE + 'Feedz.png.png' },
         { id: 'outlook', label: 'OUTLOOK', emoji: '📧', hint: 'E-mail', iconImg: DIGITAL_IMG_BASE + 'logo_outlook.png.png.png' },

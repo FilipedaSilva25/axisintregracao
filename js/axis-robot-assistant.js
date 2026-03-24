@@ -19,6 +19,7 @@
     var HEADER_SVG = '<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="32" cy="34" r="16" fill="rgba(0,212,255,0.4)"/><circle cx="26" cy="32" r="3" fill="#0a1420"/><circle cx="38" cy="32" r="3" fill="#0a1420"/><rect x="29" y="40" width="6" height="3" rx="1" fill="#0a1420"/><path d="M32 18 L32 24 M29 21 L32 18 L35 21" stroke="rgba(255,255,255,0.8)" stroke-width="1.5" fill="none"/></svg>';
 
     function createRobot() {
+        if (document.querySelector('.axis-robot-wrap')) return;
         var wrap = document.createElement('div');
         wrap.className = 'axis-robot-wrap';
         wrap.innerHTML =
@@ -28,7 +29,7 @@
             '<div class="axis-robot-panel" id="axis-robot-panel" role="dialog" aria-label="Chat com assistente AXIS" aria-hidden="true">' +
             '  <div class="axis-robot-panel-header">' +
             '    <div class="axis-robot-panel-avatar">' + HEADER_SVG + '</div>' +
-            '    <div class="axis-robot-panel-title-wrap"><div class="axis-robot-panel-title">AXIS Bot</div><div class="axis-robot-panel-subtitle">Assistente em tempo real</div></div>' +
+            '    <div class="axis-robot-panel-title-wrap"><div class="axis-robot-panel-title">AXIS Bot</div><div class="axis-robot-panel-subtitle">IA: OpenAI / Anthropic / Google Gemini (servidor) + dados AXIS</div></div>' +
             '    <label class="axis-robot-tts-toggle" title="Falar respostas automaticamente (voz masculina)"><input type="checkbox" id="axis-robot-tts-auto" aria-label="Falar respostas"/><span class="axis-robot-tts-icon" aria-hidden="true">🔊</span></label>' +
             '    <button type="button" class="axis-robot-panel-close" aria-label="Fechar">×</button>' +
             '  </div>' +
@@ -45,12 +46,8 @@
         wrap.style.visibility = 'hidden';
         wrap.style.pointerEvents = 'none';
         document.body.appendChild(wrap);
-        var navActions = document.querySelector('.nav-actions');
-        var themeBtn = document.getElementById('theme-toggle');
-        if (navActions && themeBtn) {
-            navActions.insertBefore(wrap, themeBtn);
-            wrap.classList.add('axis-robot-in-nav');
-        }
+        /* FAB fixo no canto (corpo): no header ficava pequeno e às vezes fora da área útil após ajustes de layout. */
+        wrap.classList.remove('axis-robot-in-nav');
 
         var panel = document.getElementById('axis-robot-panel');
         var messagesEl = document.getElementById('axis-robot-messages');
@@ -191,10 +188,20 @@
 
             var userName = (typeof currentUser === 'string' && currentUser) ? currentUser : (localStorage.getItem('current_user') || '');
             var base = window.location.origin || '';
+            var ctx = {
+                currentPage: (window.location.hash || '').replace(/^#/, '').trim() || '(início / sem hash)',
+                pathname: (window.location.pathname || '/') + (window.location.search || ''),
+                userLogin: (localStorage.getItem('current_user_login') || '').trim()
+            };
             fetch(base + '/api/assistant', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: text, history: chatHistory.slice(0, -1), userName: userName })
+                body: JSON.stringify({
+                    message: text,
+                    history: chatHistory.slice(0, -1),
+                    userName: userName,
+                    context: ctx
+                })
             })
                 .then(function(r) { return r.json(); })
                 .then(function(data) {
@@ -246,24 +253,37 @@
         if (!wrap) return;
         var mainDisplay = mainContent ? getComputedStyle(mainContent).display : 'none';
         var authDisplay = authScreen ? getComputedStyle(authScreen).display : 'none';
-        var mainVisible = mainContent && mainDisplay !== 'none';
+        var mainVis = mainContent && mainDisplay !== 'none';
+        var mainOpacity = mainContent ? getComputedStyle(mainContent).opacity : '0';
         var authVisible = authScreen && authDisplay !== 'none';
-        var show = mainVisible && !authVisible;
+        var show = mainVis && !authVisible && mainOpacity !== '0';
         wrap.style.visibility = show ? 'visible' : 'hidden';
         wrap.style.pointerEvents = show ? 'auto' : 'none';
+        wrap.style.opacity = show ? '1' : '0';
+    }
+
+    window.axisRobotMaybeShow = maybeShowRobot;
+
+    function scheduleRobotVisibility() {
+        maybeShowRobot();
+        setTimeout(maybeShowRobot, 50);
+        setTimeout(maybeShowRobot, 200);
+        setTimeout(maybeShowRobot, 600);
+        setTimeout(maybeShowRobot, 1500);
+        setTimeout(maybeShowRobot, 3200);
     }
 
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', function() {
             createRobot();
-            maybeShowRobot();
-            setTimeout(maybeShowRobot, 100);
-            setTimeout(maybeShowRobot, 1500);
+            scheduleRobotVisibility();
         });
     } else {
         createRobot();
-        maybeShowRobot();
-        setTimeout(maybeShowRobot, 100);
-        setTimeout(maybeShowRobot, 1500);
+        scheduleRobotVisibility();
     }
+    window.addEventListener('load', function() {
+        setTimeout(maybeShowRobot, 0);
+        setTimeout(maybeShowRobot, 300);
+    });
 })();

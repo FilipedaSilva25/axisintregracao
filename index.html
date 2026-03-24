@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Permissions-Policy" content="camera=(self), microphone=()">
     <meta name="description" content="AXIS - Sistema de Gestão de Inventário de Impressoras Zebra">
     <meta name="theme-color" content="#2ecc71">
     
@@ -18,7 +19,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
     <!-- CSS PRINCIPAL (v=axis2025 evita cache e garante atualizações visíveis) -->
-    <link rel="stylesheet" href="css/style.css?v=axis2026f">
+    <link rel="stylesheet" href="css/style.css?v=axis2026k">
     <link rel="stylesheet" href="css/suporte-tecnico.css">
     <!-- Robô assistente em holograma -->
     <link rel="stylesheet" href="css/axis-robot-assistant.css?v=axis2026robot1">
@@ -75,10 +76,16 @@
         }
 
         /* Título numa só linha, no mesmo estilo dos outros cards longos (ex.: REGISTRO DE CHAMADOS) */
+        .mod-card.preventiva-master .mod-content {
+            text-align: center;
+            align-items: center;
+        }
         .mod-card.preventiva-master .mod-content h3 {
             white-space: nowrap;
             font-size: clamp(0.72rem, 0.42rem + 1.65vw, 1.2rem);
             letter-spacing: 0.02em;
+            text-align: center;
+            width: 100%;
         }
 
         @keyframes pulse {
@@ -1537,7 +1544,7 @@
                  hidden>
                 <div class="auth-face-block auth-face-block--login">
                     <p class="auth-face-title auth-face-title--login">Reconhecimento facial</p>
-                    <p class="auth-face-tagline">Webcam · Configurações</p>
+                    <p class="auth-face-tagline">Câmara do telemóvel ou PC · cadastro em Configurações</p>
                     <ul class="auth-face-bullets" aria-label="Como funciona o acesso por rosto">
                         <li>Compara o seu rosto ao registo guardado em Configurações.</li>
                         <li>Análise por imagem (não é íris nem retina); menos seguro que senha.</li>
@@ -1678,7 +1685,7 @@
                                 </span>
                                 <input type="file" id="axis-profile-photo-input" accept="image/*" class="axis-profile-photo-input" style="display:none">
                                 <h2 class="wa-profile-name" id="axis-profile-dropdown-name">Nome</h2>
-                                <p class="wa-profile-about" id="axis-profile-dropdown-setor">Toque para adicionar setor</p>
+                                <p class="wa-profile-about" id="axis-profile-dropdown-setor">Internal Systems</p>
                             </div>
                             <div class="wa-profile-body">
                                 <div class="wa-profile-row">
@@ -1691,7 +1698,7 @@
                                 </div>
                                 <div class="wa-profile-row">
                                     <span class="wa-profile-label">Setor</span>
-                                    <input type="text" id="axis-profile-mini-setor" class="wa-profile-input" placeholder="Ex: TI, Suporte">
+                                    <input type="text" id="axis-profile-mini-setor" class="wa-profile-input" value="" readonly tabindex="0" title="Setor (definido pelo administrador ou no cadastro)" aria-label="Setor">
                                 </div>
                                 <div class="wa-profile-row wa-profile-row-readonly">
                                     <span class="wa-profile-label">Matrícula AXIS</span>
@@ -1755,13 +1762,15 @@
                 <button data-nav-page="page-home" onclick="if(typeof navigate === 'function') { navigate('page-home'); } return false;" class="side-item active">📊 Início</button>
                 <button data-nav-page="page-inventario" onclick="if(typeof navigate === 'function') { navigate('page-inventario'); } return false;" class="side-item">📦 Inventário</button>
                 <button data-nav-page="page-rondas" onclick="if(typeof navigate === 'function') { navigate('page-rondas'); } return false;" class="side-item">🛡️ Rondas</button>
-                <button data-nav-page="manutencao" onclick="window.location.href='pages/manutenção_preventiva.html'" class="side-item">🖨️ Manutenções Preventivas</button>
+                <button data-nav-page="manutencao" onclick="window.location.href='pages/manutencao_preventiva.html'" class="side-item">🖨️ Manutenções Preventivas</button>
                 <button data-nav-page="page-suporte" onclick="if(typeof navigate === 'function') { navigate('page-suporte'); } return false;" class="side-item">💬 Suporte</button>
                 <button data-nav-page="bloco" onclick="window.location.href='pages/bloco_de_notas_apple.html'" class="side-item">📝 Bloco de Notas</button>
                 <button data-nav-page="registro" onclick="window.location.href='pages/registro_chamados.html'" class="side-item">📋 Registro de Chamados</button>
                 <button data-nav-page="pecas" onclick="window.location.href='pages/pecas.html'" class="side-item">🔧 Peças</button>
                 <button data-nav-page="packing" onclick="window.location.href='pages/packing_machine.html'" class="side-item">🏭 Packing Machine</button>
                 <button data-nav-page="status-bancada" onclick="window.location.href='pages/status_bancada.html'" class="side-item">📊 Status de Bancada</button>
+                <button data-nav-page="sauron" onclick="window.location.href='pages/sauron.html'" class="side-item">🔮 Sauron</button>
+                <button data-nav-page="selbetti" onclick="window.location.href='pages/selbetti.html'" class="side-item">🏭 Selbetti</button>
                 <button data-nav-page="jovem-aprendiz" onclick="window.location.href='pages/jovem-aprendiz.html'" class="side-item">🎓 Jovem Aprendiz</button>
                 <button data-nav-page="notas" onclick="window.location.href='pages/notas_fiscais.html'" class="side-item">📄 Notas Fiscais</button>
                 <button data-nav-page="page-configuracoes" onclick="if(typeof navigate === 'function') { navigate('page-configuracoes'); } return false;" class="side-item">⚙️ Configurações</button>
@@ -1830,7 +1839,7 @@
 
                     <!-- Card Manutenção Preventiva (DESTAQUE) -->
                     <div class="mod-card preventiva-master" 
-                         onclick="window.location.href='pages/manutenção_preventiva.html'" 
+                         onclick="window.location.href='pages/manutencao_preventiva.html'"
                          tabindex="0" 
                          role="button">
                         <div class="mod-icon">🖨️</div>
@@ -1899,7 +1908,7 @@
                     <div class="mod-card sauron-master" onclick="window.location.href='pages/sauron.html'" tabindex="0" role="button">
                         <div class="mod-icon">👁</div>
                         <div class="mod-content">
-                            <h3 class="txt-axis-gradient">SAURON</h3>
+                            <h3 class="txt-axis-gradient">Sauron</h3>
                         </div>
                     </div>
 
@@ -1915,7 +1924,7 @@
                     <div class="mod-card selbetti-master" onclick="window.location.href='pages/selbetti.html'" tabindex="0" role="button" style="cursor: pointer;">
                         <div class="mod-icon"><img src="assets/IMAGENS/Robo_Selbetti_Card.png" alt="SELBETTI" onerror="this.style.display='none';this.nextElementSibling.style.display='block';" /><span style="display:none;font-size:38px;">🏭</span></div>
                         <div class="mod-content">
-                            <h3 class="txt-axis-gradient">SELBETTI</h3>
+                            <h3 class="txt-axis-gradient">Selbetti</h3>
                         </div>
                     </div>
 
@@ -2044,7 +2053,7 @@
                                         <option value="returns">RETURNS</option>
                                         <option value="packing-mono">PACKING MONO</option>
                                         <option value="packing-ptw">PACKING PTW</option>
-                                        <option value="sauron">SAURON</option>
+                                        <option value="sauron">Sauron</option>
                                         <option value="insumos">INSUMOS</option>
                                         <option value="docas-de-expedicao">DOCAS DE EXPEDIÇÃO</option>
                                         <option value="linha-de-peixe-1">LINHA DE PEIXE 1</option>
@@ -2081,7 +2090,7 @@
                                         <div class="setor-selector-option" data-value="returns" role="option">RETURNS</div>
                                         <div class="setor-selector-option" data-value="packing-mono" role="option">PACKING MONO</div>
                                         <div class="setor-selector-option" data-value="packing-ptw" role="option">PACKING PTW</div>
-                                        <div class="setor-selector-option" data-value="sauron" role="option">SAURON</div>
+                                        <div class="setor-selector-option" data-value="sauron" role="option">Sauron</div>
                                         <div class="setor-selector-option" data-value="insumos" role="option">INSUMOS</div>
                                         <div class="setor-selector-option" data-value="docas-de-expedicao" role="option">DOCAS DE EXPEDIÇÃO</div>
                                         <div class="setor-selector-option" data-value="linha-de-peixe-1" role="option">LINHA DE PEIXE 1</div>
@@ -2624,6 +2633,18 @@
                         </div>
                     </div>
 
+                    <!-- Card: Google Chat — mesmo fluxo de avisos (instalar app Chat no Workspace) -->
+                    <div class="admin-dashboard-card admin-card-google-chat" onclick="window.open('https://developers.google.com/chat/how-tos/apps-develop', '_blank', 'noopener,noreferrer');">
+                        <div class="admin-card-icon-wrapper">
+                            <div class="admin-card-icon" aria-hidden="true">💬</div>
+                        </div>
+                        <div class="admin-card-content">
+                            <h3>Bot no Google Chat</h3>
+                            <p>Para o AXIS aparecer no Google Chat, crie uma <strong>Chat app</strong> no Google Cloud e publique no vosso Workspace. Guia oficial Google (abre numa nova aba).</p>
+                            <button type="button" class="admin-card-btn" onclick="event.stopPropagation(); window.open('https://developers.google.com/chat/how-tos/apps-develop', '_blank', 'noopener,noreferrer');">Documentação Chat API</button>
+                        </div>
+                    </div>
+
                     <!-- Card: Links portais SELBETTI (só administrador — evita troca maliciosa por colaboradores) -->
                     <div class="admin-dashboard-card admin-card-selbetti-portais" onclick="if(typeof abrirSelbettiLinksPortaisAdmin === 'function') abrirSelbettiLinksPortaisAdmin();">
                         <div class="admin-card-icon-wrapper">
@@ -2855,6 +2876,10 @@
                                                 <option value="">Selecione um setor</option>
                                                 <option value="Internal Systems">Internal Systems</option>
                                                 <option value="Sauron">Sauron</option>
+                                                <option value="PACKING MONO">PACKING MONO</option>
+                                                <option value="PACKING PTW">PACKING PTW</option>
+                                                <option value="Operação Packing Mono">Operação Packing Mono</option>
+                                                <option value="Operação Packing PTW">Operação Packing PTW</option>
                                             </select>
                                             <button type="button" class="perfil-select-trigger" id="setor-select-trigger-editar" aria-expanded="false" aria-haspopup="listbox">
                                                 <span class="perfil-select-value" id="setor-select-value-editar">Selecione um setor</span>
@@ -2866,6 +2891,10 @@
                                                 <div class="perfil-select-option" data-value="" role="option">Selecione um setor</div>
                                                 <div class="perfil-select-option" data-value="Internal Systems" role="option"><span class="perfil-option-icon">💻</span>Internal Systems</div>
                                                 <div class="perfil-select-option" data-value="Sauron" role="option"><span class="perfil-option-icon">🔮</span>Sauron</div>
+                                                <div class="perfil-select-option" data-value="PACKING MONO" role="option"><span class="perfil-option-icon">📦</span>PACKING MONO</div>
+                                                <div class="perfil-select-option" data-value="PACKING PTW" role="option"><span class="perfil-option-icon">📦</span>PACKING PTW</div>
+                                                <div class="perfil-select-option" data-value="Operação Packing Mono" role="option"><span class="perfil-option-icon">📦</span>Operação Packing Mono</div>
+                                                <div class="perfil-select-option" data-value="Operação Packing PTW" role="option"><span class="perfil-option-icon">📦</span>Operação Packing PTW</div>
                                             </div>
                                         </div>
                                     </div>
@@ -2875,6 +2904,9 @@
                                         <label for="editar-usuario-matricula">Matrícula AXIS</label>
                                         <input type="text" id="editar-usuario-matricula" readonly class="input-readonly" placeholder="Atribuída automaticamente" title="Gerada automaticamente ao criar o usuário; ajuda administradores a localizar colaboradores.">
                                     </div>
+                                </div>
+                                <div id="editar-usuario-alerta-bloqueio" class="editar-usuario-bloqueio-msg" style="display: none;" role="alert">
+                                    <strong>Conta suspensa</strong> por expiração de senha. Defina uma <strong>nova senha</strong> abaixo para desbloquear — o utilizador será obrigado a alterá-la no próximo acesso.
                                 </div>
                                 <div class="editar-senha-section">
                                     <h4>🔐 Alterar Senha</h4>
@@ -3289,7 +3321,7 @@
                     <div class="settings-card face-auth-settings-card" id="face-auth-settings-card">
                         <div class="face-auth-settings-head">
                             <h3>Reconhecimento facial</h3>
-                            <p class="face-auth-settings-tagline">Login opcional com a webcam — rápido e só neste aparelho</p>
+                            <p class="face-auth-settings-tagline">Login opcional com a câmara (telemóvel ou PC) — rápido e só neste aparelho</p>
                         </div>
                         <div class="setting-item face-auth-settings-body">
                             <div class="setting-info face-auth-settings-copy">
@@ -3301,6 +3333,12 @@
                                     <li><strong>Onde fica o dado:</strong> só neste navegador (localStorage). Outro computador ou celular precisa de novo cadastro.</li>
                                 </ul>
                                 <p class="face-auth-tech-note">A permissão da <strong>câmera</strong> é pedida pelo navegador. O assistente de cadastro abre ao centro, com passos guiados.</p>
+                                <div class="face-auth-safari-note" role="note" aria-label="Safari, Chrome e dados do reconhecimento facial">
+                                    <p class="face-auth-safari-note__title">Por que no Chrome já tenho o rosto e no Safari não?</p>
+                                    <p class="face-auth-safari-note__p">O AXIS <strong>não grava a sua foto no servidor</strong>. O mapa do rosto fica só no <strong>armazenamento deste navegador</strong> (localStorage). <strong>Chrome e Safari são caixas separadas</strong> — o site está o mesmo online, mas cada app de browser tem a sua própria “gaveta”. Por isso o cadastro no computador (Chrome) <strong>não aparece</strong> no Safari do iPhone até você tocar em «Abrir câmera» aqui de novo.</p>
+                                    <p class="face-auth-safari-note__p"><strong>Safari no iPhone (Apple):</strong> por política de privacidade, a câmara na Web <strong>só é permitida com HTTPS</strong> (cadeado) ou em localhost — não com <code>http://</code> e IP. Não é falha do AXIS: é regra da Apple para proteger a câmara. Com SSL no servidor (https://seu-dominio), o Safari passa a poder usar a câmara como no Chrome em HTTPS.</p>
+                                    <p class="face-auth-safari-note__p"><strong>Modo Privado / anónimo:</strong> também usa outra gaveta; sair do privado ou cadastrar de novo no modo normal.</p>
+                                </div>
                                 <p id="face-enroll-status-short" class="face-enroll-status-short-line">—</p>
                             </div>
                             <div class="face-enroll-btns face-enroll-btns-row" role="group" aria-label="Ações do reconhecimento facial">
@@ -3319,13 +3357,25 @@
                                 <p>Altere sua senha com segurança. Após a troca, use a nova senha no próximo login.</p>
                             </div>
                             <div class="setting-control" style="min-width: 320px;">
-                                <div class="axis-form-col" style="display:flex;flex-direction:column;gap:10px;max-width:360px;">
-                                    <input type="password" id="axis-current-password" placeholder="Senha atual" autocomplete="current-password">
-                                    <input type="password" id="axis-new-password" placeholder="Nova senha (mín. 6 caracteres)" minlength="6" autocomplete="new-password">
-                                    <input type="password" id="axis-new-password-confirm" placeholder="Confirmar nova senha" minlength="6" autocomplete="new-password">
+                                <div class="axis-form-col axis-form-col-passwords settings-login-like-password" style="display:flex;flex-direction:column;gap:16px;max-width:360px;">
+                                    <div class="input-group password-container">
+                                        <span class="settings-password-faux-label" aria-hidden="true"></span>
+                                        <input type="password" id="axis-current-password" placeholder="Senha atual" autocomplete="current-password" aria-label="Senha atual">
+                                        <button type="button" class="eye-toggle" onclick="if(typeof axisToggleSettingsPassword==='function')axisToggleSettingsPassword('axis-current-password','axis-eye-current');return false;" aria-label="Mostrar ou ocultar senha atual"><span id="axis-eye-current">👁️</span></button>
+                                    </div>
+                                    <div class="input-group password-container">
+                                        <span class="settings-password-faux-label" aria-hidden="true"></span>
+                                        <input type="password" id="axis-new-password" placeholder="Nova senha (mín. 6 caracteres)" minlength="6" autocomplete="new-password" aria-label="Nova senha">
+                                        <button type="button" class="eye-toggle" onclick="if(typeof axisToggleSettingsPassword==='function')axisToggleSettingsPassword('axis-new-password','axis-eye-new');return false;" aria-label="Mostrar ou ocultar nova senha"><span id="axis-eye-new">👁️</span></button>
+                                    </div>
+                                    <div class="input-group password-container">
+                                        <span class="settings-password-faux-label" aria-hidden="true"></span>
+                                        <input type="password" id="axis-new-password-confirm" placeholder="Confirmar nova senha" minlength="6" autocomplete="new-password" aria-label="Confirmar nova senha">
+                                        <button type="button" class="eye-toggle" onclick="if(typeof axisToggleSettingsPassword==='function')axisToggleSettingsPassword('axis-new-password-confirm','axis-eye-confirm');return false;" aria-label="Mostrar ou ocultar confirmação da senha"><span id="axis-eye-confirm">👁️</span></button>
+                                    </div>
                                     <div style="display:flex;gap:10px;flex-wrap:wrap;">
                                         <button type="button" class="axis-btn axis-btn-cta" id="axis-change-password-btn" onclick="if(window.axisChangePassword){window.axisChangePassword();} return false;">SALVAR NOVA SENHA</button>
-                                        <button type="button" class="axis-btn axis-btn-cta-secondary" onclick="try{document.getElementById('axis-current-password').value='';document.getElementById('axis-new-password').value='';document.getElementById('axis-new-password-confirm').value='';}catch(e){} return false;">LIMPAR</button>
+                                        <button type="button" class="axis-btn axis-btn-cta-secondary" onclick="if(typeof window.axisClearSettingsPasswordFields==='function')window.axisClearSettingsPasswordFields(); return false;">LIMPAR</button>
                                     </div>
                                     <p id="axis-change-password-hint" style="display:none;font-size:12px;color:var(--text-secondary);margin:0;"></p>
                                 </div>
@@ -3687,7 +3737,7 @@
                                             <option value="returns">RETURNS</option>
                                             <option value="packing-mono">PACKING MONO</option>
                                             <option value="packing-ptw">PACKING PTW</option>
-                                            <option value="sauron">SAURON</option>
+                                            <option value="sauron">Sauron</option>
                                             <option value="insumos">INSUMOS</option>
                                             <option value="docas-de-expedicao">DOCAS DE EXPEDIÇÃO</option>
                                             <option value="linha-de-peixe-1">LINHA DE PEIXE 1</option>
@@ -3724,7 +3774,7 @@
                                             <div class="setor-selector-option" data-value="returns" role="option">RETURNS</div>
                                             <div class="setor-selector-option" data-value="packing-mono" role="option">PACKING MONO</div>
                                             <div class="setor-selector-option" data-value="packing-ptw" role="option">PACKING PTW</div>
-                                            <div class="setor-selector-option" data-value="sauron" role="option">SAURON</div>
+                                            <div class="setor-selector-option" data-value="sauron" role="option">Sauron</div>
                                             <div class="setor-selector-option" data-value="insumos" role="option">INSUMOS</div>
                                             <div class="setor-selector-option" data-value="docas-de-expedicao" role="option">DOCAS DE EXPEDIÇÃO</div>
                                             <div class="setor-selector-option" data-value="linha-de-peixe-1" role="option">LINHA DE PEIXE 1</div>
@@ -4050,10 +4100,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
     <!-- Script principal PRIMEIRO: define navigate, filtrarInventario, etc. -->
-    <script src="js/script.js?v=axis2026h"></script>
+    <script src="js/script.js?v=axis2026k"></script>
     <script src="js/selbetti-portal-links-admin.js?v=1"></script>
     <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
-    <script src="js/axis-face-auth.js?v=axis2026r"></script>
+    <script src="js/axis-face-auth.js?v=axis2026t"></script>
     <!-- Robô assistente AXIS (holograma + IA) -->
     <script src="js/axis-robot-assistant.js?v=axis2026robot1"></script>
     

@@ -44,6 +44,24 @@ function getAxisApiBase() {
 }
 window.getAxisApiBase = getAxisApiBase;
 
+/** Extensões do Chrome (password managers, tradutores, etc.) geram este erro; não é bug do AXIS. */
+(function axisSuppressExtensionMessageChannelNoise() {
+    if (typeof window === 'undefined') return;
+    window.addEventListener('unhandledrejection', function (ev) {
+        try {
+            var r = ev.reason;
+            var msg = (r && r.message) ? String(r.message) : String(r || '');
+            if (
+                (/message channel closed/i.test(msg) && (/asynchronous response/i.test(msg) || /listener indicated/i.test(msg))) ||
+                /message port closed before a response was received/i.test(msg) ||
+                /extension context invalidated/i.test(msg)
+            ) {
+                ev.preventDefault();
+            }
+        } catch (_) {}
+    });
+})();
+
 /** Login normalizado para 2FA (igual ao backend canonKey: trim, lowercase, espaços e pontos → _). */
 function getTotpLoginNormalized() {
     var raw = localStorage.getItem('current_user_login');
@@ -113,13 +131,49 @@ document.addEventListener('DOMContentLoaded', () => {
     var path = (window.location.pathname || '/').replace(/\/+$/, '') || '/';
     var isRoot = path === '' || path === '/' || path === '/index.html';
     var search = window.location.search || '';
+    var hashNow = (window.location.hash || '').trim();
+    // Ao voltar de páginas externas (dashboards) para a raiz sem hash, priorizar Home.
+    if (isRoot && search.indexOf('tela=login') === -1 && (!hashNow || hashNow === '#')) {
+        try {
+            var ref = document.referrer || '';
+            var fromExternalModule = /\/pages\//i.test(ref) || /\/ronda\//i.test(ref) || /manuten/i.test(ref);
+            if (fromExternalModule) {
+                localStorage.setItem('axis-current-page', 'page-home');
+                if (window.history && window.history.replaceState) {
+                    window.history.replaceState({ page: 'page-home' }, '', (window.location.pathname || '/') + '#page-home');
+                } else {
+                    window.location.hash = 'page-home';
+                }
+            }
+        } catch (_) {}
+    }
     if (isRoot && search.indexOf('tela=login') === -1) {
         var isReload = false;
         try {
             var navEntries = performance.getEntriesByType && performance.getEntriesByType('navigation');
             if (navEntries && navEntries.length > 0 && navEntries[0].type === 'reload') isReload = true;
         } catch (_) {}
-        if (!isReload) {
+        var axisHasSessionEarly = false;
+        try {
+            var u0 = localStorage.getItem('current_user');
+            var f0 = localStorage.getItem('user_logged_in');
+            axisHasSessionEarly = !!(u0 && (f0 === 'true' || f0 === 'True' || f0 === 'TRUE'));
+            if (u0 && !axisHasSessionEarly) {
+                localStorage.setItem('user_logged_in', 'true');
+                axisHasSessionEarly = true;
+            }
+        } catch (_) {}
+        // Com sessão válida: nunca mandar para tela de login (F5 / abrir raiz) — só limpar URL e seguir
+        if (axisHasSessionEarly) {
+            try {
+                sessionStorage.removeItem('axis_redirected_to_login');
+                sessionStorage.removeItem('axis_force_login_session');
+                var pRestore = localStorage.getItem('axis-current-page') || 'page-home';
+                if (!pRestore || pRestore.indexOf('page-') !== 0) pRestore = 'page-home';
+                var pathOnly = window.location.pathname || '/';
+                window.history.replaceState({ page: pRestore }, '', pathOnly + '#' + pRestore);
+            } catch (_) {}
+        } else if (!isReload) {
             try {
                 sessionStorage.setItem('axis_redirected_to_login', '1');
                 window.location.replace((window.location.pathname || '/') + '?tela=login#login');
@@ -139,11 +193,37 @@ document.addEventListener('DOMContentLoaded', () => {
     const hashLower = (window.location.hash || '').toLowerCase().replace(/\/+$/, '');
     const searchLower = (window.location.search || '').toLowerCase();
     const explicitLoginUrl = hashLower === '#login' || hashLower.startsWith('#login') || searchLower.indexOf('tela=login') !== -1;
-    const forceLogin = explicitLoginUrl;
+    let forceLogin = explicitLoginUrl;
     var justRedirectedToLogin = false;
     try { justRedirectedToLogin = sessionStorage.getItem('axis_redirected_to_login') === '1'; } catch (_) {}
+    var axisStoredUser = null;
+    var axisStoredFlag = null;
+    try {
+        axisStoredUser = localStorage.getItem('current_user');
+        axisStoredFlag = localStorage.getItem('user_logged_in');
+    } catch (_) {}
+    var axisUrlButLoggedIn = false;
+    if (explicitLoginUrl && axisStoredUser) {
+        var axisFlagOk = axisStoredFlag === 'true' || axisStoredFlag === 'True' || axisStoredFlag === 'TRUE';
+        if (axisFlagOk || !axisStoredFlag) {
+            if (!axisFlagOk && axisStoredUser) {
+                try { localStorage.setItem('user_logged_in', 'true'); } catch (_) {}
+            }
+            axisUrlButLoggedIn = true;
+            forceLogin = false;
+            try {
+                sessionStorage.removeItem('axis_redirected_to_login');
+                sessionStorage.removeItem('axis_force_login_session');
+                var hashPg = (window.location.hash || '').replace('#', '').trim();
+                var pageClean = (hashPg && hashPg.indexOf('page-') === 0) ? hashPg : (localStorage.getItem('axis-current-page') || 'page-home');
+                if (!pageClean || pageClean.indexOf('page-') !== 0) pageClean = 'page-home';
+                localStorage.setItem('axis-current-page', pageClean);
+                window.history.replaceState({ page: pageClean }, '', (window.location.pathname || '/') + '#' + pageClean);
+            } catch (_) {}
+        }
+    }
     if (forceLogin) {
-        if (justRedirectedToLogin) {
+        if (justRedirectedToLogin && !axisUrlButLoggedIn) {
             try {
                 sessionStorage.removeItem('axis_redirected_to_login');
                 localStorage.removeItem('user_logged_in');
@@ -185,9 +265,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const authScreen = document.getElementById('auth-screen');
     const mainContent = document.getElementById('main-content');
     
-    // Verifica se há usuário logado no localStorage (forceLogin só true quando link + sem sessão)
-    const savedUser = forceLogin ? null : localStorage.getItem('current_user');
-    const isLoggedInRaw = forceLogin ? null : localStorage.getItem('user_logged_in');
+    // Sessão: ler sempre do localStorage (URL com ?tela=login não pode apagar sessão válida ao recarregar)
+    const savedUser = localStorage.getItem('current_user');
+    const isLoggedInRaw = localStorage.getItem('user_logged_in');
     const isLoggedIn = isLoggedInRaw === 'true' || isLoggedInRaw === 'True' || isLoggedInRaw === 'TRUE' || isLoggedInRaw === true;
     
     // Verificação adicional: se há usuário salvo mas não há flag de login, assume que está logado
@@ -206,14 +286,29 @@ document.addEventListener('DOMContentLoaded', () => {
         // Restaura perfil do usuário
         // Tenta obter o login salvo, senão tenta normalizar o nome
         const savedLogin = localStorage.getItem('current_user_login');
-        let userLoginNormalizado = savedLogin;
-        
-        if (!userLoginNormalizado) {
-            // Fallback: tenta normalizar o nome salvo
-            userLoginNormalizado = savedUser.toLowerCase().replace(/\s+/g, '_');
+        var userLoginNormalizado = '';
+        if (savedLogin) {
+            userLoginNormalizado = typeof axisLoginCanonico === 'function'
+                ? axisLoginCanonico(savedLogin)
+                : String(savedLogin).trim().toLowerCase().replace(/\s+/g, '_').replace(/\./g, '_');
         }
-        const userKey = 'db_' + userLoginNormalizado;
-        const userDataRaw = localStorage.getItem(userKey);
+        if (!userLoginNormalizado && savedUser) {
+            userLoginNormalizado = typeof axisLoginCanonico === 'function'
+                ? axisLoginCanonico(savedUser)
+                : String(savedUser).trim().toLowerCase().replace(/\s+/g, '_').replace(/\./g, '_');
+        }
+        var userKey = userLoginNormalizado ? 'db_' + userLoginNormalizado : '';
+        var userDataRaw = userKey ? localStorage.getItem(userKey) : null;
+        if (!userDataRaw && userLoginNormalizado) {
+            var chaveAlt = Object.keys(localStorage).find(function(k) {
+                if (k.indexOf('db_') !== 0) return false;
+                if (typeof axisLoginCanonico === 'function') {
+                    return axisLoginCanonico(k.replace('db_', '')) === userLoginNormalizado;
+                }
+                return k.replace('db_', '').toLowerCase().replace(/\s+/g, '_') === userLoginNormalizado;
+            });
+            if (chaveAlt) userDataRaw = localStorage.getItem(chaveAlt);
+        }
         if (userDataRaw) {
             try {
                 const userData = JSON.parse(userDataRaw);
@@ -261,7 +356,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             const wasJustLoggedIn = sessionStorage.getItem('just_logged_in') === 'true';
             if (!wasJustLoggedIn) {
-                var savedPage = localStorage.getItem('axis-current-page');
+                var hashPageRestore = (window.location.hash || '').replace('#', '').trim().replace(/^\/+/, '');
+                var savedPage = (hashPageRestore && hashPageRestore.indexOf('page-') === 0)
+                    ? hashPageRestore
+                    : localStorage.getItem('axis-current-page');
                 if (savedPage === 'page-administracao' && currentUserProfile !== 'admin') {
                     savedPage = 'page-home';
                     localStorage.setItem('axis-current-page', savedPage);
@@ -296,7 +394,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         } else { navigateToPage(savedPage); }
                     }, 100);
                 } else {
-                    var defaultPage = localStorage.getItem('axis-home-page') || 'page-home';
+                    var defaultPage = 'page-home';
                     activePage = defaultPage;
                     localStorage.setItem('axis-current-page', defaultPage);
                     const goHome = function() {
@@ -328,7 +426,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             } else {
                 sessionStorage.removeItem('just_logged_in');
-                var defaultPage = localStorage.getItem('axis-home-page') || 'page-home';
+                var defaultPage = 'page-home';
                 activePage = defaultPage;
                 localStorage.setItem('axis-current-page', defaultPage);
                 var goHomeOnce = function() {
@@ -362,6 +460,17 @@ document.addEventListener('DOMContentLoaded', () => {
             if (bemVindo) bemVindo.style.display = 'none';
         }
         showMainContentRestore();
+        /* Reforço pós-layout: corrige tela branca na 1.ª carga (Chrome + várias rotas async a competirem). */
+        requestAnimationFrame(function() {
+            requestAnimationFrame(function() {
+                try {
+                    var pg = activePage || (localStorage.getItem('axis-current-page') || 'page-home');
+                    if (!pg || pg.indexOf('page-') !== 0) pg = 'page-home';
+                    if (typeof navigate === 'function') navigate(pg);
+                    else if (typeof ensureActiveSectionVisible === 'function') ensureActiveSectionVisible();
+                } catch (eRaf) {}
+            });
+        });
         // 2FA: persistLoginCheck (load) fará o check se necessário; conteúdo já está visível sem esperar load.
     } else {
         // Não há usuário logado, mostra tela de login
@@ -379,8 +488,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Garantir que, ao recarregar, usuário permaneça logado (verificação tardia + pageshow)
     function persistLoginCheck() {
-        // Sessão marcada como "forçar login" (sem sessão válida ao abrir o link)
+        // "Forçar login" só se não houver sessão válida (evita F5 a apagar login por flag antiga)
         if (sessionStorage.getItem('axis_force_login_session') === '1') {
+            var chkU = localStorage.getItem('current_user');
+            var chkL = localStorage.getItem('user_logged_in');
+            var chkOk = chkU && (chkL === 'true' || chkL === 'True' || chkL === 'TRUE');
+            if (chkOk) {
+                try { sessionStorage.removeItem('axis_force_login_session'); } catch (_) {}
+            } else {
             try {
                 localStorage.removeItem('user_logged_in');
                 localStorage.removeItem('current_user');
@@ -394,12 +509,30 @@ document.addEventListener('DOMContentLoaded', () => {
             currentUser = null;
             try { window.history.replaceState({}, '', (window.location.pathname || '/') + '?tela=login#login'); } catch (_) {}
             return;
+            }
         }
-        // Se a URL tiver ?tela=login ou #login, mostrar login (NÃO limpar localStorage aqui — evita "sair do site" ao recarregar)
+        // URL pede login, mas há sessão válida → manter logado e limpar query (F5 não volta ao login)
         var hash = (window.location.hash || '').toLowerCase();
         var search = (window.location.search || '').toLowerCase();
         var urlIsLogin = hash === '#login' || hash.indexOf('#login') === 0 || search.indexOf('tela=login') !== -1;
         if (urlIsLogin) {
+            var rawU = localStorage.getItem('current_user');
+            var rawL = localStorage.getItem('user_logged_in');
+            var okL = rawL === 'true' || rawL === 'True' || rawL === 'TRUE';
+            if (rawU && (okL || !rawL)) {
+                if (!okL && rawU) {
+                    try { localStorage.setItem('user_logged_in', 'true'); } catch (_) {}
+                }
+                try {
+                    sessionStorage.removeItem('axis_force_login_session');
+                    var hp = (window.location.hash || '').replace('#', '').trim();
+                    var pg = (hp && hp.indexOf('page-') === 0) ? hp : (localStorage.getItem('axis-current-page') || 'page-home');
+                    if (!pg || pg.indexOf('page-') !== 0) pg = 'page-home';
+                    localStorage.setItem('axis-current-page', pg);
+                    window.history.replaceState({ page: pg }, '', (window.location.pathname || '/') + '#' + pg);
+                } catch (_) {}
+                // continua para restaurar main abaixo (não return)
+            } else {
             var au = document.getElementById('auth-screen');
             var mn = document.getElementById('main-content');
             if (au) { au.style.display = 'flex'; au.style.opacity = '1'; au.style.visibility = 'visible'; }
@@ -407,6 +540,7 @@ document.addEventListener('DOMContentLoaded', () => {
             currentUser = null;
             try { window.history.replaceState({}, '', (window.location.pathname || '/') + '?tela=login#login'); } catch (_) {}
             return;
+            }
         }
         var raw = localStorage.getItem('user_logged_in');
         var ok = (raw === 'true' || raw === 'True' || raw === 'TRUE');
@@ -448,7 +582,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     ma.style.display = 'none';
                 }
             }
-            var sp = localStorage.getItem('axis-current-page') || 'page-home';
+            var hashPagePersist = (window.location.hash || '').replace('#', '').trim().replace(/^\/+/, '');
+            var sp = (hashPagePersist && hashPagePersist.indexOf('page-') === 0)
+                ? hashPagePersist
+                : (localStorage.getItem('axis-current-page') || 'page-home');
             if (sp === 'page-administracao' && currentUserProfile !== 'admin') {
                 sp = 'page-home';
                 localStorage.setItem('axis-current-page', sp);
@@ -461,6 +598,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 targetSection.classList.add('active');
                 targetSection.style.display = 'block';
+                targetSection.style.visibility = 'visible';
+                targetSection.style.opacity = '1';
             }
             if (typeof navigate === 'function') { try { navigate(sp); } catch (_) {} }
         }
@@ -483,16 +622,42 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('load', persistLoginCheck);
     window.addEventListener('pageshow', function (e) {
         if (e.persisted) persistLoginCheck();
+        setTimeout(ensureActiveSectionVisible, 50);
     });
     
-    // Failsafe: quando o conteúdo principal está visível, garantir que a secção ativa (ex: page-home) esteja visível e atualizada
+    // Failsafe: conteúdo principal visível + rota correta (usa computed style — inline vazio já mostrava "tela branca")
+    function axisMainContentReallyVisible(el) {
+        if (!el) return false;
+        try {
+            var st = window.getComputedStyle(el);
+            if (!st || st.display === 'none' || st.visibility === 'hidden') return false;
+        } catch (_) {
+            if (el.style && el.style.display === 'none') return false;
+        }
+        return true;
+    }
     function ensureActiveSectionVisible() {
         var mn = document.getElementById('main-content');
-        if (!mn || mn.style.display === 'none') return;
-        var pageId = (window.location.hash || '').replace('#', '').trim().replace(/^\/+/, '') || localStorage.getItem('axis-current-page') || 'page-home';
-        if (!pageId.startsWith('page-')) pageId = 'page-home';
+        if (!axisMainContentReallyVisible(mn)) return;
+        var hashPg = (window.location.hash || '').replace('#', '').trim().replace(/^\/+/, '');
+        var pageId = (hashPg && hashPg.indexOf('page-') === 0) ? hashPg : (localStorage.getItem('axis-current-page') || 'page-home');
+        if (!pageId || pageId.indexOf('page-') !== 0) pageId = 'page-home';
         var section = document.getElementById(pageId);
         if (section && section.classList.contains('main-section')) {
+            try {
+                var cs = window.getComputedStyle(section);
+                var looksOk = section.classList.contains('active') && cs && cs.display !== 'none' && cs.visibility !== 'hidden';
+                if (looksOk) {
+                    try { window._axisLastEnsuredPage = pageId; } catch (_) {}
+                    return;
+                }
+            } catch (_) {}
+            if (typeof navigate === 'function') {
+                try {
+                    navigate(pageId);
+                    return;
+                } catch (_) {}
+            }
             document.querySelectorAll('.main-section').forEach(function(s) {
                 s.classList.remove('active');
                 s.style.display = 'none';
@@ -516,12 +681,14 @@ document.addEventListener('DOMContentLoaded', () => {
             if (pageId === 'page-configuracoes' && typeof refreshTotpSettings === 'function') {
                 refreshTotpSettings();
             }
+            try { window._axisLastEnsuredPage = pageId; } catch (_) {}
         }
         if (typeof window.axisRobotMaybeShow === 'function') try { window.axisRobotMaybeShow(); } catch (_) {}
     }
     window.addEventListener('load', function() { setTimeout(ensureActiveSectionVisible, 50); });
-    window.addEventListener('load', function() { setTimeout(ensureActiveSectionVisible, 300); });
-    window.addEventListener('hashchange', function() { setTimeout(ensureActiveSectionVisible, 100); });
+    window.addEventListener('load', function() { setTimeout(ensureActiveSectionVisible, 200); });
+    window.addEventListener('load', function() { setTimeout(ensureActiveSectionVisible, 500); });
+    window.addEventListener('hashchange', function() { window._axisLastEnsuredPage = null; setTimeout(ensureActiveSectionVisible, 0); });
     
     // Inicializa tema salvo
     initTheme();
@@ -552,6 +719,11 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Configura listeners para os cards da home
     setupHomeCards();
+
+    if (typeof axisInitModalSenhaTemporaria === 'function') axisInitModalSenhaTemporaria();
+    setTimeout(function() {
+        if (typeof axisCheckSenhaTemporariaAposRestaurarSessao === 'function') axisCheckSenhaTemporariaAposRestaurarSessao();
+    }, 800);
     
 });
 
@@ -785,12 +957,29 @@ function navigate(pageId) {
     // Exporta IMEDIATAMENTE para garantir disponibilidade
     window.navigate = navigate;
 
+    var previousAxisPage = '';
+    try {
+        previousAxisPage = document.body.getAttribute('data-current-page') || '';
+    } catch (_) {}
+
     if (pageId === 'page-administracao' && currentUserProfile !== 'admin') {
         if (typeof showToast === 'function') showToast('Acesso negado. Apenas administradores podem acessar Administração.', 'error');
         pageId = 'page-home';
     }
 
     console.log('📍 Navegando para: ' + pageId);
+
+    if (
+        previousAxisPage === 'page-configuracoes' &&
+        pageId !== 'page-configuracoes' &&
+        typeof window.axisFaceCleanupForNavigation === 'function'
+    ) {
+        try {
+            window.axisFaceCleanupForNavigation();
+        } catch (faceNavErr) {
+            console.warn('Limpeza câmara/face ao sair de Configurações:', faceNavErr);
+        }
+    }
 
     // Atualiza página ativa
     activePage = pageId;
@@ -809,7 +998,7 @@ function navigate(pageId) {
         // Atualiza a hash da URL sem recarregar a página
         if (window.history && window.history.pushState) {
             try {
-                const currentPath = window.location.pathname || '/';
+                const currentPath = (window.location.pathname || '/').split('?')[0];
                 const newUrl = currentPath + '#' + pageId;
                 window.history.pushState({ page: pageId }, '', newUrl);
                 console.log(`🔗 URL atualizada: ${newUrl}`);
@@ -842,6 +1031,8 @@ function navigate(pageId) {
     if (target) {
         target.classList.add(CSSClasses.active);
         target.style.display = 'block'; // Garante que a seção seja exibida
+        target.style.visibility = 'visible';
+        target.style.opacity = '1';
         console.log(`✅ Seção ${pageId} ativada e exibida`);
         
         // Força reflow para garantir que a mudança seja aplicada
@@ -859,6 +1050,8 @@ function navigate(pageId) {
             console.log('⚠️ Usando home como fallback');
             homeSection.classList.add(CSSClasses.active);
             homeSection.style.display = 'block';
+            homeSection.style.visibility = 'visible';
+            homeSection.style.opacity = '1';
         }
     }
 
@@ -942,8 +1135,49 @@ function navigate(pageId) {
             if (typeof axisInitNiceSelectsConfig === 'function') axisInitNiceSelectsConfig();
             updateConfigSessionCard();
             if (typeof refreshTotpSettings === 'function') refreshTotpSettings();
-            showToast('Configurações carregadas', 'info');
+            if (previousAxisPage !== 'page-configuracoes' && typeof showToast === 'function') {
+                showToast('Configurações carregadas', 'info');
+            }
             break;
+    }
+
+    const axisRecoverSectionAfterRace = function() {
+        var main = document.getElementById('main-content');
+        if (!main) return;
+        try {
+            var ms = window.getComputedStyle(main);
+            if (!ms || ms.display === 'none' || ms.visibility === 'hidden') return;
+        } catch (_) {}
+        var visibleSection = null;
+        document.querySelectorAll('.main-section').forEach(function(s) {
+            if (visibleSection) return;
+            try {
+                var cs = window.getComputedStyle(s);
+                if (cs && cs.display !== 'none' && cs.visibility !== 'hidden') visibleSection = s;
+            } catch (_) {
+                if (s.style.display !== 'none') visibleSection = s;
+            }
+        });
+        if (visibleSection && visibleSection.id === pageId) return;
+        var fallback = document.getElementById(pageId) || document.getElementById('page-home');
+        if (!fallback) return;
+        document.querySelectorAll('.main-section').forEach(function(s) {
+            s.classList.remove('active');
+            s.style.display = 'none';
+        });
+        fallback.classList.add('active');
+        fallback.style.display = 'block';
+        fallback.style.visibility = 'visible';
+        fallback.style.opacity = '1';
+        try { fallback.offsetHeight; } catch (_) {}
+    };
+    setTimeout(axisRecoverSectionAfterRace, 80);
+    setTimeout(axisRecoverSectionAfterRace, 240);
+
+    try { window._axisLastEnsuredPage = pageId; } catch (_) {}
+
+    if (typeof window.axisRobotMaybeShow === 'function') {
+        try { window.axisRobotMaybeShow(); } catch (_) {}
     }
 
     // Scroll suave para o topo
@@ -1045,10 +1279,44 @@ function updateDashboardStats() {
 var axisLastActivity = Date.now();
 var axisLogoutTimeoutId = null;
 var axisLogoutTimeoutMinutes = 0;
+/** Inatividade: logout automático (minutos). Política fixa; não exposto ao colaborador nas definições. */
+var AXIS_IDLE_LOGOUT_MINUTES = 30;
 
-var AXIS_VALID_HOME_PAGES = ['page-home', 'page-inventario', 'page-rondas', 'page-administracao', 'page-configuracoes'];
+var AXIS_VALID_HOME_PAGES = ['page-home'];
 var AXIS_VALID_ACCENTS = ['blue', 'green', 'purple', 'orange'];
 var AXIS_VALID_FONT_SIZES = ['normal', 'large', 'xlarge'];
+
+/** Atualiza «Versão do AXIS» via GET /health (lê o campo version do package.json no servidor). */
+function axisRefreshVersionDisplay() {
+    var el = document.getElementById('axis-version-display');
+    if (!el) return;
+    el.title = 'Versão reportada pelo servidor';
+    var base = '';
+    try {
+        base = typeof getAxisApiBase === 'function' ? String(getAxisApiBase() || '').replace(/\/+$/, '') : '';
+    } catch (_) {
+        base = '';
+    }
+    if (!base) {
+        el.textContent = '—';
+        return;
+    }
+    fetch(base + '/health', { cache: 'no-store' })
+        .then(function (r) {
+            return r.ok ? r.json() : Promise.reject(new Error('health'));
+        })
+        .then(function (d) {
+            var v = d && (d.axisVersion != null ? d.axisVersion : d.version);
+            if (v != null && String(v).trim() !== '') {
+                el.textContent = String(v).trim();
+            } else {
+                el.textContent = '—';
+            }
+        })
+        .catch(function () {
+            el.textContent = '—';
+        });
+}
 
 function loadSettings() {
     try {
@@ -1062,12 +1330,11 @@ function loadSettings() {
     const notificationsSound = localStorage.getItem('axis-notifications-sound') === 'true';
     const fontSize = AXIS_VALID_FONT_SIZES.indexOf(localStorage.getItem('axis-font-size')) >= 0 ? localStorage.getItem('axis-font-size') : 'normal';
     const reduceMotion = localStorage.getItem('axis-reduce-motion') === 'true';
-    const logoutTimeout = localStorage.getItem('axis-logout-timeout') || '0';
     const maskSensitive = localStorage.getItem('axis-mask-sensitive') === 'true';
     const dateFormat = (localStorage.getItem('axis-date-format') || 'ddmmyyyy');
     const timeFormat = (localStorage.getItem('axis-time-format') || '24');
     const accentColor = AXIS_VALID_ACCENTS.indexOf(localStorage.getItem('axis-accent-color')) >= 0 ? localStorage.getItem('axis-accent-color') : 'blue';
-    const homePage = AXIS_VALID_HOME_PAGES.indexOf(localStorage.getItem('axis-home-page')) >= 0 ? localStorage.getItem('axis-home-page') : 'page-home';
+    const homePage = 'page-home';
 
     // Atualiza controles
     const themeToggle = document.getElementById('theme-toggle-switch');
@@ -1081,7 +1348,6 @@ function loadSettings() {
     const soundEl = document.getElementById('notifications-sound');
     const fontEl = document.getElementById('font-size-setting');
     const motionEl = document.getElementById('reduce-motion');
-    const timeoutEl = document.getElementById('logout-timeout');
     const maskEl = document.getElementById('mask-sensitive');
     const dateEl = document.getElementById('date-format-setting');
     const timeEl = document.getElementById('time-format-setting');
@@ -1089,23 +1355,23 @@ function loadSettings() {
     if (soundEl) soundEl.checked = notificationsSound;
     if (fontEl) fontEl.value = fontSize;
     if (motionEl) motionEl.checked = reduceMotion;
-    if (timeoutEl) timeoutEl.value = logoutTimeout;
     if (maskEl) maskEl.checked = maskSensitive;
     if (dateEl) dateEl.value = dateFormat;
     if (timeEl) timeEl.value = timeFormat;
     const accentEl = document.getElementById('accent-color-setting');
     const homePageEl = document.getElementById('home-page-setting');
     if (accentEl) accentEl.value = accentColor;
-    if (homePageEl) homePageEl.value = homePage;
+    if (homePageEl) homePageEl.value = 'page-home';
     if (typeof syncAccentColorPicker === 'function') syncAccentColorPicker();
 
     itemsPerPage = savedItemsPerPage;
     applyAccentColor(accentColor);
-    axisLogoutTimeoutMinutes = Math.max(0, parseInt(logoutTimeout, 10) || 0);
+    axisLogoutTimeoutMinutes = AXIS_IDLE_LOGOUT_MINUTES;
     applyFontSize(fontSize);
     applyReduceMotion(reduceMotion);
     startInactivityTimer();
     if (typeof updateConfigSessionCard === 'function') updateConfigSessionCard();
+    axisRefreshVersionDisplay();
     } catch (err) {
         if (typeof console !== 'undefined' && console.warn) console.warn('loadSettings:', err);
         itemsPerPage = 15;
@@ -1206,7 +1472,14 @@ function axisChangePassword() {
     try {
         var login = localStorage.getItem('current_user_login');
         if (!login) { if (typeof showToast === 'function') showToast('Faça login para trocar a senha.', 'warning'); return; }
-        var raw = localStorage.getItem('db_' + login);
+        var canonLogin = typeof axisLoginCanonico === 'function' ? axisLoginCanonico(login) : login;
+        var raw = localStorage.getItem('db_' + canonLogin);
+        if (!raw && typeof axisLoginCanonico === 'function') {
+            var altCk = Object.keys(localStorage).find(function(k) {
+                return k.indexOf('db_') === 0 && axisLoginCanonico(k.replace('db_', '')) === canonLogin;
+            });
+            if (altCk) raw = localStorage.getItem(altCk);
+        }
         if (!raw) { if (typeof showToast === 'function') showToast('Usuário não encontrado. Faça login novamente.', 'error'); return; }
 
         var curEl = document.getElementById('axis-current-password');
@@ -1224,18 +1497,20 @@ function axisChangePassword() {
 
         var db = {};
         try { db = JSON.parse(raw || '{}'); } catch (_) { db = {}; }
-        if ((db.pass || '') !== cur) { if (typeof showToast === 'function') showToast('Senha atual incorreta.', 'error'); return; }
+        if ((db.pass || '') !== String(cur).trim()) { if (typeof showToast === 'function') showToast('Senha atual incorreta.', 'error'); return; }
         if ((db.pass || '') === np) { if (typeof showToast === 'function') showToast('A nova senha deve ser diferente da senha atual.', 'warning'); return; }
 
         if (btn) { btn.disabled = true; btn.textContent = 'Salvando...'; }
-        db.pass = np;
+        db.pass = String(np).trim();
+        delete db.senhaTemporaria;
         // Mantém expiração: após troca, define 90 dias (padrão) – pode ajustar depois nas políticas internas
         try {
             var exp = new Date();
             exp.setDate(exp.getDate() + 90);
             db.senhaExpiracao = exp.toISOString();
         } catch (_) {}
-        localStorage.setItem('db_' + login, JSON.stringify(db));
+        var storeKey = 'db_' + (typeof axisLoginCanonico === 'function' ? axisLoginCanonico(login) : login);
+        localStorage.setItem(storeKey, JSON.stringify(db));
 
         if (curEl) curEl.value = '';
         if (newEl) newEl.value = '';
@@ -1253,10 +1528,11 @@ function axisChangePassword() {
 }
 window.axisChangePassword = axisChangePassword;
 function updateHomePage() {
-    const el = document.getElementById('home-page-setting');
-    const v = el ? el.value : 'page-home';
-    localStorage.setItem('axis-home-page', v);
-    showToast('Página inicial atualizada', 'info');
+    // Regra do AXIS: retorno de Dashboard é sempre para Início
+    localStorage.setItem('axis-home-page', 'page-home');
+    var el = document.getElementById('home-page-setting');
+    if (el) el.value = 'page-home';
+    showToast('A página de início do AXIS é fixa em "Início".', 'info');
 }
 function updateConfigSessionCard() {
     var nameEl = document.getElementById('config-session-user-name');
@@ -1286,7 +1562,7 @@ function importSettingsFromFile(ev) {
             if (data.dateFormat) localStorage.setItem('axis-date-format', data.dateFormat);
             if (data.timeFormat) localStorage.setItem('axis-time-format', data.timeFormat);
             if (data.accentColor && AXIS_VALID_ACCENTS.indexOf(data.accentColor) >= 0) localStorage.setItem('axis-accent-color', data.accentColor);
-            if (data.homePage && AXIS_VALID_HOME_PAGES.indexOf(data.homePage) >= 0) localStorage.setItem('axis-home-page', data.homePage);
+            localStorage.setItem('axis-home-page', 'page-home');
             loadSettings();
             ev.target.value = '';
             showToast('Configurações importadas com sucesso', 'success');
@@ -1339,12 +1615,8 @@ function toggleReduceMotion() {
     showToast(enable ? 'Animações reduzidas' : 'Animações normais', 'info');
 }
 function updateLogoutTimeout() {
-    const el = document.getElementById('logout-timeout');
-    const mins = parseInt(el ? el.value : '0') || 0;
-    localStorage.setItem('axis-logout-timeout', String(mins));
-    axisLogoutTimeoutMinutes = mins;
+    axisLogoutTimeoutMinutes = AXIS_IDLE_LOGOUT_MINUTES;
     startInactivityTimer();
-    showToast(mins ? 'Deslogar após ' + mins + ' min de inatividade' : 'Sessão sem limite de inatividade', 'info');
 }
 function toggleMaskSensitive() {
     const el = document.getElementById('mask-sensitive');
@@ -1483,18 +1755,18 @@ function startInactivityTimer() {
     document.addEventListener('mousemove', onActivity);
     document.addEventListener('keydown', onActivity);
     document.addEventListener('click', onActivity);
+    document.addEventListener('touchstart', onActivity, { passive: true });
     axisLogoutTimeoutId = setInterval(function() {
         if (typeof userLogado === 'undefined' || !userLogado) return;
         var login = (localStorage.getItem('current_user_login') || '').trim().toLowerCase().replace(/\s+/g, '_');
         if (login === 'admin_filipe_silva') return;
-        var mins = Math.max(0, parseInt(axisLogoutTimeoutMinutes, 10) || 0);
-        if (mins <= 0) mins = 30;
+        var mins = AXIS_IDLE_LOGOUT_MINUTES;
         var elapsed = (Date.now() - axisLastActivity) / 60000;
         if (elapsed >= mins) {
             if (axisLogoutTimeoutId) clearInterval(axisLogoutTimeoutId);
             axisLogoutTimeoutId = null;
             if (typeof execLogout === 'function') execLogout();
-            showToast('Sessão encerrada por inatividade', 'info');
+            if (typeof showToast === 'function') showToast('Sessão expirada. Faça login novamente.', 'info');
         }
     }, 60000);
 }
@@ -1684,7 +1956,7 @@ function exportSettings() {
         dateFormat: localStorage.getItem('axis-date-format') || 'ddmmyyyy',
         timeFormat: localStorage.getItem('axis-time-format') || '24',
         accentColor: localStorage.getItem('axis-accent-color') || 'blue',
-        homePage: localStorage.getItem('axis-home-page') || 'page-home',
+        homePage: 'page-home',
         exportDate: new Date().toISOString(),
         system: 'AXIS Inventory System',
         version: '1.0.0'
@@ -1766,7 +2038,8 @@ function inicializarUsuarioAdmin() {
             pass: '123456',
             dataCadastro: new Date().toISOString(),
             perfil: 'admin',
-            ultimoAcesso: new Date().toISOString()
+            ultimoAcesso: new Date().toISOString(),
+            matriculaAxis: '0001'
         };
         localStorage.setItem(adminKey, JSON.stringify(adminData));
         console.log('✅ Usuário administrador criado: admin_filipe_silva / 123456');
@@ -1774,11 +2047,42 @@ function inicializarUsuarioAdmin() {
         console.log('✅ Usuário administrador já existe no localStorage');
         try {
             const userData = JSON.parse(existingUser);
+            if (userData.matriculaAxis == null || String(userData.matriculaAxis).trim() === '') {
+                userData.matriculaAxis = '0001';
+                localStorage.setItem(adminKey, JSON.stringify(userData));
+            }
             console.log('📋 Dados do admin:', { name: userData.name, perfil: userData.perfil });
         } catch (e) {
             console.error('❌ Erro ao ler dados do admin:', e);
         }
     }
+    try {
+        axisSeedUsuariosOperacaoPacking();
+    } catch (eSeed) {}
+}
+
+/** Cria utilizadores de exemplo para Packing (login canónico) se ainda não existirem. */
+function axisSeedUsuariosOperacaoPacking() {
+    function ensure(loginCanon, displayName, setorLabel) {
+        var k = 'db_' + loginCanon;
+        if (localStorage.getItem(k)) return;
+        var o = {
+            name: displayName,
+            pass: 'Axis@2026',
+            perfil: 'operador',
+            setor: setorLabel,
+            dataCadastro: new Date().toISOString(),
+            senhaTemporaria: true
+        };
+        try {
+            var exp = new Date();
+            exp.setDate(exp.getDate() + 90);
+            o.senhaExpiracao = exp.toISOString();
+        } catch (e1) {}
+        localStorage.setItem(k, JSON.stringify(o));
+    }
+    ensure('operacao_packing_mono', 'Operação Packing Mono', 'Operação Packing Mono');
+    ensure('operacao_packing_ptw', 'Operação Packing PTW', 'Operação Packing PTW');
 }
 
 // Inicializa admin ao carregar (garante que seja executado imediatamente)
@@ -1799,6 +2103,238 @@ function axisLoginCanonico(s) {
     return t.replace(/\s+/g, '_').replace(/\./g, '_');
 }
 
+/** Chave localStorage do utilizador (sempre db_ + login canónico). */
+function axisUserDbStorageKey(login) {
+    if (login == null || String(login).trim() === '') return '';
+    var norm = axisLoginCanonico(String(login));
+    return norm ? 'db_' + norm : '';
+}
+
+/** Lê o JSON do utilizador pela chave canónica ou por qualquer db_* que case com axisLoginCanonico. */
+function axisLoadUserJsonByLogin(login) {
+    var key = axisUserDbStorageKey(login);
+    var out = { key: key, data: {} };
+    if (!key) return out;
+    try {
+        var raw = localStorage.getItem(key);
+        if (raw) {
+            out.data = JSON.parse(raw) || {};
+            return out;
+        }
+    } catch (_) {
+        out.data = {};
+    }
+    var norm = axisLoginCanonico(String(login));
+    var alt = null;
+    try {
+        alt = Object.keys(localStorage).find(function(k) {
+            if (k.indexOf('db_') !== 0) return false;
+            var u = k.replace(/^db_/, '');
+            return axisLoginCanonico(u) === norm;
+        });
+    } catch (_) {
+        alt = null;
+    }
+    if (alt) {
+        try {
+            out.key = alt;
+            out.data = JSON.parse(localStorage.getItem(alt) || '{}') || {};
+        } catch (_) {
+            out.data = {};
+        }
+    }
+    return out;
+}
+
+/** Classificação genérica do dispositivo (sem dados pessoais) — para auditoria. */
+function axisClassificarDispositivoAcesso() {
+    var ua = (typeof navigator !== 'undefined' && navigator.userAgent) ? String(navigator.userAgent) : '';
+    var uaL = ua.toLowerCase();
+    var chMobile = false;
+    try {
+        if (navigator.userAgentData && typeof navigator.userAgentData.mobile === 'boolean') {
+            chMobile = navigator.userAgentData.mobile;
+        }
+    } catch (_) {}
+    var isIPad = /ipad/.test(uaL) || (typeof navigator !== 'undefined' && navigator.platform === 'MacIntel' && (navigator.maxTouchPoints || 0) > 1);
+    var isTablet = isIPad || /tablet|playbook|silk|nexus 7|nexus 10/i.test(ua) || /android(?!.*mobile)/i.test(ua);
+    var isPhone = chMobile || /mobi|iphone|ipod|blackberry|opera mini|iemobile|wpdesktop|android.*mobile/i.test(uaL);
+    var deviceLabel = 'Computador';
+    if (isTablet) deviceLabel = 'Tablet';
+    else if (isPhone) deviceLabel = 'Smartphone';
+    return { deviceLabel: deviceLabel, deviceCategory: isTablet ? 'tablet' : isPhone ? 'mobile' : 'desktop' };
+}
+
+/** Sugestão de login a partir do nome: primeiro nome + último sobrenome (ex.: "Filipe da Silva" → "filipe.silva"). */
+function axisSugerirLoginDoNomeCompleto(nomeCompleto) {
+    var raw = (nomeCompleto || '').trim().replace(/\s+/g, ' ');
+    if (!raw) return '';
+    var parts = raw.split(/\s+/).filter(Boolean);
+    function slug(tok) {
+        try {
+            tok = String(tok).normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        } catch (_) {}
+        return tok.toLowerCase().replace(/[^a-z0-9]/g, '');
+    }
+    var first = slug(parts[0]);
+    if (!first) return '';
+    if (parts.length === 1) return first;
+    var last = slug(parts[parts.length - 1]);
+    return last ? first + '.' + last : first;
+}
+
+/**
+ * Conclui o login após senha correta ou reconhecimento facial (TOTP + transição + persistência).
+ * @param {string} loginNormalizado
+ * @param {object} db objeto do utilizador (localStorage)
+ * @param {string} dbKey ex.: db_filipe_silva
+ * @param {string|null} chaveAntiga chave antiga a remover se migrada
+ * @param {string} userInput nome/login para fallback de exibição
+ */
+function axisExecuteLoginSession(loginNormalizado, db, dbKey, chaveAntiga, userInput) {
+    if (typeof window.axisFaceCleanupLoginSession === 'function') {
+        try {
+            window.axisFaceCleanupLoginSession();
+        } catch (_) {}
+    }
+    currentUser = db.name || userInput;
+    currentUserProfile = db.perfil || 'operador';
+    console.log('👤 Utilizador (sessão):', currentUser, '| Perfil:', currentUserProfile);
+
+    fetch((window.getAxisApiBase ? (window.getAxisApiBase() || '') : '') + '/api/auth/totp-required?login=' + encodeURIComponent(loginNormalizado))
+        .then(function (r) { return r.json(); })
+        .catch(function () { return {}; })
+        .then(function (data) {
+            if (data.required) {
+                sessionStorage.setItem('axis_pending_totp', JSON.stringify({
+                    login: loginNormalizado,
+                    name: currentUser,
+                    perfil: currentUserProfile
+                }));
+                if (typeof showModalTotpLogin === 'function') {
+                    showModalTotpLogin(loginNormalizado, axisDoCompleteLoginAfterTotp);
+                } else {
+                    axisDoCompleteLoginAfterTotp();
+                }
+                return;
+            }
+            axisDoCompleteLoginAfterTotp();
+        });
+
+    function axisDoCompleteLoginAfterTotp() {
+        const userDisplay = document.getElementById('user-display-name');
+        if (userDisplay) userDisplay.innerText = currentUser;
+
+        const menuAdmin = document.getElementById('menu-admin');
+        if (menuAdmin) {
+            if (currentUserProfile === 'admin') {
+                menuAdmin.style.display = 'block';
+            } else {
+                menuAdmin.style.display = 'none';
+            }
+        }
+
+        const authScreen = document.getElementById('auth-screen');
+        const mainContent = document.getElementById('main-content');
+
+        if (authScreen) {
+            authScreen.style.opacity = '0';
+            authScreen.style.transform = 'translateY(-20px)';
+        }
+
+        localStorage.setItem('current_user', currentUser);
+        localStorage.setItem('current_user_login', loginNormalizado);
+        localStorage.setItem('user_logged_in', 'true');
+        sessionStorage.setItem('just_logged_in', 'true');
+        sessionStorage.removeItem('axis_force_login_session');
+        try {
+            sessionStorage.removeItem('axis_redirected_to_login');
+            var pathLogin = window.location.pathname || '/';
+            window.history.replaceState({ page: 'page-home' }, '', pathLogin + '#page-home');
+        } catch (_) {}
+        console.log('✅ Estado de login salvo no localStorage');
+
+        setTimeout(() => {
+            if (authScreen) {
+                authScreen.style.display = 'none';
+            }
+            if (mainContent) {
+                mainContent.style.display = 'block';
+                mainContent.style.opacity = '0';
+                mainContent.style.transform = 'translateY(20px)';
+                var navWelcome = document.getElementById('nav-welcome-text');
+                var profileWrap = document.getElementById('axis-profile-wrap');
+                if (navWelcome) navWelcome.style.display = 'block';
+                if (profileWrap) { profileWrap.style.display = 'flex'; profileWrap.style.visibility = 'visible'; }
+                if (typeof window.axisRobotMaybeShow === 'function') try { window.axisRobotMaybeShow(); } catch (_) {}
+                if (typeof atualizarPerfilNav === 'function') atualizarPerfilNav();
+                setTimeout(() => {
+                    mainContent.style.opacity = '1';
+                    mainContent.style.transform = 'translateY(0)';
+                }, 50);
+            }
+        }, 300);
+
+        db.ultimoAcesso = new Date().toISOString();
+        localStorage.setItem('db_' + loginNormalizado, JSON.stringify(db));
+        if (chaveAntiga && chaveAntiga !== dbKey) {
+            localStorage.removeItem(chaveAntiga);
+        }
+
+        const loginData = {
+            usuario: loginNormalizado,
+            data: new Date().toISOString(),
+            ip: '192.168.1.1'
+        };
+        localStorage.setItem('last_login', JSON.stringify(loginData));
+        try {
+            const audit = JSON.parse(localStorage.getItem('axis_audit_log') || '[]');
+            var devLogin = typeof axisClassificarDispositivoAcesso === 'function' ? axisClassificarDispositivoAcesso().deviceLabel : '—';
+            audit.push({ type: 'login', user: loginNormalizado, date: loginData.data, device: devLogin });
+            localStorage.setItem('axis_audit_log', JSON.stringify(audit.slice(-100)));
+        } catch (_) {}
+
+        if (typeof showBemVindoModal === 'function') {
+            showBemVindoModal(currentUser);
+        }
+
+        localStorage.setItem('axis-current-page', 'page-home');
+        if (typeof navigate === 'function') {
+            navigate('page-home');
+        }
+        if (typeof atualizarPerfilNav === 'function') atualizarPerfilNav();
+        if (typeof aplicarPermissoesModulos === 'function') aplicarPermissoesModulos();
+
+        try {
+            axisPasswordExpiryWarnings(loginNormalizado, db);
+        } catch (ePw) {}
+    }
+}
+
+/** Avisos 5…1 dias antes da expiração da senha (uma vez por dia de sessão). */
+function axisPasswordExpiryWarnings(loginNorm, db) {
+    if (!db || !db.senhaExpiracao || loginNorm === 'admin_filipe_silva') return;
+    var expMs = 0;
+    try {
+        expMs = new Date(db.senhaExpiracao).getTime();
+    } catch (e1) {
+        return;
+    }
+    var days = Math.ceil((expMs - Date.now()) / 86400000);
+    if (days < 1 || days > 5) return;
+    var k = '';
+    try {
+        k = 'axis_pwd_warn_' + loginNorm + '_' + days + '_' + new Date().toISOString().slice(0, 10);
+        if (sessionStorage.getItem(k) === '1') return;
+        sessionStorage.setItem(k, '1');
+    } catch (e2) {
+        return;
+    }
+    if (typeof showToast === 'function') {
+        showToast('Faltam ' + days + ' dia(s) para expirar a sua senha. Altere-a em Configurações.', 'warning', 9500);
+    }
+}
+
 function handleAuth() {
     console.log('🔐 ========== INICIANDO AUTENTICAÇÃO ==========');
     console.log('🔐 Processando autenticação...');
@@ -1816,7 +2352,7 @@ function handleAuth() {
     }
     
     const userInput = userField.value.trim();
-    const pass = passField.value;
+    const pass = String(passField.value || '').trim();
 
     if (!userInput || !pass) {
         console.log('⚠️ Campos vazios');
@@ -1867,133 +2403,35 @@ function handleAuth() {
         try {
             const db = JSON.parse(dbRaw);
             console.log('✅ Dados do usuário carregados:', { name: db.name, perfil: db.perfil, pass: db.pass ? '***' : '(vazia)' });
-            
-            if (db.pass === pass) {
-                console.log('✅ SENHA CORRETA - INICIANDO LOGIN');
-                currentUser = db.name || userInput;
-                currentUserProfile = db.perfil || 'operador';
-                console.log('👤 Usuário logado:', currentUser);
-                console.log('👑 Perfil:', currentUserProfile);
 
-                // 2.ª etapa: Google Authenticator (TOTP), se ativado para este utilizador
-                fetch((window.getAxisApiBase ? (window.getAxisApiBase() || '') : '') + '/api/auth/totp-required?login=' + encodeURIComponent(loginNormalizado))
-                    .then(function(r) { return r.json(); })
-                    .catch(function() { return {}; })
-                    .then(function(data) {
-                        if (data.required) {
-                            sessionStorage.setItem('axis_pending_totp', JSON.stringify({
-                                login: loginNormalizado,
-                                name: currentUser,
-                                perfil: currentUserProfile
-                            }));
-                            if (typeof showModalTotpLogin === 'function') {
-                                showModalTotpLogin(loginNormalizado, doCompleteLogin);
-                            } else {
-                                doCompleteLogin();
-                            }
-                            return;
-                        }
-                        doCompleteLogin();
-                    });
-
-                function doCompleteLogin() {
-                // Atualiza saudação
-            const userDisplay = document.getElementById('user-display-name');
-            if (userDisplay) userDisplay.innerText = currentUser;
-            
-            // Mostra menu de administração apenas para admins
-            const menuAdmin = document.getElementById('menu-admin');
-            if (menuAdmin) {
-                if (currentUserProfile === 'admin') {
-                    menuAdmin.style.display = 'block';
+            if (db.bloqueadoSenhaExpirada === true) {
+                if (typeof showToast === 'function') {
+                    showToast('Acesso suspenso: prazo de senha expirou. Peça a um administrador para desbloquear e definir nova senha.', 'error');
                 } else {
-                    menuAdmin.style.display = 'none';
+                    alert('Acesso suspenso. Contacte um administrador.');
                 }
+                return;
             }
 
-            // Transição de telas com animação
-            const authScreen = document.getElementById('auth-screen');
-            const mainContent = document.getElementById('main-content');
-            
-            if (authScreen) {
-                authScreen.style.opacity = '0';
-                authScreen.style.transform = 'translateY(-20px)';
-            }
-            
-                // Salva estado de login
-                localStorage.setItem('current_user', currentUser);
-                localStorage.setItem('current_user_login', loginNormalizado); // Salva o login também
-                localStorage.setItem('user_logged_in', 'true');
-                // Marca que acabou de fazer login (para não restaurar página antiga)
-                sessionStorage.setItem('just_logged_in', 'true');
-                sessionStorage.removeItem('axis_force_login_session'); // permite área logada após login
-                console.log('✅ Estado de login salvo no localStorage');
-                console.log('   Nome:', currentUser);
-                console.log('   Login:', loginNormalizado);
-                
-                setTimeout(() => {
-                    if (authScreen) {
-                        authScreen.style.display = 'none';
-                        console.log('✅ Tela de login ocultada');
-                    }
-                    if (mainContent) {
-                        mainContent.style.display = 'block';
-                        mainContent.style.opacity = '0';
-                        mainContent.style.transform = 'translateY(20px)';
-                        console.log('✅ Conteúdo principal exibido');
-                        // Mostrar perfil do usuário logo após login (ao lado do botão de tema)
-                        var navWelcome = document.getElementById('nav-welcome-text');
-                        var profileWrap = document.getElementById('axis-profile-wrap');
-                        if (navWelcome) navWelcome.style.display = 'block';
-                        if (profileWrap) { profileWrap.style.display = 'flex'; profileWrap.style.visibility = 'visible'; }
-                        if (typeof window.axisRobotMaybeShow === 'function') try { window.axisRobotMaybeShow(); } catch (_) {}
-                        if (typeof atualizarPerfilNav === 'function') atualizarPerfilNav();
-                        setTimeout(() => {
-                            mainContent.style.opacity = '1';
-                            mainContent.style.transform = 'translateY(0)';
-                            console.log('✅ Animação de entrada concluída');
-                        }, 50);
+            if (String(db.pass || '').trim() === pass) {
+                var expMs = db.senhaExpiracao ? new Date(db.senhaExpiracao).getTime() : 0;
+                if (expMs > 0 && Date.now() > expMs) {
+                    db.bloqueadoSenhaExpirada = true;
+                    try {
+                        localStorage.setItem(dbKey, JSON.stringify(db));
+                        if (chaveAntiga && chaveAntiga !== dbKey) {
+                            localStorage.removeItem(chaveAntiga);
+                        }
+                    } catch (eBl) {}
+                    if (typeof showToast === 'function') {
+                        showToast('O prazo para trocar a sua senha terminou. Um administrador deve desbloquear a sua conta.', 'error');
                     } else {
-                        console.error('❌ mainContent não encontrado!');
+                        alert('Senha expirada. Contacte um administrador.');
                     }
-                }, 300);
-            
-            // Atualiza último acesso do usuário
-            db.ultimoAcesso = new Date().toISOString();
-            localStorage.setItem('db_' + loginNormalizado, JSON.stringify(db));
-            // Migra: remove chave antiga (ex: db_JOAO.SILVA) para evitar duplicata
-            if (chaveAntiga && chaveAntiga !== dbKey) {
-                localStorage.removeItem(chaveAntiga);
-                console.log('✅ Usuário migrado para chave normalizada');
-            }
-            
-            // Registra login
-            const loginData = {
-                usuario: loginNormalizado,
-                data: new Date().toISOString(),
-                ip: '192.168.1.1' // Simulado
-            };
-            localStorage.setItem('last_login', JSON.stringify(loginData));
-            try {
-                const audit = JSON.parse(localStorage.getItem('axis_audit_log') || '[]');
-                audit.push({ type: 'login', user: loginNormalizado, date: loginData.data });
-                localStorage.setItem('axis_audit_log', JSON.stringify(audit.slice(-100)));
-            } catch (_) {}
-            
-                if (typeof showBemVindoModal === 'function') {
-                    showBemVindoModal(currentUser);
+                    return;
                 }
-                
-                // Ao fazer login: sempre vai para Início (Home)
-                localStorage.setItem('axis-current-page', 'page-home');
-                if (typeof navigate === 'function') {
-                    navigate('page-home');
-                }
-                if (typeof atualizarPerfilNav === 'function') atualizarPerfilNav();
-                if (typeof aplicarPermissoesModulos === 'function') aplicarPermissoesModulos();
-
-                } /* fim doCompleteLogin */
-
+                console.log('✅ SENHA CORRETA - INICIANDO LOGIN');
+                axisExecuteLoginSession(loginNormalizado, db, dbKey, chaveAntiga, userInput);
             } else {
                 console.log('❌ Senha incorreta');
                 // Animação de erro
@@ -2056,6 +2494,49 @@ function togglePassword() {
     }
 }
 
+/** Olho nas senhas de Configurações (mesmo comportamento do login). */
+function axisToggleSettingsPassword(inputId, iconId) {
+    var input = document.getElementById(inputId);
+    var icon = document.getElementById(iconId);
+    if (!input || !icon) return;
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.textContent = '🙈';
+        icon.title = 'Ocultar senha';
+    } else {
+        input.type = 'password';
+        icon.textContent = '👁️';
+        icon.title = 'Mostrar senha';
+    }
+}
+
+function axisClearSettingsPasswordFields() {
+    try {
+        var ids = ['axis-current-password', 'axis-new-password', 'axis-new-password-confirm'];
+        var eyes = [
+            ['axis-current-password', 'axis-eye-current'],
+            ['axis-new-password', 'axis-eye-new'],
+            ['axis-new-password-confirm', 'axis-eye-confirm']
+        ];
+        ids.forEach(function (id) {
+            var el = document.getElementById(id);
+            if (el) el.value = '';
+        });
+        eyes.forEach(function (pair) {
+            var inp = document.getElementById(pair[0]);
+            var ic = document.getElementById(pair[1]);
+            if (inp) inp.type = 'password';
+            if (ic) {
+                ic.textContent = '👁️';
+                ic.title = 'Mostrar senha';
+            }
+        });
+    } catch (_) {}
+}
+
+window.axisToggleSettingsPassword = axisToggleSettingsPassword;
+window.axisClearSettingsPasswordFields = axisClearSettingsPasswordFields;
+
 function fecharModalSair() {
     const wrap = document.getElementById('modal-sair');
     if (wrap) {
@@ -2088,7 +2569,10 @@ function execLogout() {
     localStorage.setItem('last_logout', JSON.stringify(logoutData));
     try {
         var audit = JSON.parse(localStorage.getItem('axis_audit_log') || '[]');
-        audit.push({ type: 'logout', user: currentUser || '-', date: logoutData.data });
+        var devOut = typeof axisClassificarDispositivoAcesso === 'function' ? axisClassificarDispositivoAcesso().deviceLabel : '—';
+        var userAudit = '';
+        try { userAudit = localStorage.getItem('current_user_login') || ''; } catch (_) {}
+        audit.push({ type: 'logout', user: userAudit || (currentUser || '-'), date: logoutData.data, device: devOut });
         localStorage.setItem('axis_audit_log', JSON.stringify(audit.slice(-100)));
     } catch (_) {}
     if (window._axisAdminStatsInterval) {
@@ -2880,7 +3364,11 @@ function syncSetorSelectorFromSelect(selectId, triggerId, dropdownId, defaultLab
 }
 
 function closeOtherFilterDropdowns(exceptDropdown) {
-    const panel = exceptDropdown.closest('#ucs-filter-panel') || exceptDropdown.closest('#cadastro-modal') || exceptDropdown.closest('#editar-modal');
+    const panel =
+        exceptDropdown.closest('#ucs-filter-panel') ||
+        exceptDropdown.closest('#cadastro-modal') ||
+        exceptDropdown.closest('#editar-modal') ||
+        exceptDropdown.closest('#axis-profile-dropdown');
     if (panel) {
         panel.querySelectorAll('.setor-selector-dropdown.is-open').forEach(function (d) {
             if (d === exceptDropdown) return;
@@ -3208,7 +3696,7 @@ function editarEquipamento(tag) {
 }
 
 function showConfirmExcluirModal(opts) {
-    const { title = 'Excluir', message = 'Tem certeza?', onConfirm, icon = '🗑️' } = opts || {};
+    const { title = 'Excluir', message = 'Tem certeza?', onConfirm, icon = '🗑️', overlayExtraClass = '' } = opts || {};
     const overlay = document.getElementById('confirm-excluir-overlay');
     const titleEl = document.getElementById('confirm-excluir-title');
     const msg = document.getElementById('confirm-excluir-message');
@@ -3220,10 +3708,16 @@ function showConfirmExcluirModal(opts) {
     if (titleEl) titleEl.textContent = title;
     if (msg) msg.textContent = message;
     if (iconEl) iconEl.textContent = icon;
+    if (overlayExtraClass) {
+        overlayExtraClass.split(/\s+/).filter(Boolean).forEach(function(c) { overlay.classList.add(c); });
+    }
     overlay.style.display = 'flex';
 
     const fecharConfirm = () => {
         overlay.style.display = 'none';
+        if (overlayExtraClass) {
+            overlayExtraClass.split(/\s+/).filter(Boolean).forEach(function(c) { overlay.classList.remove(c); });
+        }
         btnCancelar.onclick = null;
         btnExcluir.onclick = null;
         overlay.onclick = null;
@@ -3271,7 +3765,7 @@ function formatarSetor(setor) {
         'returns': 'RETURNS',
         'packing-mono': 'PACKING MONO',
         'packing-ptw': 'PACKING PTW',
-        'sauron': 'SAURON',
+        'sauron': 'Sauron',
         'insumos': 'INSUMOS',
         'docas-de-expedicao': 'DOCAS DE EXPEDIÇÃO',
         'linha-de-peixe-1': 'LINHA DE PEIXE 1',
@@ -4936,7 +5430,7 @@ var SETORES_EDIT = [
     { v: 'internal-systems', l: 'INTERNAL SYSTEMS' }, { v: 'lideranca', l: 'LIDERANÇA' }, { v: 'mhw', l: 'MHW' }, { v: 'p2m', l: 'P2M' },
     { v: 'check-in', l: 'CHECK-IN' }, { v: 'reciving', l: 'RECIVING' }, { v: 'mz1', l: 'MZ1' }, { v: 'mz2', l: 'MZ2' }, { v: 'mz3', l: 'MZ3' },
     { v: 'inventario', l: 'INVENTÁRIO' }, { v: 'cx', l: 'CX' }, { v: 'returns', l: 'RETURNS' }, { v: 'packing-mono', l: 'PACKING MONO' },
-    { v: 'packing-ptw', l: 'PACKING PTW' }, { v: 'sauron', l: 'SAURON' }, { v: 'insumos', l: 'INSUMOS' }, { v: 'docas-de-expedicao', l: 'DOCAS DE EXPEDIÇÃO' },
+    { v: 'packing-ptw', l: 'PACKING PTW' }, { v: 'sauron', l: 'Sauron' }, { v: 'insumos', l: 'INSUMOS' }, { v: 'docas-de-expedicao', l: 'DOCAS DE EXPEDIÇÃO' },
     { v: 'linha-de-peixe-1', l: 'LINHA DE PEIXE 1' }, { v: 'sorter', l: 'SORTER' }, { v: 'linha-de-peixe-2', l: 'LINHA DE PEIXE 2' },
     { v: 'rk', l: 'RK' }, { v: 'nt-rk', l: 'NT RK' }, { v: 'qualidade', l: 'QUALIDADE' }, { v: 'aquario-outbound', l: 'AQUÁRIO OUTBOUND' },
     { v: 'adm', l: 'ADM' }, { v: 'gate', l: 'GATE' }, { v: 'ambulatorio-interno', l: 'AMBULATÓRIO INTERNO' }, { v: 'ambulatorio-externo', l: 'AMBULATÓRIO EXTERNO' },
@@ -5176,6 +5670,136 @@ function fecharBemVindoModal() {
     if (wrap) {
         wrap.style.display = 'none';
         wrap.onclick = null;
+    }
+    if (typeof axisAbrirModalSenhaTemporariaSeNecessario === 'function') {
+        setTimeout(function() { axisAbrirModalSenhaTemporariaSeNecessario(); }, 200);
+    }
+}
+
+/** Após boas-vindas ou ao restaurar sessão: obriga troca da senha gerada pelo admin. */
+function axisUsuarioPrecisaTrocarSenhaTemporaria() {
+    var login = localStorage.getItem('current_user_login');
+    if (!login) return false;
+    var key = 'db_' + (typeof axisLoginCanonico === 'function' ? axisLoginCanonico(login) : String(login).trim().toLowerCase().replace(/\s+/g, '_').replace(/\./g, '_'));
+    var raw = localStorage.getItem(key);
+    if (!raw) {
+        var alt = Object.keys(localStorage).find(function(k) {
+            if (k.indexOf('db_') !== 0 || typeof axisLoginCanonico !== 'function') return false;
+            return axisLoginCanonico(k.replace('db_', '')) === axisLoginCanonico(login);
+        });
+        if (alt) raw = localStorage.getItem(alt);
+    }
+    if (!raw) return false;
+    try {
+        var db = JSON.parse(raw);
+        return db.senhaTemporaria === true;
+    } catch (_) {
+        return false;
+    }
+}
+
+function axisAbrirModalSenhaTemporariaSeNecessario() {
+    if (!axisUsuarioPrecisaTrocarSenhaTemporaria()) return;
+    var m = document.getElementById('modal-senha-temporaria');
+    if (!m) return;
+    var err = document.getElementById('axis-senha-temp-erro');
+    var n1 = document.getElementById('axis-senha-temp-nova');
+    var n2 = document.getElementById('axis-senha-temp-confirma');
+    if (err) err.textContent = '';
+    if (n1) n1.value = '';
+    if (n2) n2.value = '';
+    m.style.display = 'flex';
+    document.body.classList.add('modal-senha-temp-open');
+    setTimeout(function() { if (n1 /* still open */) try { n1.focus(); } catch (_) {} }, 350);
+}
+
+function axisConfirmarNovaSenhaTemporaria() {
+    var errEl = document.getElementById('axis-senha-temp-erro');
+    var n1 = document.getElementById('axis-senha-temp-nova');
+    var n2 = document.getElementById('axis-senha-temp-confirma');
+    if (errEl) errEl.textContent = '';
+    var login = localStorage.getItem('current_user_login');
+    if (!login) {
+        if (errEl) errEl.textContent = 'Sessão inválida. Entre novamente.';
+        return;
+    }
+    var nv = String(n1 && n1.value ? n1.value : '').trim();
+    var c2 = String(n2 && n2.value ? n2.value : '').trim();
+    if (nv.length < 6) {
+        if (errEl) errEl.textContent = 'A nova senha deve ter pelo menos 6 caracteres.';
+        return;
+    }
+    if (nv !== c2) {
+        if (errEl) errEl.textContent = 'A confirmação não confere.';
+        return;
+    }
+    var loginNorm = typeof axisLoginCanonico === 'function' ? axisLoginCanonico(login) : login;
+    var userKey = 'db_' + loginNorm;
+    var raw = localStorage.getItem(userKey);
+    if (!raw && typeof axisLoginCanonico === 'function') {
+        var altK = Object.keys(localStorage).find(function(k) {
+            return k.indexOf('db_') === 0 && axisLoginCanonico(k.replace('db_', '')) === loginNorm;
+        });
+        if (altK) { userKey = altK; raw = localStorage.getItem(altK); }
+    }
+    if (!raw) {
+        if (errEl) errEl.textContent = 'Dados do usuário não encontrados.';
+        return;
+    }
+    var db = {};
+    try { db = JSON.parse(raw); } catch (_) { db = {}; }
+    if (!db.senhaTemporaria) {
+        var m = document.getElementById('modal-senha-temporaria');
+        if (m) { m.style.display = 'none'; document.body.classList.remove('modal-senha-temp-open'); }
+        return;
+    }
+    db.pass = nv;
+    delete db.senhaTemporaria;
+    try {
+        var exp = new Date();
+        exp.setDate(exp.getDate() + 90);
+        db.senhaExpiracao = exp.toISOString();
+    } catch (_) {}
+    try {
+        localStorage.setItem(userKey, JSON.stringify(db));
+    } catch (e) {
+        if (errEl) errEl.textContent = 'Não foi possível salvar. Tente de novo.';
+        return;
+    }
+    var m = document.getElementById('modal-senha-temporaria');
+    if (m) m.style.display = 'none';
+    document.body.classList.remove('modal-senha-temp-open');
+    if (n1) n1.value = '';
+    if (n2) n2.value = '';
+    if (typeof showToast === 'function') showToast('Senha definida com sucesso. Ambiente AXIS liberado.', 'success');
+    try { if (typeof atualizarPerfilNav === 'function') atualizarPerfilNav(); } catch (_) {}
+}
+
+function axisCheckSenhaTemporariaAposRestaurarSessao() {
+    try {
+        if (!localStorage.getItem('user_logged_in') || !localStorage.getItem('current_user_login')) return;
+        var bem = document.getElementById('modal-bem-vindo');
+        if (bem && bem.style.display === 'flex') return;
+        if (axisUsuarioPrecisaTrocarSenhaTemporaria()) axisAbrirModalSenhaTemporariaSeNecessario();
+    } catch (_) {}
+}
+
+function axisInitModalSenhaTemporaria() {
+    var btn = document.getElementById('axis-senha-temp-submit');
+    if (btn && !btn._axisBound) {
+        btn._axisBound = true;
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            axisConfirmarNovaSenhaTemporaria();
+        });
+    }
+    var form = document.getElementById('axis-senha-temp-form');
+    if (form && !form._axisBound) {
+        form._axisBound = true;
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            axisConfirmarNovaSenhaTemporaria();
+        });
     }
 }
 
@@ -5571,6 +6195,33 @@ function gerarSenhaAutomatica() {
     return base;
 }
 
+function abrirWhatsappBotAdmin() {
+    if (typeof currentUserProfile !== 'undefined' && currentUserProfile !== 'admin') {
+        if (typeof showToast === 'function') showToast('Apenas administradores podem abrir o conector do bot.', 'error');
+        return;
+    }
+    var url = 'pages/whatsapp-qr.html';
+    try {
+        var w = window.open(url, '_blank', 'noopener,noreferrer');
+        if (!w) window.location.href = url;
+    } catch (_) {
+        window.location.href = url;
+    }
+}
+
+/** Links dos portais SELBETTI — modal nesta página (js/selbetti-portal-links-admin.js) */
+function abrirSelbettiLinksPortaisAdmin() {
+    if (typeof currentUserProfile !== 'undefined' && currentUserProfile !== 'admin') {
+        if (typeof showToast === 'function') showToast('Apenas administradores podem editar os links dos portais SELBETTI.', 'error');
+        return;
+    }
+    if (typeof window.axisSelbettiPortalLinksOpen !== 'function') {
+        if (typeof showToast === 'function') showToast('Módulo de links indisponível. Recarregue a página.', 'error');
+        return;
+    }
+    window.axisSelbettiPortalLinksOpen();
+}
+
 function abrirCadastrarUsuario() {
     const modal = document.getElementById('modal-cadastrar-usuario');
     if (modal) {
@@ -5582,7 +6233,6 @@ function abrirCadastrarUsuario() {
         if (senhaEl) {
             senhaEl.value = gerarSenhaAutomatica();
             senhaEl.type = 'text';
-            setTimeout(function() { if (senhaEl) senhaEl.type = 'password'; }, 800);
         }
         if (expEl) {
             expEl.textContent = 'Senha gerada automaticamente. Expira em ' + dias + ' dias.';
@@ -5603,12 +6253,17 @@ function fecharModalCadastrarUsuario() {
 const MODULOS_PERMISSOES = [
     { id: 'page-inventario', nome: 'Inventário', icon: '📦' },
     { id: 'page-rondas', nome: 'Rondas', icon: '🛡️' },
-    { id: 'manutencao', nome: 'Manutenção Preventiva', icon: '🖨️' },
+    { id: 'manutencao', nome: 'Manutenções Preventivas', icon: '🖨️' },
     { id: 'page-suporte', nome: 'Suporte Técnico', icon: '💬' },
-    { id: 'notas', nome: 'Notas Fiscais', icon: '📄' },
     { id: 'bloco', nome: 'Bloco de Notas', icon: '📝' },
     { id: 'registro', nome: 'Registro de Chamados', icon: '📋' },
     { id: 'pecas', nome: 'Peças', icon: '🔧' },
+    { id: 'packing', nome: 'Packing Machine', icon: '⚙️' },
+    { id: 'status-bancada', nome: 'Status de Bancada', icon: '📊' },
+    { id: 'sauron', nome: 'Sauron', icon: '🔮' },
+    { id: 'selbetti', nome: 'Selbetti', icon: '🏭' },
+    { id: 'jovem-aprendiz', nome: 'Jovem Aprendiz', icon: '🎓' },
+    { id: 'notas', nome: 'Notas Fiscais', icon: '📄' },
     { id: 'page-configuracoes', nome: 'Configurações', icon: '⚙️' }
 ];
 
@@ -5622,6 +6277,11 @@ const CARD_TO_MODULO = {
     'bloco-master': 'bloco',
     'chamados-master': 'registro',
     'pecas-master': 'pecas',
+    'packing-master': 'packing',
+    'status-bancada-master': 'status-bancada',
+    'sauron-master': 'sauron',
+    'selbetti-master': 'selbetti',
+    'jovem-aprendiz-master': 'jovem-aprendiz',
     'config-master': 'page-configuracoes'
 };
 
@@ -5653,7 +6313,8 @@ const PERFIS_LABEL = {
     admin: '👑 Administrador',
     tecnico: '🔧 Técnico',
     operador: '👤 Operador',
-    visualizador: '👁️ Visualizador'
+    visualizador: '👁️ Visualizador',
+    aprendiz: '📚 Aprendiz'
 };
 
 // Permissões por USUÁRIO (não por perfil) - aberto ao lado de Editar
@@ -5684,7 +6345,8 @@ function abrirModalPermissoesUsuario(login) {
         admin: MODULOS_PERMISSOES,
         tecnico: MODULOS_PERMISSOES,
         operador: MODULOS_PERMISSOES.filter(m => !['page-configuracoes'].includes(m.id)),
-        visualizador: MODULOS_PERMISSOES.filter(m => ['page-inventario', 'page-rondas', 'page-suporte', 'notas', 'bloco', 'registro', 'pecas'].includes(m.id))
+        visualizador: MODULOS_PERMISSOES.filter(m => ['page-inventario', 'page-rondas', 'manutencao', 'page-suporte', 'notas', 'bloco', 'registro', 'pecas', 'packing', 'status-bancada', 'sauron', 'selbetti', 'jovem-aprendiz'].includes(m.id)),
+        aprendiz: MODULOS_PERMISSOES.filter(m => ['page-inventario', 'page-rondas', 'manutencao', 'page-suporte', 'notas', 'bloco', 'registro', 'pecas', 'packing', 'status-bancada', 'sauron', 'selbetti', 'jovem-aprendiz'].includes(m.id))
     };
     const modulos = modulosPorPerfil[perfil] || MODULOS_PERMISSOES;
     
@@ -5833,7 +6495,9 @@ function preencherModalLogs() {
     tbody.innerHTML = limited.map((e) => {
         const dt = e.date ? new Date(e.date).toLocaleString('pt-BR') : '-';
         const ev = e.type === 'login' ? 'Login' : e.type === 'logout' ? 'Logout' : (e.type || 'Evento');
-        return `<tr><td>${dt}</td><td>${ev}</td><td>${(e.user || '-').replace(/</g, '&lt;')}</td></tr>`;
+        const dev = (e.device && String(e.device)) ? String(e.device).replace(/</g, '&lt;') : '—';
+        const usr = (e.user || '-').replace(/</g, '&lt;');
+        return `<tr><td>${dt}</td><td>${ev}</td><td>${usr}</td><td>${dev}</td></tr>`;
     }).join('');
 }
 
@@ -5878,7 +6542,8 @@ function carregarUsuarios() {
             'admin': '👑 Administrador',
             'tecnico': '🔧 Técnico',
             'operador': '👤 Operador',
-            'visualizador': '👁️ Visualizador'
+            'visualizador': '👁️ Visualizador',
+            'aprendiz': '📚 Aprendiz'
         }[user.perfil] || user.perfil || 'Operador';
         
         // admin_filipe_silva: sem Permissões (tem tudo liberado) e sem Excluir
@@ -5889,6 +6554,7 @@ function carregarUsuarios() {
             <tr>
                 <td>${user.name || '-'}</td>
                 <td><strong>${user.login}</strong></td>
+                <td>${user.matriculaAxis ? String(user.matriculaAxis) : '—'}</td>
                 <td>${perfilLabel}</td>
                 <td>${dataCadastro}</td>
                 <td>${ultimoAcesso}</td>
@@ -5927,11 +6593,87 @@ function initCadastroUsuarioLoginAuto() {
     var loginEl = document.getElementById('novo-usuario-login');
     if (!nomeEl || !loginEl) return;
     nomeEl.addEventListener('input', function() {
-        var nome = nomeEl.value.trim();
-        if (!nome) { loginEl.value = ''; return; }
-        var login = nome.toUpperCase().replace(/\s+/g, '.').replace(/[^A-Z0-9.]/g, '');
-        loginEl.value = login;
+        var sug = axisSugerirLoginDoNomeCompleto(nomeEl.value);
+        loginEl.value = sug;
     });
+}
+
+/** Evita que cliques/teclas no campo senha propaguem para o overlay do modal (scroll/sair do foco ao selecionar texto). */
+function initCadastroSenhaCampoEstavel() {
+    var el = document.getElementById('novo-usuario-senha');
+    if (!el || el._axisSenhaStable) return;
+    el._axisSenhaStable = true;
+    ['mousedown', 'touchstart', 'selectstart'].forEach(function(ev) {
+        el.addEventListener(ev, function(e) { e.stopPropagation(); }, false);
+    });
+    el.addEventListener('keydown', function(e) { e.stopPropagation(); }, false);
+    el.addEventListener('keyup', function(e) { e.stopPropagation(); }, false);
+}
+
+/** Matrícula mostrada no perfil: criador (admin_filipe_silva) usa sempre 0001. */
+function axisMatriculaPerfilDisplay(login, userData) {
+    var canon = typeof axisLoginCanonico === 'function' ? axisLoginCanonico(login) : String(login || '').trim().toLowerCase().replace(/\s+/g, '_').replace(/\./g, '_');
+    if (canon === 'admin_filipe_silva') return '0001';
+    if (!userData) return '';
+    var m = userData.matriculaAxis;
+    return m != null && String(m).trim() !== '' ? String(m) : '';
+}
+
+/** Próxima matrícula local se a API não responder (varre usuários em localStorage). */
+function axisMatriculaFallbackLocal() {
+    var max = 0;
+    for (var i = 0; i < localStorage.length; i++) {
+        var k = localStorage.key(i);
+        if (!k || k.indexOf('db_') !== 0) continue;
+        try {
+            var u = JSON.parse(localStorage.getItem(k) || '{}');
+            var m = u.matriculaAxis != null ? String(u.matriculaAxis).replace(/\D/g, '') : '';
+            if (m) {
+                var n = parseInt(m, 10);
+                if (!isNaN(n) && n > max) max = n;
+            }
+        } catch (e) { /* ignore */ }
+    }
+    return String(max + 1).padStart(4, '0');
+}
+
+function axisSincronizarMatriculaPerfilSeFaltar(login, nomeFallback) {
+    if (!login) return;
+    var canon = typeof axisLoginCanonico === 'function' ? axisLoginCanonico(login) : String(login).trim().toLowerCase().replace(/\s+/g, '_');
+    var key = 'db_' + canon;
+    var raw = localStorage.getItem(key);
+    if (!raw) return;
+    var u;
+    try { u = JSON.parse(raw); } catch (e) { return; }
+    if (canon === 'admin_filipe_silva') {
+        if (u.matriculaAxis !== '0001') {
+            u.matriculaAxis = '0001';
+            try { localStorage.setItem(key, JSON.stringify(u)); } catch (e2) {}
+            if (typeof atualizarPerfilNav === 'function') atualizarPerfilNav();
+        }
+        return;
+    }
+    if (u.matriculaAxis) return;
+    var nome = (u.name || nomeFallback || '').trim();
+    if (!nome || nome.length < 2) return;
+    if (typeof fetch === 'undefined') {
+        u.matriculaAxis = axisMatriculaFallbackLocal();
+        try { localStorage.setItem(key, JSON.stringify(u)); } catch (e2) {}
+        return;
+    }
+    fetch('/api/axis/colaboradores-matriculas/garantir', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nome: nome })
+    }).then(function (r) { return r.json(); }).then(function (data) {
+        if (data && data.ok && data.matricula) {
+            u.matriculaAxis = data.matricula;
+            try { localStorage.setItem(key, JSON.stringify(u)); } catch (e3) {}
+            if (typeof atualizarPerfilNav === 'function') atualizarPerfilNav();
+            var el = document.getElementById('axis-profile-mini-matricula');
+            if (el) el.textContent = data.matricula;
+        }
+    }).catch(function () { /* silencioso */ });
 }
 
 function cadastrarUsuario(event) {
@@ -5944,7 +6686,7 @@ function cadastrarUsuario(event) {
     
     const nome = document.getElementById('novo-usuario-nome').value.trim();
     const login = document.getElementById('novo-usuario-login').value.trim();
-    const senha = document.getElementById('novo-usuario-senha').value;
+    const senha = String(document.getElementById('novo-usuario-senha').value || '').trim();
     const perfil = document.getElementById('novo-usuario-perfil').value;
     
     if (!nome || !login || !senha || !perfil) {
@@ -5983,16 +6725,34 @@ function cadastrarUsuario(event) {
         foto: '',
         dataCadastro: new Date().toISOString(),
         ultimoAcesso: null,
-        senhaExpiracao: dataExpiracao.toISOString()
+        senhaExpiracao: dataExpiracao.toISOString(),
+        senhaTemporaria: true
     };
-    
-    localStorage.setItem(userKey, JSON.stringify(novoUsuario));
-    
-    showToast(`Usuário ${nome} cadastrado! Login: ${loginNorm}`, 'success');
-    limparFormularioUsuario();
-    fecharModalCadastrarUsuario();
-    carregarUsuarios();
-    atualizarEstatisticasAdmin();
+
+    function finalizarCadastroUsuario(matricula) {
+        if (matricula) novoUsuario.matriculaAxis = matricula;
+        localStorage.setItem(userKey, JSON.stringify(novoUsuario));
+        showToast(`Usuário ${nome} cadastrado! Login: ${loginNorm}` + (matricula ? ` · Matrícula ${matricula}` : ''), 'success');
+        limparFormularioUsuario();
+        fecharModalCadastrarUsuario();
+        carregarUsuarios();
+        atualizarEstatisticasAdmin();
+    }
+
+    if (typeof fetch !== 'undefined') {
+        fetch('/api/axis/colaboradores-matriculas/garantir', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nome: nome })
+        }).then(function (r) { return r.json(); }).then(function (data) {
+            if (data && data.ok && data.matricula) finalizarCadastroUsuario(data.matricula);
+            else finalizarCadastroUsuario(axisMatriculaFallbackLocal());
+        }).catch(function () {
+            finalizarCadastroUsuario(axisMatriculaFallbackLocal());
+        });
+    } else {
+        finalizarCadastroUsuario(axisMatriculaFallbackLocal());
+    }
 }
 
 function editarUsuario(login) {
@@ -6025,10 +6785,14 @@ function abrirModalEditarUsuario(login) {
     perfilSelect.value = userData.perfil || 'operador';
     var setorEl = document.getElementById('editar-usuario-setor');
     if (setorEl) setorEl.value = userData.setor || '';
+    var matEl = document.getElementById('editar-usuario-matricula');
+    if (matEl) matEl.value = userData.matriculaAxis || '—';
     document.getElementById('editar-usuario-nova-senha').value = '';
     document.getElementById('editar-usuario-confirmar-senha').value = '';
     document.getElementById('editar-senha-expiracao-info').style.display = 'none';
-    
+    var alertaBloq = document.getElementById('editar-usuario-alerta-bloqueio');
+    if (alertaBloq) alertaBloq.style.display = userData.bloqueadoSenhaExpirada === true ? 'block' : 'none';
+
     atualizarPerfilSelectEditar();
     atualizarSetorSelectEditar();
     modal.style.display = 'flex';
@@ -6240,7 +7004,7 @@ function salvarUsuarioEditado(event) {
         return;
     }
     
-    const perfisValidos = ['admin', 'tecnico', 'operador', 'visualizador'];
+    const perfisValidos = ['admin', 'tecnico', 'operador', 'visualizador', 'aprendiz'];
     if (!perfisValidos.includes(perfil)) {
         showToast('Perfil inválido', 'error');
         return;
@@ -6259,23 +7023,35 @@ function salvarUsuarioEditado(event) {
     
     const userKey = 'db_' + loginNorm;
     let userData = JSON.parse(localStorage.getItem(originalKey) || localStorage.getItem(userKey) || '{}');
+    var wasBlockedSenha = userData.bloqueadoSenhaExpirada === true;
     // Preservar foto e outros campos não editados neste modal
     var fotoExistente = userData.foto;
     var ultimoAcessoExistente = userData.ultimoAcesso;
+    var matriculaExistente = userData.matriculaAxis;
 
     userData.name = nome;
     userData.perfil = perfil;
     userData.setor = setor;
+    if (matriculaExistente !== undefined && matriculaExistente !== null && matriculaExistente !== '') {
+        userData.matriculaAxis = matriculaExistente;
+    }
     if (fotoExistente !== undefined) userData.foto = fotoExistente;
     if (ultimoAcessoExistente !== undefined) userData.ultimoAcesso = ultimoAcessoExistente;
     
     let diasExpiracao = null;
     if (novaSenha) {
         userData.pass = novaSenha;
-        diasExpiracao = obterExpiracaoSenhaAleatoria();
-        const dataExpiracao = new Date();
-        dataExpiracao.setDate(dataExpiracao.getDate() + diasExpiracao);
-        userData.senhaExpiracao = dataExpiracao.toISOString();
+        delete userData.bloqueadoSenhaExpirada;
+        if (wasBlockedSenha) {
+            userData.senhaTemporaria = true;
+            delete userData.senhaExpiracao;
+        } else {
+            delete userData.senhaTemporaria;
+            diasExpiracao = obterExpiracaoSenhaAleatoria();
+            const dataExpiracao = new Date();
+            dataExpiracao.setDate(dataExpiracao.getDate() + diasExpiracao);
+            userData.senhaExpiracao = dataExpiracao.toISOString();
+        }
     }
     
     localStorage.setItem(userKey, JSON.stringify(userData));
@@ -6283,9 +7059,19 @@ function salvarUsuarioEditado(event) {
     
     if (novaSenha) {
         const info = document.getElementById('editar-senha-expiracao-info');
-        info.textContent = `Senha alterada. Expiração definida aleatoriamente em ${diasExpiracao} dias.`;
-        info.style.display = 'block';
-        showToast(`Usuário atualizado. Senha expira em ${diasExpiracao} dias.`, 'success');
+        if (wasBlockedSenha) {
+            if (info) {
+                info.textContent = 'Conta desbloqueada. O utilizador deve definir nova senha ao entrar (senha temporária).';
+                info.style.display = 'block';
+            }
+            showToast('Utilizador desbloqueado. Ele será obrigado a trocar a senha no próximo login.', 'success');
+        } else {
+            if (info) {
+                info.textContent = 'Senha alterada. Expiração definida aleatoriamente em ' + diasExpiracao + ' dias.';
+                info.style.display = 'block';
+            }
+            showToast('Usuário atualizado. Senha expira em ' + diasExpiracao + ' dias.', 'success');
+        }
     } else {
         showToast('Usuário atualizado com sucesso!', 'success');
     }
@@ -6470,6 +7256,7 @@ function loadDocumentacao() {
     initDocTabs();
     initDocBusca();
     initDocModal();
+    initDocViewIAButton();
     renderizarDocumentos();
 }
 
@@ -6562,11 +7349,143 @@ async function abrirModalDocumento(editId) {
         }
     }
     modal.style.display = 'flex';
+    if (typeof syncDocGlassSelects === 'function') syncDocGlassSelects();
 }
 
 function fecharModalDocumento() {
     const modal = document.getElementById('modal-documento');
     if (modal) modal.style.display = 'none';
+}
+
+function axisFormatDocFileSize(n) {
+    if (n == null || !isFinite(n)) return '';
+    if (n < 1024) return n + ' B';
+    if (n < 1024 * 1024) return (n / 1024).toFixed(1) + ' KB';
+    return (n / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+function docFilePreviewIconForName(name) {
+    const ext = ((name || '').split('.').pop() || '').toLowerCase();
+    if (ext === 'pdf') return '📄';
+    if (ext === 'zip' || ext === 'rar' || ext === '7z') return '📦';
+    if (ext === 'zeb' || ext === 'zpl' || ext === 'lbl' || ext === 'nlbl') return '🏷️';
+    if (ext === 'txt') return '📝';
+    return '📎';
+}
+
+function updateDocFilePreviewFromInput(fileInput) {
+    const file = fileInput && fileInput.files && fileInput.files[0];
+    const zone = document.getElementById('doc-file-zone');
+    const empty = document.getElementById('doc-file-zone-empty');
+    const card = document.getElementById('doc-file-preview-card');
+    const nameEl = document.getElementById('doc-file-preview-name');
+    const extEl = document.getElementById('doc-file-preview-ext');
+    const sizeEl = document.getElementById('doc-file-preview-size');
+    const iconEl = document.getElementById('doc-file-preview-icon');
+    const fileText = document.getElementById('doc-file-text');
+    if (!zone || !empty || !card) return;
+    if (!file) {
+        empty.classList.remove('doc-file-zone-empty-hidden');
+        card.classList.add('doc-file-preview-hidden');
+        zone.classList.remove('doc-file-has-file');
+        if (fileText) fileText.textContent = 'Clique ou arraste o arquivo aqui';
+        return;
+    }
+    empty.classList.add('doc-file-zone-empty-hidden');
+    card.classList.remove('doc-file-preview-hidden');
+    zone.classList.add('doc-file-has-file');
+    const base = file.name || 'arquivo';
+    if (nameEl) nameEl.textContent = base;
+    const ext = (base.indexOf('.') >= 0) ? base.split('.').pop().toUpperCase() : 'FILE';
+    if (extEl) extEl.textContent = ext;
+    if (sizeEl) sizeEl.textContent = axisFormatDocFileSize(file.size);
+    if (iconEl) iconEl.textContent = docFilePreviewIconForName(base);
+}
+
+function syncDocGlassSelects() {
+    document.querySelectorAll('#modal-documento .doc-select-glass').forEach((wrap) => {
+        const select = wrap.querySelector('select.doc-select-native');
+        const valueSpan = wrap.querySelector('.doc-select-glass-value');
+        const dropdown = wrap.querySelector('.doc-select-glass-dropdown');
+        const trigger = wrap.querySelector('.doc-select-glass-trigger');
+        if (!select || !valueSpan) return;
+        const opt = select.options[select.selectedIndex];
+        valueSpan.textContent = opt ? opt.textContent : '';
+        if (dropdown) {
+            dropdown.querySelectorAll('.doc-select-glass-option').forEach((el) => {
+                el.classList.toggle('selected', el.dataset.value === select.value);
+            });
+        }
+        if (trigger) trigger.setAttribute('aria-expanded', 'false');
+        if (dropdown) dropdown.classList.remove('open');
+    });
+}
+
+function initDocSelectGlass() {
+    if (!document.getElementById('modal-documento')) return;
+    document.querySelectorAll('#modal-documento .doc-select-glass').forEach((wrap) => {
+        if (wrap.dataset.docGlassInited) return;
+        wrap.dataset.docGlassInited = '1';
+        const select = wrap.querySelector('select.doc-select-native');
+        const trigger = wrap.querySelector('.doc-select-glass-trigger');
+        const dropdown = wrap.querySelector('.doc-select-glass-dropdown');
+        const valueSpan = wrap.querySelector('.doc-select-glass-value');
+        if (!select || !trigger || !dropdown || !valueSpan) return;
+
+        function buildOptions() {
+            dropdown.innerHTML = '';
+            for (let i = 0; i < select.options.length; i++) {
+                const opt = select.options[i];
+                const div = document.createElement('div');
+                div.className = 'doc-select-glass-option' + (opt.value === select.value ? ' selected' : '');
+                div.setAttribute('role', 'option');
+                div.dataset.value = opt.value;
+                div.textContent = opt.textContent;
+                div.addEventListener('click', function () {
+                    select.value = this.dataset.value;
+                    const o = select.options[select.selectedIndex];
+                    valueSpan.textContent = o ? o.textContent : '';
+                    dropdown.querySelectorAll('.doc-select-glass-option').forEach((el) => {
+                        el.classList.toggle('selected', el.dataset.value === select.value);
+                    });
+                    trigger.setAttribute('aria-expanded', 'false');
+                    dropdown.classList.remove('open');
+                    select.dispatchEvent(new Event('change', { bubbles: true }));
+                });
+                dropdown.appendChild(div);
+            }
+        }
+        buildOptions();
+        const opt0 = select.options[select.selectedIndex];
+        valueSpan.textContent = opt0 ? opt0.textContent : '';
+
+        trigger.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const isOpen = dropdown.classList.toggle('open');
+            trigger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+            document.querySelectorAll('#modal-documento .doc-select-glass-dropdown.open').forEach((d) => {
+                if (d !== dropdown) {
+                    d.classList.remove('open');
+                    const w = d.closest('.doc-select-glass');
+                    const t = w && w.querySelector('.doc-select-glass-trigger');
+                    if (t) t.setAttribute('aria-expanded', 'false');
+                }
+            });
+        });
+        dropdown.addEventListener('click', (e) => { e.stopPropagation(); });
+    });
+    if (!window.__axisDocGlassCloseBound) {
+        window.__axisDocGlassCloseBound = true;
+        document.addEventListener('click', () => {
+            document.querySelectorAll('#modal-documento .doc-select-glass-dropdown.open').forEach((d) => {
+                d.classList.remove('open');
+                const w = d.closest('.doc-select-glass');
+                const t = w && w.querySelector('.doc-select-glass-trigger');
+                if (t) t.setAttribute('aria-expanded', 'false');
+            });
+        });
+    }
 }
 
 function docToggleTipo() {
@@ -6587,6 +7506,7 @@ function docToggleTipo() {
 }
 
 function initDocModal() {
+    initDocSelectGlass();
     const tipo = document.getElementById('doc-tipo');
     if (tipo && !tipo.dataset.inited) {
         tipo.dataset.inited = '1';
@@ -6594,43 +7514,53 @@ function initDocModal() {
     }
     const fileInput = document.getElementById('doc-arquivo');
     const fileZone = document.getElementById('doc-file-zone');
-    const fileText = document.getElementById('doc-file-text');
-    if (fileInput && fileZone && fileText && !fileInput.dataset.docInited) {
+    const clearBtn = document.getElementById('doc-file-preview-clear');
+    if (fileInput && fileZone && !fileInput.dataset.docInited) {
         fileInput.dataset.docInited = '1';
-        fileInput.addEventListener('change', function() {
-            const f = this.files && this.files[0];
-            if (f) {
-                fileText.textContent = f.name;
-                fileZone.classList.add('doc-file-has-file');
-            } else {
-                fileText.textContent = 'Clique ou arraste o arquivo aqui';
-                fileZone.classList.remove('doc-file-has-file');
+        fileInput.addEventListener('change', function () {
+            updateDocFilePreviewFromInput(this);
+        });
+        fileZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            fileZone.classList.add('doc-file-dragover');
+        });
+        fileZone.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            fileZone.classList.remove('doc-file-dragover');
+        });
+        fileZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            fileZone.classList.remove('doc-file-dragover');
+            if (e.dataTransfer.files && e.dataTransfer.files.length) {
+                try {
+                    const dt = new DataTransfer();
+                    dt.items.add(e.dataTransfer.files[0]);
+                    fileInput.files = dt.files;
+                } catch (err) {
+                    console.warn('AXIS docs: não foi possível anexar ficheiro por arrastar.', err);
+                }
+                updateDocFilePreviewFromInput(fileInput);
             }
         });
-        fileZone.addEventListener('dragover', function(e) {
+    }
+    if (clearBtn && !clearBtn.dataset.docInited) {
+        clearBtn.dataset.docInited = '1';
+        clearBtn.addEventListener('click', (e) => {
             e.preventDefault();
-            fileZone.classList.add('doc-file-has-file');
-        });
-        fileZone.addEventListener('dragleave', function(e) {
-            e.preventDefault();
-            if (!fileInput.files || !fileInput.files[0]) fileZone.classList.remove('doc-file-has-file');
-        });
-        fileZone.addEventListener('drop', function(e) {
-            e.preventDefault();
-            if (e.dataTransfer.files.length) {
-                fileInput.files = e.dataTransfer.files;
-                fileText.textContent = e.dataTransfer.files[0].name;
-                fileZone.classList.add('doc-file-has-file');
+            e.stopPropagation();
+            const inp = document.getElementById('doc-arquivo');
+            if (inp) {
+                inp.value = '';
+                updateDocFilePreviewFromInput(inp);
             }
         });
     }
 }
 
 function resetDocFileZone() {
-    const fileText = document.getElementById('doc-file-text');
-    const fileZone = document.getElementById('doc-file-zone');
-    if (fileText) fileText.textContent = 'Clique ou arraste o arquivo aqui';
-    if (fileZone) fileZone.classList.remove('doc-file-has-file');
+    const fileInput = document.getElementById('doc-arquivo');
+    if (fileInput) fileInput.value = '';
+    if (fileInput) updateDocFilePreviewFromInput(fileInput);
 }
 
 function initDocTabs() {
@@ -6732,7 +7662,408 @@ function editarDocumento(id) {
     abrirModalDocumento(id);
 }
 
+function docViewExtFromFileId(fileId) {
+    const s = String(fileId || '');
+    const i = s.lastIndexOf('.');
+    if (i <= 0 || i === s.length - 1) return '';
+    return s.slice(i + 1).toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+/** Tamanho do ficheiro via HEAD (evita carregar GB na pré-visualização). */
+const DOC_VIEW_MAX_TEXT_PREVIEW = 1.5 * 1024 * 1024;
+const DOC_VIEW_MAX_PDF_IFRAME = 14 * 1024 * 1024;
+const DOC_VIEW_MAX_IMAGE_INLINE = 8 * 1024 * 1024;
+const DOC_VIEW_ZEBRA_LABEL_MAX_BYTES = 14 * 1024 * 1024;
+
+const DOC_ZPL_MAX_CHARS = 450000;
+
+/** Bloco ZPL a partir de ficheiro .zpl (texto). */
+function docExtractZplFromText(s) {
+    const u = String(s || '');
+    const m = u.match(/\^XA/i);
+    if (!m || m.index == null) return null;
+    const start = m.index;
+    const upper = u.toUpperCase();
+    let lastXz = -1;
+    let pos = start;
+    while (pos < u.length) {
+        const i = upper.indexOf('^XZ', pos);
+        if (i < 0) break;
+        lastXz = i;
+        pos = i + 1;
+    }
+    if (lastXz < start) return null;
+    const z = u.slice(start, lastXz + 4).replace(/\0/g, '').trim();
+    return z.length >= 8 && z.length <= DOC_ZPL_MAX_CHARS ? z : null;
+}
+
+function docExtractZplAsciiBytes(u8) {
+    if (!u8 || u8.length < 8) return null;
+    const n = u8.length;
+    function isStart(i) {
+        return i <= n - 3 && u8[i] === 0x5e && (
+            (u8[i + 1] === 0x58 && u8[i + 2] === 0x41) ||
+            (u8[i + 1] === 0x78 && u8[i + 2] === 0x61)
+        );
+    }
+    function isEnd(i) {
+        return i <= n - 3 && u8[i] === 0x5e && (
+            (u8[i + 1] === 0x58 && u8[i + 2] === 0x5a) ||
+            (u8[i + 1] === 0x78 && u8[i + 2] === 0x7a)
+        );
+    }
+    let start = -1;
+    for (let i = 0; i <= n - 3; i++) {
+        if (isStart(i)) {
+            start = i;
+            break;
+        }
+    }
+    if (start < 0) return null;
+    let endPos = -1;
+    for (let j = start + 3; j <= n - 3; j++) {
+        if (isEnd(j)) endPos = j + 3;
+    }
+    if (endPos <= start || (endPos - start) > DOC_ZPL_MAX_CHARS) return null;
+    try {
+        const dec = new TextDecoder('iso-8859-1');
+        const z = dec.decode(u8.subarray(start, endPos)).replace(/\0/g, '').trim();
+        return z.length >= 8 ? z : null;
+    } catch (_) {
+        return null;
+    }
+}
+
+/** ZPL em UTF-16 LE (^ = 5E 00, X = 58 00, …) — comum em ficheiros ZebraDesigner. */
+function docExtractZplUtf16LEBytes(u8) {
+    if (!u8 || u8.length < 12) return null;
+    const n = u8.length;
+    function isStart16(i) {
+        if (i > n - 6) return false;
+        if (u8[i] !== 0x5e || u8[i + 1] !== 0) return false;
+        const x = u8[i + 2];
+        if (x !== 0x58 && x !== 0x78) return false;
+        if (u8[i + 3] !== 0) return false;
+        const a = u8[i + 4];
+        if (a !== 0x41 && a !== 0x61) return false;
+        return u8[i + 5] === 0;
+    }
+    function isEnd16(i) {
+        if (i > n - 6) return false;
+        if (u8[i] !== 0x5e || u8[i + 1] !== 0) return false;
+        const x = u8[i + 2];
+        if (x !== 0x58 && x !== 0x78) return false;
+        if (u8[i + 3] !== 0) return false;
+        const z = u8[i + 4];
+        if (z !== 0x5a && z !== 0x7a) return false;
+        return u8[i + 5] === 0;
+    }
+    let start = -1;
+    for (let i = 0; i <= n - 6; i++) {
+        if (isStart16(i)) {
+            start = i;
+            break;
+        }
+    }
+    if (start < 0) return null;
+    let endPos = -1;
+    for (let j = start + 6; j <= n - 6; j++) {
+        if (isEnd16(j)) endPos = j + 6;
+    }
+    if (endPos <= start || (endPos - start) > DOC_ZPL_MAX_CHARS * 2) return null;
+    try {
+        const dec = new TextDecoder('utf-16le');
+        const z = dec.decode(u8.subarray(start, endPos)).replace(/\0/g, '').trim();
+        return z.length >= 8 ? z : null;
+    } catch (_) {
+        return null;
+    }
+}
+
+/** ZPL em UTF-16 BE (00 5E 00 58 00 41 …). */
+function docExtractZplUtf16BEBytes(u8) {
+    if (!u8 || u8.length < 12) return null;
+    const n = u8.length;
+    function isStart16(i) {
+        if (i > n - 6) return false;
+        if (u8[i] !== 0 || u8[i + 1] !== 0x5e) return false;
+        if (u8[i + 2] !== 0) return false;
+        const x = u8[i + 3];
+        if (x !== 0x58 && x !== 0x78) return false;
+        if (u8[i + 4] !== 0) return false;
+        const a = u8[i + 5];
+        return a === 0x41 || a === 0x61;
+    }
+    function isEnd16(i) {
+        if (i > n - 6) return false;
+        if (u8[i] !== 0 || u8[i + 1] !== 0x5e) return false;
+        if (u8[i + 2] !== 0) return false;
+        const x = u8[i + 3];
+        if (x !== 0x58 && x !== 0x78) return false;
+        if (u8[i + 4] !== 0) return false;
+        const z = u8[i + 5];
+        return z === 0x5a || z === 0x7a;
+    }
+    let start = -1;
+    for (let i = 0; i <= n - 6; i++) {
+        if (isStart16(i)) {
+            start = i;
+            break;
+        }
+    }
+    if (start < 0) return null;
+    let endPos = -1;
+    for (let j = start + 6; j <= n - 6; j++) {
+        if (isEnd16(j)) endPos = j + 6;
+    }
+    if (endPos <= start || (endPos - start) > DOC_ZPL_MAX_CHARS * 2) return null;
+    try {
+        let z = '';
+        for (let k = start; k + 1 < endPos; k += 2) {
+            z += String.fromCharCode((u8[k] << 8) | u8[k + 1]);
+        }
+        z = z.replace(/\0/g, '').trim();
+        return z.length >= 8 ? z : null;
+    } catch (_) {
+        return null;
+    }
+}
+
+/** Procura ZPL no binário .lbl / .nlbl: ASCII, UTF-16 LE, UTF-16 BE. */
+function docExtractZplFromLabelBytes(u8) {
+    return docExtractZplAsciiBytes(u8) || docExtractZplUtf16LEBytes(u8) || docExtractZplUtf16BEBytes(u8);
+}
+
+function docViewHideLabelCard() {
+    const card = document.getElementById('doc-view-label-card');
+    if (card) card.classList.add('doc-view-preview-hidden');
+}
+
+function docViewShowLabelCard(message, hint) {
+    const card = document.getElementById('doc-view-label-card');
+    const msg = document.getElementById('doc-view-label-card-msg');
+    const hintEl = document.getElementById('doc-view-label-card-hint');
+    if (!card || !msg) return;
+    msg.textContent = message || '';
+    if (hintEl) hintEl.textContent = hint || '';
+    card.classList.remove('doc-view-preview-hidden');
+}
+
+/**
+ * Envia ZPL ao backend (Labelary) e mostra PNG no modal.
+ * @returns {Promise<boolean>}
+ */
+async function docViewRenderZplToImage(zpl, img, zebraNote, iframe, noteText) {
+    if (!zpl || zpl.length < 8) return false;
+    try {
+        const pr = await fetch('/api/docs/render-zpl', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json; charset=utf-8' },
+            body: JSON.stringify({ zpl })
+        });
+        if (!pr.ok) return false;
+        const blob = await pr.blob();
+        if (window._docViewZebraBlobUrl) {
+            try { URL.revokeObjectURL(window._docViewZebraBlobUrl); } catch (_) {}
+        }
+        window._docViewZebraBlobUrl = URL.createObjectURL(blob);
+        if (img) {
+            img.src = window._docViewZebraBlobUrl;
+            img.alt = 'Pré-visualização da etiqueta (ZPL)';
+            img.classList.remove('doc-view-preview-hidden');
+        }
+        if (zebraNote) {
+            zebraNote.textContent = noteText || 'A etiqueta é feita de comandos ZPL; abaixo vê-se o resultado como imagem (similar à impressão). Renderização via Labelary (rede).';
+            zebraNote.classList.remove('doc-view-preview-hidden');
+        }
+        if (iframe) iframe.classList.add('doc-view-preview-hidden');
+        return true;
+    } catch (_) {
+        return false;
+    }
+}
+
+function docExtractReadableAsciiFromBinary(u8, maxOut) {
+    maxOut = maxOut || 10000;
+    const cap = Math.min(u8.length, 3 * 1024 * 1024);
+    const lines = [];
+    let cur = '';
+    let outLen = 0;
+    for (let i = 0; i < cap && outLen < maxOut; i++) {
+        const b = u8[i];
+        if (b >= 32 && b < 127) {
+            cur += String.fromCharCode(b);
+        } else {
+            if (cur.length >= 5) {
+                lines.push(cur);
+                outLen += cur.length + 1;
+            }
+            cur = '';
+        }
+    }
+    if (cur.length >= 5 && outLen < maxOut) lines.push(cur);
+    const uniq = [...new Set(lines)];
+    return uniq.slice(0, 120).join('\n');
+}
+
+/** Evita mostrar lixo binário no modal quando .lbl/.nlbl não tem ZPL (fragmentos ASCII aleatórios). */
+function docZebraSnippetIsReadable(s) {
+    const raw = String(s || '').trim();
+    if (raw.length < 40) return false;
+    const lines = raw.split(/\n/).map(function (l) { return l.trim(); }).filter(Boolean);
+    if (lines.length < 2) return false;
+    const t = raw.replace(/\s/g, '');
+    if (t.length < 50) return false;
+    var alnum = 0;
+    for (var i = 0; i < t.length; i++) {
+        var c = t.charCodeAt(i);
+        if ((c >= 48 && c <= 57) || (c >= 65 && c <= 90) || (c >= 97 && c <= 122) || c > 127) alnum++;
+    }
+    if (alnum / t.length < 0.52) return false;
+    var wordish = 0;
+    for (var j = 0; j < lines.length; j++) {
+        if (/[a-zA-ZÀ-ÿ]{4,}/.test(lines[j]) && lines[j].length < 220) wordish++;
+    }
+    return wordish >= 2;
+}
+
+async function docViewGetFileSizeBytes(fileUrl) {
+    try {
+        const r = await fetch(fileUrl, { method: 'HEAD', credentials: 'same-origin' });
+        if (!r.ok) return null;
+        const cl = r.headers.get('Content-Length');
+        if (cl == null || cl === '') return null;
+        const n = parseInt(cl, 10);
+        return Number.isFinite(n) && n >= 0 ? n : null;
+    } catch (_) {
+        return null;
+    }
+}
+
+function docViewResetArquivoPreview() {
+    window._docViewTextForIA = '';
+    docViewHideLabelCard();
+    const iframe = document.getElementById('doc-view-iframe');
+    const img = document.getElementById('doc-view-preview-image');
+    const pre = document.getElementById('doc-view-preview-text');
+    const fallback = document.getElementById('doc-view-preview-fallback');
+    const iaWrap = document.getElementById('doc-view-ia-wrap');
+    const iaStatus = document.getElementById('doc-view-ia-status');
+    const iaResult = document.getElementById('doc-view-ia-result');
+    const iaBtn = document.getElementById('doc-view-ia-btn');
+    if (iframe) {
+        iframe.src = 'about:blank';
+        iframe.classList.add('doc-view-preview-hidden');
+        iframe.removeAttribute('sandbox');
+    }
+    if (img) {
+        img.removeAttribute('src');
+        img.classList.add('doc-view-preview-hidden');
+    }
+    if (pre) {
+        pre.textContent = '';
+        pre.classList.add('doc-view-preview-hidden');
+    }
+    if (fallback) {
+        fallback.textContent = '';
+        fallback.classList.add('doc-view-preview-hidden');
+    }
+    if (iaWrap) iaWrap.classList.add('doc-view-preview-hidden');
+    if (iaStatus) {
+        iaStatus.textContent = '';
+        iaStatus.classList.add('doc-view-preview-hidden');
+    }
+    if (iaResult) {
+        iaResult.textContent = '';
+        iaResult.classList.add('doc-view-preview-hidden');
+    }
+    if (iaBtn) iaBtn.disabled = false;
+    const zebraNote = document.getElementById('doc-view-zebra-note');
+    if (zebraNote) {
+        zebraNote.textContent = '';
+        zebraNote.classList.add('doc-view-preview-hidden');
+    }
+    if (window._docViewZebraBlobUrl) {
+        try { URL.revokeObjectURL(window._docViewZebraBlobUrl); } catch (_) {}
+        window._docViewZebraBlobUrl = null;
+    }
+}
+
+function docViewSetIAVisible(hasText) {
+    const iaWrap = document.getElementById('doc-view-ia-wrap');
+    if (!iaWrap) return;
+    if (hasText && String(window._docViewTextForIA || '').trim().length >= 30) {
+        iaWrap.classList.remove('doc-view-preview-hidden');
+    } else {
+        iaWrap.classList.add('doc-view-preview-hidden');
+    }
+}
+
+function initDocViewIAButton() {
+    const btn = document.getElementById('doc-view-ia-btn');
+    if (!btn || btn.dataset.axisIaInited) return;
+    btn.dataset.axisIaInited = '1';
+    btn.addEventListener('click', () => { gerarResumoDocumentoIA(); });
+}
+
+async function gerarResumoDocumentoIA() {
+    const body = String(window._docViewTextForIA || '').trim();
+    const status = document.getElementById('doc-view-ia-status');
+    const result = document.getElementById('doc-view-ia-result');
+    const btn = document.getElementById('doc-view-ia-btn');
+    if (body.length < 30) {
+        if (typeof showToast === 'function') showToast('Não há texto carregado para resumir. Abra um ficheiro de texto ou documento com conteúdo.', 'warning');
+        return;
+    }
+    const slice = body.slice(0, 14000);
+    let userName = '';
+    try {
+        const login = localStorage.getItem('current_user_login');
+        if (login) {
+            const u = JSON.parse(localStorage.getItem('db_' + login) || '{}');
+            userName = (u.name || login || '').trim();
+        }
+    } catch (_) {}
+    if (status) {
+        status.textContent = 'A gerar resumo com o assistente AXIS…';
+        status.classList.remove('doc-view-preview-hidden');
+    }
+    if (result) result.classList.add('doc-view-preview-hidden');
+    if (btn) btn.disabled = true;
+    try {
+        const r = await fetch('/api/assistant', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                message: 'Responda em português. Faça um resumo claro em tópicos curtos (máximo 8 linhas) do documento abaixo da biblioteca Documentação AXIS. Use apenas informação presente no texto; não invente.\n\n--- DOCUMENTO ---\n' + slice,
+                userName,
+                history: []
+            })
+        });
+        const j = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(j.error || 'Erro ao contactar a IA');
+        const reply = (j.reply != null ? String(j.reply) : '') || 'Sem resposta.';
+        if (result) {
+            result.textContent = reply;
+            result.classList.remove('doc-view-preview-hidden');
+        }
+        if (status) {
+            status.textContent = '';
+            status.classList.add('doc-view-preview-hidden');
+        }
+    } catch (e) {
+        if (status) {
+            status.textContent = e.message || 'Erro ao gerar resumo.';
+            status.classList.remove('doc-view-preview-hidden');
+        }
+        if (typeof showToast === 'function') showToast(e.message || 'Erro na IA', 'error');
+    } finally {
+        if (btn) btn.disabled = false;
+    }
+}
+
 async function verDocumento(id) {
+    if (typeof initDocViewIAButton === 'function') initDocViewIAButton();
     const docs = await getDocumentos();
     const doc = docs.find(d => d.id === id || d.fileName === id);
     if (!doc) return;
@@ -6744,29 +8075,319 @@ async function verDocumento(id) {
     const downloadBtn = document.getElementById('doc-view-download');
     const conteudoArea = document.getElementById('doc-view-conteudo');
     if (!modal || !tituloEl) return;
+    docViewResetArquivoPreview();
     tituloEl.textContent = doc.titulo || 'Documento';
     descEl.textContent = doc.descricao || '';
     descEl.style.display = doc.descricao ? 'block' : 'none';
     if (doc.tipo === 'arquivo' && (doc.fileName || doc.id)) {
         const fileId = doc.fileName || doc.id;
         const fileUrl = getDocApiBase() + '/' + encodeURIComponent(fileId) + '/file';
+        const ext = docViewExtFromFileId(fileId);
+        const textExts = new Set(['txt', 'text', 'zpl', 'csv', 'log', 'md', 'markdown', 'json', 'xml', 'ini', 'cfg', 'env', 'html', 'htm', 'css', 'js', 'ts', 'yaml', 'yml']);
+        const imageExts = new Set(['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'bmp', 'ico']);
+        const binaryExts = new Set([
+            'zip', 'rar', '7z', 'zeb', 'exe', 'dll', 'bin', 'dmg', 'iso',
+            'z', 'gz', 'tgz', 'xz', 'bz2', 'tar', 'upd', 'fw', 'mot', 'znd', 'snd', 'cos', 'img', 'ota', 'apk', 'hex', 'ehex', 'prg'
+        ]);
+
+        const fileSizeBytes = await docViewGetFileSizeBytes(fileUrl);
+
         if (arquivoArea) arquivoArea.style.display = 'block';
-        if (iframe) {
-            iframe.src = fileUrl;
-            iframe.style.height = '400px';
-        }
         if (downloadBtn) {
             downloadBtn.href = fileUrl;
-            downloadBtn.download = (doc.titulo || 'documento') + (fileUrl.match(/\.(pdf|zip|txt|doc|xls)/i) ? '' : '');
+            downloadBtn.setAttribute('download', '');
+            downloadBtn.download = (doc.titulo || 'documento').replace(/[\\/:*?"<>|]/g, '_') + (ext ? '.' + ext : '');
             downloadBtn.style.display = 'inline-block';
         }
         if (conteudoArea) conteudoArea.style.display = 'none';
+
+        const img = document.getElementById('doc-view-preview-image');
+        const pre = document.getElementById('doc-view-preview-text');
+        const fallback = document.getElementById('doc-view-preview-fallback');
+
+        if (!ext) {
+            if (fallback) {
+                fallback.textContent = 'O ficheiro não tem extensão visível no nome. Use «Baixar arquivo» ou envie de novo com extensão (.pdf, .txt, .zpl, etc.).';
+                fallback.classList.remove('doc-view-preview-hidden');
+            }
+            if (iframe) iframe.classList.add('doc-view-preview-hidden');
+            docViewSetIAVisible(false);
+            modal.style.display = 'flex';
+            return;
+        }
+
+        if (imageExts.has(ext)) {
+            if (fileSizeBytes != null && fileSizeBytes > DOC_VIEW_MAX_IMAGE_INLINE) {
+                if (fallback) {
+                    fallback.textContent = 'A imagem é demasiado grande para pré-visualizar no browser (' + Math.round(fileSizeBytes / (1024 * 1024)) + ' MB). Use «Baixar arquivo».';
+                    fallback.classList.remove('doc-view-preview-hidden');
+                }
+                if (iframe) iframe.classList.add('doc-view-preview-hidden');
+                docViewSetIAVisible(false);
+                modal.style.display = 'flex';
+                return;
+            }
+            if (img) {
+                img.src = fileUrl;
+                img.classList.remove('doc-view-preview-hidden');
+            }
+            if (iframe) iframe.classList.add('doc-view-preview-hidden');
+            docViewSetIAVisible(false);
+            modal.style.display = 'flex';
+            return;
+        }
+
+        if (textExts.has(ext)) {
+            if (fileSizeBytes != null && fileSizeBytes > DOC_VIEW_MAX_TEXT_PREVIEW) {
+                if (fallback) {
+                    fallback.textContent = 'O ficheiro de texto é grande (' + Math.round(fileSizeBytes / (1024 * 1024)) + ' MB) e não será aberto aqui para não travar o site. Use «Baixar arquivo».';
+                    fallback.classList.remove('doc-view-preview-hidden');
+                }
+                if (iframe) iframe.classList.add('doc-view-preview-hidden');
+                docViewSetIAVisible(false);
+                modal.style.display = 'flex';
+                return;
+            }
+            try {
+                const r = await fetch(fileUrl, { credentials: 'same-origin' });
+                if (!r.ok) throw new Error('HTTP ' + r.status);
+                const t = await r.text();
+                if (ext === 'zpl') {
+                    const zebraNoteZpl = document.getElementById('doc-view-zebra-note');
+                    const zplBlock = docExtractZplFromText(t);
+                    if (zplBlock) {
+                        const noteZpl = 'O ficheiro .zpl é texto com comandos ZPL (posição do texto, código de barras, QR, etc.). A imagem abaixo é o desenho da etiqueta — o mesmo tipo de resultado que vê no ZebraDesigner antes de imprimir. Renderização via Labelary (rede).';
+                        const rendered = await docViewRenderZplToImage(zplBlock, img, zebraNoteZpl, iframe, noteZpl);
+                        if (rendered) {
+                            window._docViewTextForIA = t;
+                            if (pre) {
+                                pre.textContent = t;
+                                pre.classList.add('doc-view-preview-hidden');
+                            }
+                            docViewSetIAVisible(true);
+                            modal.style.display = 'flex';
+                            return;
+                        }
+                    }
+                }
+                window._docViewTextForIA = t;
+                if (pre) {
+                    pre.textContent = t;
+                    pre.classList.remove('doc-view-preview-hidden');
+                }
+                const znClr = document.getElementById('doc-view-zebra-note');
+                if (znClr && ext === 'zpl') {
+                    znClr.textContent = '';
+                    znClr.classList.add('doc-view-preview-hidden');
+                }
+                if (iframe) iframe.classList.add('doc-view-preview-hidden');
+                docViewSetIAVisible(true);
+            } catch (err) {
+                if (fallback) {
+                    fallback.textContent = 'Não foi possível carregar o texto. Use «Baixar arquivo» ou tente de novo.';
+                    fallback.classList.remove('doc-view-preview-hidden');
+                }
+                docViewSetIAVisible(false);
+            }
+            modal.style.display = 'flex';
+            return;
+        }
+
+        if (ext === 'lbl' || ext === 'nlbl') {
+            const zebraNote = document.getElementById('doc-view-zebra-note');
+            if (fileSizeBytes != null && fileSizeBytes > DOC_VIEW_ZEBRA_LABEL_MAX_BYTES) {
+                if (fallback) {
+                    fallback.textContent = 'Ficheiro demasiado grande para pré-visualizar aqui. Use «Baixar arquivo». Dica: na ZebraDesigner exporte também .zpl para uma pré-visualização mais fiável.';
+                    fallback.classList.remove('doc-view-preview-hidden');
+                }
+                if (iframe) iframe.classList.add('doc-view-preview-hidden');
+                docViewSetIAVisible(false);
+                modal.style.display = 'flex';
+                return;
+            }
+            modal.style.display = 'flex';
+            const previewUrl = getDocApiBase() + '/' + encodeURIComponent(fileId) + '/label-preview';
+            try {
+                const pr = await fetch(previewUrl, { credentials: 'same-origin' });
+                const ct = (pr.headers.get('content-type') || '').toLowerCase();
+                if (pr.ok && ct.includes('image/png')) {
+                    const blob = await pr.blob();
+                    if (window._docViewZebraBlobUrl) {
+                        try { URL.revokeObjectURL(window._docViewZebraBlobUrl); } catch (_) {}
+                    }
+                    window._docViewZebraBlobUrl = URL.createObjectURL(blob);
+                    if (img) {
+                        img.src = window._docViewZebraBlobUrl;
+                        img.alt = 'Pré-visualização da etiqueta (ZPL renderizado)';
+                        img.classList.remove('doc-view-preview-hidden');
+                    }
+                    if (zebraNote) {
+                        zebraNote.textContent = 'Imagem gerada a partir dos comandos ZPL encontrados no ficheiro (incl. ZIP interno, se existir e for legível). Pode diferir ligeiramente do ecrã do ZebraDesigner. Renderização via Labelary (rede).';
+                        zebraNote.classList.remove('doc-view-preview-hidden');
+                    }
+                    if (iframe) iframe.classList.add('doc-view-preview-hidden');
+                    if (fallback) fallback.classList.add('doc-view-preview-hidden');
+                    docViewHideLabelCard();
+                    if (pre) pre.classList.add('doc-view-preview-hidden');
+                    docViewSetIAVisible(false);
+                    return;
+                }
+                if (pr.ok && ct.includes('application/json')) {
+                    const j = await pr.json().catch(() => ({}));
+                    if (j && j.ok === false) {
+                        if (zebraNote) {
+                            zebraNote.textContent = '';
+                            zebraNote.classList.add('doc-view-preview-hidden');
+                        }
+                        if (img) {
+                            img.removeAttribute('src');
+                            img.classList.add('doc-view-preview-hidden');
+                        }
+                        if (pre) {
+                            pre.textContent = '';
+                            pre.classList.add('doc-view-preview-hidden');
+                        }
+                        if (fallback) fallback.classList.add('doc-view-preview-hidden');
+                        window._docViewTextForIA = '';
+                        docViewShowLabelCard(j.message || 'Não foi possível gerar a imagem da etiqueta.', j.hint || '');
+                        if (iframe) iframe.classList.add('doc-view-preview-hidden');
+                        docViewSetIAVisible(false);
+                        return;
+                    }
+                }
+                if (pr.status === 422) {
+                    const j = await pr.json().catch(() => ({}));
+                    if (zebraNote) {
+                        zebraNote.textContent = '';
+                        zebraNote.classList.add('doc-view-preview-hidden');
+                    }
+                    if (img) {
+                        img.removeAttribute('src');
+                        img.classList.add('doc-view-preview-hidden');
+                    }
+                    if (pre) {
+                        pre.textContent = '';
+                        pre.classList.add('doc-view-preview-hidden');
+                    }
+                    if (fallback) fallback.classList.add('doc-view-preview-hidden');
+                    window._docViewTextForIA = '';
+                    docViewShowLabelCard(j.message || 'Não foi possível gerar a imagem da etiqueta.', j.hint || '');
+                    if (iframe) iframe.classList.add('doc-view-preview-hidden');
+                    docViewSetIAVisible(false);
+                    return;
+                }
+            } catch (_) { /* continua para fallback no cliente */ }
+
+            try {
+                const fr = await fetch(fileUrl, { credentials: 'same-origin' });
+                if (!fr.ok) throw new Error('HTTP ' + fr.status);
+                const ab = await fr.arrayBuffer();
+                const u8 = new Uint8Array(ab);
+                const zpl = docExtractZplFromLabelBytes(u8);
+                if (zpl && zpl.length >= 8) {
+                    const noteLbl = 'No ZebraDesigner a etiqueta é feita de elementos (texto, QR, código de barras, linhas). No ficheiro isso fica guardado como dados binários; quando encontramos comandos ZPL (^XA…^XZ) lá dentro — em texto normal ou em UTF-16 — geramos a imagem como a impressora faria. Pode diferir ligeiramente do ecrã do Designer. Renderização via Labelary (rede).';
+                    const rendered = await docViewRenderZplToImage(zpl, img, zebraNote, iframe, noteLbl);
+                    if (rendered) {
+                        docViewHideLabelCard();
+                        docViewSetIAVisible(false);
+                        return;
+                    }
+                }
+                const snippets = docExtractReadableAsciiFromBinary(u8, 12000);
+                if (snippets && snippets.trim().length > 30 && docZebraSnippetIsReadable(snippets)) {
+                    window._docViewTextForIA = snippets;
+                    if (pre) {
+                        pre.textContent = 'Não foi encontrado um bloco ZPL (^XA … ^XZ) neste ficheiro. Segue texto legível extraído (referência). Para pré-visualização em imagem, exporte o rótulo em .zpl na ZebraDesigner e volte a enviar.\n\n---\n' + snippets;
+                        pre.classList.remove('doc-view-preview-hidden');
+                    }
+                    if (zebraNote) {
+                        zebraNote.textContent = 'Ficheiro Zebra Designer sem ZPL embutido detetável. O texto abaixo são só fragmentos legíveis do ficheiro (não é o desenho da etiqueta).';
+                        zebraNote.classList.remove('doc-view-preview-hidden');
+                    }
+                    if (iframe) iframe.classList.add('doc-view-preview-hidden');
+                    docViewHideLabelCard();
+                    docViewSetIAVisible(true);
+                    return;
+                }
+                if (zebraNote) {
+                    zebraNote.textContent = '';
+                    zebraNote.classList.add('doc-view-preview-hidden');
+                }
+                if (pre) {
+                    pre.textContent = '';
+                    pre.classList.add('doc-view-preview-hidden');
+                }
+                window._docViewTextForIA = '';
+                docViewShowLabelCard(
+                    'Este .' + ext + ' não contém ZPL (^XA…^XZ) legível para gerar imagem aqui.',
+                    'Na ZebraDesigner: Ficheiro → Imprimir para ficheiro ou Exportar → ZPL (.zpl). Carregue o .zpl na Documentação AXIS para ver a etiqueta como imagem. Use «Baixar arquivo» para abrir o .' + ext + ' no Designer.'
+                );
+                if (fallback) fallback.classList.add('doc-view-preview-hidden');
+                if (iframe) iframe.classList.add('doc-view-preview-hidden');
+                docViewSetIAVisible(false);
+            } catch (err) {
+                if (fallback) {
+                    fallback.textContent = 'Não foi possível ler o ficheiro. Use «Baixar arquivo».';
+                    fallback.classList.remove('doc-view-preview-hidden');
+                }
+                docViewHideLabelCard();
+                if (iframe) iframe.classList.add('doc-view-preview-hidden');
+                docViewSetIAVisible(false);
+            }
+            return;
+        }
+
+        if (binaryExts.has(ext)) {
+            if (fallback) {
+                fallback.textContent = 'Pré-visualização não disponível para este tipo (.' + ext + '). Use o botão «Baixar arquivo» abaixo.';
+                fallback.classList.remove('doc-view-preview-hidden');
+            }
+            if (iframe) iframe.classList.add('doc-view-preview-hidden');
+            docViewSetIAVisible(false);
+            modal.style.display = 'flex';
+            return;
+        }
+
+        if (ext === 'pdf') {
+            if (fileSizeBytes != null && fileSizeBytes > DOC_VIEW_MAX_PDF_IFRAME) {
+                if (fallback) {
+                    fallback.textContent = 'O PDF é grande (' + Math.round(fileSizeBytes / (1024 * 1024)) + ' MB). Abrir dentro da página pode travar o Chrome. Use «Baixar arquivo» e abra no leitor de PDF do sistema.';
+                    fallback.classList.remove('doc-view-preview-hidden');
+                }
+                if (iframe) iframe.classList.add('doc-view-preview-hidden');
+                docViewSetIAVisible(false);
+                modal.style.display = 'flex';
+                return;
+            }
+            if (iframe) {
+                iframe.removeAttribute('sandbox');
+                iframe.src = fileUrl;
+                iframe.style.minHeight = '420px';
+                iframe.classList.remove('doc-view-preview-hidden');
+            }
+            docViewSetIAVisible(false);
+            modal.style.display = 'flex';
+            return;
+        }
+
+        if (fallback) {
+            fallback.textContent = 'Pré-visualização inline não está disponível para .' + ext + ' (ex.: firmware Zebra, binários). Use «Baixar arquivo» — assim o site não trava.';
+            fallback.classList.remove('doc-view-preview-hidden');
+        }
+        if (iframe) {
+            iframe.src = 'about:blank';
+            iframe.classList.add('doc-view-preview-hidden');
+        }
+        docViewSetIAVisible(false);
     } else {
         if (arquivoArea) arquivoArea.style.display = 'none';
-        if (iframe) iframe.src = '';
+        if (iframe) iframe.src = 'about:blank';
         if (conteudoArea) {
             conteudoArea.style.display = 'block';
-            conteudoArea.innerHTML = '<pre class="doc-view-pre">' + (doc.conteudo || '').escapeHtml() + '</pre>';
+            const raw = doc.conteudo || '';
+            conteudoArea.innerHTML = '<pre class="doc-view-pre">' + raw.escapeHtml() + '</pre>';
+            window._docViewTextForIA = raw;
+            docViewSetIAVisible(true);
         }
     }
     modal.style.display = 'flex';
@@ -6775,21 +8396,106 @@ async function verDocumento(id) {
 function fecharModalDocView() {
     const modal = document.getElementById('modal-doc-view');
     if (modal) modal.style.display = 'none';
+    docViewResetArquivoPreview();
+}
+
+function abrirModalZplEditor() {
+    const m = document.getElementById('modal-zpl-editor');
+    if (m) m.style.display = 'flex';
+}
+
+function fecharModalZplEditor() {
+    if (window._zplEditorBlobUrl) {
+        try { URL.revokeObjectURL(window._zplEditorBlobUrl); } catch (_) {}
+        window._zplEditorBlobUrl = null;
+    }
+    const m = document.getElementById('modal-zpl-editor');
+    if (m) m.style.display = 'none';
+}
+
+async function docZplEditorPreview() {
+    const ta = document.getElementById('zpl-editor-textarea');
+    const img = document.getElementById('zpl-editor-preview-img');
+    const st = document.getElementById('zpl-editor-status');
+    const zpl = ta ? String(ta.value || '').trim() : '';
+    if (!zpl || zpl.length < 6) {
+        if (st) {
+            st.textContent = 'Introduza ZPL com pelo menos ^XA … ^XZ.';
+            st.classList.remove('doc-view-preview-hidden');
+        }
+        return;
+    }
+    if (st) {
+        st.textContent = 'A gerar imagem…';
+        st.classList.remove('doc-view-preview-hidden');
+    }
+    if (img) img.classList.add('doc-view-preview-hidden');
+    try {
+        const r = await fetch('/api/docs/render-zpl', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json; charset=utf-8' },
+            body: JSON.stringify({ zpl })
+        });
+        if (!r.ok) {
+            let err = 'Não foi possível renderizar.';
+            try {
+                const t = await r.text();
+                const j = JSON.parse(t);
+                if (j.error) err = j.error;
+            } catch (_) {}
+            if (st) st.textContent = err;
+            return;
+        }
+        const blob = await r.blob();
+        if (window._zplEditorBlobUrl) {
+            try { URL.revokeObjectURL(window._zplEditorBlobUrl); } catch (_) {}
+        }
+        window._zplEditorBlobUrl = URL.createObjectURL(blob);
+        if (img) {
+            img.src = window._zplEditorBlobUrl;
+            img.classList.remove('doc-view-preview-hidden');
+        }
+        if (st) {
+            st.textContent = '';
+            st.classList.add('doc-view-preview-hidden');
+        }
+    } catch (e) {
+        if (st) {
+            st.textContent = e.message || 'Erro de rede.';
+            st.classList.remove('doc-view-preview-hidden');
+        }
+    }
 }
 
 async function excluirDocumento(id) {
-    if (!confirm('Excluir este documento?')) return;
+    let tituloDoc = '';
     try {
-        const r = await fetch(getDocApiBase() + '/' + encodeURIComponent(id), { method: 'DELETE' });
-        const j = await r.json();
-        if (!j.ok) throw new Error(j.error || 'Erro ao excluir');
-        invalidarCacheDocs();
-        fecharModalDocView();
-        await renderizarDocumentos();
-        showToast('Documento excluído.', 'success');
-    } catch (err) {
-        showToast(err.message || 'Erro ao excluir documento.', 'error');
-    }
+        const docs = await getDocumentos();
+        const d = docs.find(function(x) { return x.id === id; });
+        if (d) tituloDoc = (d.titulo || '').trim();
+    } catch (_) {}
+    const msgBody = tituloDoc
+        ? 'Deseja realmente excluir o documento «' + tituloDoc + '»? O ficheiro será removido do servidor e esta ação não pode ser desfeita.'
+        : 'Deseja realmente excluir este documento? O ficheiro será removido do servidor e esta ação não pode ser desfeita.';
+    showConfirmExcluirModal({
+        title: 'Excluir documento',
+        message: msgBody,
+        icon: '📚',
+        overlayExtraClass: 'confirm-doc-delete',
+        onConfirm: async function() {
+            try {
+                const r = await fetch(getDocApiBase() + '/' + encodeURIComponent(id), { method: 'DELETE' });
+                const j = await r.json();
+                if (!j.ok) throw new Error(j.error || 'Erro ao excluir');
+                invalidarCacheDocs();
+                fecharModalDocView();
+                await renderizarDocumentos();
+                showToast('Documento excluído.', 'success');
+            } catch (err) {
+                showToast(err.message || 'Erro ao excluir documento.', 'error');
+            }
+        }
+    });
 }
 
 if (typeof String.prototype.escapeHtml !== 'function') {
@@ -6874,6 +8580,30 @@ if (typeof window.navigate !== 'function') {
         }
     };
 }
+/** Abas do login: uma secção de cada vez; ao voltar ao manual, fecha a câmara facial. */
+function axisSwitchAuthEntryTab(which) {
+    var manual = document.getElementById('auth-panel-manual');
+    var face = document.getElementById('auth-panel-face');
+    var tabM = document.getElementById('auth-tab-manual');
+    var tabF = document.getElementById('auth-tab-face');
+    if (!manual || !face || !tabM || !tabF) return;
+    var manualOn = which === 'manual';
+    manual.hidden = !manualOn;
+    face.hidden = manualOn;
+    tabM.setAttribute('aria-selected', manualOn ? 'true' : 'false');
+    tabF.setAttribute('aria-selected', manualOn ? 'false' : 'true');
+    tabM.classList.toggle('auth-entry-tab--active', manualOn);
+    tabF.classList.toggle('auth-entry-tab--active', !manualOn);
+    tabM.setAttribute('tabindex', manualOn ? '0' : '-1');
+    tabF.setAttribute('tabindex', manualOn ? '-1' : '0');
+    if (manualOn && typeof window.axisFaceCleanupLoginSession === 'function') {
+        try {
+            window.axisFaceCleanupLoginSession();
+        } catch (e) {}
+    }
+}
+window.axisSwitchAuthEntryTab = axisSwitchAuthEntryTab;
+
 // FORÇA exportação de autenticação
 if (typeof handleAuth === 'function') {
     window.handleAuth = handleAuth;
@@ -7203,13 +8933,13 @@ function toggleNavNotifications() {
     } else {
         panel.classList.add('open');
         panel.setAttribute('aria-hidden', 'false');
-        carregarNavNotifications();
+        window.carregarNavNotifications();
         // Ao abrir, marca como lidas (o usuário viu o painel)
         axisMarkAllNotificationsRead();
     }
 }
 
-function carregarNavNotifications() {
+window.carregarNavNotifications = function carregarNavNotifications() {
     var body = document.getElementById('nav-notifications-body');
     var countEl = document.getElementById('nav-notification-count');
     if (!body) return;
@@ -7227,7 +8957,7 @@ function carregarNavNotifications() {
         }).join('');
     }
     axisUpdateNotificationBadge();
-}
+};
 
 window.toggleNavNotifications = toggleNavNotifications;
 
@@ -7244,6 +8974,23 @@ document.addEventListener('click', function(e) {
     }
 });
 
+/** Setor exibido no perfil (texto fixo, persistido em localStorage para não sumir ao recarregar). */
+var AXIS_PERFIL_SETOR_TEXTO = 'Internal Systems';
+
+function axisPerfilGarantirSetorFixo(userData, storeKey) {
+    var s = userData.setor == null ? '' : String(userData.setor).trim();
+    var slugLegacy = s.toLowerCase() === 'internal-systems';
+    var upperLegacy = /^internal\s+systems$/i.test(s);
+    if (!s || slugLegacy || upperLegacy) {
+        userData.setor = AXIS_PERFIL_SETOR_TEXTO;
+        if (storeKey) {
+            try {
+                localStorage.setItem(storeKey, JSON.stringify(userData));
+            } catch (_) {}
+        }
+    }
+}
+
 // ================= PERFIL NO NAV (ao lado do tema) =================
 function atualizarPerfilNav() {
     var wrap = document.getElementById('axis-profile-wrap');
@@ -7253,12 +9000,12 @@ function atualizarPerfilNav() {
         wrap.style.display = 'none';
         return;
     }
-    var userData = {};
-    try {
-        userData = JSON.parse(localStorage.getItem('db_' + login) || '{}');
-    } catch (_) {}
+    var loadedProf = axisLoadUserJsonByLogin(login);
+    var userData = loadedProf.data || {};
+    var storeKeyNav = loadedProf.key || axisUserDbStorageKey(login);
+    axisPerfilGarantirSetorFixo(userData, storeKeyNav);
     var nome = userData.name || login;
-    var setor = userData.setor || '—';
+    var setor = userData.setor || AXIS_PERFIL_SETOR_TEXTO;
     var foto = userData.foto || '';
     var diasTexto = '—';
     if (login === 'admin_filipe_silva') {
@@ -7280,6 +9027,19 @@ function atualizarPerfilNav() {
     setEl('axis-profile-dropdown-login', login);
     setEl('axis-profile-dropdown-setor', setor);
     setEl('axis-profile-dropdown-dias', diasTexto);
+    var matDisp = typeof axisMatriculaPerfilDisplay === 'function' ? axisMatriculaPerfilDisplay(login, userData) : (userData.matriculaAxis ? String(userData.matriculaAxis) : '');
+    var matMini = document.getElementById('axis-profile-mini-matricula');
+    if (matMini) matMini.textContent = matDisp || '—';
+    var navMat = document.getElementById('axis-profile-nav-matricula');
+    if (navMat) {
+        if (matDisp) {
+            navMat.textContent = matDisp;
+            navMat.style.display = '';
+        } else {
+            navMat.textContent = '';
+            navMat.style.display = 'none';
+        }
+    }
     var av = document.getElementById('axis-profile-avatar');
     var avDrop = document.getElementById('axis-profile-dropdown-avatar');
     if (av) {
@@ -7315,18 +9075,39 @@ function atualizarPerfilNav() {
 function preencherPerfilMini() {
     var login = localStorage.getItem('current_user_login');
     if (!login) return;
-    var userData = {};
-    try {
-        userData = JSON.parse(localStorage.getItem('db_' + login) || '{}');
-    } catch (_) {}
+    var loadedMini = axisLoadUserJsonByLogin(login);
+    var userData = loadedMini.data || {};
     var nomeEl = document.getElementById('axis-profile-mini-nome');
     var setorEl = document.getElementById('axis-profile-mini-setor');
     var imgEl = document.getElementById('axis-profile-dropdown-avatar');
     var initialEl = document.getElementById('axis-profile-dropdown-initial');
     if (nomeEl) nomeEl.value = userData.name || login;
-    if (setorEl) setorEl.value = userData.setor || '';
+    axisPerfilGarantirSetorFixo(userData, loadedMini.key || axisUserDbStorageKey(login));
+    var setorMostrar = (userData.setor && String(userData.setor).trim()) ? String(userData.setor).trim() : AXIS_PERFIL_SETOR_TEXTO;
+    if (setorEl) {
+        setorEl.value = setorMostrar;
+        try {
+            setorEl.setAttribute('title', 'Setor: ' + setorMostrar);
+        } catch (eT) {}
+    }
     var aboutEl = document.getElementById('axis-profile-dropdown-setor');
-    if (aboutEl) aboutEl.textContent = (userData.setor && userData.setor.trim()) ? userData.setor.trim() : 'Toque para adicionar setor';
+    if (aboutEl) aboutEl.textContent = setorMostrar;
+    var matEl = document.getElementById('axis-profile-mini-matricula');
+    var matDispMini = typeof axisMatriculaPerfilDisplay === 'function' ? axisMatriculaPerfilDisplay(login, userData) : (userData.matriculaAxis ? String(userData.matriculaAxis) : '');
+    if (matEl) matEl.textContent = matDispMini || '—';
+    var navMatMini = document.getElementById('axis-profile-nav-matricula');
+    if (navMatMini) {
+        if (matDispMini) {
+            navMatMini.textContent = matDispMini;
+            navMatMini.style.display = '';
+        } else {
+            navMatMini.textContent = '';
+            navMatMini.style.display = 'none';
+        }
+    }
+    if (typeof axisSincronizarMatriculaPerfilSeFaltar === 'function') {
+        axisSincronizarMatriculaPerfilSeFaltar(login, userData.name || login);
+    }
     if (userData.foto && imgEl && initialEl) {
         imgEl.src = userData.foto;
         imgEl.style.display = 'block';
@@ -7494,6 +9275,13 @@ function initAxisProfile() {
                 var initialEl = document.getElementById('axis-profile-dropdown-initial');
                 if (imgEl) { imgEl.src = fotoPendente; imgEl.style.display = 'block'; }
                 if (initialEl) initialEl.style.display = 'none';
+                var modalImg = document.getElementById('axis-profile-photo-modal-img');
+                var modalInitial = document.getElementById('axis-profile-photo-modal-initial');
+                if (modalImg && fotoPendente) {
+                    modalImg.src = fotoPendente;
+                    modalImg.style.display = 'block';
+                    if (modalInitial) modalInitial.style.display = 'none';
+                }
             };
             reader.readAsDataURL(file);
         });
@@ -7503,17 +9291,43 @@ function initAxisProfile() {
         saveBtn.addEventListener('click', function() {
             var login = localStorage.getItem('current_user_login');
             if (!login) return;
-            var userKey = 'db_' + login;
-            var userData = {};
-            try {
-                userData = JSON.parse(localStorage.getItem(userKey) || '{}');
-            } catch (_) {}
+            var storeKey = axisUserDbStorageKey(login);
+            var loadedSave = axisLoadUserJsonByLogin(login);
+            var userData = loadedSave.data || {};
             var nome = document.getElementById('axis-profile-mini-nome');
-            var setorEl = document.getElementById('axis-profile-mini-setor');
+            var setorIn = document.getElementById('axis-profile-mini-setor');
             if (nome && nome.value.trim()) userData.name = nome.value.trim();
-            if (setorEl) userData.setor = setorEl.value.trim() || '';
+            var setorTxt = (setorIn && setorIn.value && String(setorIn.value).trim()) ? String(setorIn.value).trim() : (userData.setor && String(userData.setor).trim() ? String(userData.setor).trim() : AXIS_PERFIL_SETOR_TEXTO);
+            userData.setor = setorTxt;
+            if (setorIn) setorIn.value = setorTxt;
             if (fotoPendente !== null) userData.foto = fotoPendente;
-            localStorage.setItem(userKey, JSON.stringify(userData));
+            if (!userData.matriculaAxis && userData.name && typeof fetch !== 'undefined') {
+                fetch('/api/axis/colaboradores-matriculas/garantir', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nome: userData.name.trim() })
+                }).then(function (r) { return r.json(); }).then(function (data) {
+                    if (data && data.ok && data.matricula) userData.matriculaAxis = data.matricula;
+                    try { localStorage.setItem(storeKey, JSON.stringify(userData)); } catch (e) {}
+                    if (typeof atualizarPerfilNav === 'function') atualizarPerfilNav();
+                    if (typeof showToast === 'function') showToast('Perfil atualizado', 'success');
+                    fecharPerfilNav();
+                    fotoPendente = null;
+                    var ud = document.getElementById('user-display-name');
+                    if (ud && userData.name) ud.innerText = userData.name;
+                }).catch(function () {
+                    userData.matriculaAxis = axisMatriculaFallbackLocal();
+                    try { localStorage.setItem(storeKey, JSON.stringify(userData)); } catch (e2) {}
+                    if (typeof atualizarPerfilNav === 'function') atualizarPerfilNav();
+                    if (typeof showToast === 'function') showToast('Perfil atualizado', 'success');
+                    fecharPerfilNav();
+                    fotoPendente = null;
+                    var ud2 = document.getElementById('user-display-name');
+                    if (ud2 && userData.name) ud2.innerText = userData.name;
+                });
+                return;
+            }
+            localStorage.setItem(storeKey, JSON.stringify(userData));
             if (userData.name) localStorage.setItem('current_user', userData.name);
             if (typeof atualizarPerfilNav === 'function') atualizarPerfilNav();
             if (typeof showToast === 'function') showToast('Perfil atualizado', 'success');
@@ -7554,8 +9368,8 @@ function abrirModalFotoPerfil() {
         document.body.appendChild(modal);
     }
     var login = localStorage.getItem('current_user_login');
-    var userData = {};
-    if (login) try { userData = JSON.parse(localStorage.getItem('db_' + login) || '{}'); } catch (_) {}
+    var loadedModal = login ? axisLoadUserJsonByLogin(login) : { data: {} };
+    var userData = loadedModal.data || {};
     var foto = userData.foto || '';
     var nome = userData.name || login || '';
     var initial = (nome.charAt(0) || 'U').toUpperCase();
@@ -7587,25 +9401,46 @@ function initModalFotoPerfil() {
     var photoInput = document.getElementById('axis-profile-photo-input');
     var modalImg = document.getElementById('axis-profile-photo-modal-img');
     if (btnAtualizar && photoInput) {
-        btnAtualizar.addEventListener('click', function() {
-            fecharModalFotoPerfil();
-            photoInput.click();
+        btnAtualizar.addEventListener('click', function(ev) {
+            if (ev) { ev.preventDefault(); ev.stopPropagation(); }
+            try { photoInput.value = ''; } catch (_) {}
+            try { photoInput.click(); } catch (e1) {
+                if (typeof showToast === 'function') showToast('Não foi possível abrir o seletor de ficheiros.', 'error');
+            }
         });
     }
     if (btnVisualizar && modalImg) {
         btnVisualizar.addEventListener('click', function() {
             var src = modalImg.src;
-            if (src && src.indexOf('data:') === 0) window.open(src, '_blank');
+            if (src && src.indexOf('data:') === 0) {
+                window.open(src, '_blank');
+            } else if (typeof showToast === 'function') {
+                showToast('Primeiro escolha uma imagem em «Atualizar Imagem».', 'info');
+            }
         });
     }
     if (btnSalvar && modalImg) {
         btnSalvar.addEventListener('click', function() {
             var src = modalImg.src;
-            if (!src || src.indexOf('data:') !== 0) return;
-            var a = document.createElement('a');
-            a.href = src;
-            a.download = 'foto-perfil-axis.png';
-            a.click();
+            if (!src || src.indexOf('data:') !== 0) {
+                if (typeof showToast === 'function') showToast('Escolha uma foto em «Atualizar Imagem» e depois guarde no perfil.', 'warning');
+                return;
+            }
+            var login = localStorage.getItem('current_user_login');
+            if (!login) return;
+            var storeKey = axisUserDbStorageKey(login);
+            var loaded = axisLoadUserJsonByLogin(login);
+            var userData = loaded.data || {};
+            userData.foto = src;
+            try {
+                localStorage.setItem(storeKey, JSON.stringify(userData));
+            } catch (e2) {
+                if (typeof showToast === 'function') showToast('Armazenamento cheio ou bloqueado — não foi possível guardar a foto.', 'error');
+                return;
+            }
+            if (typeof atualizarPerfilNav === 'function') atualizarPerfilNav();
+            if (typeof showToast === 'function') showToast('Foto guardada no perfil', 'success');
+            fecharModalFotoPerfil();
         });
     }
     modal.querySelectorAll('.axis-profile-photo-modal-overlay, .axis-profile-photo-modal-close').forEach(function(el) {
@@ -7613,12 +9448,33 @@ function initModalFotoPerfil() {
     });
 }
 
+function initEditarUsuarioFormSubmit() {
+    var form = document.getElementById('editar-usuario-form');
+    if (!form || form.getAttribute('data-axis-submit-init') === '1') return;
+    form.setAttribute('data-axis-submit-init', '1');
+    form.addEventListener('submit', function (ev) {
+        try {
+            ev.preventDefault();
+        } catch (e1) {}
+        salvarUsuarioEditado(ev);
+    });
+    var btnSalvar = form.querySelector('button.btn-primary[type="submit"]');
+    if (btnSalvar) {
+        btnSalvar.setAttribute('type', 'button');
+        btnSalvar.addEventListener('click', function (ev) {
+            salvarUsuarioEditado(ev);
+        });
+    }
+}
+
 // Dropdown Perfil customizado no modal Editar Usuário + Login automático no cadastro
 if (document.readyState !== 'loading') {
     initPerfilSelectEditar();
     initSetorSelectEditar();
+    initEditarUsuarioFormSubmit();
     initPerfilSelectCadastro();
     initCadastroUsuarioLoginAuto();
+    initCadastroSenhaCampoEstavel();
     initAxisProfile();
     if (localStorage.getItem('current_user_login')) {
         setTimeout(function() { if (typeof atualizarPerfilNav === 'function') atualizarPerfilNav(); }, 0);
@@ -7627,8 +9483,10 @@ if (document.readyState !== 'loading') {
     document.addEventListener('DOMContentLoaded', function() {
         initPerfilSelectEditar();
         initSetorSelectEditar();
+        initEditarUsuarioFormSubmit();
         initPerfilSelectCadastro();
         initCadastroUsuarioLoginAuto();
+        initCadastroSenhaCampoEstavel();
         initAxisProfile();
         if (localStorage.getItem('current_user_login')) {
             setTimeout(function() { if (typeof atualizarPerfilNav === 'function') atualizarPerfilNav(); }, 0);

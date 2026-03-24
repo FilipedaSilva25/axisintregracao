@@ -8,8 +8,11 @@ $ErrorActionPreference = "Stop"
 $projectRoot = $PSScriptRoot
 $port = 3006
 $url = "http://localhost:${port}/?tela=login#login"
-$maxWaitSeconds = 15
+$maxWaitSeconds = 45
 $checkIntervalMs = 500
+
+# O .env pode definir PORT (ex. 30999); o start.bat promete 3006 — forçar para o processo Node filho.
+$env:PORT = "$port"
 
 # -----------------------------------------------------------------------------
 # 1. Navegar para a pasta do projeto
@@ -77,18 +80,27 @@ $urlCheck = "http://localhost:${port}"
 $apiCheck = "http://localhost:${port}/api/bancadas/status"
 
 while ($elapsed -lt ($maxWaitSeconds * 1000)) {
+    $tcpOk = $false
     try {
-        $request = [System.Net.WebRequest]::Create($urlCheck)
-        $request.Timeout = 2000
-        $request.Method = "GET"
-        $response = $request.GetResponse()
-        $response.Close()
-        $ready = $true
-        break
-    } catch {
-        Start-Sleep -Milliseconds $checkIntervalMs
-        $elapsed += $checkIntervalMs
+        $tcpClient = New-Object System.Net.Sockets.TcpClient
+        $iar = $tcpClient.BeginConnect([string]'127.0.0.1', [int]$port, $null, $null)
+        if ($iar.AsyncWaitHandle.WaitOne(600, $false) -and $tcpClient.Connected) {
+            $tcpOk = $true
+        }
+        $tcpClient.Close()
+    } catch { try { $tcpClient.Close() } catch { } }
+    if ($tcpOk) {
+        try {
+            $r = Invoke-WebRequest -Uri $urlCheck -UseBasicParsing -Method GET -TimeoutSec 3 -ErrorAction Stop
+            if ([int]$r.StatusCode -eq 200) {
+                $ready = $true
+                break
+            }
+        } catch { }
     }
+    # Sempre avançar o tempo (evita ciclo infinito se o pedido não lançar exceção e não for 200)
+    Start-Sleep -Milliseconds $checkIntervalMs
+    $elapsed += $checkIntervalMs
 }
 
 if (-not $ready) {
@@ -104,17 +116,12 @@ Write-Host "      Servidor respondendo OK." -ForegroundColor Green
 $apiReady = $false
 for ($i = 0; $i -lt 5; $i++) {
     try {
-        $apiReq = [System.Net.WebRequest]::Create($apiCheck)
-        $apiReq.Timeout = 3000
-        $apiReq.Method = "GET"
-        $apiResp = $apiReq.GetResponse()
-        if ([int]$apiResp.StatusCode -eq 200) {
-            $apiResp.Close()
+        $ar = Invoke-WebRequest -Uri $apiCheck -UseBasicParsing -Method GET -TimeoutSec 4 -ErrorAction Stop
+        if ([int]$ar.StatusCode -eq 200) {
             $apiReady = $true
             Write-Host "      API Status de Bancada OK." -ForegroundColor Green
             break
         }
-        $apiResp.Close()
     } catch { }
     if (-not $apiReady) { Start-Sleep -Seconds 1 }
 }
@@ -124,9 +131,9 @@ if (-not $apiReady) {
 }
 
 # -----------------------------------------------------------------------------
-# 5. Abrir o site no Chrome (servidor ja esta a correr)
+# 5. Abrir o site no Chrome no perfil normal (janela habitual do utilizador)
 # -----------------------------------------------------------------------------
-Write-Host "[4/4] Abrindo site no Chrome..." -ForegroundColor Cyan
+Write-Host "[4/4] Abrindo site no Chrome (perfil normal)..." -ForegroundColor Cyan
 
 # Copia URL para clipboard (para colar manualmente se precisar)
 try {
@@ -152,7 +159,7 @@ foreach ($chromeExe in $chromePaths) {
             Start-Process -FilePath $chromeExe -ArgumentList $url -ErrorAction Stop
             Start-Sleep -Milliseconds 800
             $opened = $true
-            Write-Host "      Site aberto no Chrome." -ForegroundColor Green
+            Write-Host "      Site aberto no Chrome (perfil normal)." -ForegroundColor Green
             break
         } catch { }
     }
@@ -163,10 +170,10 @@ if (-not $opened) {
     foreach ($chromeExe in $chromePaths) {
         if ((Test-Path $chromeExe)) {
             try {
-                Start-Process $chromeExe -ArgumentList "--no-first-run",$url -ErrorAction Stop
+                Start-Process $chromeExe -ArgumentList "--no-first-run", $url -ErrorAction Stop
                 Start-Sleep -Milliseconds 800
                 $opened = $true
-                Write-Host "      Site aberto no Chrome." -ForegroundColor Green
+                Write-Host "      Site aberto no Chrome (perfil normal)." -ForegroundColor Green
                 break
             } catch { }
         }
@@ -241,9 +248,9 @@ if (-not $opened) {
     foreach ($ffExe in $firefoxPaths) {
         if ((Test-Path $ffExe)) {
             try {
-                Start-Process $ffExe -ArgumentList $url -ErrorAction Stop
+                Start-Process $ffExe -ArgumentList "-private-window", $url -ErrorAction Stop
                 $opened = $true
-                Write-Host "      Site aberto (Firefox)." -ForegroundColor Green
+                Write-Host "      Site aberto (Firefox, janela privada)." -ForegroundColor Green
                 break
             } catch { }
         }
