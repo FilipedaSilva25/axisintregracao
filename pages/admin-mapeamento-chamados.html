@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="format-detection" content="telephone=no">
+    <title>AXIS | Mapeamento de chamados — Status (admin)</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/registro_chamados.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* Evita que o wrapper <form> quebre o flex do wizard (Chrome autofill/pagamento em http) */
+        form.rc-map-wizard-fields-form {
+            display: contents;
+        }
+        body.admin-mapa-standalone {
+            margin: 0;
+            min-height: 100vh;
+            padding: 28px 20px 40px;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            color: var(--rc-text, #1d1d1f);
+            background: linear-gradient(160deg, #f5f5f7 0%, rgba(0, 122, 255, 0.07) 100%);
+        }
+        .admin-mapa-wrap {
+            max-width: min(1160px, 100%);
+            margin: 0 auto;
+        }
+        /* Dois cards lado a lado: mesma largura; flex + stretch iguala a altura ao card mais alto */
+        .admin-mapa-stack {
+            display: flex;
+            flex-direction: row;
+            align-items: stretch;
+            gap: 24px;
+            width: 100%;
+        }
+        .admin-mapa-stack > .sauron-rc-embed {
+            flex: 1 1 0;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            align-self: stretch;
+            min-height: 100%;
+        }
+        /* Card status (esquerda): largura para «MAPEAMENTO DE CHAMADOS (BRSC02)» numa linha */
+        .admin-mapa-stack > .admin-card-mapeamento-rc-inner.sauron-rc-embed {
+            flex: 0 1 40%;
+            min-width: 300px;
+            max-width: 480px;
+        }
+        .admin-mapa-stack > .admin-card-mapeamento-rc-inner .rc-map-title {
+            font-size: 16px;
+            letter-spacing: -0.02em;
+        }
+        .admin-mapa-stack > .admin-mapa-rc-embed-wizard.sauron-rc-embed {
+            flex: 1 1 0;
+            min-width: 0;
+        }
+        @media (max-width: 960px) {
+            .admin-mapa-stack {
+                flex-direction: column;
+            }
+            .admin-mapa-stack > .sauron-rc-embed {
+                flex: 1 1 auto;
+            }
+            .admin-mapa-stack > .admin-card-mapeamento-rc-inner.sauron-rc-embed {
+                flex: 1 1 auto;
+                max-width: none;
+                min-width: 0;
+            }
+        }
+        .admin-mapa-stack > .sauron-rc-embed > .rc-glass-card.rc-map-wizard-card {
+            flex: 1 1 auto;
+            display: flex;
+            flex-direction: column;
+            min-height: 100%;
+            width: 100%;
+        }
+        /* Card de status (esquerda): estica na vertical até igualar ao wizard; espaço extra fica entre campos e botão */
+        .admin-mapa-stack > .admin-card-mapeamento-rc-inner {
+            height: 100%;
+        }
+        .admin-mapa-stack > .admin-card-mapeamento-rc-inner > .rc-glass-card.rc-map-wizard-card {
+            flex: 1 1 auto;
+            min-height: 100%;
+            height: auto;
+        }
+        .admin-mapa-stack > .admin-card-mapeamento-rc-inner .admin-rc-fields.admin-mapa-rc-form {
+            flex: 1 1 auto;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            gap: 10px;
+        }
+        .admin-mapa-stack > .admin-card-mapeamento-rc-inner .admin-rc-actions {
+            margin-top: auto;
+            padding-top: 22px;
+            flex-shrink: 0;
+        }
+        .admin-mapa-stack > .admin-card-mapeamento-rc-inner .admin-rc-actions .admin-card-btn {
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            font-weight: 700;
+        }
+        .admin-mapa-stack > .admin-card-mapeamento-rc-inner .admin-rc-feedback {
+            flex-shrink: 0;
+        }
+        .admin-mapa-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 20px;
+            color: #007aff;
+            font-weight: 600;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        .admin-mapa-back:hover { text-decoration: underline; }
+        .admin-mapa-rc-embed.sauron-rc-embed {
+            width: 100%;
+        }
+        .admin-mapa-rc-embed .rc-glass-card.rc-map-wizard-card {
+            margin: 0;
+        }
+        .admin-mapa-stack > .sauron-rc-embed .rc-map-wizard {
+            flex: 1 1 auto;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+        .admin-mapa-stack > .sauron-rc-embed.admin-mapa-rc-embed-wizard .rc-map-nav {
+            margin-top: auto;
+        }
+        .admin-rc-map-manual-banner {
+            margin: 0 0 14px 0;
+            padding: 14px 16px;
+            border-radius: 14px;
+            border: 1px solid rgba(255, 193, 7, 0.45);
+            background: rgba(255, 248, 220, 0.88);
+            font-size: 12px;
+            line-height: 1.55;
+            color: var(--rc-text, #1d1d1f);
+        }
+        .admin-rc-map-manual-banner p {
+            margin: 0;
+        }
+        [data-theme="dark"] .admin-rc-map-manual-banner {
+            background: rgba(55, 50, 38, 0.65);
+            border-color: rgba(255, 193, 7, 0.28);
+        }
+        .admin-rc-map-time-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+        .admin-rc-map-time-part {
+            flex: 1 1 76px;
+            min-width: 72px;
+            max-width: 110px;
+            padding: 10px 8px;
+            cursor: pointer;
+        }
+        .admin-rc-map-time-sep {
+            font-weight: 800;
+            color: var(--rc-text-sec, #86868b);
+            user-select: none;
+        }
+        .admin-mapa-rc-form.admin-rc-fields {
+            margin-top: 4px;
+            gap: 14px;
+        }
+        /* Grupos label + campo (alinhamento vertical consistente) */
+        .admin-mapa-stack > .admin-card-mapeamento-rc-inner .admin-rc-field-group {
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 8px;
+        }
+        .admin-mapa-stack > .admin-card-mapeamento-rc-inner .admin-rc-field-group .rc-map-section-title {
+            margin: 0;
+            padding-top: 4px;
+            font-size: 14px;
+            line-height: 1.3;
+        }
+        /* Campos do card de status: menos padding vertical (texto/select mais compactos) */
+        .admin-mapa-stack > .admin-card-mapeamento-rc-inner .rc-map-text-input {
+            padding: 8px 12px;
+            font-size: 14px;
+            line-height: 1.35;
+            border-radius: 10px;
+        }
+        .admin-mapa-stack > .admin-card-mapeamento-rc-inner .admin-rc-status-trigger {
+            padding: 8px 12px;
+            font-size: 14px;
+            line-height: 1.35;
+            border-radius: 10px;
+            min-height: 0;
+        }
+        .admin-mapa-stack > .admin-card-mapeamento-rc-inner .admin-rc-status-trigger-pill {
+            padding: 4px 10px;
+            font-size: 10px;
+        }
+        /* Seletor de status (custom — cores por estado) */
+        .admin-rc-status-select {
+            position: relative;
+            width: 100%;
+        }
+        .admin-rc-status-trigger {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 12px 14px;
+            border-radius: 12px;
+            border: 1px solid var(--rc-glass-border, rgba(0, 122, 255, 0.15));
+            font-size: 15px;
+            font-family: inherit;
+            background: rgba(255, 255, 255, 0.85);
+            color: var(--rc-text, #1d1d1f);
+            cursor: pointer;
+            text-align: left;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .admin-rc-status-trigger:hover {
+            border-color: rgba(0, 122, 255, 0.35);
+        }
+        .admin-rc-status-trigger:focus {
+            outline: none;
+            border-color: var(--rc-accent, #007aff);
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2);
+        }
+        .admin-rc-status-trigger.is-open {
+            border-color: var(--rc-accent, #007aff);
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.15);
+        }
+        .admin-rc-status-trigger .admin-rc-status-chevron {
+            flex-shrink: 0;
+            font-size: 12px;
+            color: var(--rc-text-sec, #86868b);
+            transition: transform 0.2s;
+        }
+        .admin-rc-status-trigger.is-open .admin-rc-status-chevron {
+            transform: rotate(180deg);
+        }
+        .admin-rc-status-trigger-text {
+            flex: 1;
+            min-width: 0;
+        }
+        .admin-rc-status-trigger-text.is-placeholder {
+            color: var(--rc-text-sec, #86868b);
+            font-weight: 500;
+        }
+        .admin-rc-status-trigger-pill {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 12px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            line-height: 1.2;
+        }
+        .admin-rc-status-trigger-pill--aberto {
+            background: rgba(255, 59, 48, 0.2);
+            color: #c62828;
+            border: 1px solid rgba(255, 59, 48, 0.45);
+        }
+        .admin-rc-status-trigger-pill--em-andamento {
+            background: rgba(255, 149, 0, 0.22);
+            color: #c35b00;
+            border: 1px solid rgba(255, 149, 0, 0.45);
+        }
+        .admin-rc-status-trigger-pill--pendente {
+            background: rgba(0, 122, 255, 0.18);
+            color: #0056b3;
+            border: 1px solid rgba(0, 122, 255, 0.35);
+        }
+        .admin-rc-status-trigger-pill--finalizado {
+            background: rgba(52, 199, 89, 0.22);
+            color: #1e7e34;
+            border: 1px solid rgba(52, 199, 89, 0.45);
+        }
+        .admin-rc-status-dropdown {
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: calc(100% + 6px);
+            z-index: 40;
+            margin: 0;
+            padding: 8px;
+            list-style: none;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.98);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 122, 255, 0.08);
+            max-height: min(320px, 70vh);
+            overflow-y: auto;
+        }
+        .admin-rc-status-dropdown[hidden] {
+            display: none !important;
+        }
+        .admin-rc-status-dropdown li + li {
+            margin-top: 6px;
+        }
+        .admin-rc-status-opt {
+            display: block;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-family: inherit;
+            text-align: left;
+            border-radius: 10px;
+            transition: transform 0.12s, box-shadow 0.2s;
+        }
+        .admin-rc-status-opt-inner {
+            display: block;
+            padding: 12px 14px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            line-height: 1.25;
+        }
+        .admin-rc-status-opt--aberto .admin-rc-status-opt-inner {
+            background: rgba(255, 59, 48, 0.12);
+            color: #c62828;
+            border: 1px solid rgba(255, 59, 48, 0.28);
+        }
+        .admin-rc-status-opt--em-andamento .admin-rc-status-opt-inner {
+            background: rgba(255, 149, 0, 0.14);
+            color: #c35b00;
+            border: 1px solid rgba(255, 149, 0, 0.3);
+        }
+        .admin-rc-status-opt--pendente .admin-rc-status-opt-inner {
+            background: rgba(0, 122, 255, 0.12);
+            color: #0056b3;
+            border: 1px solid rgba(0, 122, 255, 0.28);
+        }
+        .admin-rc-status-opt--finalizado .admin-rc-status-opt-inner {
+            background: rgba(52, 199, 89, 0.14);
+            color: #1e7e34;
+            border: 1px solid rgba(52, 199, 89, 0.32);
+        }
+        .admin-rc-status-opt:hover .admin-rc-status-opt-inner {
+            filter: brightness(0.97);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+        .admin-rc-status-opt:focus {
+            outline: none;
+        }
+        .admin-rc-status-opt:focus .admin-rc-status-opt-inner {
+            box-shadow: 0 0 0 2px var(--rc-accent, #007aff);
+        }
+        [data-theme="dark"] .admin-rc-status-trigger {
+            background: rgba(44, 44, 46, 0.85);
+            border-color: rgba(255, 255, 255, 0.12);
+            color: var(--rc-text, #f5f5f7);
+        }
+        [data-theme="dark"] .admin-rc-status-dropdown {
+            background: rgba(44, 44, 46, 0.98);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+        [data-theme="dark"] .admin-rc-status-trigger-pill--aberto { color: #ff6961; }
+        [data-theme="dark"] .admin-rc-status-trigger-pill--em-andamento { color: #ffb340; }
+        [data-theme="dark"] .admin-rc-status-trigger-pill--pendente { color: #64b5f6; }
+        [data-theme="dark"] .admin-rc-status-trigger-pill--finalizado { color: #6bcf7f; }
+        [data-theme="dark"] body.admin-mapa-standalone {
+            background: linear-gradient(160deg, #1c1c1e 0%, rgba(0, 122, 255, 0.12) 100%);
+        }
+
+        /* Data dia / mês / ano — mesmo padrão visual da hora */
+        .admin-rc-map-date-dmy-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+        .admin-rc-map-date-dmy-row .rc-select-graph--dia {
+            max-width: 88px;
+            flex: 1 1 72px;
+        }
+        .admin-rc-map-date-dmy-row .rc-select-graph--mes {
+            max-width: 168px;
+            flex: 2 1 120px;
+        }
+        .admin-rc-map-date-dmy-row .rc-select-graph--ano {
+            max-width: 100px;
+            flex: 1 1 80px;
+        }
+
+        /* Hora / min / seg — dropdown estilo glass (seta recuada) */
+        .rc-select-graph {
+            position: relative;
+            flex: 1 1 0;
+            min-width: 0;
+            max-width: 120px;
+        }
+        .rc-select-graph .rc-select-native {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            opacity: 0;
+            pointer-events: none;
+            left: -9999px;
+        }
+        .rc-select-graph-trigger {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            padding: 11px 34px 11px 12px;
+            border: 1px solid rgba(0, 122, 255, 0.22);
+            border-radius: 12px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.94) 0%, rgba(255, 255, 255, 0.82) 100%);
+            font-size: 14px;
+            font-weight: 700;
+            font-family: inherit;
+            color: var(--rc-text, #1d1d1f);
+            cursor: pointer;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            text-align: center;
+        }
+        .rc-select-graph-trigger:hover {
+            border-color: rgba(0, 122, 255, 0.45);
+        }
+        .rc-select-graph-trigger:focus {
+            outline: none;
+            border-color: var(--rc-accent, #007aff);
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2);
+        }
+        .rc-select-graph-value {
+            flex: 1;
+            min-width: 0;
+            text-align: center;
+        }
+        .rc-select-graph-chevron {
+            position: absolute;
+            right: 11px;
+            top: 50%;
+            margin-top: -7px;
+            font-size: 11px;
+            color: var(--rc-accent, #007aff);
+            opacity: 0.88;
+            pointer-events: none;
+        }
+        .rc-select-graph-trigger[aria-expanded="true"] .rc-select-graph-chevron {
+            transform: rotate(180deg);
+        }
+        .rc-select-graph-dropdown {
+            display: none;
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: calc(100% + 6px);
+            z-index: 280;
+            max-height: 220px;
+            overflow-y: auto;
+            padding: 6px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.98);
+            border: 1px solid rgba(0, 122, 255, 0.18);
+            box-shadow: 0 14px 36px rgba(0, 0, 0, 0.12);
+        }
+        .rc-select-graph-dropdown.open {
+            display: block;
+            animation: rc-fadeIn 0.2s ease;
+        }
+        .rc-select-graph-opt {
+            display: block;
+            width: 100%;
+            margin: 0;
+            padding: 9px 10px;
+            border: none;
+            border-radius: 9px;
+            background: transparent;
+            font-size: 13px;
+            font-weight: 700;
+            font-family: inherit;
+            color: var(--rc-text, #1d1d1f);
+            cursor: pointer;
+            text-align: center;
+            transition: background 0.15s;
+        }
+        .rc-select-graph-opt:hover {
+            background: rgba(0, 122, 255, 0.12);
+            color: var(--rc-accent, #007aff);
+        }
+        .rc-select-graph-opt.selected {
+            background: linear-gradient(135deg, var(--rc-accent, #007aff) 0%, #0056b3 100%);
+            color: #fff;
+        }
+        [data-theme="dark"] .rc-select-graph-trigger {
+            background: linear-gradient(180deg, rgba(56, 56, 58, 0.95) 0%, rgba(38, 38, 40, 0.98) 100%);
+            border-color: rgba(255, 255, 255, 0.14);
+            color: var(--rc-text, #f5f5f7);
+        }
+        [data-theme="dark"] .rc-select-graph-dropdown {
+            background: rgba(44, 44, 46, 0.98);
+            border-color: rgba(255, 255, 255, 0.12);
+        }
+    </style>
+</head>
+<body class="admin-mapa-standalone">
+    <div class="admin-mapa-wrap">
+        <a href="../index.html#page-administracao" class="admin-mapa-back"><i class="fas fa-arrow-left"></i> Painel de administração</a>
+        <div class="admin-mapa-stack">
+        <div class="sauron-rc-embed admin-mapa-rc-embed admin-card-mapeamento-rc-inner">
+            <section class="rc-glass-card rc-map-wizard-card">
+                <h2 class="rc-map-title"><i class="fas fa-print" aria-hidden="true"></i> MAPEAMENTO DE CHAMADOS (BRSC02)</h2>
+                <p class="rc-map-subtitle">UNIDADE DE BRSC02 · PAINEL DE STATUS</p>
+                <div class="rc-map-letter" aria-label="Instruções do painel administrativo">
+                    <p>Informe o <strong>IS</strong> (igual à tabela de mapeamento) e o <strong>status</strong> desejado. O servidor mantém <strong>um único registo por IS</strong>; alterações aqui não duplicam linhas. Novos envios pelo formulário <strong>Sauron</strong> entram como <strong>CHAMADO ABERTO</strong>.</p>
+                </div>
+                <div class="admin-rc-fields admin-mapa-rc-form">
+                    <div class="admin-rc-field-group">
+                        <h3 class="rc-map-section-title" id="admin-rc-lbl-chave">IS DO CHAMADO</h3>
+                        <input type="text" id="admin-rc-chave" class="rc-map-text-input" placeholder="251425 (após IS-)" value="IS-" autocomplete="off" aria-labelledby="admin-rc-lbl-chave">
+                    </div>
+                    <div class="admin-rc-field-group">
+                        <h3 class="rc-map-section-title" id="admin-rc-lbl-status">STATUS</h3>
+                        <div class="admin-rc-status-select" id="admin-rc-status-wrap">
+                        <input type="hidden" id="admin-rc-status" value="" autocomplete="off">
+                        <button type="button" class="admin-rc-status-trigger" id="admin-rc-status-trigger" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="admin-rc-lbl-status">
+                            <span class="admin-rc-status-trigger-text is-placeholder" id="admin-rc-status-trigger-label">Selecione um Status...</span>
+                            <i class="fas fa-chevron-down admin-rc-status-chevron" aria-hidden="true"></i>
+                        </button>
+                        <ul class="admin-rc-status-dropdown" id="admin-rc-status-list" role="listbox" aria-labelledby="admin-rc-lbl-status" hidden>
+                            <li role="none">
+                                <button type="button" class="admin-rc-status-opt admin-rc-status-opt--aberto" role="option" data-value="aberto" data-label="CHAMADO ABERTO" tabindex="-1">
+                                    <span class="admin-rc-status-opt-inner">CHAMADO ABERTO</span>
+                                </button>
+                            </li>
+                            <li role="none">
+                                <button type="button" class="admin-rc-status-opt admin-rc-status-opt--em-andamento" role="option" data-value="em-andamento" data-label="CHAMADO EM ANDAMENTO" tabindex="-1">
+                                    <span class="admin-rc-status-opt-inner">CHAMADO EM ANDAMENTO</span>
+                                </button>
+                            </li>
+                            <li role="none">
+                                <button type="button" class="admin-rc-status-opt admin-rc-status-opt--pendente" role="option" data-value="pendente" data-label="CHAMADO PENDENTE" tabindex="-1">
+                                    <span class="admin-rc-status-opt-inner">CHAMADO PENDENTE</span>
+                                </button>
+                            </li>
+                            <li role="none">
+                                <button type="button" class="admin-rc-status-opt admin-rc-status-opt--finalizado" role="option" data-value="finalizado" data-label="CHAMADO FINALIZADO" tabindex="-1">
+                                    <span class="admin-rc-status-opt-inner">CHAMADO FINALIZADO</span>
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+                    </div>
+                    <div class="admin-rc-actions">
+                        <button type="button" class="admin-card-btn" id="admin-rc-aplicar">APLICAR STATUS</button>
+                    </div>
+                    <p class="admin-rc-feedback rc-map-feedback" id="admin-rc-feedback" role="status" aria-live="polite"></p>
+                </div>
+            </section>
+        </div>
+
+        <div class="sauron-rc-embed admin-mapa-rc-embed admin-mapa-rc-embed-wizard">
+            <section class="rc-glass-card rc-map-wizard-card">
+                <div id="admin-rc-map-wizard" class="rc-map-wizard">
+                    <h2 class="rc-map-title"><i class="fas fa-print" aria-hidden="true"></i> MAPEAMENTO DE CHAMADOS DE IMPRESSORAS</h2>
+                    <p class="rc-map-subtitle">UNIDADE DE BRSC02 · ENTRADA MANUAL (PLANILHA)</p>
+                    <div class="admin-rc-map-manual-banner" role="note">
+                        <p><strong>Entrada manual a partir da planilha.</strong> Enquanto a planilha de controlo existir em paralelo, use <em>este</em> fluxo para lançar no AXIS os chamados que já constam nela: dados da pessoa e bancada como no Sauron, depois o <strong>IS</strong>, e na última etapa a <strong>data e hora</strong> (como na planilha) e o <strong>status real</strong> do chamado — incluindo já finalizados ou em andamento.</p>
+                    </div>
+                    <div class="rc-map-letter" aria-label="Texto introdutório do mapeamento">
+                        <p class="rc-map-letter-greeting"><strong>Prezado(a) Usuário(a),</strong></p>
+                        <p>Este formulário replica o mapeamento da unidade <strong>BRSC02</strong> para gestão e prevenção de duplicados na JIRA; nesta página serve também para <strong>sincronizar manualmente</strong> com o que está na planilha.</p>
+                        <p><strong>Objetivo principal:</strong> garantir que cada solicitação seja única, agilizando o atendimento e evitando tickets repetidos.</p>
+                        <p><strong>Acesso e transparência:</strong> os utilizadores terão acesso a uma planilha de controle para acompanhar o status dos chamados.</p>
+                        <ul class="rc-map-letter-list">
+                            <li><strong>Atualização em tempo real</strong> pelo Técnico Residente Selbetti.</li>
+                            <li><strong>Acompanhamento constante</strong> da resolução e do tempo de atendimento.</li>
+                        </ul>
+                        <p><strong>Dúvidas e suporte:</strong></p>
+                        <ul class="rc-map-letter-list rc-map-letter-contacts">
+                            <li>WhatsApp corporativo: <a href="https://wa.me/5548998328507" target="_blank" rel="noopener noreferrer">+55 (48) 99832-8507</a></li>
+                            <li>Google Chat / E-mail: <a href="mailto:ext_filipe@mercadolivre.com">ext_filipe@mercadolivre.com</a></li>
+                        </ul>
+                        <p class="rc-map-letter-thanks">Agradecemos a sua colaboração para manter a eficiência do serviço.</p>
+                        <p class="rc-map-letter-note">Os registos deste fluxo no AXIS ficam associados ao e-mail corporativo que você selecionar nas próximas etapas.</p>
+                    </div>
+                    <form class="rc-map-wizard-fields-form" autocomplete="off" novalidate onsubmit="return false;" data-form-type="other">
+                    <p class="rc-map-progress" aria-live="polite">Seção <span id="admin-rc-map-step-num">1</span> de <span id="admin-rc-map-step-total">6</span></p>
+
+                    <div id="admin-rc-map-step-1" class="rc-map-step" data-step="1">
+                        <h3 class="rc-map-section-title">NOME COMPLETO <span class="rc-map-req">*</span></h3>
+                        <div id="admin-rc-map-nomes-list" class="rc-map-radio-list" role="radiogroup" aria-label="Nome completo"></div>
+                    </div>
+
+                    <div id="admin-rc-map-step-2" class="rc-map-step" data-step="2" hidden>
+                        <h3 class="rc-map-section-title">USUÁRIO MERCADO LIVRE <span class="rc-map-req">*</span></h3>
+                        <div id="admin-rc-map-ml-list" class="rc-map-radio-list" role="radiogroup" aria-label="Usuário Mercado Livre"></div>
+                    </div>
+
+                    <div id="admin-rc-map-step-3" class="rc-map-step" data-step="3" hidden>
+                        <h3 class="rc-map-section-title">E-MAIL CORPORATIVO <span class="rc-map-req">*</span></h3>
+                        <p class="rc-map-hint">Mercado Livre — alinhado ao cadastro BRSC02. Ao alterar nome ou usuário ML nas secções anteriores, a sugestão acompanha.</p>
+                        <div id="admin-rc-map-emails-list" class="rc-map-radio-list" role="radiogroup" aria-label="E-mail corporativo"></div>
+                    </div>
+
+                    <div id="admin-rc-map-step-4" class="rc-map-step" data-step="4" hidden>
+                        <h3 class="rc-map-section-title">BANCADA</h3>
+                        <label class="rc-map-input-label" for="admin-rc-map-bancada">BANCADA (código ou identificação) <span class="rc-map-req">*</span></label>
+                        <input type="text" id="admin-rc-map-bancada" name="axis_brsc02_bancada_workstation" class="rc-map-text-input" placeholder="Ex.: 12 ou A01" maxlength="32" autocomplete="axis-bancada-ref" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true" data-bwignore data-form-type="other">
+                    </div>
+
+                    <div id="admin-rc-map-step-5" class="rc-map-step" data-step="5" hidden>
+                        <h3 class="rc-map-section-title">CHAMADOS CRIADOS</h3>
+                        <label class="rc-map-input-label" for="admin-rc-map-is">IS DO CHAMADO <span class="rc-map-req">*</span></label>
+                        <input type="text" id="admin-rc-map-is" class="rc-map-text-input" placeholder="910791 (após IS-)" value="IS-" maxlength="32" autocomplete="off">
+                        <p class="rc-map-hint">Na etapa seguinte indicará data, hora e o status que constam na planilha.</p>
+                    </div>
+
+                    <div id="admin-rc-map-step-6" class="rc-map-step" data-step="6" hidden>
+                        <h3 class="rc-map-section-title">DATA, HORA E STATUS <span class="rc-map-req">*</span></h3>
+                        <p class="rc-map-hint">Alinhe ao registo da planilha. A data e a hora local são gravadas no envio.</p>
+                        <label class="rc-map-input-label" id="admin-rc-map-lbl-data-dmy">DATA (dia · mês · ano)</label>
+                        <input type="hidden" id="admin-rc-map-data" value="" autocomplete="off" aria-hidden="true">
+                        <div class="admin-rc-map-date-dmy-row" role="group" aria-labelledby="admin-rc-map-lbl-data-dmy">
+                            <div class="rc-select-graph admin-rc-date-glass rc-select-graph--dia" data-admin-time-glass="admin-rc-map-dia">
+                                <select id="admin-rc-map-dia" class="rc-select-native admin-rc-time-native" aria-label="Dia"></select>
+                                <button type="button" class="rc-select-graph-trigger" aria-haspopup="listbox" aria-expanded="false"><span class="rc-select-graph-value"></span><i class="fas fa-chevron-down rc-select-graph-chevron"></i></button>
+                                <div class="rc-select-graph-dropdown" role="listbox"></div>
+                            </div>
+                            <span class="admin-rc-map-time-sep" aria-hidden="true">/</span>
+                            <div class="rc-select-graph admin-rc-date-glass rc-select-graph--mes" data-admin-time-glass="admin-rc-map-mes">
+                                <select id="admin-rc-map-mes" class="rc-select-native admin-rc-time-native" aria-label="Mês"></select>
+                                <button type="button" class="rc-select-graph-trigger" aria-haspopup="listbox" aria-expanded="false"><span class="rc-select-graph-value"></span><i class="fas fa-chevron-down rc-select-graph-chevron"></i></button>
+                                <div class="rc-select-graph-dropdown" role="listbox"></div>
+                            </div>
+                            <span class="admin-rc-map-time-sep" aria-hidden="true">/</span>
+                            <div class="rc-select-graph admin-rc-date-glass rc-select-graph--ano" data-admin-time-glass="admin-rc-map-ano">
+                                <select id="admin-rc-map-ano" class="rc-select-native admin-rc-time-native" aria-label="Ano"></select>
+                                <button type="button" class="rc-select-graph-trigger" aria-haspopup="listbox" aria-expanded="false"><span class="rc-select-graph-value"></span><i class="fas fa-chevron-down rc-select-graph-chevron"></i></button>
+                                <div class="rc-select-graph-dropdown" role="listbox"></div>
+                            </div>
+                        </div>
+                        <label class="rc-map-input-label">HORA LOCAL (hora · minuto · segundo)</label>
+                        <div class="admin-rc-map-time-row" role="group" aria-label="Hora, minuto e segundo">
+                            <div class="rc-select-graph admin-rc-time-glass" data-admin-time-glass="admin-rc-map-hh">
+                                <select id="admin-rc-map-hh" class="rc-select-native admin-rc-time-native" aria-label="Hora" title="Hora"></select>
+                                <button type="button" class="rc-select-graph-trigger" aria-haspopup="listbox" aria-expanded="false"><span class="rc-select-graph-value"></span><i class="fas fa-chevron-down rc-select-graph-chevron"></i></button>
+                                <div class="rc-select-graph-dropdown" role="listbox"></div>
+                            </div>
+                            <span class="admin-rc-map-time-sep" aria-hidden="true">:</span>
+                            <div class="rc-select-graph admin-rc-time-glass" data-admin-time-glass="admin-rc-map-mm">
+                                <select id="admin-rc-map-mm" class="rc-select-native admin-rc-time-native" aria-label="Minuto" title="Minuto"></select>
+                                <button type="button" class="rc-select-graph-trigger" aria-haspopup="listbox" aria-expanded="false"><span class="rc-select-graph-value"></span><i class="fas fa-chevron-down rc-select-graph-chevron"></i></button>
+                                <div class="rc-select-graph-dropdown" role="listbox"></div>
+                            </div>
+                            <span class="admin-rc-map-time-sep" aria-hidden="true">:</span>
+                            <div class="rc-select-graph admin-rc-time-glass" data-admin-time-glass="admin-rc-map-ss">
+                                <select id="admin-rc-map-ss" class="rc-select-native admin-rc-time-native" aria-label="Segundo" title="Segundo"></select>
+                                <button type="button" class="rc-select-graph-trigger" aria-haspopup="listbox" aria-expanded="false"><span class="rc-select-graph-value"></span><i class="fas fa-chevron-down rc-select-graph-chevron"></i></button>
+                                <div class="rc-select-graph-dropdown" role="listbox"></div>
+                            </div>
+                        </div>
+                        <label class="rc-map-input-label" id="admin-rc-map-lbl-reg-status">STATUS DO CHAMADO <span class="rc-map-req">*</span></label>
+                        <div class="admin-rc-status-select" id="admin-rc-map-reg-status-wrap">
+                            <input type="hidden" id="admin-rc-map-reg-status" value="" autocomplete="off">
+                            <button type="button" class="admin-rc-status-trigger" id="admin-rc-map-reg-status-trigger" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="admin-rc-map-lbl-reg-status">
+                                <span class="admin-rc-status-trigger-text is-placeholder" id="admin-rc-map-reg-status-trigger-label">Selecione um Status...</span>
+                                <i class="fas fa-chevron-down admin-rc-status-chevron" aria-hidden="true"></i>
+                            </button>
+                            <ul class="admin-rc-status-dropdown" id="admin-rc-map-reg-status-list" role="listbox" aria-labelledby="admin-rc-map-lbl-reg-status" hidden>
+                                <li role="none"><button type="button" class="admin-rc-status-opt admin-rc-status-opt--aberto" role="option" data-value="aberto" data-label="CHAMADO ABERTO" tabindex="-1"><span class="admin-rc-status-opt-inner">CHAMADO ABERTO</span></button></li>
+                                <li role="none"><button type="button" class="admin-rc-status-opt admin-rc-status-opt--em-andamento" role="option" data-value="em-andamento" data-label="CHAMADO EM ANDAMENTO" tabindex="-1"><span class="admin-rc-status-opt-inner">CHAMADO EM ANDAMENTO</span></button></li>
+                                <li role="none"><button type="button" class="admin-rc-status-opt admin-rc-status-opt--pendente" role="option" data-value="pendente" data-label="CHAMADO PENDENTE" tabindex="-1"><span class="admin-rc-status-opt-inner">CHAMADO PENDENTE</span></button></li>
+                                <li role="none"><button type="button" class="admin-rc-status-opt admin-rc-status-opt--finalizado" role="option" data-value="finalizado" data-label="CHAMADO FINALIZADO" tabindex="-1"><span class="admin-rc-status-opt-inner">CHAMADO FINALIZADO</span></button></li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div id="admin-rc-map-feedback" class="rc-map-feedback" role="status"></div>
+
+                    <div class="rc-map-nav">
+                        <button type="button" class="rc-map-btn rc-map-btn-secondary" id="admin-rc-map-back" hidden>Voltar</button>
+                        <button type="button" class="rc-map-btn rc-map-btn-primary" id="admin-rc-map-next">Continuar</button>
+                        <button type="button" class="rc-map-btn rc-map-btn-primary" id="admin-rc-map-submit" hidden>Enviar mapeamento</button>
+                    </div>
+                    </form>
+                </div>
+            </section>
+        </div>
+        </div>
+    </div>
+    <script>
+        try {
+            var t = localStorage.getItem('theme') || (localStorage.getItem('axis-theme'));
+            if (t === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+        } catch (e) {}
+    </script>
+    <script src="../js/registro_chamados.js"></script>
+    <script src="../js/admin-mapeamento-chamados-page.js"></script>
+</body>
+</html>

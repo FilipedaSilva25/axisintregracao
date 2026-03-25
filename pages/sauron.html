@@ -4,9 +4,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AXIS | SAURON</title>
+    <meta name="format-detection" content="telephone=no">
+    <title>AXIS | Sauron</title>
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/status_bancada.css">
+    <link rel="stylesheet" href="../css/registro_chamados.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -15,13 +17,17 @@
         .sauron-top-bar h1 { font-size: 22px; font-weight: 800; color: #ff9800; margin: 0; }
         .sauron-back { padding: 10px 20px; background: linear-gradient(135deg, rgba(255,152,0,0.2), rgba(255,193,7,0.15)); color: #ff9800; border: 1px solid rgba(255,152,0,0.35); border-radius: 12px; font-size: 14px; font-weight: 600; text-decoration: none; transition: all 0.2s; }
         .sauron-back:hover { background: linear-gradient(135deg, rgba(255,152,0,0.3), rgba(255,193,7,0.25)); transform: translateY(-1px); }
-        .sauron-main { padding: 24px; max-width: 480px; margin: 0 auto; }
+        .sauron-main { padding: 24px; max-width: 1200px; margin: 0 auto; }
+        .sauron-main-row { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; justify-content: center; }
+        .sauron-main-row .sauron-form-wrap,
+        .sauron-main-row .sauron-rc-wrap { flex: 1 1 360px; min-width: min(100%, 320px); max-width: 560px; }
         .sauron-form-wrap { width: 100%; }
+        form.rc-map-wizard-fields-form { display: contents; }
     </style>
 </head>
 <body class="sauron-page">
     <header class="sauron-top-bar">
-        <h1>SAURON</h1>
+        <h1>Sauron</h1>
         <div class="sauron-top-bar-actions">
             <a href="../index.html#page-home" class="sauron-back">
                 <i class="fas fa-th-large"></i> Voltar ao Dashboard
@@ -30,6 +36,7 @@
     </header>
 
     <main class="sauron-main">
+        <div class="sauron-main-row">
         <div class="sauron-form-wrap sb-form-column">
             <section class="sb-card">
                 <h2><i class="fas fa-edit"></i> Atualizar status</h2>
@@ -101,8 +108,74 @@
                 <div id="sb-msg" class="sb-msg" role="alert"></div>
             </section>
         </div>
+        <div class="sauron-rc-wrap sauron-rc-embed">
+            <section class="rc-glass-card rc-map-wizard-card">
+                <div id="rc-map-wizard" class="rc-map-wizard">
+                    <h2 class="rc-map-title"><i class="fas fa-print" aria-hidden="true"></i> MAPEAMENTO DE CHAMADOS DE IMPRESSORAS</h2>
+                    <p class="rc-map-subtitle">UNIDADE DE BRSC02</p>
+                    <div class="rc-map-letter" aria-label="Texto introdutório do mapeamento">
+                        <p class="rc-map-letter-greeting"><strong>Prezado(a) Usuário(a),</strong></p>
+                        <p>Este é o <strong>Formulário de Mapeamento de Chamados de Impressoras</strong> da unidade <strong>BRSC02</strong>, uma iniciativa para gestão eficiente e prevenção de chamados duplicados na plataforma JIRA.</p>
+                        <p><strong>Objetivo principal:</strong> garantir que cada solicitação seja única, agilizando o atendimento e evitando tickets repetidos.</p>
+                        <p><strong>Acesso e transparência:</strong> os utilizadores terão acesso a uma planilha de controle para acompanhar o status dos chamados.</p>
+                        <ul class="rc-map-letter-list">
+                            <li><strong>Atualização em tempo real</strong> pelo Técnico Residente Selbetti.</li>
+                            <li><strong>Acompanhamento constante</strong> da resolução e do tempo de atendimento.</li>
+                        </ul>
+                        <p><strong>Dúvidas e suporte:</strong></p>
+                        <ul class="rc-map-letter-list rc-map-letter-contacts">
+                            <li>WhatsApp corporativo: <a href="https://wa.me/5548998328507" target="_blank" rel="noopener noreferrer">+55 (48) 99832-8507</a></li>
+                            <li>Google Chat / E-mail: <a href="mailto:ext_filipe@mercadolivre.com">ext_filipe@mercadolivre.com</a></li>
+                        </ul>
+                        <p class="rc-map-letter-thanks">Agradecemos a sua colaboração para manter a eficiência do serviço.</p>
+                        <p class="rc-map-letter-note">Os registos deste fluxo no AXIS ficam associados ao e-mail corporativo que você selecionar nas próximas etapas.</p>
+                    </div>
+                    <form class="rc-map-wizard-fields-form" autocomplete="off" novalidate onsubmit="return false;" data-form-type="other">
+                    <p class="rc-map-progress" aria-live="polite">Seção <span id="rc-map-step-num">1</span> de 5</p>
+
+                    <div id="rc-map-step-1" class="rc-map-step" data-step="1">
+                        <h3 class="rc-map-section-title">NOME COMPLETO <span class="rc-map-req">*</span></h3>
+                        <div id="rc-map-nomes-list" class="rc-map-radio-list" role="radiogroup" aria-label="Nome completo"></div>
+                    </div>
+
+                    <div id="rc-map-step-2" class="rc-map-step" data-step="2" hidden>
+                        <h3 class="rc-map-section-title">USUÁRIO MERCADO LIVRE <span class="rc-map-req">*</span></h3>
+                        <div id="rc-map-ml-list" class="rc-map-radio-list" role="radiogroup" aria-label="Usuário Mercado Livre"></div>
+                    </div>
+
+                    <div id="rc-map-step-3" class="rc-map-step" data-step="3" hidden>
+                        <h3 class="rc-map-section-title">E-MAIL CORPORATIVO <span class="rc-map-req">*</span></h3>
+                        <p class="rc-map-hint">Mercado Livre — alinhado ao cadastro BRSC02. Ao alterar nome ou usuário ML nas secções anteriores, a sugestão acompanha.</p>
+                        <div id="rc-map-emails-list" class="rc-map-radio-list" role="radiogroup" aria-label="E-mail corporativo"></div>
+                    </div>
+
+                    <div id="rc-map-step-4" class="rc-map-step" data-step="4" hidden>
+                        <h3 class="rc-map-section-title">BANCADA</h3>
+                        <label class="rc-map-input-label" for="rc-map-bancada">BANCADA (código ou identificação) <span class="rc-map-req">*</span></label>
+                        <input type="text" id="rc-map-bancada" name="axis_brsc02_bancada_workstation" class="rc-map-text-input" placeholder="Ex.: 12 ou A01" maxlength="32" autocomplete="axis-bancada-ref" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true" data-bwignore data-form-type="other">
+                    </div>
+
+                    <div id="rc-map-step-5" class="rc-map-step" data-step="5" hidden>
+                        <h3 class="rc-map-section-title">CHAMADOS CRIADOS</h3>
+                        <label class="rc-map-input-label" for="rc-map-is">IS DO CHAMADO <span class="rc-map-req">*</span></label>
+                        <input type="text" id="rc-map-is" class="rc-map-text-input" placeholder="Ex.: IS-910791" maxlength="24" autocomplete="off">
+                    </div>
+
+                    <div id="rc-map-feedback" class="rc-map-feedback" role="status"></div>
+
+                    <div class="rc-map-nav">
+                        <button type="button" class="rc-map-btn rc-map-btn-secondary" id="rc-map-back" hidden>Voltar</button>
+                        <button type="button" class="rc-map-btn rc-map-btn-primary" id="rc-map-next">Continuar</button>
+                        <button type="button" class="rc-map-btn rc-map-btn-primary" id="rc-map-submit" hidden>Enviar mapeamento</button>
+                    </div>
+                    </form>
+                </div>
+            </section>
+        </div>
+        </div>
     </main>
 
     <script src="../js/status_bancada.js"></script>
+    <script src="../js/registro_chamados.js"></script>
 </body>
 </html>
