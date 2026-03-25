@@ -7,6 +7,7 @@
 const path = require('path');
 const fs = require('fs');
 const { DATA_DIR, ROOT_DIR, PORT } = require('./config');
+const { registerPreventivaFromWhatsApp } = require('./packing-preventiva-persist');
 
 const AUTH_DIR = path.join(DATA_DIR, 'whatsapp-auth');
 const PACKING_TROCAS_FILE = path.join(DATA_DIR, 'packing-trocas.json');
@@ -322,7 +323,7 @@ async function startConnector() {
                             });
                             await writeJson(PACKING_TROCAS_FILE, trocas);
                         },
-                        { getBancadasStatus, baseUrl, updateBancadaStatus, getPecasEstoque, registerPecasEntrada, registerPecasSaida, registerChamado }
+                        { getBancadasStatus, baseUrl, updateBancadaStatus, getPecasEstoque, registerPecasEntrada, registerPecasSaida, registerChamado, registerPreventiva: registerPreventivaFromWhatsApp }
                     );
 
                     if (reply && sock) {

@@ -5,6 +5,25 @@
 
 const BIBLIOTECA_KEY = 'axis_manutencoes_biblioteca';
 const FAVORITOS_KEY = 'axis_manutencoes_favoritos';
+const LIXEIRA_KEY = 'axis_manutencoes_lixeira';
+const LIXEIRA_RETENCAO_MS = 30 * 24 * 60 * 60 * 1000;
+
+function isDashboardPage() {
+    try {
+        return String(document.body?.getAttribute('data-mp-page') || '').toLowerCase() === 'dashboard';
+    } catch (_) {
+        return false;
+    }
+}
+
+function parseFavKey(key) {
+    const parts = String(key || '').split('-');
+    if (parts.length < 3) return null;
+    const mes = parts.pop();
+    const ano = parts.pop();
+    const id = parts.join('-');
+    return { id, ano, mes };
+}
 const MESES_NOMES = {
     '01': 'Janeiro', '02': 'Fevereiro', '03': 'Março', '04': 'Abril',
     '05': 'Maio', '06': 'Junho', '07': 'Julho', '08': 'Agosto',
@@ -83,12 +102,17 @@ let chartAnosInstance = null;
 let chartMesesInstance = null;
 let chartSetorInstance = null;
 let chartTecnicoInstance = null;
+let previewBlobUrl = null;
+let mpAutoRefreshTimer = null;
 
 function getBiblioteca() {
     try {
         const raw = localStorage.getItem(BIBLIOTECA_KEY);
-        const data = raw ? JSON.parse(raw) : null;
-        if (data && typeof data === 'object' && Object.keys(data).length) return data;
+        if (raw === null || raw === undefined) {
+            return JSON.parse(JSON.stringify(SEED));
+        }
+        const data = JSON.parse(raw);
+        if (data && typeof data === 'object' && !Array.isArray(data)) return data;
     } catch (_) {}
     return JSON.parse(JSON.stringify(SEED));
 }
@@ -98,6 +122,59 @@ function setBiblioteca(data) {
         localStorage.setItem(BIBLIOTECA_KEY, JSON.stringify(data));
         return true;
     } catch (_) { return false; }
+}
+
+function getLixeira() {
+    try {
+        const raw = localStorage.getItem(LIXEIRA_KEY);
+        const arr = raw ? JSON.parse(raw) : [];
+        return Array.isArray(arr) ? arr : [];
+    } catch (_) {
+        return [];
+    }
+}
+
+function setLixeira(arr) {
+    try {
+        localStorage.setItem(LIXEIRA_KEY, JSON.stringify(Array.isArray(arr) ? arr : []));
+        return true;
+    } catch (_) {
+        return false;
+    }
+}
+
+function purgeLixeiraExpired() {
+    const now = Date.now();
+    const arr = getLixeira().filter(entry => {
+        const t = entry && entry.deletedAt ? new Date(entry.deletedAt).getTime() : 0;
+        return t && (now - t) < LIXEIRA_RETENCAO_MS;
+    });
+    if (arr.length !== getLixeira().length) setLixeira(arr);
+    return arr;
+}
+
+function contarPorAno(bib, ano) {
+    return Object.values(bib[ano] || {}).reduce((a, sub) => a + (Array.isArray(sub) ? sub.length : 0), 0);
+}
+
+function doughnutChartOptions() {
+    return {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: { color: '#6e6e73', font: { size: 11 }, padding: 12 }
+            }
+        },
+        cutout: '52%',
+        layout: { padding: 6 }
+    };
+}
+
+function coresParaN(n) {
+    const cores = ['#28a745', '#007aff', '#fd7e14', '#5856d6', '#32ade6', '#2ecc71', '#ff9f43', '#e056fd', '#20c997', '#6f42c1'];
+    return Array.from({ length: n }, (_, i) => cores[i % cores.length]);
 }
 
 function getFavoritos() {
@@ -122,6 +199,71 @@ function toggleFavorito(id, ano, mes) {
     else fav.add(key);
     setFavoritos(fav);
     refiltrar();
+    popularMenuFavoritos();
+}
+
+function popularMenuFavoritos() {
+    const listEl = document.getElementById('mp-favoritos-list');
+    if (!listEl) return;
+    const favSet = getFavoritos();
+    const bib = getBiblioteca();
+    const rows = [];
+    favSet.forEach(function(key) {
+        const p = parseFavKey(key);
+        if (!p) return;
+        const arr = (bib[p.ano] || {})[p.mes];
+        const m = Array.isArray(arr) ? arr.find(function(x) { return String(x.id) === String(p.id); }) : null;
+        if (!m) return;
+        const label = (m.modelo || '') + ' · ' + (m.serial || '') + ' — ' + (MESES_NOMES[p.mes] || p.mes) + '/' + p.ano;
+        rows.push(
+            '<button type="button" class="mp-nav-fav-item" onclick="event.preventDefault();irParaFavorito(' +
+                JSON.stringify(String(p.id)) + ',' + JSON.stringify(String(p.ano)) + ',' + JSON.stringify(String(p.mes)) + ')">' +
+                '<i class="fas fa-star"></i><span>' + esc(label) + '</span></button>'
+        );
+    });
+    listEl.innerHTML = rows.length
+        ? rows.join('')
+        : '<div class="mp-nav-fav-empty">Nenhuma preventiva favorita.</div>';
+}
+
+function irParaFavorito(id, ano, mes) {
+    try {
+        sessionStorage.setItem('mp_open_target', JSON.stringify({ id: id, ano: ano, mes: mes }));
+    } catch (_) {}
+    const path = window.location.pathname || '';
+    if (path.indexOf('manutencoes-biblioteca') >= 0) {
+        tryConsumeMpOpenTarget();
+        const menu = document.getElementById('hamburger-menu');
+        const btn = document.getElementById('hamburger-btn');
+        if (menu) menu.classList.remove('show');
+        if (btn) btn.classList.remove('active');
+        return;
+    }
+    const inPages = path.includes('pages');
+    window.location.href = inPages ? 'manutencoes-biblioteca.html' : 'pages/manutencoes-biblioteca.html';
+}
+
+function tryConsumeMpOpenTarget() {
+    if (isDashboardPage()) return;
+    try {
+        const raw = sessionStorage.getItem('mp_open_target');
+        if (!raw) return;
+        sessionStorage.removeItem('mp_open_target');
+        const t = JSON.parse(raw);
+        if (!t || t.id == null || !t.ano || !t.mes) return;
+        const mesPad = String(t.mes).padStart(2, '0');
+        setTimeout(function() {
+            selecionarAno(String(t.ano));
+            setTimeout(function() {
+                selecionarMes(mesPad, String(t.ano));
+                setTimeout(function() {
+                    const sid = String(t.id).replace(/"/g, '');
+                    const el = document.querySelector('.mp-manut-card[data-id="' + sid + '"], tr[data-id="' + sid + '"]');
+                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 120);
+            }, 80);
+        }, 80);
+    } catch (_) {}
 }
 
 function isFavorito(id, ano, mes) {
@@ -153,16 +295,41 @@ function atualizarStats() {
     const elTotal = document.getElementById('stat-total');
     const elAno = document.getElementById('stat-ano');
     const elMes = document.getElementById('stat-mes');
-    if (elTotal) elTotal.textContent = todos.length;
-    let noAno = 0, noMes = 0;
-    if (anoSelecionado) {
-        noAno = Object.values(bib[anoSelecionado] || {}).reduce((a, arr) => a + arr.length, 0);
-        if (mesSelecionado) {
-            noMes = (bib[anoSelecionado] || {})[mesSelecionado.numero]?.length || 0;
+    const now = new Date();
+    const yCal = String(now.getFullYear());
+    const mCal = String(now.getMonth() + 1).padStart(2, '0');
+
+    if (isDashboardPage()) {
+        if (elTotal) elTotal.textContent = todos.length;
+        const elAnoCal = document.getElementById('stat-ano-cal');
+        const elMesCal = document.getElementById('stat-mes-cal');
+        if (elAnoCal) elAnoCal.textContent = contarPorAno(bib, yCal);
+        if (elMesCal) elMesCal.textContent = ((bib[yCal] || {})[mCal] || []).length;
+        if (elAno) elAno.textContent = anoSelecionado
+            ? contarPorAno(bib, anoSelecionado)
+            : 0;
+        if (elMes) {
+            elMes.textContent = anoSelecionado && mesSelecionado
+                ? ((bib[anoSelecionado] || {})[mesSelecionado.numero] || []).length
+                : 0;
         }
+        ['2024', '2025', '2026'].forEach(function(yr) {
+            const el = document.getElementById('stat-year-' + yr);
+            if (el) el.textContent = contarPorAno(bib, yr);
+        });
+    } else {
+        if (elTotal) elTotal.textContent = todos.length;
+        let noAno = 0;
+        let noMes = 0;
+        if (anoSelecionado) {
+            noAno = contarPorAno(bib, anoSelecionado);
+            if (mesSelecionado) {
+                noMes = (bib[anoSelecionado] || {})[mesSelecionado.numero]?.length || 0;
+            }
+        }
+        if (elAno) elAno.textContent = noAno;
+        if (elMes) elMes.textContent = noMes;
     }
-    if (elAno) elAno.textContent = noAno;
-    if (elMes) elMes.textContent = noMes;
     atualizarGraficos();
 }
 
@@ -170,33 +337,31 @@ function atualizarGraficos() {
     if (typeof Chart === 'undefined') return;
     const bib = getBiblioteca();
     const anos = Object.keys(bib || {}).filter(a => a).sort((a, b) => Number(b) - Number(a));
-    const totaisAnos = anos.map(a => Object.values(bib[a] || {}).reduce((s, arr) => s + (Array.isArray(arr) ? arr.length : 0), 0));
+    const totaisAnos = anos.map(a => contarPorAno(bib, a));
+    const doughnutDs = function(labels, data) {
+        const n = labels.length;
+        return {
+            labels: labels,
+            datasets: [{
+                data: data,
+                backgroundColor: coresParaN(n),
+                borderColor: '#fff',
+                borderWidth: 3,
+                hoverOffset: 14,
+                offset: 4
+            }]
+        };
+    };
 
     const ctxAnos = document.getElementById('chart-anos');
     if (ctxAnos) {
         if (chartAnosInstance) chartAnosInstance.destroy();
+        const labelsA = anos.length ? anos : ['Nenhum ano'];
+        const dataA = anos.length ? totaisAnos : [1];
         chartAnosInstance = new Chart(ctxAnos, {
-            type: 'bar',
-            data: {
-                labels: anos.length ? anos : ['Nenhum ano'],
-                datasets: [{
-                    label: 'Manutenções',
-                    data: anos.length ? totaisAnos : [0],
-                    backgroundColor: anos.length ? ['#28a745', '#007aff', '#fd7e14', '#5856d6', '#32ade6'] : 'rgba(0,0,0,0.1)',
-                    borderColor: ['#1e7e34', '#0066cc', '#e56b00', '#4840b8', '#2596be'],
-                    borderWidth: 2,
-                    borderRadius: 10,
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.06)' }, ticks: { color: '#6e6e73', font: { size: 11 } } },
-                    x: { grid: { display: false }, ticks: { color: '#6e6e73', font: { size: 11 } } }
-                }
-            }
+            type: 'doughnut',
+            data: doughnutDs(labelsA, dataA),
+            options: doughnutChartOptions()
         });
     }
 
@@ -204,62 +369,24 @@ function atualizarGraficos() {
     const wrapMeses = document.getElementById('chart-meses-wrap');
     const titleMeses = document.getElementById('chart-meses-title');
     if (ctxMeses && wrapMeses) {
-        if (anoSelecionado) {
-            if (titleMeses) titleMeses.textContent = 'Manutenções por mês · ' + anoSelecionado;
-            wrapMeses.style.display = 'block';
-            const meses = bib[anoSelecionado] || {};
-            const labels = MESES_ORDEM.map(m => MESES_NOMES[m].slice(0, 3));
-            const data = MESES_ORDEM.map(m => (Array.isArray(meses[m]) ? meses[m].length : 0));
-            if (chartMesesInstance) chartMesesInstance.destroy();
-            chartMesesInstance = new Chart(ctxMeses, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Manutenções',
-                        data: data,
-                        backgroundColor: data.map((v, i) => v > 0 ? ['#28a745', '#2ecc71', '#32ade6', '#007aff', '#fd7e14', '#ff9f43', '#5856d6', '#28a745', '#2ecc71', '#32ade6', '#007aff', '#fd7e14'][i] : 'rgba(0,0,0,0.06)'),
-                        borderColor: data.map((v) => v > 0 ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.08)'),
-                        borderWidth: 2,
-                        borderRadius: 8,
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.06)' }, ticks: { color: '#6e6e73', font: { size: 10 } } },
-                        x: { grid: { display: false }, ticks: { color: '#6e6e73', font: { size: 10 } } }
-                    }
-                }
-            });
-        } else {
-            if (titleMeses) titleMeses.textContent = 'Manutenções por mês';
-            wrapMeses.style.display = 'block';
-            if (chartMesesInstance) {
-                chartMesesInstance.destroy();
-                chartMesesInstance = null;
-            }
-            if (ctxMeses) {
-                chartMesesInstance = new Chart(ctxMeses, {
-                    type: 'bar',
-                    data: {
-                        labels: MESES_ORDEM.map(m => MESES_NOMES[m].slice(0, 3)),
-                        datasets: [{ label: 'Manutenções', data: MESES_ORDEM.map(() => 0), backgroundColor: 'rgba(0,0,0,0.05)', borderColor: 'rgba(0,0,0,0.08)', borderWidth: 1, borderRadius: 6 }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: { legend: { display: false } },
-                        scales: { y: { beginAtZero: true }, x: { grid: { display: false } } }
-                    }
-                });
-            }
+        const mesRefAno = isDashboardPage()
+            ? String(new Date().getFullYear())
+            : (anoSelecionado || String(new Date().getFullYear()));
+        const meses = bib[mesRefAno] || {};
+        const labels = MESES_ORDEM.map(m => MESES_NOMES[m].slice(0, 3));
+        const data = MESES_ORDEM.map(m => (Array.isArray(meses[m]) ? meses[m].length : 0));
+        if (titleMeses) {
+            titleMeses.textContent = 'MANUTENÇÕES POR MÊS · ' + mesRefAno;
         }
+        wrapMeses.style.display = 'block';
+        if (chartMesesInstance) chartMesesInstance.destroy();
+        chartMesesInstance = new Chart(ctxMeses, {
+            type: 'doughnut',
+            data: doughnutDs(labels, data),
+            options: doughnutChartOptions()
+        });
     }
 
-    /* Gráfico: Distribuição por setor (pizza) */
     const ctxSetor = document.getElementById('chart-setor');
     const wrapSetor = document.getElementById('chart-setor-wrap');
     if (ctxSetor && wrapSetor) {
@@ -271,7 +398,6 @@ function atualizarGraficos() {
         });
         const setorLabels = Object.keys(bySetor).sort((a, b) => bySetor[b] - bySetor[a]);
         const setorData = setorLabels.map(s => bySetor[s]);
-        const coresSetor = ['#28a745', '#007aff', '#fd7e14', '#5856d6', '#32ade6', '#2ecc71', '#ff9f43', '#e056fd'];
         if (chartSetorInstance) chartSetorInstance.destroy();
         chartSetorInstance = new Chart(ctxSetor, {
             type: 'doughnut',
@@ -279,24 +405,17 @@ function atualizarGraficos() {
                 labels: setorLabels.length ? setorLabels : ['Sem dados'],
                 datasets: [{
                     data: setorData.length ? setorData : [1],
-                    backgroundColor: setorLabels.map((_, i) => coresSetor[i % coresSetor.length]),
+                    backgroundColor: coresParaN(setorLabels.length || 1),
                     borderColor: '#fff',
-                    borderWidth: 2,
-                    hoverOffset: 8
+                    borderWidth: 3,
+                    hoverOffset: 14,
+                    offset: 4
                 }]
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { position: 'bottom', labels: { color: '#6e6e73', font: { size: 11 }, padding: 12 } }
-                },
-                cutout: '55%'
-            }
+            options: doughnutChartOptions()
         });
     }
 
-    /* Gráfico: Manutenções por técnico (barras horizontais) */
     const ctxTec = document.getElementById('chart-tecnico');
     const wrapTec = document.getElementById('chart-tecnico-wrap');
     if (ctxTec && wrapTec) {
@@ -306,33 +425,17 @@ function atualizarGraficos() {
             const t = (m.tecnico || 'Sem técnico').trim();
             byTecnico[t] = (byTecnico[t] || 0) + 1;
         });
-        const tecEntries = Object.entries(byTecnico).sort((a, b) => b[1] - a[1]).slice(0, 8);
+        const tecEntries = Object.entries(byTecnico).sort((a, b) => b[1] - a[1]).slice(0, 10);
         const tecLabels = tecEntries.map(([k]) => k);
         const tecData = tecEntries.map(([, v]) => v);
         if (chartTecnicoInstance) chartTecnicoInstance.destroy();
         chartTecnicoInstance = new Chart(ctxTec, {
-            type: 'bar',
-            data: {
-                labels: tecLabels.length ? tecLabels : ['—'],
-                datasets: [{
-                    label: 'Manutenções',
-                    data: tecData.length ? tecData : [0],
-                    backgroundColor: tecData.map((_, i) => ['#28a745', '#2ecc71', '#32ade6', '#007aff', '#fd7e14', '#ff9f43', '#5856d6', '#e056fd'][i % 8]),
-                    borderColor: tecData.map((_, i) => ['#1e7e34', '#27ae60', '#2596be', '#0066cc', '#e56b00', '#e67e22', '#4840b8', '#c0392b'][i % 8]),
-                    borderWidth: 2,
-                    borderRadius: 8
-                }]
-            },
-            options: {
-                indexAxis: 'y',
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    x: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.06)' }, ticks: { color: '#6e6e73', font: { size: 10 } } },
-                    y: { grid: { display: false }, ticks: { color: '#6e6e73', font: { size: 10 }, maxRotation: 0 } }
-                }
-            }
+            type: 'doughnut',
+            data: doughnutDs(
+                tecLabels.length ? tecLabels : ['—'],
+                tecData.length ? tecData : [1]
+            ),
+            options: doughnutChartOptions()
         });
     }
 }
@@ -521,19 +624,78 @@ function getManutencaoFromCard(cardOrRow) {
     return arr.find(function(x) { return String(x.id) === String(id); }) || null;
 }
 
+function pdfUrlManutencaoRelativa(ano, mes, arquivo) {
+    const base = String(arquivo || '').split(/[/\\]/).pop() || 'relatorio.pdf';
+    const safe = encodeURIComponent(base.replace(/[^a-zA-Z0-9._-]/g, '_'));
+    const mesPad = String(mes).padStart(2, '0');
+    return '/manutencoes/' + encodeURIComponent(String(ano)) + '/' + mesPad + '/' + safe;
+}
+
 function mostrarPreview(cardOrRow) {
     if (previewTimeout) clearTimeout(previewTimeout);
     const m = getManutencaoFromCard(cardOrRow);
-    if (!m) return;
-    previewTimeout = setTimeout(() => {
+    if (!m || !cardOrRow) return;
+    const ano = cardOrRow.dataset?.ano;
+    const mes = cardOrRow.dataset?.mes;
+    previewTimeout = setTimeout(function() {
         const modal = document.getElementById('preview-modal');
         const body = document.getElementById('preview-body');
         if (modal && body) {
-            body.innerHTML = buildPreviewHtml(m);
+            if (previewBlobUrl) {
+                try { URL.revokeObjectURL(previewBlobUrl); } catch (_) {}
+                previewBlobUrl = null;
+            }
+            body.innerHTML = '<div class="mp-preview-pdf-loading"><i class="fas fa-spinner fa-spin"></i> Carregando PDF…</div>';
             modal.classList.add('show');
+            carregarPdfNoPreview(body, m, ano, mes);
         }
         previewTimeout = null;
     }, 100);
+}
+
+function carregarPdfNoPreview(body, m, ano, mes) {
+    const rel = pdfUrlManutencaoRelativa(ano, mes, m.arquivo);
+    const abs = (typeof window.location !== 'undefined' && window.location.origin)
+        ? (window.location.origin + rel)
+        : rel;
+
+    function mostrarIframe(src) {
+        body.textContent = '';
+        const iframe = document.createElement('iframe');
+        iframe.className = 'mp-preview-iframe';
+        iframe.title = 'PDF da preventiva';
+        iframe.src = src;
+        body.appendChild(iframe);
+    }
+
+    function fallbackBlob() {
+        if (typeof window.jspdf === 'undefined' || !window.jspdf.jsPDF) {
+            body.innerHTML = '<p class="mp-preview-fallback">PDF não encontrado no servidor e a biblioteca jsPDF não está disponível.</p>';
+            return;
+        }
+        try {
+            const blob = gerarPDFManutencaoFromData(m);
+            if (!blob) throw new Error('vazio');
+            previewBlobUrl = URL.createObjectURL(blob);
+            mostrarIframe(previewBlobUrl);
+        } catch (e) {
+            body.innerHTML = '<p class="mp-preview-fallback">Não foi possível gerar o PDF para visualização.</p>';
+        }
+    }
+
+    fetch(abs, { method: 'GET', cache: 'no-store' })
+        .then(function(r) {
+            if (!r.ok) throw new Error('http');
+            return r.blob();
+        })
+        .then(function(blob) {
+            if (!blob || blob.size < 32) throw new Error('empty');
+            previewBlobUrl = URL.createObjectURL(blob);
+            mostrarIframe(previewBlobUrl);
+        })
+        .catch(function() {
+            fallbackBlob();
+        });
 }
 
 function buildPreviewHtml(m) {
@@ -570,6 +732,10 @@ function buildPreviewHtml(m) {
 
 function esconderPreview() {
     if (previewTimeout) { clearTimeout(previewTimeout); previewTimeout = null; }
+    if (previewBlobUrl) {
+        try { URL.revokeObjectURL(previewBlobUrl); } catch (_) {}
+        previewBlobUrl = null;
+    }
     const modal = document.getElementById('preview-modal');
     if (modal) modal.classList.remove('show');
 }
@@ -891,7 +1057,7 @@ function buildPdfHtml(m) {
 
 function adicionarManutencao() {
     const inPages = (window.location.pathname || '').includes('pages');
-    window.location.href = inPages ? 'manutenção_preventiva.html' : 'pages/manutenção_preventiva.html';
+    window.location.href = inPages ? 'manutencao_preventiva.html' : 'pages/manutencao_preventiva.html';
 }
 
 function animarContador(el, fim, ms) {
@@ -1328,6 +1494,85 @@ function exportarBiblioteca() {
     URL.revokeObjectURL(a.href);
 }
 
+function atualizarBadgeLixeira() {
+    const n = purgeLixeiraExpired().length;
+    const el = document.getElementById('btn-lixeira-count');
+    if (el) el.textContent = n > 0 ? String(n) : '';
+    const btn = document.getElementById('btn-abrir-lixeira');
+    if (btn) btn.setAttribute('title', n > 0 ? 'Lixeira (' + n + ' itens)' : 'Lixeira');
+}
+
+function abrirModalLixeira() {
+    purgeLixeiraExpired();
+    renderLixeiraLista();
+    const m = document.getElementById('lixeira-modal');
+    if (m) {
+        m.classList.add('show');
+        m.style.display = 'flex';
+    }
+}
+
+function fecharModalLixeira() {
+    const m = document.getElementById('lixeira-modal');
+    if (m) {
+        m.classList.remove('show');
+        m.style.display = 'none';
+    }
+}
+
+function renderLixeiraLista() {
+    const tbody = document.getElementById('lixeira-table-body');
+    if (!tbody) return;
+    const arr = purgeLixeiraExpired();
+    if (arr.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" class="mp-lixeira-empty">Lixeira vazia. Itens excluídos ficam aqui por até 30 dias.</td></tr>';
+        const all = document.getElementById('lixeira-select-all');
+        if (all) all.checked = false;
+        return;
+    }
+    tbody.innerHTML = arr.map(function(entry, i) {
+        const del = entry.deletedAt ? new Date(entry.deletedAt) : new Date();
+        const dias = Math.max(0, Math.ceil((LIXEIRA_RETENCAO_MS - (Date.now() - del.getTime())) / (24 * 60 * 60 * 1000)));
+        const ano = entry._ano || '';
+        const mes = entry._mes || '';
+        const id = entry.id != null ? String(entry.id) : '';
+        return '<tr><td><input type="checkbox" class="mp-lixeira-cb" data-idx="' + i + '" aria-label="Selecionar"></td>' +
+            '<td>' + esc(formatarData(entry.data)) + '</td>' +
+            '<td><strong>' + esc(entry.serial || '-') + '</strong></td>' +
+            '<td>' + esc(entry.modelo || '-') + '</td>' +
+            '<td>' + esc(entry.tecnico || '-') + '</td>' +
+            '<td>' + esc(entry.setor || '-') + '</td>' +
+            '<td>' + esc(ano) + ' / ' + esc(mes) + '</td>' +
+            '<td><span class="mp-lixeira-dias">' + dias + ' d</span></td></tr>';
+    }).join('');
+}
+
+function toggleLixeiraSelectAll(master) {
+    document.querySelectorAll('.mp-lixeira-cb').forEach(function(c) {
+        c.checked = !!(master && master.checked);
+    });
+}
+
+function confirmarExclusaoLixeiraSelecionadas() {
+    const checked = Array.prototype.slice.call(document.querySelectorAll('.mp-lixeira-cb:checked'));
+    if (!checked.length) return;
+    const modal = document.getElementById('confirm-modal');
+    const msg = document.getElementById('confirm-message');
+    if (msg) msg.textContent = 'Os itens selecionados serão apagados permanentemente da lixeira (antes dos 30 dias, se for o caso).';
+    confirmCallback = function() {
+        fecharConfirm();
+        const idxs = checked.map(function(c) { return parseInt(c.dataset.idx, 10); }).filter(function(n) { return !isNaN(n); }).sort(function(a, b) { return b - a; });
+        let arr = getLixeira();
+        idxs.forEach(function(i) {
+            if (i >= 0 && i < arr.length) arr.splice(i, 1);
+        });
+        setLixeira(arr);
+        atualizarBadgeLixeira();
+        renderLixeiraLista();
+    };
+    if (modal) modal.classList.add('show');
+}
+
 function confirmarExcluir(btn) {
     const id = btn?.dataset?.id;
     const ano = btn?.dataset?.ano;
@@ -1335,7 +1580,7 @@ function confirmarExcluir(btn) {
     if (id == null || id === '' || !ano || !mes) return;
     const modal = document.getElementById('confirm-modal');
     const msg = document.getElementById('confirm-message');
-    if (msg) msg.textContent = 'Esta manutenção será removida da biblioteca.';
+    if (msg) msg.textContent = 'Esta manutenção irá para a lixeira (permanece até 30 dias).';
     confirmCallback = () => excluirManutencao(id, ano, mes);
     if (modal) modal.classList.add('show');
 }
@@ -1353,15 +1598,30 @@ function excluirManutencao(id, ano, mes) {
     if (!arr) return;
     const idx = arr.findIndex(m => String(m.id) === String(id));
     if (idx < 0) return;
+    const removido = arr[idx];
     arr.splice(idx, 1);
     if (arr.length === 0) delete bib[ano][mes];
-    if (Object.keys(bib[ano]).length === 0) delete bib[ano];
+    if (Object.keys(bib[ano] || {}).length === 0) delete bib[ano];
     setBiblioteca(bib);
+    const lix = getLixeira();
+    lix.push({
+        ...removido,
+        _ano: String(ano),
+        _mes: String(mes),
+        deletedAt: new Date().toISOString()
+    });
+    setLixeira(lix);
+    const fav = getFavoritos();
+    fav.delete(String(id) + '-' + String(ano) + '-' + String(mes));
+    setFavoritos(fav);
+    popularMenuFavoritos();
     const manutencoes = (getBiblioteca()[ano] || {})[mes] || [];
     aplicarBuscaEFiltro(manutencoes);
     atualizarStats();
     carregarAnosMenu();
     if (anoSelecionado) carregarMesesAno(anoSelecionado);
+    atualizarBadgeLixeira();
+    renderLixeiraLista();
 }
 
 function clonarManutencao(cardOrRow) {
@@ -1438,8 +1698,12 @@ ${list.map(m => `<tr><td>${formatarData(m.data)}</td><td>${(m.serial || '').repl
 }
 
 function atualizarDashboard() {
+    purgeLixeiraExpired();
     carregarAnosMenu();
     atualizarStats();
+    popularMenuFavoritos();
+    atualizarBadgeLixeira();
+    renderLixeiraLista();
     if (anoSelecionado) {
         carregarMesesAno(anoSelecionado);
         if (mesSelecionado) {
@@ -1447,7 +1711,7 @@ function atualizarDashboard() {
             aplicarBuscaEFiltro(manutencoes);
         }
     } else {
-        voltarParaAnos();
+        if (!isDashboardPage()) voltarParaAnos();
     }
 }
 
@@ -1466,9 +1730,23 @@ function refiltrar() {
 
 document.addEventListener('DOMContentLoaded', () => {
     try {
+    purgeLixeiraExpired();
     carregarAnosMenu();
     atualizarStats();
     atualizarGraficos();
+    popularMenuFavoritos();
+    atualizarBadgeLixeira();
+    renderLixeiraLista();
+    tryConsumeMpOpenTarget();
+    if (isDashboardPage()) {
+        if (mpAutoRefreshTimer) clearInterval(mpAutoRefreshTimer);
+        mpAutoRefreshTimer = setInterval(function() {
+            purgeLixeiraExpired();
+            atualizarStats();
+            popularMenuFavoritos();
+            atualizarBadgeLixeira();
+        }, 30000);
+    }
     const busca = document.getElementById('mp-busca');
     if (busca) busca.addEventListener('input', refiltrar);
     const filterOrdem = document.getElementById('filter-ordem');
@@ -1546,6 +1824,7 @@ window.toggleViewModeTo = toggleViewModeTo;
 window.adicionarManutencao = adicionarManutencao;
 window.clonarManutencao = clonarManutencao;
 window.toggleFavorito = toggleFavorito;
+window.irParaFavorito = irParaFavorito;
 window.mostrarPreview = mostrarPreview;
 window.esconderPreview = esconderPreview;
 window.exportarBiblioteca = exportarBiblioteca;
@@ -1553,6 +1832,10 @@ window.exportarCSV = exportarCSV;
 window.getBiblioteca = getBiblioteca;
 window.setBiblioteca = setBiblioteca;
 window.confirmarExcluir = confirmarExcluir;
+window.abrirModalLixeira = abrirModalLixeira;
+window.fecharModalLixeira = fecharModalLixeira;
+window.toggleLixeiraSelectAll = toggleLixeiraSelectAll;
+window.confirmarExclusaoLixeiraSelecionadas = confirmarExclusaoLixeiraSelecionadas;
 window.fecharConfirm = fecharConfirm;
 window.gerarRelatorioPDF = gerarRelatorioPDF;
 window.abrirDropdownSetores = abrirDropdownSetores;

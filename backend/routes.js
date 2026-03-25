@@ -5,15 +5,63 @@
 
 const path = require('path');
 const fs = require('fs');
-const { DATA_DIR, CONFIG_MODULOS, HEADERS, ROOT_DIR, DOCS_STORAGE_DIR, DOCS_METADATA_FILE } = require('./config');
+const {
+    ZPL_MAX_CHARS,
+    extractZplFromLabelBinary,
+    getLabelPreviewFailure,
+    renderZplToPngBuffer
+} = require('./zebra-label-zpl');
+const { formidable } = require('formidable');
+const { DATA_DIR, CONFIG_MODULOS, HEADERS, HEADERS_DOC_FILE_PREVIEW, ROOT_DIR, DOCS_STORAGE_DIR, DOCS_METADATA_FILE, MIME_TYPES, AXIS_APP_VERSION } = require('./config');
 
 const MANUTENCOES_DIR = path.join(ROOT_DIR, 'manutencoes');
 const { readJson, readJsonSync, writeJson } = require('./data');
 const PACKING_TROCAS_FILE = path.join(DATA_DIR, 'packing-trocas.json');
+const { PACKING_PREVENTIVAS_FILE, persistPackingPreventivaReg, registerPreventivaFromWhatsApp } = require('./packing-preventiva-persist');
+const {
+    getColaboradoresList,
+    garantirMatriculaPorNome
+} = require('./axis-colaboradores-matriculas');
 const BANCADAS_STATUS_FILE = path.join(DATA_DIR, 'bancadas-status.json');
 const PECAS_ESTOQUE_FILE = path.join(DATA_DIR, 'pecas-estoque.json');
 const PECAS_MOVIMENTOS_FILE = path.join(DATA_DIR, 'pecas-movimentos.json');
 const REGISTRO_CHAMADOS_FILE = path.join(DATA_DIR, 'registro-chamados.json');
+
+/** Um registo por IS (sem duplicar linhas): preserva o mais recente e agrega mapeamento dos outros. */
+function dedupeRegistroChamadosPorIs(list) {
+    if (!Array.isArray(list)) return [];
+    const semChave = [];
+    const comChave = [];
+    for (const item of list) {
+        if (!item || typeof item !== 'object') continue;
+        const ch = item.chave != null ? String(item.chave).trim() : '';
+        if (!ch) {
+            semChave.push(item);
+            continue;
+        }
+        comChave.push(item);
+    }
+    const grupos = new Map();
+    for (const item of comChave) {
+        const k = String(item.chave).trim().toLowerCase();
+        if (!grupos.has(k)) grupos.set(k, []);
+        grupos.get(k).push(item);
+    }
+    const fundidos = [];
+    for (const [, arr] of grupos) {
+        arr.sort((a, b) => new Date(b.data || 0) - new Date(a.data || 0));
+        const novo = { ...arr[0] };
+        for (let i = 1; i < arr.length; i++) {
+            const o = arr[i];
+            if (!novo.mapeamento && o.mapeamento) novo.mapeamento = o.mapeamento;
+            if ((!novo.observacao || !String(novo.observacao).trim()) && o.observacao) novo.observacao = o.observacao;
+            if (!Array.isArray(novo.tipos) || !novo.tipos.length) novo.tipos = o.tipos || [];
+        }
+        fundidos.push(novo);
+    }
+    fundidos.sort((a, b) => new Date(b.data || 0) - new Date(a.data || 0));
+    return fundidos.concat(semChave);
+}
 
 // Evita responder 2x à mesma mensagem do webhook Cloud API (Meta às vezes reenvia)
 const CLOUD_WEBHOOK_PROCESSED_IDS = new Set();
@@ -70,7 +118,24 @@ async function handleApi(req, res, urlPath) {
 
     // ---- Health / Ping ----
     if ((urlPath === '/health' || urlPath === '/ping') && method === 'GET') {
-        sendJson(res, { ok: true, port: require('./config').PORT, env: require('./config').NODE_ENV });
+        const cfg = require('./config');
+        sendJson(res, {
+            ok: true,
+            axisVersion: cfg.AXIS_APP_VERSION,
+            port: cfg.PORT,
+            env: cfg.NODE_ENV,
+            webcam: {
+                scope: 'browser',
+                note: 'A câmara é acedida só pelo Chrome (getUserMedia). O servidor Node não recebe vídeo nem trata permissões.'
+            },
+            auth: {
+                totp: true,
+                faceLogin: {
+                    mode: 'browser_only',
+                    note: 'Login/cadastro facial rodam no navegador (face-api.js + localStorage). O servidor valida sessão/TOTP como no login por senha; não armazena fotos nem descritores faciais.'
+                }
+            }
+        });
         return true;
     }
 
@@ -193,7 +258,7 @@ async function handleApi(req, res, urlPath) {
             return true;
         }
         await totp.enableTotp(login);
-        // Regista momento da confirmação para a janela de 60 minutos sem pedir código novamente
+        // Regista momento da confirmação para a janela de 3 dias sem pedir código novamente
         await totp.setLastVerifiedAt(login);
         sendJson(res, { ok: true });
         return true;
@@ -226,6 +291,19 @@ async function handleApi(req, res, urlPath) {
         return true;
     }
 
+    if (urlPath === '/api/auth/capabilities' && method === 'GET') {
+        sendJson(res, {
+            ok: true,
+            totp: true,
+            faceLogin: {
+                mode: 'browser_only',
+                storage: 'localStorage',
+                note: 'Descritores faciais ficam só no dispositivo; após reconhecimento o fluxo segue como login normal (TOTP se ativo).'
+            }
+        });
+        return true;
+    }
+
     // ---- Registro de Chamados (mesmo ficheiro do bot WhatsApp: tempo real no site) ----
     if (urlPath === '/api/registro-chamados' && method === 'GET') {
         try {
@@ -234,6 +312,13 @@ async function handleApi(req, res, urlPath) {
                 const raw = readJsonSync(REGISTRO_CHAMADOS_FILE, []);
                 list = Array.isArray(raw) ? raw : (raw.chamados || []);
             } catch (e) { list = []; }
+            const antes = list.length;
+            list = dedupeRegistroChamadosPorIs(list);
+            if (list.length !== antes) {
+                try {
+                    await writeJson(REGISTRO_CHAMADOS_FILE, list);
+                } catch (eW) { /* responde ainda assim com lista deduplicada em memória */ }
+            }
             sendJson(res, { ok: true, chamados: list });
             return true;
         } catch (e) {
@@ -244,6 +329,48 @@ async function handleApi(req, res, urlPath) {
     if (urlPath === '/api/registro-chamados' && method === 'POST') {
         let body;
         try { body = await parseBody(req); } catch (_) { sendErr(res, 400, 'Body inválido'); return true; }
+        if (body.action === 'clear-all') {
+            try {
+                await writeJson(REGISTRO_CHAMADOS_FILE, []);
+                sendJson(res, { ok: true });
+            } catch (e) {
+                sendErr(res, 500, 'Erro ao limpar registros');
+            }
+            return true;
+        }
+        if (body.action === 'update-status-by-chave') {
+            const chaveUp = (body.chave && String(body.chave).trim()) || '';
+            const statusUp = (body.status && String(body.status).trim()) || '';
+            if (!chaveUp || !statusUp) {
+                sendErr(res, 400, 'IS e status são obrigatórios');
+                return true;
+            }
+            try {
+                let list = [];
+                try {
+                    const raw = readJsonSync(REGISTRO_CHAMADOS_FILE, []);
+                    list = Array.isArray(raw) ? raw : (raw.chamados || []);
+                } catch (e) { list = []; }
+                const ck = chaveUp.toLowerCase();
+                let found = false;
+                for (let i = 0; i < list.length; i++) {
+                    if (list[i] && String(list[i].chave || '').trim().toLowerCase() === ck) {
+                        list[i].status = statusUp;
+                        found = true;
+                    }
+                }
+                if (!found) {
+                    sendErr(res, 404, 'IS não encontrado');
+                    return true;
+                }
+                list = dedupeRegistroChamadosPorIs(list);
+                await writeJson(REGISTRO_CHAMADOS_FILE, list);
+                sendJson(res, { ok: true });
+            } catch (e) {
+                sendErr(res, 500, 'Erro ao atualizar status');
+            }
+            return true;
+        }
         const chave = (body.chave && String(body.chave).trim()) || '';
         const status = (body.status && String(body.status).trim()) || 'ABERTO';
         const observacao = (body.observacao && String(body.observacao).trim()) || '';
@@ -267,9 +394,41 @@ async function handleApi(req, res, urlPath) {
                 observacao: observacao,
                 origem: body.origem || 'site'
             };
-            list.unshift(novo);
+            if (body.mapeamento && typeof body.mapeamento === 'object') {
+                novo.mapeamento = body.mapeamento;
+            }
+            const ck = chave.toLowerCase();
+            const idxExist = list.findIndex((c) => c && String(c.chave || '').trim().toLowerCase() === ck);
+            if (idxExist !== -1) {
+                const prev = list[idxExist];
+                const fundido = { ...prev };
+                fundido.chave = chave;
+                fundido.observacao = observacao || prev.observacao || '';
+                fundido.tipos = Array.isArray(tipos) && tipos.length ? tipos : (prev.tipos || []);
+                fundido.origem = body.origem || prev.origem || 'site';
+                if (body.mapeamento && typeof body.mapeamento === 'object') {
+                    fundido.mapeamento = body.mapeamento;
+                    if (body.origem === 'admin_mapeamento_manual_planilha') {
+                        fundido.status = status;
+                        if (body.data) fundido.data = body.data;
+                        else fundido.data = prev.data || fundido.data;
+                    } else {
+                        fundido.status = 'aberto';
+                        fundido.data = prev.data || fundido.data;
+                    }
+                    fundido.id = prev.id || fundido.id;
+                } else {
+                    fundido.status = status;
+                }
+                list.splice(idxExist, 1);
+                list.unshift(fundido);
+            } else {
+                list.unshift(novo);
+            }
+            list = dedupeRegistroChamadosPorIs(list);
+            const gravado = list.find((c) => c && String(c.chave || '').trim().toLowerCase() === ck) || novo;
             await writeJson(REGISTRO_CHAMADOS_FILE, list);
-            sendJson(res, { ok: true, chamado: novo });
+            sendJson(res, { ok: true, chamado: gravado });
             return true;
         } catch (e) {
             sendErr(res, 500, 'Erro ao salvar chamado');
@@ -346,6 +505,34 @@ async function handleApi(req, res, urlPath) {
         return true;
     }
 
+    // ---- Pré-visualização ZPL (etiquetas Zebra Designer .lbl/.nlbl com ZPL embutido) — proxy Labelary ----
+    if (urlPath === '/api/docs/render-zpl' && method === 'POST') {
+        let body;
+        try {
+            body = await parseBody(req);
+        } catch (e) {
+            sendErr(res, 400, 'Corpo inválido');
+            return true;
+        }
+        const zpl = typeof body.zpl === 'string' ? body.zpl.trim() : '';
+        if (zpl.length < 6 || zpl.length > ZPL_MAX_CHARS) {
+            sendErr(res, 400, 'ZPL inválido ou demasiado grande');
+            return true;
+        }
+        const pngBuf = await renderZplToPngBuffer(zpl);
+        if (!pngBuf || pngBuf.length < 80) {
+            sendErr(res, 502, 'Não foi possível renderizar o ZPL (serviço externo ou comandos inválidos).');
+            return true;
+        }
+        res.writeHead(200, {
+            ...HEADERS,
+            'Content-Type': 'image/png',
+            'Cache-Control': 'private, max-age=120'
+        });
+        res.end(pngBuf);
+        return true;
+    }
+
     // ---- Documentação AXIS: upload e armazenamento (suporte 2TB+ via DOCS_STORAGE_DIR) ----
     const docsPath = (urlPath || '').replace(/\/+$/, '').trim();
     if (docsPath.startsWith('/api/docs')) {
@@ -361,7 +548,9 @@ async function handleApi(req, res, urlPath) {
         const getDocs = () => {
             try {
                 const d = readJsonSync(metadataFile, []);
-                return Array.isArray(d) ? d : (d.docs || d);
+                if (Array.isArray(d)) return d;
+                if (d && Array.isArray(d.docs)) return d.docs;
+                return [];
             } catch (e) { return []; }
         };
         const saveDocs = (docs) => { return writeJson(metadataFile, docs); };
@@ -370,6 +559,72 @@ async function handleApi(req, res, urlPath) {
             return m ? decodeURIComponent(m[1]) : null;
         };
         const id = idFromPath(docsPath);
+        const labelPrevMatch = docsPath.match(/^\/api\/docs\/([^/]+)\/label-preview$/);
+        if (labelPrevMatch && method === 'GET') {
+            const lid = decodeURIComponent(labelPrevMatch[1]);
+            const docsList = getDocs();
+            const doc = docsList.find((d) => d.id === lid || d.fileName === lid);
+            if (!doc) {
+                sendErr(res, 404, 'Documento não encontrado');
+                return true;
+            }
+            const fp = path.join(docsDir, doc.fileName || doc.id);
+            let stLbl;
+            try {
+                stLbl = fs.statSync(fp);
+            } catch (_) {
+                sendErr(res, 404, 'Arquivo não encontrado');
+                return true;
+            }
+            if (!stLbl.isFile()) {
+                sendErr(res, 404, 'Arquivo não encontrado');
+                return true;
+            }
+            const extLbl = path.extname(fp).toLowerCase();
+            if (extLbl !== '.lbl' && extLbl !== '.nlbl') {
+                sendErr(res, 400, 'Pré-visualização de etiqueta só para .lbl e .nlbl');
+                return true;
+            }
+            const maxLabel = 14 * 1024 * 1024;
+            if (stLbl.size > maxLabel) {
+                // 200 + JSON (não 422) para o browser não registar "Failed to load resource" no F12 — situação esperada.
+                res.writeHead(200, { ...HEADERS, 'Content-Type': 'application/json; charset=utf-8' });
+                res.end(JSON.stringify({
+                    ok: false,
+                    code: 'TOO_LARGE',
+                    message: 'Ficheiro demasiado grande para processar.',
+                    hint: 'Exporte .zpl no ZebraDesigner ou reduza o tamanho do ficheiro.'
+                }), 'utf-8');
+                return true;
+            }
+            const bufLbl = fs.readFileSync(fp);
+            const zplLbl = extractZplFromLabelBinary(bufLbl);
+            if (!zplLbl) {
+                const fail = getLabelPreviewFailure(bufLbl);
+                res.writeHead(200, { ...HEADERS, 'Content-Type': 'application/json; charset=utf-8' });
+                res.end(JSON.stringify({ ok: false, ...fail }), 'utf-8');
+                return true;
+            }
+            const pngLbl = await renderZplToPngBuffer(zplLbl);
+            if (!pngLbl || pngLbl.length < 80) {
+                res.writeHead(200, { ...HEADERS, 'Content-Type': 'application/json; charset=utf-8' });
+                res.end(JSON.stringify({
+                    ok: false,
+                    code: 'LABELARY_FAIL',
+                    message: 'Não foi possível gerar a imagem (rede ou comandos ZPL inválidos para o serviço de renderização).',
+                    hint: 'Verifique a ligação à Internet ou exporte .zpl simplificado no ZebraDesigner.'
+                }), 'utf-8');
+                return true;
+            }
+            res.writeHead(200, {
+                ...HEADERS,
+                'Content-Type': 'image/png',
+                'Cache-Control': 'private, max-age=120',
+                'Content-Length': String(pngLbl.length)
+            });
+            res.end(pngLbl);
+            return true;
+        }
         if ((docsPath === '/api/docs') && method === 'GET') {
             let docs = [];
             try { docs = getDocs(); } catch (e) { docs = []; }
@@ -379,8 +634,8 @@ async function handleApi(req, res, urlPath) {
         if (docsPath === '/api/docs' && method === 'POST') {
             const ct = (req.headers['content-type'] || '');
             if (ct.includes('multipart/form-data')) {
-                const form = formidable({ uploadDir: docsDir, keepExtensions: true, multiples: true, maxFileSize: 100 * 1024 * 1024 });
                 try {
+                    const form = formidable({ uploadDir: docsDir, keepExtensions: true, multiples: true, maxFileSize: 100 * 1024 * 1024 });
                     const [fields, files] = await form.parse(req);
                     const titulo = (fields.titulo && (Array.isArray(fields.titulo) ? fields.titulo[0] : fields.titulo)) || '';
                     const descricao = (fields.descricao && (Array.isArray(fields.descricao) ? fields.descricao[0] : fields.descricao)) || '';
@@ -397,7 +652,16 @@ async function handleApi(req, res, urlPath) {
                         const ext = path.extname(file.originalFilename || file.newFilename || '') || path.extname(file.filepath);
                         fileName = docId + (ext || '.bin');
                         const dest = path.join(docsDir, fileName);
-                        fs.renameSync(file.filepath, dest);
+                        try {
+                            fs.renameSync(file.filepath, dest);
+                        } catch (renErr) {
+                            if (renErr && renErr.code === 'EXDEV') {
+                                fs.copyFileSync(file.filepath, dest);
+                                try { fs.unlinkSync(file.filepath); } catch (_) {}
+                            } else {
+                                throw renErr;
+                            }
+                        }
                         docId = fileName;
                     } else {
                         const conteudo = (fields.conteudo && (Array.isArray(fields.conteudo) ? fields.conteudo[0] : fields.conteudo)) || '';
@@ -437,7 +701,7 @@ async function handleApi(req, res, urlPath) {
             sendJson(res, { ok: true, doc: meta });
             return true;
         }
-        if (id && docsPath.endsWith('/file') && method === 'GET') {
+        if (id && docsPath.endsWith('/file') && (method === 'GET' || method === 'HEAD')) {
             const docs = getDocs();
             const doc = docs.find(d => d.id === id || d.fileName === id);
             if (!doc) {
@@ -445,13 +709,32 @@ async function handleApi(req, res, urlPath) {
                 return true;
             }
             const fp = path.join(docsDir, doc.fileName || doc.id);
-            if (!fs.existsSync(fp) || !fs.statSync(fp).isFile()) {
+            let stFile;
+            try {
+                stFile = fs.statSync(fp);
+            } catch (_) {
+                sendErr(res, 404, 'Arquivo não encontrado');
+                return true;
+            }
+            if (!stFile.isFile()) {
                 sendErr(res, 404, 'Arquivo não encontrado');
                 return true;
             }
             const ext = path.extname(fp).toLowerCase();
             const contentType = MIME_TYPES[ext] || 'application/octet-stream';
-            res.writeHead(200, { ...HEADERS, 'Content-Type': contentType, 'Content-Disposition': 'inline; filename="' + (doc.titulo || doc.id) + ext + '"' });
+            const size = stFile.size;
+            const fileHeaders = {
+                ...HEADERS_DOC_FILE_PREVIEW,
+                'Content-Type': contentType,
+                'Content-Length': String(size),
+                'Content-Disposition': 'inline; filename="' + (doc.titulo || doc.id) + ext + '"'
+            };
+            if (method === 'HEAD') {
+                res.writeHead(200, fileHeaders);
+                res.end();
+                return true;
+            }
+            res.writeHead(200, fileHeaders);
             fs.createReadStream(fp).pipe(res);
             return true;
         }
@@ -573,6 +856,109 @@ async function handleApi(req, res, urlPath) {
         try {
             await writeJson(PACKING_TROCAS_FILE, trocas);
             sendJson(res, { ok: true, message: 'Troca registrada', troca });
+        } catch (e) {
+            sendErr(res, 500, 'Erro ao salvar: ' + (e.message || ''));
+        }
+        return true;
+    }
+
+    // ---- Packing Machine - Preventivas (espelho do Forms PREVENTIVAS DE PACKING MACHINE) ----
+    if (urlPath === '/api/axis/colaboradores-matriculas' && method === 'GET') {
+        try {
+            const colaboradores = getColaboradoresList();
+            sendJson(res, { ok: true, colaboradores });
+        } catch (e) {
+            sendErr(res, 500, 'Erro ao ler matrículas');
+        }
+        return true;
+    }
+
+    if (urlPath === '/api/axis/colaboradores-matriculas/garantir' && method === 'POST') {
+        const body = await parseBody(req);
+        const nome = body && body.nome != null ? String(body.nome).trim() : '';
+        if (!nome || nome.length < 2) {
+            sendErr(res, 400, 'Nome inválido');
+            return true;
+        }
+        try {
+            const r = await garantirMatriculaPorNome(nome);
+            if (!r || !r.ok) {
+                sendErr(res, 500, 'Não foi possível atribuir matrícula');
+                return true;
+            }
+            sendJson(res, { ok: true, matricula: r.matricula, novo: !!r.novo });
+        } catch (e) {
+            sendErr(res, 500, 'Erro ao gravar matrícula');
+        }
+        return true;
+    }
+
+    if (urlPath === '/api/packing/preventivas' && method === 'GET') {
+        let lista = [];
+        try {
+            const data = readJsonSync(PACKING_PREVENTIVAS_FILE, []);
+            lista = Array.isArray(data) ? data : (data.preventivas || []);
+        } catch (e) {
+            lista = [];
+        }
+        sendJson(res, { ok: true, preventivas: lista });
+        return true;
+    }
+
+    if (urlPath === '/api/packing/preventiva' && method === 'POST') {
+        const body = await parseBody(req);
+        const usuario = body.usuario != null ? String(body.usuario).trim().substring(0, 120) : '';
+        const observacao = body.observacao != null ? String(body.observacao).trim().substring(0, 500) : '';
+        let numeroPm = String(body.numeroPm || '').trim();
+        if (/^[1-6]$/.test(numeroPm)) numeroPm = 'PM ' + numeroPm;
+        else if (/^PM\s*0?([1-6])$/i.test(numeroPm)) {
+            const m = numeroPm.match(/([1-6])/);
+            numeroPm = 'PM ' + m[1];
+        } else {
+            const n = parseInt(String(numeroPm).replace(/\D/g, ''), 10);
+            numeroPm = (n >= 1 && n <= 6) ? 'PM ' + n : '';
+        }
+        let tarefas = [];
+        if (Array.isArray(body.tarefas)) {
+            tarefas = body.tarefas.map((x) => String(x || '').trim()).filter(Boolean);
+        } else if (body.preventivaRealizada != null) {
+            tarefas = String(body.preventivaRealizada).split(',').map((s) => s.trim()).filter(Boolean);
+        }
+        const permitidas = ['CABEÇA DE IMPRESSÃO', 'ROLOS TRACIONADORES'];
+        tarefas = tarefas.filter((t) => permitidas.includes(t));
+        if (!usuario) {
+            sendErr(res, 400, 'Campo usuario é obrigatório');
+            return true;
+        }
+        if (!numeroPm) {
+            sendErr(res, 400, 'numeroPm inválido (use PM 1 a PM 6)');
+            return true;
+        }
+        if (tarefas.length === 0) {
+            sendErr(res, 400, 'Informe ao menos uma preventiva (CABEÇA DE IMPRESSÃO e/ou ROLOS TRACIONADORES)');
+            return true;
+        }
+        const preventivaRealizada = tarefas.join(', ');
+        const nomeCompleto = body.nomeCompleto != null ? String(body.nomeCompleto).trim().substring(0, 120) : '';
+        const matriculaAxis = body.matriculaAxis != null ? String(body.matriculaAxis).replace(/\D/g, '').substring(0, 8) : '';
+        const localidade = body.localidade != null ? String(body.localidade).trim().substring(0, 120) : '';
+        const reg = {
+            id: body.id || ('prev_api_' + Date.now()),
+            dataHora: body.dataHora || new Date().toISOString(),
+            usuario,
+            numeroPm,
+            tarefas,
+            preventivaRealizada,
+            observacao,
+            origem: body.origem || 'api',
+            phone: body.phone != null ? String(body.phone).substring(0, 20) : undefined
+        };
+        if (nomeCompleto) reg.nomeCompleto = nomeCompleto;
+        if (matriculaAxis) reg.matriculaAxis = matriculaAxis;
+        if (localidade) reg.localidade = localidade;
+        try {
+            await persistPackingPreventivaReg(reg);
+            sendJson(res, { ok: true, message: 'Preventiva registrada', preventiva: reg });
         } catch (e) {
             sendErr(res, 500, 'Erro ao salvar: ' + (e.message || ''));
         }
@@ -786,7 +1172,7 @@ async function handleApi(req, res, urlPath) {
 var s=document.getElementById('status');
 var qr=document.getElementById('qr');
 function poll(){fetch('/api/whatsapp/status').then(r=>r.json()).then(d=>{
-if(d.connected){qr.innerHTML='';s.textContent='✅ Conectado! Envie "troca" no WhatsApp para registrar.';s.className='status';return}
+if(d.connected){qr.innerHTML='';s.textContent='✅ Conectado! Envie "troca" ou "preventiva" no WhatsApp.';s.className='status';return}
 if(d.qr){qr.innerHTML='<img src="'+d.qr+'" alt="QR Code">';s.textContent='Escaneie o QR Code no WhatsApp (Aparelho conectado > Vincular dispositivo)';s.className='status warn';}else{qr.innerHTML='';s.textContent='Aguardando QR... Iniciando bot.';s.className='status warn'}
 }).catch(()=>{s.textContent='Erro ao conectar. O servidor está rodando?';s.className='status err'})}
 poll();setInterval(poll,3000);
@@ -947,7 +1333,8 @@ poll();setInterval(poll,3000);
                                 phone: troca.phone
                             });
                             await writeJson(PACKING_TROCAS_FILE, trocas);
-                        }
+                        },
+                        { registerPreventiva: registerPreventivaFromWhatsApp }
                     );
                     if (reply) {
                         const r = await cloudApi.sendMessage(from, reply);
@@ -992,7 +1379,8 @@ poll();setInterval(poll,3000);
                         phone: troca.phone
                     });
                     await writeJson(PACKING_TROCAS_FILE, trocas);
-                }
+                },
+                { registerPreventiva: registerPreventivaFromWhatsApp }
             );
             sendJson(res, { ok: true, reply: reply || 'Ok.', from });
         } catch (e) {
@@ -1051,13 +1439,25 @@ poll();setInterval(poll,3000);
         const message = typeof body.message === 'string' ? body.message.trim() : '';
         const history = Array.isArray(body.history) ? body.history : [];
         const userName = typeof body.userName === 'string' ? body.userName.trim() : '';
+        const clientContext = body.context && typeof body.context === 'object' ? body.context : {};
         if (!message) {
             sendErr(res, 400, 'Campo message é obrigatório');
             return true;
         }
+        let serverSnapshot = { axisVersion: AXIS_APP_VERSION, bancadasUpdatedAt: null, bancadasCount: 0, bancadasPreview: '' };
+        try {
+            const raw = readJsonSync(BANCADAS_STATUS_FILE, {});
+            const b = raw.bancadas && typeof raw.bancadas === 'object' ? raw.bancadas : {};
+            const keys = Object.keys(b);
+            serverSnapshot.bancadasUpdatedAt = raw.updatedAt || null;
+            serverSnapshot.bancadasCount = keys.length;
+            serverSnapshot.bancadasPreview = keys.slice(0, 12).map(function(k) {
+                return String(k) + '=' + String(b[k]);
+            }).join(', ');
+        } catch (_) {}
         try {
             const { chat } = require('./assistant');
-            const result = await chat(message, history, userName);
+            const result = await chat(message, history, userName, { clientContext: clientContext, serverSnapshot: serverSnapshot });
             sendJson(res, result);
         } catch (e) {
             console.error('API /api/assistant:', e);
@@ -1082,11 +1482,15 @@ poll();setInterval(poll,3000);
                 'POST /api/manutencoes/salvar-pdf',
                 'GET  /api/packing/trocas',
                 'POST /api/packing/troca',
+                'GET  /api/packing/preventivas',
+                'POST /api/packing/preventiva',
                 'GET  /api/bancadas/status',
                 'POST /api/bancadas/status',
                 'POST /api/whatsapp/packing-registro',
                 'POST /api/whatsapp/packing-webhook',
-                'POST /api/assistant'
+                'POST /api/assistant',
+                'POST /api/docs/render-zpl',
+                'GET  /api/docs/{id}/label-preview'
             ]
         });
         return true;

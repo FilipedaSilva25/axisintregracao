@@ -12,7 +12,8 @@
     /* REJEITOS: coluna de baixo para cima → 100 em baixo, 104 em cima (ordem DOM: top=104, bottom=100) */
     const REJEITOS_LAYOUT = ['104', '103', '102', '101', '100'];
     const BANCADAS_PM = ['PM01', 'PM02', 'PM03', 'PM04', 'PM05', 'PM06'];
-    const PM_LAYOUT = ['PM01', 'PM02', 'PM03', 'PM04', 'PM05', 'PM06', null, null, null];
+    /* PACKING MACHINE: PM01–PM06 em coluna de baixo para cima (PM01 em baixo, PM06 em cima), igual a RETIROS */
+    const PM_LAYOUT = [null, null, 'PM06', 'PM05', null, 'PM04', 'PM03', 'PM02', 'PM01'];
 
     function pad2(n) {
         return String(n).padStart(2, '0');

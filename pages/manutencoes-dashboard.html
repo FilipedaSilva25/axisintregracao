@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AXIS | BIBLIOTECA DE MANUTENÇÕES PREVENTIVAS</title>
+    <title>AXIS | DASHBOARD MANUTENÇÕES PREVENTIVAS</title>
     <link rel="stylesheet" href="../css/manutencoes-dashboard.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
-<body>
+<body data-mp-page="dashboard">
     <!-- BLINDAGEM VOLTAR: link href="../index.html?axis_voltar=1#page-home" + onclick seta axis_voltar_force_main. Não remover. -->
     <div class="mp-nav">
         <button class="mp-nav-btn" id="hamburger-btn" onclick="toggleHamburgerMenu()" aria-label="Menu">
@@ -21,256 +21,111 @@
                 <span>Voltar para Dashboard</span>
             </a>
             <a href="manutencoes-dashboard.html" class="mp-nav-item active">
-                <i class="fas fa-clipboard-list"></i>
-                <span>Biblioteca de Manutenções</span>
+                <i class="fas fa-chart-pie"></i>
+                <span>Dashboards preventivas</span>
             </a>
-        </div>
-    </div>
-
-    <div class="mp-preview" id="preview-modal">
-        <div class="mp-preview-box">
-            <div class="mp-preview-head">
-                <h3>Visualização</h3>
-                <button class="mp-preview-close" onclick="esconderPreview()" aria-label="Fechar"><i class="fas fa-times"></i></button>
-            </div>
-            <div class="mp-preview-body" id="preview-body"></div>
-        </div>
-    </div>
-
-    <div class="mp-confirm" id="confirm-modal" onclick="if(event.target===this)fecharConfirm()">
-        <div class="mp-confirm-box">
-            <h3>Excluir registro?</h3>
-            <p id="confirm-message">Esta manutenção será removida da biblioteca.</p>
-            <div class="mp-confirm-actions">
-                <button type="button" class="mp-btn-cancel" id="confirm-cancel">Cancelar</button>
-                <button type="button" class="mp-btn-danger" id="confirm-ok"><i class="fas fa-trash-alt"></i> Excluir</button>
-            </div>
-        </div>
-    </div>
-
-    <header class="mp-header">
-        <div class="mp-header-left">
-            <h1 class="mp-title">Biblioteca de Manutenções Preventivas</h1>
-            <p class="mp-subtitle" id="current-path">Todas as manutenções</p>
-        </div>
-        <div class="mp-header-actions">
-            <label class="mp-search-wrap">
-                <i class="fas fa-search"></i>
-                <input type="text" id="mp-busca" placeholder="Buscar: serial, modelo, setor, técnico, ano..." autocomplete="off">
-            </label>
-            <div class="mp-view-toggle" title="Alternar visualização">
-                <button type="button" class="mp-view-btn active" id="btn-view-cards" onclick="toggleViewModeTo('cards')"><i class="fas fa-th-large"></i> Cards</button>
-                <button type="button" class="mp-view-btn" id="btn-view-tabela" onclick="toggleViewModeTo('tabela')"><i class="fas fa-list"></i> Tabela</button>
-            </div>
-            <div class="mp-export-dropdown">
-                <button class="mp-btn-icon" id="btn-export-toggle" title="Exportar" aria-haspopup="true" aria-expanded="false"><i class="fas fa-file-export"></i></button>
-                <div class="mp-export-menu" id="export-menu">
-                    <button type="button" class="mp-export-option" onclick="exportarBiblioteca()"><i class="fas fa-file-code"></i> JSON</button>
-                    <button type="button" class="mp-export-option" onclick="exportarCSV()"><i class="fas fa-file-alt"></i> CSV</button>
-                </div>
-            </div>
-            <button class="mp-btn-icon" onclick="atualizarDashboard()" title="Atualizar"><i class="fas fa-sync-alt"></i></button>
-            <button class="mp-btn-primary" onclick="adicionarManutencao()">
-                <i class="fas fa-plus"></i>
+            <a href="manutencoes-biblioteca.html" class="mp-nav-item">
+                <i class="fas fa-book-open"></i>
+                <span>Biblioteca de preventivas</span>
+            </a>
+            <a href="#" class="mp-nav-item" onclick="event.preventDefault(); adicionarManutencao();">
+                <i class="fas fa-plus-circle"></i>
                 <span>Nova manutenção</span>
+            </a>
+            <div class="mp-nav-section">
+                <div class="mp-nav-section-title"><i class="fas fa-star"></i> Favoritos</div>
+                <div id="mp-favoritos-list" class="mp-favoritos-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mp-dashboard-page">
+        <header class="mp-header mp-dashboard-header">
+            <div class="mp-header-left">
+                <h1 class="mp-title mp-dashboard-title">Dashboards · Manutenções preventivas</h1>
+                <p class="mp-subtitle mp-dashboard-lead">Visão consolidada com atualização automática a cada 30 segundos.</p>
+            </div>
+            <div class="mp-header-actions mp-dashboard-header-actions">
+                <a href="manutencoes-biblioteca.html" class="mp-btn-secondary-outline">
+                    <i class="fas fa-book-open"></i> Biblioteca
+                </a>
+                <button type="button" class="mp-btn-primary" onclick="adicionarManutencao()">
+                    <i class="fas fa-plus"></i> Nova manutenção
+                </button>
+                <button type="button" class="mp-btn-icon" onclick="atualizarDashboard()" title="Atualizar agora"><i class="fas fa-sync-alt"></i></button>
+            </div>
+        </header>
+
+        <div class="mp-stats mp-stats-dashboard" id="mp-stats">
+            <div class="mp-stat mp-stat-total mp-stat-xl" title="Total na biblioteca">
+                <span class="mp-stat-n" id="stat-total">0</span>
+                <span class="mp-stat-l">Total realizado</span>
+            </div>
+            <div class="mp-stat mp-stat-xl">
+                <span class="mp-stat-n" id="stat-ano-cal">0</span>
+                <span class="mp-stat-l">No ano</span>
+            </div>
+            <div class="mp-stat mp-stat-xl">
+                <span class="mp-stat-n" id="stat-mes-cal">0</span>
+                <span class="mp-stat-l">No mês</span>
+            </div>
+            <button type="button" class="mp-stat-copy mp-stat-copy-xl" id="btn-copiar-resumo" onclick="copiarResumo()" title="Copiar resumo">
+                <i class="fas fa-copy"></i>
             </button>
         </div>
-    </header>
 
-    <div class="mp-stats" id="mp-stats">
-        <div class="mp-stat mp-stat-total" title="Total de manutenções realizadas na biblioteca">
-            <span class="mp-stat-n" id="stat-total">0</span>
-            <span class="mp-stat-l">Total realizado</span>
+        <div class="mp-year-cards" id="mp-year-cards">
+            <div class="mp-year-card mp-chart-hologram">
+                <div class="mp-year-card-inner">
+                    <span class="mp-year-label">2024</span>
+                    <span class="mp-year-n" id="stat-year-2024">0</span>
+                    <span class="mp-year-sub">manutenções registradas</span>
+                </div>
+            </div>
+            <div class="mp-year-card mp-chart-hologram">
+                <div class="mp-year-card-inner">
+                    <span class="mp-year-label">2025</span>
+                    <span class="mp-year-n" id="stat-year-2025">0</span>
+                    <span class="mp-year-sub">manutenções registradas</span>
+                </div>
+            </div>
+            <div class="mp-year-card mp-chart-hologram">
+                <div class="mp-year-card-inner">
+                    <span class="mp-year-label">2026</span>
+                    <span class="mp-year-n" id="stat-year-2026">0</span>
+                    <span class="mp-year-sub">manutenções registradas</span>
+                </div>
+            </div>
         </div>
-        <div class="mp-stat">
-            <span class="mp-stat-n" id="stat-ano">0</span>
-            <span class="mp-stat-l">No ano</span>
-        </div>
-        <div class="mp-stat">
-            <span class="mp-stat-n" id="stat-mes">0</span>
-            <span class="mp-stat-l">No mês</span>
-        </div>
-        <button type="button" class="mp-stat-copy" id="btn-copiar-resumo" onclick="copiarResumo()" title="Copiar resumo">
-            <i class="fas fa-copy"></i>
-        </button>
+
+        <section class="mp-charts mp-charts-dashboard" id="mp-charts">
+            <div class="mp-chart-card mp-chart-hologram">
+                <div class="mp-chart-card-inner">
+                    <h3 class="mp-chart-title"><i class="fas fa-chart-pie"></i> MANUTENÇÕES POR ANO</h3>
+                    <div class="mp-chart-wrap mp-chart-pie-wrap"><canvas id="chart-anos" width="300" height="200"></canvas></div>
+                </div>
+            </div>
+            <div class="mp-chart-card mp-chart-hologram" id="chart-meses-wrap">
+                <div class="mp-chart-card-inner">
+                    <h3 class="mp-chart-title"><i class="fas fa-calendar-alt"></i> <span id="chart-meses-title">MANUTENÇÕES POR MÊS</span></h3>
+                    <div class="mp-chart-wrap mp-chart-pie-wrap"><canvas id="chart-meses" width="300" height="200"></canvas></div>
+                </div>
+            </div>
+            <div class="mp-chart-card mp-chart-hologram" id="chart-setor-wrap">
+                <div class="mp-chart-card-inner">
+                    <h3 class="mp-chart-title"><i class="fas fa-chart-pie"></i> DISTRIBUIÇÃO POR SETOR</h3>
+                    <div class="mp-chart-wrap mp-chart-pie-wrap"><canvas id="chart-setor" width="240" height="200"></canvas></div>
+                </div>
+            </div>
+            <div class="mp-chart-card mp-chart-hologram" id="chart-tecnico-wrap">
+                <div class="mp-chart-card-inner">
+                    <h3 class="mp-chart-title"><i class="fas fa-user-cog"></i> POR TÉCNICO</h3>
+                    <div class="mp-chart-wrap mp-chart-pie-wrap"><canvas id="chart-tecnico" width="300" height="200"></canvas></div>
+                </div>
+            </div>
+        </section>
     </div>
 
-    <section class="mp-charts" id="mp-charts">
-        <div class="mp-chart-card mp-chart-hologram">
-            <div class="mp-chart-card-inner">
-                <h3 class="mp-chart-title"><i class="fas fa-chart-bar"></i> Manutenções por ano</h3>
-                <div class="mp-chart-wrap"><canvas id="chart-anos" width="300" height="160"></canvas></div>
-            </div>
-        </div>
-        <div class="mp-chart-card mp-chart-hologram" id="chart-meses-wrap">
-            <div class="mp-chart-card-inner">
-                <h3 class="mp-chart-title"><i class="fas fa-calendar-alt"></i> <span id="chart-meses-title">Manutenções por mês</span></h3>
-                <div class="mp-chart-wrap"><canvas id="chart-meses" width="300" height="160"></canvas></div>
-            </div>
-        </div>
-        <div class="mp-chart-card mp-chart-hologram" id="chart-setor-wrap">
-            <div class="mp-chart-card-inner">
-                <h3 class="mp-chart-title"><i class="fas fa-chart-pie"></i> Distribuição por setor</h3>
-                <div class="mp-chart-wrap mp-chart-pie-wrap"><canvas id="chart-setor" width="240" height="180"></canvas></div>
-            </div>
-        </div>
-        <div class="mp-chart-card mp-chart-hologram" id="chart-tecnico-wrap">
-            <div class="mp-chart-card-inner">
-                <h3 class="mp-chart-title"><i class="fas fa-user-cog"></i> Por técnico</h3>
-                <div class="mp-chart-wrap mp-chart-bar-h-wrap"><canvas id="chart-tecnico" width="300" height="160"></canvas></div>
-            </div>
-        </div>
-    </section>
-
-    <div class="mp-layout">
-        <aside class="mp-sidebar" id="mp-sidebar">
-            <div class="mp-sidebar-inner">
-            <h2 class="mp-sidebar-title">Anos</h2>
-            <div class="mp-sidebar-tools">
-                <input type="text" class="mp-sidebar-search" id="anos-busca" placeholder="Buscar ano..." autocomplete="off">
-                <div class="mp-sidebar-sort">
-                    <label class="mp-sort-label">Ordenar</label>
-                    <select class="mp-sort-select" id="anos-ordem">
-                        <option value="recente">Mais recente</option>
-                        <option value="antigo">Mais antigo</option>
-                        <option value="quantidade">Por quantidade</option>
-                    </select>
-                </div>
-            </div>
-            <div class="mp-sidebar-nav-wrap">
-                <nav class="mp-sidebar-nav" id="anos-menu" tabindex="0" role="listbox" aria-label="Anos"></nav>
-            </div>
-            <div class="mp-sidebar-footer">
-                <button type="button" class="mp-sidebar-add" id="btn-adicionar-ano" title="Nova manutenção">
-                    <i class="fas fa-plus"></i> Adicionar ano
-                </button>
-            </div>
-            </div>
-        </aside>
-
-        <main class="mp-main">
-            <div class="mp-toolbar" id="meses-toolbar" style="display:none;">
-                <h3 class="mp-toolbar-title" id="ano-selecionado"></h3>
-                <div class="mp-toolbar-actions">
-                    <button class="mp-btn-text" onclick="gerarRelatorioPDF()" id="btn-gerar-pdf" title="Gerar PDF do período"><i class="fas fa-file-pdf"></i> Gerar PDF</button>
-                    <button class="mp-btn-text" onclick="voltarParaMeses()" id="btn-voltar-meses" style="display:none;">
-                        <i class="fas fa-arrow-left"></i> Voltar para meses
-                    </button>
-                    <button class="mp-btn-text" onclick="voltarParaAnos()" id="btn-voltar-anos">
-                        <i class="fas fa-arrow-left"></i> Voltar para anos
-                    </button>
-                </div>
-            </div>
-
-            <div class="mp-filters" id="mp-filters" style="display:none;">
-                <div class="mp-msg-triggers">
-                    <div class="mp-msg-wrap" id="wrap-periodo">
-                        <button type="button" class="mp-msg-trigger" id="trigger-periodo" onclick="abrirDropdownPeriodo(event)">
-                            <i class="fas fa-calendar-alt"></i>
-                            <span class="mp-msg-label">Período</span>
-                            <span class="mp-msg-badge" id="badge-periodo" style="display:none;"></span>
-                            <i class="fas fa-chevron-down mp-msg-arrow"></i>
-                        </button>
-                        <div class="mp-msg-dropdown" id="dropdown-periodo">
-                            <div class="mp-msg-dropdown-list">
-                                <button type="button" class="mp-panel-item" data-periodo="todos">Todos</button>
-                                <button type="button" class="mp-panel-item" data-periodo="7">Últimos 7 dias</button>
-                                <button type="button" class="mp-panel-item" data-periodo="30">Últimos 30 dias</button>
-                                <button type="button" class="mp-panel-item" data-periodo="ano">Este ano</button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="mp-msg-wrap" id="wrap-setor">
-                        <button type="button" class="mp-msg-trigger" id="trigger-setor" onclick="abrirDropdownSetores(event)">
-                            <i class="fas fa-building"></i>
-                            <span class="mp-msg-label">Setores</span>
-                            <span class="mp-msg-badge" id="badge-setor" style="display:none;"></span>
-                            <i class="fas fa-chevron-down mp-msg-arrow"></i>
-                        </button>
-                        <div class="mp-msg-dropdown" id="dropdown-setores">
-                            <div class="mp-msg-dropdown-list" id="panel-setores-list"></div>
-                        </div>
-                    </div>
-                    <div class="mp-msg-wrap" id="wrap-modelo">
-                        <button type="button" class="mp-msg-trigger" id="trigger-modelo" onclick="abrirDropdownModelos(event)">
-                            <i class="fas fa-print"></i>
-                            <span class="mp-msg-label">Modelos</span>
-                            <span class="mp-msg-badge" id="badge-modelo" style="display:none;"></span>
-                            <i class="fas fa-chevron-down mp-msg-arrow"></i>
-                        </button>
-                        <div class="mp-msg-dropdown" id="dropdown-modelos">
-                            <div class="mp-msg-dropdown-list" id="panel-modelos-list"></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="mp-filter-ordem-agrupar">
-                    <label class="mp-filter-group mp-filter-sort" id="filter-sort-wrap">
-                        <span>Ordenar</span>
-                        <select id="filter-ordem" class="mp-select">
-                            <option value="data-desc">Mais recente</option>
-                            <option value="data-asc">Mais antigo</option>
-                            <option value="serial">Serial</option>
-                            <option value="tecnico">Técnico</option>
-                            <option value="setor">Setor</option>
-                        </select>
-                    </label>
-                    <label class="mp-filter-group mp-filter-group-by" id="filter-group-wrap">
-                        <span>Agrupar</span>
-                        <select id="filter-agrupar" class="mp-select">
-                            <option value="">Nenhum</option>
-                            <option value="setor">Setor</option>
-                            <option value="tecnico">Técnico</option>
-                            <option value="modelo">Modelo</option>
-                        </select>
-                    </label>
-                </div>
-                <input type="hidden" id="filter-setor" value="">
-                <input type="hidden" id="filter-modelo" value="">
-                <input type="hidden" id="filter-periodo" value="todos">
-                <div class="mp-filter-extra">
-                    <button type="button" class="mp-btn-limpar" id="btn-limpar-filtros" style="display:none;" onclick="limparFiltros()">
-                        <i class="fas fa-times-circle"></i> Limpar filtros
-                    </button>
-                </div>
-            </div>
-
-            <div class="mp-stats-historico" id="mp-stats-historico" style="display:none;">
-                <div class="mp-stat-h-item"><i class="fas fa-user-cog"></i> <span id="stat-top-tecnico">—</span></div>
-                <div class="mp-stat-h-item"><i class="fas fa-building"></i> <span id="stat-top-setor">—</span></div>
-            </div>
-
-            <div class="mp-grid-meses" id="meses-grid" style="display:none;"></div>
-
-            <div class="mp-grid-manutencoes" id="manutencoes-grid">
-                <div class="mp-empty mp-empty-hologram" id="mp-empty-initial">
-                    <div class="mp-empty-icon-wrap">
-                        <i class="fas fa-folder-open"></i>
-                    </div>
-                    <h3>Selecione um ano</h3>
-                    <p>Escolha um ano no menu lateral para ver as manutenções por mês.</p>
-                </div>
-            </div>
-
-            <div class="mp-list-wrap" id="manutencoes-list" style="display:none;">
-                <table class="mp-table">
-                    <thead>
-                        <tr>
-                            <th class="mp-th-fav" title="Favorito"></th>
-                            <th>Data</th>
-                            <th>Serial</th>
-                            <th>Modelo</th>
-                            <th>Técnico</th>
-                            <th>Setor</th>
-                            <th>Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody id="manutencoes-table-body"></tbody>
-                </table>
-            </div>
-        </main>
-    </div>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js?v=2"></script>
-    <script src="../js/manutencoes-dashboard.js?v=7"></script>
+    <script src="../js/manutencoes-dashboard.js?v=8"></script>
 </body>
 </html>

@@ -931,7 +931,7 @@ body.sb-filter-retiros .sb-resumos-col {
 .sb-grid-wrap {
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: flex-start;
     gap: 24px;
     width: 100%;
     max-width: 100%;
@@ -944,47 +944,58 @@ body.sb-filter-retiros .sb-resumos-col {
 }
 /* Legenda já está dentro de .sb-leyenda-card na linha do topo */
 
-.sb-grid-wrap::-webkit-scrollbar {
-    height: 12px;
-}
-
-.sb-grid-wrap::-webkit-scrollbar-track {
-    background: rgba(0, 0, 0, 0.08);
-    border-radius: 6px;
-}
-
-.sb-grid-wrap::-webkit-scrollbar-thumb {
-    background: rgba(255, 152, 0, 0.5);
-    border-radius: 6px;
-}
-
-.sb-grid-wrap::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 152, 0, 0.7);
-}
-
-/* Firefox: barra de rolagem visível na área da página */
-.sb-grid-wrap {
-    scrollbar-color: rgba(255, 152, 0, 0.5) rgba(0, 0, 0, 0.08);
-    scrollbar-width: thin;
-}
-
 /* Área centralizada: linha 1 = PTW + MONO | linha 2 = REJEITOS + PM + RETIROS no meio */
 .sb-cards-area {
     display: flex;
-    flex-direction: column;
-    align-items: center;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    justify-content: flex-start;
     gap: 24px;
+    width: max-content;
+    min-width: max-content;
+    max-width: none;
+}
+
+/* Faixa de rolagem horizontal entre cards e estatísticas */
+.sb-cards-scroll {
     width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: 10px;
+}
+
+.sb-cards-scroll::-webkit-scrollbar {
+    height: 14px;
+}
+
+.sb-cards-scroll::-webkit-scrollbar-track {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.55), rgba(226, 233, 245, 0.45));
+    border: 1px solid rgba(255, 255, 255, 0.65);
+    border-radius: 999px;
+    box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+.sb-cards-scroll::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, rgba(156, 175, 212, 0.9), rgba(130, 152, 192, 0.9));
+    border: 2px solid rgba(255, 255, 255, 0.75);
+    border-radius: 999px;
+    box-shadow: 0 1px 6px rgba(76, 95, 130, 0.25);
+}
+
+.sb-cards-scroll::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, rgba(141, 162, 204, 0.95), rgba(116, 139, 184, 0.95));
+}
+
+/* Firefox: barra de rolagem visível na área dos cards */
+.sb-cards-scroll {
+    scrollbar-color: rgba(132, 154, 196, 0.95) rgba(230, 236, 246, 0.8);
+    scrollbar-width: thin;
 }
 
 .sb-cards-row-top {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 24px;
-    align-items: stretch;
-    width: 100%;
-    max-width: 1920px; /* PTW + MONO mais prolados */
+    display: contents;
 }
 .sb-cards-row-top .sb-card {
     flex: 1 1 400px;
@@ -992,9 +1003,14 @@ body.sb-filter-retiros .sb-resumos-col {
     min-width: 340px;
 }
 .sb-cards-row-top .sb-card[data-secao="ptw"] {
-    margin-left: 80px;
+    margin-left: 0;
     min-width: 480px;
     max-width: 920px;
+}
+.sb-cards-row-top .sb-card[data-secao="rejeitos"] {
+    flex: 0 0 auto;
+    min-width: 165px;
+    max-width: 165px;
 }
 .sb-cards-row-top .sb-card[data-secao="mono"] {
     min-width: 520px;
@@ -1019,17 +1035,18 @@ body.sb-filter-retiros .sb-resumos-col {
 }
 
 .sb-cards-row-bottom {
-    display: flex;
-    flex-wrap: nowrap;
-    justify-content: center;
-    gap: 10px;
-    align-items: stretch;
-    width: 100%;
-    max-width: 640px;
+    display: contents;
 }
 .sb-cards-row-bottom .sb-card {
     flex: 0 0 auto;
 }
+
+/* Ordem única na horizontal (direita->esquerda: RETIROS, PM, MONO, PTW, REJEITOS) */
+.sb-cards-area .sb-card[data-secao="rejeitos"] { order: 1; }
+.sb-cards-area .sb-card[data-secao="ptw"] { order: 2; }
+.sb-cards-area .sb-card[data-secao="mono"] { order: 3; }
+.sb-cards-area .sb-card[data-secao="pm"] { order: 4; }
+.sb-cards-area .sb-card[data-secao="retiros"] { order: 5; }
 
 /* Mantém .sb-cards-row para filtros e regras que referenciam a linha */
 .sb-cards-row {
@@ -1110,9 +1127,9 @@ body.sb-filter-retiros .sb-resumos-col {
     overflow-x: auto !important;
     overflow-y: auto !important;
     -webkit-overflow-scrolling: touch;
-    scrollbar-width: none; /* Firefox: barras invisíveis; rolagem com rato mantém-se */
+    scrollbar-width: none; /* Firefox: barra invisível; rolagem mantém-se */
 }
-/* PACKING MONO: barra vertical invisível; horizontal visível; rolagem mantida */
+/* PACKING MONO: barra invisível; rolagem mantida */
 .sb-cards-row-top .sb-card[data-secao="mono"] .sb-bancadas-grid::-webkit-scrollbar {
     width: 0 !important;  /* vertical invisível */
     height: 10px;
@@ -1173,6 +1190,7 @@ body.sb-filter-retiros .sb-resumos-col {
     grid-template-columns: repeat(10, minmax(66px, 1fr));
     width: max-content;
     min-width: 732px;
+    align-content: start;
 }
 
 /* PACKING PTW: 11 colunas – células um pouco maiores dentro do card */
@@ -1180,6 +1198,7 @@ body.sb-filter-retiros .sb-resumos-col {
     grid-template-columns: repeat(11, minmax(66px, 1fr));
     width: max-content;
     min-width: 814px;
+    align-content: center;
 }
 
 /* REJEITOS: mesmo tamanho que PACKING MACHINE e RETIROS */

@@ -3,6 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Primeiro script: filtra ruído de extensões do Chrome no console (não é bug da aplicação) -->
+    <script>
+        (function () {
+            function textoDaRejeicao(reason) {
+                if (reason == null) return '';
+                try {
+                    if (typeof reason === 'string') return reason;
+                    if (reason instanceof Error && reason.message) return String(reason.message);
+                    if (typeof reason === 'object' && reason.message != null) return String(reason.message);
+                    return String(reason);
+                } catch (x) {
+                    return '';
+                }
+            }
+            function isErroExtensaoChrome(msg) {
+                var s = String(msg || '').toLowerCase();
+                if (!s) return false;
+                if (s.indexOf('message channel closed') !== -1) return true;
+                if (s.indexOf('asynchronous response') !== -1 && s.indexOf('listener') !== -1) return true;
+                if (s.indexOf('extension context invalidated') !== -1) return true;
+                if (s.indexOf('receiving end does not exist') !== -1) return true;
+                return false;
+            }
+            window.addEventListener('unhandledrejection', function (e) {
+                if (isErroExtensaoChrome(textoDaRejeicao(e.reason))) {
+                    e.preventDefault();
+                    if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
+                }
+            });
+        })();
+    </script>
     <title>AXIS | DOCUMENTOS - NOTAS FISCAIS</title>
     
     <!-- CSS Principal -->
@@ -23,17 +54,6 @@
     <meta name="theme-color" content="#4361ee">
 </head>
 <body>
-    <!-- Suprime erro no F12 causado por extensões do browser (message channel closed) -->
-    <script>
-        window.addEventListener('unhandledrejection', function(e) {
-            var msg = (e.reason && (e.reason.message || String(e.reason))) || '';
-            if (msg.indexOf('message channel closed') !== -1 || msg.indexOf('asynchronous response') !== -1) {
-                e.preventDefault();
-                e.stopPropagation();
-                return true;
-            }
-        });
-    </script>
     <!-- ================= ESTRUTURA PRINCIPAL ================= -->
     <div class="app-container">
         <!-- Sidebar - Menu redesenhado -->
@@ -106,26 +126,24 @@
                         <i class="fas fa-bars"></i>
                     </button>
                     <div class="page-title">
-                        <h1 id="page-title">Dashboard</h1>
-                        <p class="page-subtitle" id="page-subtitle">Sistema inteligente de gestão fiscal</p>
-                    </div>
-                </div>
-                
-                <div class="header-center">
-                    <div class="search-container">
-                        <i class="fas fa-search"></i>
-                        <input type="text" 
-                               class="search-input" 
-                               id="global-search" 
-                               placeholder="Buscar notas fiscais..." 
-                               onkeyup="handleSearch()">
-                        <button class="search-filter" onclick="toggleAdvancedSearch()">
-                            <i class="fas fa-filter"></i>
-                        </button>
+                        <h1 id="page-title">Dashboard Financeiro</h1>
+                        <p class="page-subtitle" id="page-subtitle">Visão geral inteligente das suas notas fiscais</p>
+                        <p class="page-subtitle-detail" id="page-subtitle-detail"><i class="fas fa-sync-alt" aria-hidden="true"></i> Dados atualizados em tempo real</p>
                     </div>
                 </div>
                 
                 <div class="header-right">
+                    <div class="header-search-compact search-container search-container--header">
+                        <i class="fas fa-search" aria-hidden="true"></i>
+                        <input type="text"
+                               class="search-input"
+                               id="global-search"
+                               placeholder="Buscar…"
+                               onkeyup="handleSearch()">
+                        <button type="button" class="search-filter" onclick="toggleAdvancedSearch()" title="Filtros">
+                            <i class="fas fa-filter"></i>
+                        </button>
+                    </div>
                     <button class="header-btn" onclick="toggleTheme()" title="Alternar tema">
                         <i class="fas fa-moon" id="theme-icon"></i>
                     </button>
@@ -207,18 +225,7 @@
             <div class="content-wrapper">
                 <!-- Dashboard -->
                 <section id="dashboard" class="content-section active">
-                    <div class="dashboard-header dashboard-header-glass">
-                        <div class="dashboard-header-content">
-                            <h2><i class="fas fa-chart-line"></i> Dashboard Financeiro</h2>
-                            <p>Visão geral inteligente das suas notas fiscais</p>
-                            <p class="dashboard-detail"><i class="fas fa-sync-alt"></i> Dados atualizados em tempo real</p>
-                        </div>
-                    </div>
-                    
-                    <!-- Axis Smart Widgets -->
-                    <div class="charts-grid" id="axis-smart-widgets">
-                        <!-- Widgets serão carregados dinamicamente -->
-                    </div>
+                    <div class="charts-grid dashboard-smart-widgets" id="axis-smart-widgets"></div>
                     
                     <!-- Estatísticas Completas -->
                     <div class="stats-grid">
@@ -316,21 +323,21 @@
                     <!-- Gráficos Completos -->
                     <div class="charts-grid">
                         <div class="chart-card axis-card">
-                            <h3><i class="fas fa-chart-pie"></i> Distribuição por Status</h3>
+                            <h3 class="chart-card-title-caps"><i class="fas fa-chart-pie"></i> DISTRIBUIÇÃO POR STATUS</h3>
                             <div class="chart-container">
                                 <canvas id="chart-status"></canvas>
                             </div>
                         </div>
                         
                         <div class="chart-card axis-card">
-                            <h3><i class="fas fa-chart-line"></i> Entrada de Notas (6 meses)</h3>
+                            <h3 class="chart-card-title-caps"><i class="fas fa-chart-line"></i> ENTRADA DE NOTAS (6 MESES)</h3>
                             <div class="chart-container">
                                 <canvas id="chart-timeline"></canvas>
                             </div>
                         </div>
                         
                         <div class="chart-card axis-card">
-                            <h3><i class="fas fa-chart-bar"></i> Distribuição por Tipo</h3>
+                            <h3 class="chart-card-title-caps"><i class="fas fa-chart-bar"></i> DISTRIBUIÇÃO POR TIPO</h3>
                             <div class="chart-container">
                                 <canvas id="chart-tipo"></canvas>
                             </div>
@@ -341,8 +348,8 @@
                     <div class="recent-nfs axis-card recent-nfs-glass">
                         <div class="section-header">
                             <h3><i class="fas fa-history"></i> Últimas Notas Fiscais</h3>
-                            <button type="button" class="btn-secondary" onclick="showSection('notas')">
-                                Ver Todas
+                            <button type="button" class="btn-primary btn-ver-todas-nfs" onclick="irParaBibliotecaNotas()">
+                                Ver todas
                             </button>
                         </div>
                         <div class="table-responsive">
@@ -415,7 +422,6 @@
                         <div class="section-header biblioteca-header">
                             <div>
                                 <h2><i class="fas fa-folder-open"></i> Biblioteca de Notas Fiscais</h2>
-                                <p>Gerencie todas as suas notas fiscais em um só lugar</p>
                             </div>
                         </div>
                         
@@ -1010,23 +1016,16 @@
                 
                 <!-- Seção de Fornecedores -->
                 <section id="fornecedores" class="content-section">
-                    <div class="section-header">
-                        <h2><i class="fas fa-building"></i> Fornecedores</h2>
-                        <p>Gerencie todos os seus fornecedores</p>
-                    </div>
-                    
-                    <!-- Actions Bar -->
-                    <div class="actions-bar axis-card">
-                        <button class="btn-primary" onclick="abrirCadastroFornecedor()">
-                            <i class="fas fa-plus"></i> Novo Fornecedor
+                    <!-- Actions Bar: uma linha -->
+                    <div class="fornecedores-toolbar axis-card">
+                        <button type="button" class="btn-primary btn-fornecedor-novo" onclick="abrirCadastroFornecedor()">
+                            Novo fornecedor
                         </button>
-                        
-                        <div class="search-container-sm">
-                            <i class="fas fa-search"></i>
-                            <input type="text" id="supplier-search" placeholder="Buscar fornecedor..." onkeyup="searchSuppliers()">
+                        <div class="fornecedor-search-pill" role="search">
+                            <i class="fas fa-search" aria-hidden="true"></i>
+                            <input type="text" id="supplier-search" class="fornecedor-search-input" placeholder="Buscar fornecedor" onkeyup="searchSuppliers()" autocomplete="off">
                         </div>
-                        
-                        <button class="btn-secondary" onclick="exportarFornecedores()">
+                        <button type="button" class="btn-secondary btn-fornecedor-export" onclick="exportarFornecedores()">
                             <i class="fas fa-file-export"></i> Exportar
                         </button>
                     </div>
@@ -1042,10 +1041,13 @@
                             <table class="data-table">
                                 <thead>
                                     <tr>
-                                        <th>CNPJ</th>
-                                        <th>Nome</th>
+                                        <th>CNPJ / CPF</th>
+                                        <th>Razão social</th>
+                                        <th>Nome fantasia</th>
+                                        <th>IE</th>
                                         <th>E-mail</th>
                                         <th>Telefone</th>
+                                        <th>Cidade / UF</th>
                                         <th>Notas</th>
                                         <th>Status</th>
                                         <th>Ações</th>
@@ -1105,31 +1107,35 @@
                 </button>
             </div>
             <div class="modal-body">
-                <div class="upload-zone" id="upload-zone">
-                    <i class="fas fa-cloud-upload-alt"></i>
-                    <p>Arraste e solte sua nota fiscal aqui</p>
-                    <span>ou</span>
-                    <button class="btn-primary" onclick="document.getElementById('file-input').click()">
-                        Selecione o arquivo
-                    </button>
-                    <input type="file" id="file-input" accept=".pdf,.jpg,.jpeg,.png,.xml" style="display: none;">
+                <div class="upload-zone upload-zone--clickable"
+                     id="upload-zone"
+                     role="button"
+                     tabindex="0"
+                     aria-label="Arraste a nota fiscal ou clique para escolher arquivo no computador">
+                    <div class="upload-zone-visual">
+                        <i class="fas fa-cloud-upload-alt" aria-hidden="true"></i>
+                        <p class="upload-zone-headline">Arraste e solte sua nota fiscal aqui</p>
+                        <span class="upload-zone-hint">ou clique nesta área para abrir o explorador</span>
+                    </div>
+                    <input type="file" id="file-input" class="upload-file-input-native" accept=".pdf,.jpg,.jpeg,.png,.xml" multiple aria-hidden="true" tabindex="-1">
                 </div>
+                <div id="upload-list" class="upload-list" aria-live="polite"></div>
                 
                 <div class="upload-options">
-                    <h4>Opções de Upload</h4>
-                    <div class="options-grid">
-                        <div class="option">
+                    <h4 class="upload-options-heading">Opções de upload</h4>
+                    <div class="upload-options-row" role="group" aria-label="Opções de upload">
+                        <label class="upload-option-toggle">
                             <input type="checkbox" id="auto-detect" checked>
-                            <label for="auto-detect">Detecção automática de dados</label>
-                        </div>
-                        <div class="option">
+                            <span class="upload-option-toggle__face">Detecção automática de dados</span>
+                        </label>
+                        <label class="upload-option-toggle">
                             <input type="checkbox" id="save-backup">
-                            <label for="save-backup">Salvar backup automático</label>
-                        </div>
-                        <div class="option">
+                            <span class="upload-option-toggle__face">Salvar backup automático</span>
+                        </label>
+                        <label class="upload-option-toggle">
                             <input type="checkbox" id="notify-upload" checked>
-                            <label for="notify-upload">Notificar após upload</label>
-                        </div>
+                            <span class="upload-option-toggle__face">Notificar após upload</span>
+                        </label>
                     </div>
                 </div>
                 
@@ -1142,7 +1148,7 @@
             </div>
             <div class="modal-footer">
                 <button class="btn-secondary" onclick="closeModal('upload-modal')">Cancelar</button>
-                <button class="btn-primary" onclick="processarUpload()">Processar</button>
+                <button type="button" class="btn-primary" id="nf-upload-processar-btn" onclick="processarUpload()">Processar</button>
             </div>
         </div>
     </div>
@@ -1243,8 +1249,60 @@
             </div>
             <div class="modal-footer">
                 <button class="btn-secondary" onclick="closeModal('nf-details-modal')">Fechar</button>
-                <button class="btn-primary" onclick="editarNF()">Editar</button>
-                <button class="btn-danger" onclick="excluirNF()">Excluir</button>
+                <button type="button" class="btn-primary" onclick="editarNF()">Editar</button>
+                <button type="button" class="btn-danger" onclick="excluirNF()">Excluir</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal editar nota (card) -->
+    <div class="modal" id="nf-edit-modal">
+        <div class="modal-content modal-lg nf-edit-modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-edit"></i> Editar nota fiscal</h3>
+                <button type="button" class="modal-close" onclick="closeModal('nf-edit-modal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body nf-edit-body">
+                <input type="hidden" id="nf-edit-nota-id" value="">
+                <div class="nf-edit-grid">
+                    <div class="form-group">
+                        <label for="nf-edit-numero">Número da NF</label>
+                        <input type="text" id="nf-edit-numero" class="form-control" placeholder="Ex.: 123456">
+                    </div>
+                    <div class="form-group">
+                        <label for="nf-edit-cliente">Fornecedor / cliente</label>
+                        <input type="text" id="nf-edit-cliente" class="form-control" placeholder="Nome">
+                    </div>
+                    <div class="form-group">
+                        <label for="nf-edit-data">Data de emissão</label>
+                        <input type="date" id="nf-edit-data" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="nf-edit-venc">Data de vencimento</label>
+                        <input type="date" id="nf-edit-venc" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="nf-edit-valor">Valor (R$)</label>
+                        <input type="text" id="nf-edit-valor" class="form-control" placeholder="0,00">
+                    </div>
+                    <div class="form-group">
+                        <label for="nf-edit-status">Status</label>
+                        <select id="nf-edit-status" class="form-control">
+                            <option value="pendente">Pendente</option>
+                            <option value="pago">Pago</option>
+                            <option value="paga">Paga</option>
+                            <option value="vencido">Vencido</option>
+                            <option value="vencida">Vencida</option>
+                            <option value="a-vencer">A vencer</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" onclick="closeModal('nf-edit-modal')">Cancelar</button>
+                <button type="button" class="btn-primary" onclick="salvarEdicaoNotaFiscal()">Salvar alterações</button>
             </div>
         </div>
     </div>
@@ -1293,6 +1351,142 @@
     <!-- Toast Notifications -->
     <div class="toast-container" id="toast-container"></div>
 
+    <!-- Cadastro / edição de fornecedor (vidro + fundo borrado) -->
+    <div class="modal fornecedor-cadastro-modal-wrap" id="fornecedor-cadastro-modal">
+        <div class="modal-content modal-content-fornecedor-glass modal-large">
+            <div class="modal-header">
+                <h3 id="fornecedor-modal-titulo"><i class="fas fa-building"></i> Novo fornecedor</h3>
+                <button type="button" class="modal-close" onclick="fecharModalFornecedorCadastro()" aria-label="Fechar">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body fornecedor-modal-body">
+                <input type="hidden" id="fornecedor-edit-id" value="">
+                <p class="fornecedor-modal-hint" id="fornecedor-modal-hint">
+                    Campos alinhados ao emitente da NF-e (XML). O cadastro automático preenche ao enviar nota fiscal.
+                </p>
+                <div class="fornecedor-form-grid">
+                    <div class="form-group">
+                        <label for="fornecedor-cnpj">CNPJ ou CPF</label>
+                        <input type="text" id="fornecedor-cnpj" class="axis-input-glass" placeholder="00.000.000/0000-00" autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label for="fornecedor-ie">Inscrição estadual (IE)</label>
+                        <input type="text" id="fornecedor-ie" class="axis-input-glass" placeholder="Isento ou número" autocomplete="off">
+                    </div>
+                    <div class="form-group fornecedor-span-2">
+                        <label for="fornecedor-razao">Razão social / nome <span class="req">*</span></label>
+                        <input type="text" id="fornecedor-razao" class="axis-input-glass" placeholder="Nome conforme NF-e" required autocomplete="organization">
+                    </div>
+                    <div class="form-group fornecedor-span-2">
+                        <label for="fornecedor-fantasia">Nome fantasia</label>
+                        <input type="text" id="fornecedor-fantasia" class="axis-input-glass" placeholder="Opcional" autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label for="fornecedor-email">E-mail</label>
+                        <input type="email" id="fornecedor-email" class="axis-input-glass" placeholder="contato@empresa.com.br" autocomplete="email">
+                    </div>
+                    <div class="form-group">
+                        <label for="fornecedor-telefone">Telefone</label>
+                        <input type="text" id="fornecedor-telefone" class="axis-input-glass" placeholder="(00) 00000-0000" autocomplete="tel">
+                    </div>
+                    <div class="form-group fornecedor-span-2">
+                        <label for="fornecedor-endereco">Logradouro e número</label>
+                        <input type="text" id="fornecedor-endereco" class="axis-input-glass" placeholder="Rua, número, complemento" autocomplete="street-address">
+                    </div>
+                    <div class="form-group">
+                        <label for="fornecedor-bairro">Bairro</label>
+                        <input type="text" id="fornecedor-bairro" class="axis-input-glass" placeholder="Bairro" autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label for="fornecedor-cep">CEP</label>
+                        <input type="text" id="fornecedor-cep" class="axis-input-glass" placeholder="00000-000" autocomplete="postal-code">
+                    </div>
+                    <div class="form-group">
+                        <label for="fornecedor-cidade">Município</label>
+                        <input type="text" id="fornecedor-cidade" class="axis-input-glass" placeholder="Cidade" autocomplete="address-level2">
+                    </div>
+                    <div class="form-group">
+                        <span class="axis-dd-label-static" id="label-fornecedor-uf">UF</span>
+                        <div class="axis-dd axis-dd-glass" data-axis-dd="fornecedor-uf">
+                            <input type="hidden" id="fornecedor-uf" value="">
+                            <button type="button" class="axis-dd-trigger axis-dd-trigger-glass" id="fornecedor-uf-trigger" aria-haspopup="listbox" aria-expanded="false">
+                                <span class="axis-dd-text" id="fornecedor-uf-text">—</span>
+                                <i class="fas fa-chevron-down axis-dd-chevron" aria-hidden="true"></i>
+                            </button>
+                            <ul class="axis-dd-panel" id="fornecedor-uf-list" role="listbox" hidden></ul>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <span class="axis-dd-label-static" id="label-fornecedor-regime">Regime tributário</span>
+                        <div class="axis-dd axis-dd-glass" data-axis-dd="fornecedor-regime">
+                            <input type="hidden" id="fornecedor-regime" value="">
+                            <button type="button" class="axis-dd-trigger axis-dd-trigger-glass" id="fornecedor-regime-trigger" aria-haspopup="listbox" aria-expanded="false">
+                                <span class="axis-dd-text" id="fornecedor-regime-text">Não informado</span>
+                                <i class="fas fa-chevron-down axis-dd-chevron" aria-hidden="true"></i>
+                            </button>
+                            <ul class="axis-dd-panel" id="fornecedor-regime-list" role="listbox" hidden>
+                                <li class="axis-dd-option" role="option" data-value="" tabindex="-1">Não informado</li>
+                                <li class="axis-dd-option" role="option" data-value="simples" tabindex="-1">Simples Nacional</li>
+                                <li class="axis-dd-option" role="option" data-value="presumido" tabindex="-1">Lucro presumido</li>
+                                <li class="axis-dd-option" role="option" data-value="real" tabindex="-1">Lucro real</li>
+                                <li class="axis-dd-option" role="option" data-value="mei" tabindex="-1">MEI</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <span class="axis-dd-label-static" id="label-fornecedor-status">Status</span>
+                        <div class="axis-dd axis-dd-glass" data-axis-dd="fornecedor-status">
+                            <input type="hidden" id="fornecedor-status" value="ativo">
+                            <button type="button" class="axis-dd-trigger axis-dd-trigger-glass" id="fornecedor-status-trigger" aria-haspopup="listbox" aria-expanded="false">
+                                <span class="axis-dd-text" id="fornecedor-status-text">Ativo</span>
+                                <i class="fas fa-chevron-down axis-dd-chevron" aria-hidden="true"></i>
+                            </button>
+                            <ul class="axis-dd-panel" id="fornecedor-status-list" role="listbox" hidden>
+                                <li class="axis-dd-option" role="option" data-value="ativo" tabindex="-1">Ativo</li>
+                                <li class="axis-dd-option" role="option" data-value="inativo" tabindex="-1">Inativo</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="form-group fornecedor-span-2">
+                        <label for="fornecedor-obs">Observações</label>
+                        <textarea id="fornecedor-obs" class="axis-input-glass axis-textarea-glass" rows="2" placeholder="Notas internas"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" onclick="fecharModalFornecedorCadastro()">Cancelar</button>
+                <button type="button" class="btn-primary" onclick="salvarFornecedorCadastroForm()">Salvar fornecedor</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Visualização da nota (PDF/imagem) — estilo vidro como Suporte -->
+    <div id="nf-viewer-modal" class="nf-viewer-modal" style="display: none;" aria-hidden="true">
+        <div class="nf-viewer-overlay" onclick="fecharModalVisualizarNF()" aria-hidden="true"></div>
+        <div class="nf-viewer-dialog" role="dialog" aria-modal="true" aria-labelledby="nf-viewer-title" onclick="event.stopPropagation();">
+            <div class="nf-viewer-header">
+                <div class="nf-viewer-heading">
+                    <span class="nf-viewer-icon-wrap" aria-hidden="true"><i class="fas fa-file-invoice"></i></span>
+                    <div>
+                        <h2 id="nf-viewer-title" class="nf-viewer-title">Nota fiscal</h2>
+                        <p id="nf-viewer-sub" class="nf-viewer-sub"></p>
+                    </div>
+                </div>
+                <button type="button" class="nf-viewer-close" onclick="fecharModalVisualizarNF()" aria-label="Fechar">×</button>
+            </div>
+            <div class="nf-viewer-body">
+                <div id="nf-viewer-fallback" class="nf-viewer-fallback" style="display: none;" role="status"></div>
+                <iframe id="nf-viewer-iframe" class="nf-viewer-iframe" title="Pré-visualização do documento" style="display: none;"></iframe>
+                <img id="nf-viewer-img" class="nf-viewer-img" alt="" style="display: none;" />
+            </div>
+            <div class="nf-viewer-footer">
+                <a id="nf-viewer-download" href="#" class="nf-viewer-btn nf-viewer-btn--ghost" download style="display: none;">Baixar arquivo</a>
+                <button type="button" class="nf-viewer-btn nf-viewer-btn--primary" onclick="fecharModalVisualizarNF()">Fechar</button>
+            </div>
+        </div>
+    </div>
+
     <!-- ================= SCRIPTS ================= -->
     <script src="../js/notas_fiscais.js"></script>
     <script src="../js/notas_fiscais_features.js"></script>
@@ -1302,6 +1496,7 @@
     <script src="../js/notas_fiscais_lixeira_estrutura.js"></script>
     <script src="../js/notas_fiscais_preview_download.js"></script>
     <script src="../js/notas_fiscais_configuracoes.js"></script>
+    <script src="../js/notas_fiscais_fornecedores.js"></script>
     
     <!-- Garantir que todos os botões tenham função (fallbacks) -->
     <script>

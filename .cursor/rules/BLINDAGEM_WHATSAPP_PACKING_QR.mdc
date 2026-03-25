@@ -1,0 +1,23 @@
+---
+description: Blindagem — Conector WhatsApp (QR) e Packing Machine
+globs: pages/packing_machine.html, pages/whatsapp-qr.html, css/packing_machine.css
+alwaysApply: false
+---
+
+# Blindagem — Conector WhatsApp (QR) + Packing Machine
+
+Esta área foi redesenhada e deve continuar consistente.
+
+## Regra
+- **Não alterar** sem autorização explícita do utilizador.
+- Se precisar alterar, **documentar** o motivo e o que mudou em `BLINDAGEM.md`.
+
+## O que ficou garantido
+1. `pages/whatsapp-qr.html`: novo layout “vidro Apple”, tipografia legível e textos claros.
+   - O QR **não deve ser alterado**: IDs/containers e chamada ao endpoint `/api/whatsapp/status` permanecem.
+2. `pages/packing_machine.html`: no card de aviso do WhatsApp:
+   - Removido “passo a passo” antigo.
+   - Aviso claro de que a conexão/pareamento ocorre via **Administração → Conector WhatsApp**.
+   - Suporte via e-mail: `axis.upport@icloud.com`.
+3. `css/packing_machine.css`: estilos do aviso/links do WhatsApp compatíveis com o novo texto.
+

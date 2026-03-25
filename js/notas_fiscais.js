@@ -28,6 +28,7 @@ const CONFIG = {
 // ================= ESTADO GLOBAL =================
 let state = {
     clientes: [],
+    fornecedores: [],
     notasFiscais: [],
     currentPath: ['root'],
     selectedItems: [],
@@ -54,6 +55,7 @@ let state = {
     dragTarget: null,
     contextMenu: null,
     uploadFiles: [],
+    uploadPreviewUrls: [],
     pdfZoom: 100,
     novaPastaTipo: null,
     novaPastaMesNumero: null,
@@ -86,6 +88,7 @@ function carregarDados() {
         try {
             const data = JSON.parse(saved);
             state.clientes = data.clientes || [];
+            state.fornecedores = data.fornecedores || [];
             state.notasFiscais = data.notasFiscais || [];
             state.subpastas = data.subpastas || {};
         } catch (e) {
@@ -117,10 +120,34 @@ function carregarDados() {
 function salvarDados() {
     const data = {
         clientes: state.clientes,
+        fornecedores: state.fornecedores || [],
         notasFiscais: state.notasFiscais,
         subpastas: state.subpastas || {}
     };
-    localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(data));
+    try {
+        localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(data));
+    } catch (e) {
+        try {
+            const dataSlim = {
+                clientes: data.clientes,
+                fornecedores: data.fornecedores || [],
+                notasFiscais: data.notasFiscais.map(function (n) {
+                    var o = Object.assign({}, n);
+                    delete o.arquivoDataUrl;
+                    return o;
+                }),
+                subpastas: data.subpastas
+            };
+            localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(dataSlim));
+            if (typeof mostrarToast === 'function') {
+                mostrarToast('Armazenamento cheio: o PDF não foi guardado de forma permanente (nota mantida). Tente um ficheiro menor.', 'warning');
+            }
+        } catch (e2) {
+            if (typeof mostrarToast === 'function') {
+                mostrarToast('Erro ao guardar dados no navegador.', 'error');
+            }
+        }
+    }
     localStorage.setItem(CONFIG.VIEW_MODE_KEY, state.viewMode);
     localStorage.setItem('axis_favoritos', JSON.stringify(state.favoritos || []));
     
@@ -946,6 +973,7 @@ function atualizarStatusBar() {
 function abrirUpload() {
     const modal = document.getElementById('upload-modal');
     if (modal) {
+        modal.style.display = '';
         modal.classList.add('show');
         // Animação de entrada
         const content = modal.querySelector('.modal-content');
@@ -955,13 +983,46 @@ function abrirUpload() {
     }
 }
 
+function revokeNfUploadPreviewUrls() {
+    if (state.uploadPreviewUrls && state.uploadPreviewUrls.length) {
+        state.uploadPreviewUrls.forEach(function (u) {
+            try {
+                URL.revokeObjectURL(u);
+            } catch (e) {}
+        });
+    }
+    state.uploadPreviewUrls = [];
+}
+
+/** Limpa lista e ficheiros do modal de upload (após processar com sucesso). */
+function resetNfUploadModal() {
+    revokeNfUploadPreviewUrls();
+    state.uploadFiles = [];
+    var list = document.getElementById('upload-list');
+    if (list) list.innerHTML = '';
+    var fi = document.getElementById('file-input');
+    if (fi) fi.value = '';
+    var z = document.getElementById('upload-zone');
+    if (z) z.classList.remove('dragover');
+}
+
 function fecharModal(modalId) {
+    if (modalId === 'upload-modal') {
+        revokeNfUploadPreviewUrls();
+    }
     document.getElementById(modalId).classList.remove('show');
 }
 
 function handleDragOver(e) {
     e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
     e.currentTarget.classList.add('dragover');
+}
+
+function handleDragLeaveUploadZone(e) {
+    var z = e.currentTarget;
+    if (z.contains(e.relatedTarget)) return;
+    z.classList.remove('dragover');
 }
 
 function handleDrop(e) {
@@ -976,39 +1037,96 @@ function handleFileSelect(e) {
     processarArquivos(files);
 }
 
+function extensaoArquivoUpload(file) {
+    var n = (file && file.name) || '';
+    var m = n.match(/\.([^.]+)$/);
+    return m ? m[1].toLowerCase() : '';
+}
+
+function arquivoPermitidoUpload(file) {
+    var ext = extensaoArquivoUpload(file);
+    return ['pdf', 'jpg', 'jpeg', 'png', 'xml'].indexOf(ext) !== -1;
+}
+
+function nfEscapeHtml(str) {
+    if (str == null) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+
 function processarArquivos(files) {
     const uploadList = document.getElementById('upload-list');
-    uploadList.innerHTML = '';
+    revokeNfUploadPreviewUrls();
     state.uploadFiles = [];
-    
-    Array.from(files).forEach((file, index) => {
-        if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
-            const item = criarItemUpload(file, index);
-            uploadList.appendChild(item);
-            
-            const progressBar = item.querySelector('.upload-item-progress-bar');
-            state.uploadFiles.push({ file, progressBar, item });
-        } else {
-            mostrarToast(`Arquivo ${file.name} não é um PDF`, 'error');
+    if (uploadList) uploadList.innerHTML = '';
+
+    Array.from(files || []).forEach((file, index) => {
+        if (!arquivoPermitidoUpload(file)) {
+            mostrarToast('Formato não suportado: ' + (file.name || '') + ' (use PDF, imagem ou XML)', 'error');
+            return;
         }
+        const item = criarItemUpload(file, index);
+        if (uploadList) uploadList.appendChild(item);
+        const progressBar = item.querySelector('.upload-item-progress-bar');
+        state.uploadFiles.push({ file, progressBar, item });
     });
 }
 
 function criarItemUpload(file, index) {
+    const ext = extensaoArquivoUpload(file);
+    let iconClass = 'fa-file';
+    if (ext === 'pdf') iconClass = 'fa-file-pdf';
+    else if (ext === 'xml') iconClass = 'fa-file-code';
+    else if (['jpg', 'jpeg', 'png'].indexOf(ext) !== -1) iconClass = 'fa-file-image';
+    const safeName = nfEscapeHtml(file.name);
+    var previewUrl = '';
+    try {
+        previewUrl = URL.createObjectURL(file);
+        state.uploadPreviewUrls.push(previewUrl);
+    } catch (e) {
+        previewUrl = '';
+    }
+
+    var previewBlock = '';
+    if (previewUrl && ext === 'pdf') {
+        previewBlock =
+            '<div class="upload-item-preview-wrap upload-item-preview-wrap--pdf">' +
+            '<iframe class="upload-item-preview-iframe" title="Pré-visualização do PDF" src="' +
+            previewUrl +
+            '#toolbar=0&amp;navpanes=0"></iframe></div>';
+    } else if (previewUrl && ['jpg', 'jpeg', 'png'].indexOf(ext) !== -1) {
+        previewBlock =
+            '<div class="upload-item-preview-wrap upload-item-preview-wrap--image">' +
+            '<img class="upload-item-preview-img" src="' +
+            previewUrl +
+            '" alt="" /></div>';
+    } else if (ext === 'xml') {
+        previewBlock =
+            '<div class="upload-item-preview-wrap upload-item-preview-wrap--placeholder">' +
+            '<span class="upload-item-preview-placeholder"><i class="fas fa-file-code" aria-hidden="true"></i> Ficheiro XML — a estrutura será validada ao processar.</span></div>';
+    }
+
     const div = document.createElement('div');
     div.className = 'upload-item';
-    div.innerHTML = `
-        <div class="upload-item-icon">
-            <i class="fas fa-file-pdf"></i>
-        </div>
-        <div class="upload-item-info">
-            <div class="upload-item-name">${file.name}</div>
-            <div class="upload-item-size">${formatarTamanho(file.size / 1024)}</div>
-        </div>
-        <div class="upload-item-progress">
-            <div class="upload-item-progress-bar" style="width: 0%"></div>
-        </div>
-    `;
+    div.innerHTML =
+        '<div class="upload-item-row">' +
+        '<div class="upload-item-icon">' +
+        '<i class="fas ' +
+        iconClass +
+        '"></i></div>' +
+        '<div class="upload-item-info">' +
+        '<div class="upload-item-name">' +
+        safeName +
+        '</div>' +
+        '<div class="upload-item-size">' +
+        formatarTamanho(file.size / 1024) +
+        '</div></div>' +
+        '<div class="upload-item-progress">' +
+        '<div class="upload-item-progress-bar" style="width: 0%"></div></div></div>' +
+        previewBlock;
     return div;
 }
 
@@ -1043,7 +1161,8 @@ function abrirBuscaAvancada() {
 }
 
 function executarBuscaAvancada() {
-    const btn = document.querySelector('.btn-primary:has-text("Buscar")');
+    var searchModal = document.getElementById('search-modal');
+    var btn = searchModal ? searchModal.querySelector('.modal-footer .btn-primary') : null;
     if (btn) {
         btn.classList.add('loading');
     }
@@ -1115,8 +1234,8 @@ function ordenarPor(campo) {
         state.sortDirection = 'asc';
     }
     
-    // Feedback visual
-    const btn = document.querySelector(`.toolbar-btn:has(.fa-sort)`);
+    // Feedback visual (sem :has — compatível com browsers mais antigos)
+    const btn = document.querySelector('.toolbar-btn .fa-sort')?.closest('.toolbar-btn');
     if (btn) {
         btn.style.animation = 'buttonPulse 0.5s ease';
         const icon = btn.querySelector('i');
@@ -1303,7 +1422,7 @@ function pdfPrint() {
 // ================= OUTRAS FUNÇÕES =================
 // ================= NOVA PASTA - FUNÇÃO COMPLETA =================
 function novaPasta() {
-    const btn = document.querySelector('.btn-toolbar:has(.fa-folder-plus)');
+    const btn = document.querySelector('.btn-toolbar .fa-folder-plus')?.closest('.btn-toolbar');
     if (btn) {
         btn.style.animation = 'buttonPulse 0.3s ease';
     }
@@ -2043,6 +2162,31 @@ function configurarEventos() {
             }
         });
     });
+
+    (function configurarZonaUploadModal() {
+        var zone = document.getElementById('upload-zone');
+        var fileInput = document.getElementById('file-input');
+        if (!zone || !fileInput) return;
+        zone.addEventListener('click', function () {
+            try {
+                fileInput.value = '';
+            } catch (e) {}
+            fileInput.click();
+        });
+        zone.addEventListener('keydown', function (ev) {
+            if (ev.key === 'Enter' || ev.key === ' ') {
+                ev.preventDefault();
+                try {
+                    fileInput.value = '';
+                } catch (e2) {}
+                fileInput.click();
+            }
+        });
+        zone.addEventListener('dragover', handleDragOver);
+        zone.addEventListener('dragleave', handleDragLeaveUploadZone);
+        zone.addEventListener('drop', handleDrop);
+        fileInput.addEventListener('change', handleFileSelect);
+    })();
 }
 
 // ================= EXPORTAR FUNÇÕES GLOBAIS =================
@@ -2053,7 +2197,10 @@ window.navegarAcima = navegarAcima;
 window.toggleViewMode = toggleViewMode;
 window.abrirUpload = abrirUpload;
 window.fecharModal = fecharModal;
+window.revokeNfUploadPreviewUrls = revokeNfUploadPreviewUrls;
+window.resetNfUploadModal = resetNfUploadModal;
 window.handleDragOver = handleDragOver;
+window.handleDragLeaveUploadZone = handleDragLeaveUploadZone;
 window.handleDrop = handleDrop;
 window.handleFileSelect = handleFileSelect;
 window.processarUpload = processarUpload;
@@ -2118,7 +2265,7 @@ if (typeof showSection === 'undefined') {
         
         // Atualizar título
         const titles = {
-            'dashboard': 'Dashboard',
+            'dashboard': 'Dashboard Financeiro',
             'notas': 'Notas Fiscais',
             'fornecedores': 'Fornecedores',
             'relatorios': 'Relatórios',
@@ -2128,9 +2275,21 @@ if (typeof showSection === 'undefined') {
         
         const titleEl = document.getElementById('page-title');
         const subtitleEl = document.querySelector('.page-subtitle');
-        if (titleEl) titleEl.textContent = titles[sectionId] || 'Dashboard';
+        const subtitleDetailEl = document.getElementById('page-subtitle-detail');
+        if (titleEl) titleEl.textContent = titles[sectionId] || 'Dashboard Financeiro';
         if (subtitleEl && sectionId === 'dashboard') {
-            subtitleEl.textContent = 'Sistema inteligente de gestão fiscal';
+            subtitleEl.textContent = 'Visão geral inteligente das suas notas fiscais';
+            subtitleEl.style.display = '';
+        }
+        if (subtitleDetailEl) {
+            if (sectionId === 'dashboard') {
+                subtitleDetailEl.style.display = 'flex';
+                subtitleDetailEl.innerHTML =
+                    '<i class="fas fa-sync-alt" aria-hidden="true"></i> Dados atualizados em tempo real';
+            } else {
+                subtitleDetailEl.style.display = 'none';
+                subtitleDetailEl.innerHTML = '';
+            }
         }
     };
 }
@@ -2559,63 +2718,139 @@ function processarUploadCompleto() {
         return;
     }
     
-    const autoOrganize = document.getElementById('auto-organize')?.checked;
-    const autoRename = document.getElementById('auto-rename')?.checked;
-    const btn = document.querySelector('.btn-primary:has-text("Fazer Upload")');
-    
+    const autoOrganize = document.getElementById('auto-detect')?.checked;
+    const autoRename = document.getElementById('save-backup')?.checked;
+    var elNotify = document.getElementById('notify-upload');
+    var notificar = elNotify ? elNotify.checked : true;
+    const btn = document.getElementById('nf-upload-processar-btn');
+
     if (btn) {
         btn.classList.add('loading');
         btn.disabled = true;
     }
-    
-    state.uploadFiles.forEach((fileData, index) => {
+
+    const uploadBatchTotal = state.uploadFiles.length;
+    let uploadBatchCompleted = 0;
+
+    function finalizarLoteUpload() {
+        uploadBatchCompleted++;
+        if (uploadBatchCompleted < uploadBatchTotal) return;
+        salvarDados();
+        if (typeof window.renderizarTabelaFornecedores === 'function') {
+            try {
+                window.renderizarTabelaFornecedores();
+            } catch (eRf) {}
+        }
+        if (notificar) {
+            mostrarToast(`${uploadBatchTotal} arquivo(s) enviado(s) com sucesso`, 'success');
+        }
+        if (btn) {
+            btn.classList.remove('loading');
+            btn.disabled = false;
+            btn.style.animation = 'buttonPulse 0.5s ease';
+        }
+        setTimeout(() => {
+            if (typeof window.resetNfUploadModal === 'function') {
+                window.resetNfUploadModal();
+            } else {
+                state.uploadFiles = [];
+            }
+            fecharModal('upload-modal');
+            renderizarConteudo();
+            if (typeof renderizarNotasFiscais === 'function') {
+                renderizarNotasFiscais(state.notasFiscais);
+            }
+        }, 1000);
+    }
+
+    function anexarDataUrlEInserirNota(nota, fileBlob) {
+        const ext = extensaoArquivoUpload(fileBlob);
+        const podeDataUrl =
+            ext === 'pdf' ||
+            ['jpg', 'jpeg', 'png', 'xml'].indexOf(ext) !== -1;
+        if (!fileBlob || !podeDataUrl || typeof FileReader === 'undefined') {
+            state.notasFiscais.push(nota);
+            if (typeof window.axisSincronizarFornecedorDaNota === 'function') {
+                try {
+                    window.axisSincronizarFornecedorDaNota(nota);
+                } catch (eSf) {}
+            }
+            finalizarLoteUpload();
+            return;
+        }
+        const fr = new FileReader();
+        fr.onload = function () {
+            try {
+                nota.arquivoDataUrl = fr.result;
+            } catch (e1) {}
+            state.notasFiscais.push(nota);
+            if (typeof window.axisSincronizarFornecedorDaNota === 'function') {
+                try {
+                    window.axisSincronizarFornecedorDaNota(nota);
+                } catch (eSf2) {}
+            }
+            finalizarLoteUpload();
+        };
+        fr.onerror = function () {
+            state.notasFiscais.push(nota);
+            if (typeof window.axisSincronizarFornecedorDaNota === 'function') {
+                try {
+                    window.axisSincronizarFornecedorDaNota(nota);
+                } catch (eSf3) {}
+            }
+            finalizarLoteUpload();
+        };
+        fr.readAsDataURL(fileBlob);
+    }
+
+    state.uploadFiles.forEach((fileData) => {
         const file = fileData.file;
         const progressBar = fileData.progressBar;
-        
-        // Simular upload com animação
+
         let progress = 0;
         const interval = setInterval(() => {
             progress += Math.random() * 25 + 5;
             if (progress >= 100) {
                 progress = 100;
                 clearInterval(interval);
-                
-                // Animação de conclusão
-                progressBar.style.transition = 'width 0.3s ease';
-                progressBar.style.background = 'linear-gradient(90deg, var(--apple-green), var(--apple-accent))';
-                
-                // Criar nota fiscal
+
+                if (progressBar) {
+                    progressBar.style.transition = 'width 0.3s ease';
+                    progressBar.style.background = 'linear-gradient(90deg, var(--apple-green), var(--apple-accent))';
+                }
+
                 setTimeout(() => {
                     const nota = criarNotaFiscalDoArquivo(file, autoOrganize, autoRename);
-                    
-                    // Organizar automaticamente na estrutura Fornecedor > Ano > Mês > Data
-                    if (typeof aplicarOrganizacaoAutomatica !== 'undefined') {
-                        aplicarOrganizacaoAutomatica(nota);
-                    } else if (typeof organizarNotaNaEstrutura !== 'undefined') {
-                        organizarNotaNaEstrutura(nota);
-                    }
-                    state.notasFiscais.push(nota);
-                    
-                    if (index === state.uploadFiles.length - 1) {
-                        salvarDados();
-                        mostrarToast(`${state.uploadFiles.length} arquivo(s) enviado(s) com sucesso`, 'success');
-                        
-                        if (btn) {
-                            btn.classList.remove('loading');
-                            btn.disabled = false;
-                            btn.style.animation = 'buttonPulse 0.5s ease';
+                    const extUp = extensaoArquivoUpload(file);
+                    function continuarFluxoNotaAposMeta() {
+                        if (typeof aplicarOrganizacaoAutomatica !== 'undefined') {
+                            aplicarOrganizacaoAutomatica(nota);
+                        } else if (typeof organizarNotaNaEstrutura !== 'undefined') {
+                            organizarNotaNaEstrutura(nota);
                         }
-                        
-                        setTimeout(() => {
-                            fecharModal('upload-modal');
-                            renderizarConteudo();
-                            state.uploadFiles = [];
-                        }, 1000);
+                        anexarDataUrlEInserirNota(nota, file);
+                    }
+                    if (extUp === 'xml' && typeof window.axisEnriquecerNotaComXmlNFe === 'function') {
+                        const tr = new FileReader();
+                        tr.onload = function () {
+                            try {
+                                window.axisEnriquecerNotaComXmlNFe(nota, tr.result);
+                            } catch (errXml) {}
+                            continuarFluxoNotaAposMeta();
+                        };
+                        tr.onerror = function () {
+                            continuarFluxoNotaAposMeta();
+                        };
+                        tr.readAsText(file, 'UTF-8');
+                    } else {
+                        continuarFluxoNotaAposMeta();
                     }
                 }, 300);
             }
-            progressBar.style.width = progress + '%';
-            progressBar.style.transition = 'width 0.2s ease';
+            if (progressBar) {
+                progressBar.style.width = progress + '%';
+                progressBar.style.transition = 'width 0.2s ease';
+            }
         }, 150);
     });
 }
@@ -2670,6 +2905,12 @@ function criarNotaFiscalDoArquivo(file, autoOrganize, autoRename) {
         const valorStr = valorMatch[1] || valorMatch[2];
         valor = parseFloat(valorStr.replace(',', '.'));
     }
+
+    const extUp = extensaoArquivoUpload(file);
+    let tipoNota = 'pdf';
+    if (extUp === 'xml') tipoNota = 'xml';
+    else if (['jpg', 'jpeg', 'png'].indexOf(extUp) !== -1) tipoNota = 'imagem';
+    const extRename = extUp === 'xml' ? 'xml' : (['jpg', 'jpeg', 'png'].indexOf(extUp) !== -1 ? extUp : 'pdf');
     
     return {
         id: `upload_${Date.now()}_${Math.random()}`,
@@ -2682,9 +2923,9 @@ function criarNotaFiscalDoArquivo(file, autoOrganize, autoRename) {
         status: 'pendente',
         numero: numeroNF,
         tamanho: Math.round(file.size / 1024),
-        tipo: 'pdf',
+        tipo: tipoNota,
         caminho: `${cliente}/${ano}/${mes}/${data}`,
-        nomeArquivo: autoRename ? `NF-${numeroNF}.pdf` : nomeArquivo,
+        nomeArquivo: autoRename ? `NF-${numeroNF}.${extRename}` : nomeArquivo,
         uploadDate: new Date().toISOString()
     };
 }
@@ -2702,7 +2943,7 @@ function copiarSelecionadosReal() {
     animarBotoes('.toolbar-btn');
     
     // Feedback visual no botão
-    const btn = document.querySelector('.toolbar-btn:has(.fa-copy)');
+    const btn = document.querySelector('.toolbar-btn .fa-copy')?.closest('.toolbar-btn');
     if (btn) {
         btn.classList.add('loading');
         setTimeout(() => btn.classList.remove('loading'), 500);
@@ -2722,7 +2963,7 @@ function cortarSelecionadosReal() {
     animarBotoes('.toolbar-btn');
     
     // Feedback visual no botão
-    const btn = document.querySelector('.toolbar-btn:has(.fa-cut)');
+    const btn = document.querySelector('.toolbar-btn .fa-cut')?.closest('.toolbar-btn');
     if (btn) {
         btn.classList.add('loading');
         setTimeout(() => btn.classList.remove('loading'), 500);
@@ -2751,7 +2992,7 @@ function colarReal() {
     let itensColados = 0;
     
     // Feedback visual no botão
-    const btn = document.querySelector('.toolbar-btn:has(.fa-paste)');
+    const btn = document.querySelector('.toolbar-btn .fa-paste')?.closest('.toolbar-btn');
     if (btn) {
         btn.classList.add('loading');
     }

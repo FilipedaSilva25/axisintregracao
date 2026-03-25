@@ -291,7 +291,7 @@ class ChatAI {
 
             case 'abrir_preventiva':
                 try {
-                    window.location.href = (typeof window.location.origin !== 'undefined' ? window.location.origin : '') + '/pages/manutenção_preventiva.html';
+                    window.location.href = (typeof window.location.origin !== 'undefined' ? window.location.origin : '') + '/pages/manutencao_preventiva.html';
                 } catch (e) {
                     if (typeof showToast === 'function') showToast('Acesse Manutenção Preventiva pelo menu', 'info');
                 }

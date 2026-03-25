@@ -44,14 +44,22 @@
         <!-- Área dos cards (REJEITOS, PTW, MONO, PM, RETIROS) – alinhados à esquerda, largura total -->
         <div class="sb-grid-wrap">
             <!-- Linha 1: PACKING PTW + PACKING MONO | Legenda abaixo | Linha 2: REJEITOS, PACKING MACHINE, RETIROS -->
-            <div class="sb-cards-area">
-                <div class="sb-cards-row sb-cards-row-top">
+            <div class="sb-cards-scroll">
+                <div class="sb-cards-area">
+                    <div class="sb-cards-row sb-cards-row-top">
                     <section class="sb-card" data-secao="ptw">
                         <div class="sb-card-header">
                             <h2 class="sb-section-title">PACKING PTW</h2>
                             <button type="button" class="sb-card-expand" aria-label="Tela cheia" title="Tela cheia"><i class="fas fa-expand"></i></button>
                         </div>
                         <div id="sb-grid-ptw" class="sb-bancadas-grid"></div>
+                    </section>
+                    <section class="sb-card" data-secao="rejeitos">
+                        <div class="sb-card-header">
+                            <h2 class="sb-section-title">REJEITOS</h2>
+                            <button type="button" class="sb-card-expand" aria-label="Tela cheia" title="Tela cheia"><i class="fas fa-expand"></i></button>
+                        </div>
+                        <div id="sb-grid-rejeitos" class="sb-bancadas-grid sb-grid-rejeitos"></div>
                     </section>
                     <section class="sb-card" data-secao="mono">
                         <div class="sb-card-header">
@@ -60,15 +68,8 @@
                         </div>
                         <div id="sb-grid-mono" class="sb-bancadas-grid"></div>
                     </section>
-                </div>
-                <div class="sb-cards-row sb-cards-row-bottom">
-                    <section class="sb-card" data-secao="rejeitos">
-                        <div class="sb-card-header">
-                            <h2 class="sb-section-title">REJEITOS</h2>
-                            <button type="button" class="sb-card-expand" aria-label="Tela cheia" title="Tela cheia"><i class="fas fa-expand"></i></button>
-                        </div>
-                        <div id="sb-grid-rejeitos" class="sb-bancadas-grid sb-grid-rejeitos"></div>
-                    </section>
+                    </div>
+                    <div class="sb-cards-row sb-cards-row-bottom">
                     <section class="sb-card sb-card-pm" data-secao="pm">
                         <div class="sb-card-header">
                             <h2 class="sb-section-title">PACKING MACHINE</h2>
@@ -83,6 +84,7 @@
                         </div>
                         <div id="sb-grid-retiros" class="sb-bancadas-grid sb-grid-retiros"></div>
                     </section>
+                    </div>
                 </div>
             </div>
 

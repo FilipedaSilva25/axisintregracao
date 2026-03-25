@@ -1,22 +1,47 @@
 [
   {
-    "id": "rc-wa-1773633163633",
-    "data": "2026-03-16T03:52:43.633Z",
-    "chave": "IS-140720",
-    "status": "FECHADO",
+    "id": "rc-1774417784019",
+    "data": "2025-11-05T19:09:53.000Z",
+    "chave": "IS-812103",
+    "status": "finalizado",
     "tipos": [],
-    "observacao": "Realizado a demanda do cancelamento do relacionamento com o contrato de impressora ZT411",
-    "origem": "whatsapp",
-    "phone": "276922462380171"
+    "observacao": "BRSC02 · michel.miranda@mercadolivre.com · Bancada 48 · ML: micmiranda",
+    "origem": "admin_mapeamento_manual_planilha"
   },
   {
-    "id": "rc-wa-1773632504882",
-    "data": "2026-03-16T03:41:44.882Z",
-    "chave": "IS-251427",
-    "status": "EM_ANDAMENTO",
+    "id": "rc-1774417480455",
+    "data": "2025-11-05T19:07:18.000Z",
+    "chave": "IS-812181",
+    "status": "finalizado",
     "tipos": [],
-    "observacao": "Realizado a troca da impressora, portanto chamado em aberto devido a falta de assinatura da ordem de serviço, por conta disso, chamado posto em andamento!",
-    "origem": "whatsapp",
-    "phone": "276922462380171"
+    "observacao": "BRSC02 · michel.miranda@mercadolivre.com · Bancada 96 · ML: micmiranda",
+    "origem": "admin_mapeamento_manual_planilha"
+  },
+  {
+    "id": "rc-1774416559827",
+    "data": "2025-11-05T19:04:46.000Z",
+    "chave": "IS-812175",
+    "status": "finalizado",
+    "tipos": [],
+    "observacao": "BRSC02 · michel.miranda@mercadolivre.com · Bancada 66 · ML: micmiranda",
+    "origem": "admin_mapeamento_manual_planilha"
+  },
+  {
+    "id": "rc-1774416239165",
+    "data": "2025-11-05T18:59:55.000Z",
+    "chave": "IS-812116",
+    "status": "finalizado",
+    "tipos": [],
+    "observacao": "BRSC02 · michel.miranda@mercadolivre.com · Bancada 77 · ML: micmiranda",
+    "origem": "admin_mapeamento_manual_planilha"
+  },
+  {
+    "id": "rc-1774414756813",
+    "data": "2025-11-05T18:58:55.000Z",
+    "chave": "IS-812156",
+    "status": "finalizado",
+    "tipos": [],
+    "observacao": "BRSC02 · michel.miranda@mercadolivre.com · Bancada 62 · ML: micmiranda",
+    "origem": "admin_mapeamento_manual_planilha"
   }
 ]

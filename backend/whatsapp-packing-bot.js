@@ -1,11 +1,22 @@
 /**
  * Fluxo do Chatbot WhatsApp - AXIS
  * 1. Troca de Cabeça de Impressão (Packing Machine)
- * 2. Manutenção Preventiva (em breve)
+ * 2. Manutenção Preventiva (PREVENTIVAS DE PACKING MACHINE)
  * 3. Status de Bancada
+ * 4. Inventário de peças
+ * 5. Registro de Chamados
+ * 6. Ajuda / Suporte
  */
 
+const SUPORTE_EMAIL = 'axis.support@icloud.com';
+const SUPORTE_WHATSAPP_TEXTO = '+55 (48) 99157-8172';
+
+const { formatListaWhatsapp, resolveSelecaoMatricula } = require('./axis-colaboradores-matriculas');
+
 const PM_OPCOES = ['PM 1', 'PM 2', 'PM 3', 'PM 4', 'PM 5', 'PM 6'];
+
+const PREVENTIVA_CABECA = 'CABEÇA DE IMPRESSÃO';
+const PREVENTIVA_ROLOS = 'ROLOS TRACIONADORES';
 
 // Setores (ordem igual ao ATUALIZAR STATUS)
 const SETORES = [
@@ -66,6 +77,35 @@ function parseNumero(texto) {
     return isNaN(n) || n < 0 ? null : n;
 }
 
+function normalizeCmd(texto) {
+    return String(texto || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
+function msgPrevMatriculaLista() {
+    const lista = formatListaWhatsapp();
+    return `🔧 *PREVENTIVAS — passo 2 de 4*
+
+🪪 *Matrícula AXIS*
+
+Escolha sua matrícula na lista (digite o *número da linha* ou o código, ex: *0001*, *0002*):
+
+${lista || '_(Lista em atualização — contacte o suporte.)_'}
+
+_Dica: o mesmo número da matrícula no seu perfil no site AXIS._`;
+}
+
+/** Retorna array de tarefas válidas ou null */
+function parsePrevTarefas(texto) {
+    const s = normalizeCmd(texto);
+    if (!s) return null;
+    if (s === '3' || s === '3.' || s === 'ambos' || s === '12' || s === '1,2' || s === '1 e 2' || s === '1-2' || s === '1 2') {
+        return [PREVENTIVA_CABECA, PREVENTIVA_ROLOS];
+    }
+    if (s === '1' || s === '1.' || s.indexOf('cabeca') >= 0 || s.indexOf('cabeça') >= 0) return [PREVENTIVA_CABECA];
+    if (s === '2' || s === '2.' || s.indexOf('rolo') >= 0 || s.indexOf('trac') >= 0) return [PREVENTIVA_ROLOS];
+    return null;
+}
+
 /** Retorna o id da bancada (ex: R01, 13, PTW_01) ou null se inválido */
 function parseBancadaBySetor(setorId, texto) {
     const t = String(texto || '').trim();
@@ -114,8 +154,18 @@ O que você gostaria de fazer?
 *3* – Status de Bancada
 *4* – Inventário de peças (entrada/saída rápida)
 *5* – Registro de Chamados (Mercado Livre)
+*6* – Ajuda e suporte
 
-_Digite 1, 2, 3, 4 ou 5 para continuar_`,
+_Digite de *1* a *6*_`,
+
+    ajudaSuporte: `ℹ️ *Ajuda e suporte AXIS*
+
+Precisa de ajuda com o bot, preventivas, troca de cabeça ou outro módulo?
+
+📧 *E-mail:* ${SUPORTE_EMAIL}
+📱 *WhatsApp:* ${SUPORTE_WHATSAPP_TEXTO}
+
+Você também pode enviar *oi* ou *menu* para ver as opções novamente (são *6* no total).`,
 
     selecaoTroca: `📋 *Troca de Cabeça de Impressão*
 
@@ -126,11 +176,65 @@ Qual máquina? Digite o número:
 
 _Digite apenas o número (1 a 6)_`,
 
-    emBreve: `🔧 *Manutenção Preventiva*
+    prevNomeCompleto: `🔧 *PREVENTIVAS DE PACKING MACHINE*
 
-Esta funcionalidade está em desenvolvimento e será liberada em breve.
+👤 *Passo 1 de 4 — Nome completo*
 
-Para iniciar outra ação, digite *oi* ou *menu*.`,
+Digite seu *nome completo* (igual ao cadastro no AXIS).
+
+_Mínimo 4 caracteres._`,
+
+    prevLocalidade: `📍 *Passo 3 de 4 — Localidade*
+
+Informe sua *cidade*, *unidade* ou *local* onde está realizando o registro.
+
+_Ex.: Florianópolis · CD Sul · Matriz_
+
+_Mínimo 2 caracteres._`,
+
+    prevPm: (nome) => `✅ Identificação registrada.
+
+🏭 *Passo 4 de 4 — Packing Machine*
+
+*${nome}* — qual PM?
+
+1️⃣ PM 1  2️⃣ PM 2  3️⃣ PM 3
+4️⃣ PM 4  5️⃣ PM 5  6️⃣ PM 6
+
+_Digite de 1 a 6_`,
+
+    prevTarefas: (pm) => `✅ *${pm}* selecionada.
+
+🛠️ *Preventiva realizada*
+
+*1* – ${PREVENTIVA_CABECA}
+*2* – ${PREVENTIVA_ROLOS}
+*3* – Ambas
+
+_Digite 1, 2 ou 3_`,
+
+    prevObs: `📝 *Alguma observação?*
+
+Digite o texto ou envie *-* se não houver.`,
+
+    prevOk: (nome, mat, loc, pm, tarefas, obs) => `✅ *Preventiva registrada!*
+
+• *Nome:* ${nome}
+• *Matrícula:* ${mat}
+• *Localidade:* ${loc}
+• *PM:* ${pm}
+• *Realizado:* ${tarefas.join(', ')}
+${obs ? `• *Obs:* ${obs}` : ''}
+
+Os dados já aparecem na página *PACKING MACHINE → Preventivas*.`,
+
+    prevErroNome: `⚠️ Informe seu *nome completo* (mínimo 4 caracteres).`,
+
+    prevErroMatricula: `⚠️ Não encontramos essa matrícula. Digite o *número da linha* da lista ou a matrícula com *4 dígitos* (ex: 0001).`,
+
+    prevErroLocalidade: `⚠️ Informe a *localidade* com pelo menos 2 caracteres (cidade, unidade ou local).`,
+
+    prevErroTarefa: `⚠️ Digite *1* (cabeça), *2* (rolos) ou *3* (ambas).`,
 
     passo2: (pm) => `✅ *${pm}* selecionada.
 
@@ -157,13 +261,14 @@ _Digite seu nome completo_`,
 
 O registro já está disponível na página Packing Machine.`,
 
-    erroAtividade: `⚠️ Por favor, digite *1*, *2*, *3*, *4* ou *5* para escolher a atividade.
+    erroAtividade: `⚠️ Por favor, digite de *1* a *6* para escolher a atividade.
 
 *1* – Troca de Cabeça de Impressão
 *2* – Manutenção Preventiva
 *3* – Status de Bancada
 *4* – Inventário de peças
-*5* – Registro de Chamados`,
+*5* – Registro de Chamados
+*6* – Ajuda e suporte`,
 
     pecasSubmenu: `📦 *Inventário de peças, acessórios e limpeza*
 
@@ -223,7 +328,7 @@ _Exemplo: 70303_`,
 
 Digite *oi* ou *menu* para recomeçar.`,
 
-    menu: `Digite *oi*, *menu* ou *troca* para iniciar um novo registro.`,
+    menu: `Digite *oi*, *menu*, *troca* ou *preventiva* para um novo registro.`,
 
     rcNumero: `📋 *Registro de Chamados (Mercado Livre)*
 
@@ -329,6 +434,12 @@ async function handleIncoming(msg, sendReply, registerTroca, opts) {
     const getBancadasStatus = opts && typeof opts.getBancadasStatus === 'function' ? opts.getBancadasStatus : null;
     const baseUrl = (opts && opts.baseUrl) ? String(opts.baseUrl) : '';
 
+    const bn = normalizeCmd(msg.body);
+    if (bn === 'preventiva' || bn === 'preventivas' || bn === 'manutencao preventiva' || bn === 'manutenção preventiva') {
+        estados.set(from, { step: 'prev_nome', atividade: 'preventiva' });
+        return sendReply(from, MSG.prevNomeCompleto);
+    }
+
     const comandoInicio = ['troca', 'registrar', 'registro', 'oi', 'ola', 'olá', 'menu', 'iniciar'];
     if (comandoInicio.some(c => body.includes(c)) && body.length < 35) {
         estados.set(from, { step: 'menu' });
@@ -341,6 +452,11 @@ async function handleIncoming(msg, sendReply, registerTroca, opts) {
         estados.set(from, estado);
     }
 
+    const ajudaCmd = ['ajuda', 'suporte', 'help', 'duvida', 'dúvida', 'contato'];
+    if (ajudaCmd.includes(bn) && String(msg.body || '').trim().length < 24 && estado.step === 'menu') {
+        return sendReply(from, MSG.ajudaSuporte);
+    }
+
     if (estado.step === 'menu') {
         const t = String(msg.body || '').trim();
         if (t === '1' || t === '1.') {
@@ -350,7 +466,10 @@ async function handleIncoming(msg, sendReply, registerTroca, opts) {
             return sendReply(from, MSG.selecaoTroca);
         }
         if (t === '2' || t === '2.') {
-            return sendReply(from, MSG.emBreve);
+            estado.step = 'prev_nome';
+            estado.atividade = 'preventiva';
+            estados.set(from, estado);
+            return sendReply(from, MSG.prevNomeCompleto);
         }
         if (t === '3' || t === '3.') {
             estado.step = 'status_setor';
@@ -370,6 +489,10 @@ async function handleIncoming(msg, sendReply, registerTroca, opts) {
             estados.set(from, estado);
             return sendReply(from, MSG.rcNumero);
         }
+        if (t === '6' || t === '6.') {
+            estados.set(from, { step: 'menu' });
+            return sendReply(from, MSG.ajudaSuporte);
+        }
         return sendReply(from, MSG.erroAtividade);
     }
 
@@ -377,6 +500,86 @@ async function handleIncoming(msg, sendReply, registerTroca, opts) {
     const registerPecasEntrada = opts && typeof opts.registerPecasEntrada === 'function' ? opts.registerPecasEntrada : null;
     const registerPecasSaida = opts && typeof opts.registerPecasSaida === 'function' ? opts.registerPecasSaida : null;
     const registerChamado = opts && typeof opts.registerChamado === 'function' ? opts.registerChamado : null;
+    const registerPreventiva = opts && typeof opts.registerPreventiva === 'function' ? opts.registerPreventiva : null;
+
+    if (estado.step === 'prev_nome') {
+        const nome = String(msg.body || '').trim();
+        if (nome.length < 4) return sendReply(from, MSG.prevErroNome);
+        estado.prev_nome_completo = nome;
+        estado.step = 'prev_matricula';
+        estados.set(from, estado);
+        return sendReply(from, msgPrevMatriculaLista());
+    }
+
+    if (estado.step === 'prev_matricula') {
+        const colab = resolveSelecaoMatricula(msg.body);
+        if (!colab) return sendReply(from, MSG.prevErroMatricula);
+        estado.prev_matricula = colab.matricula;
+        estado.prev_matricula_nome_cadastro = colab.nome;
+        estado.step = 'prev_localidade';
+        estados.set(from, estado);
+        return sendReply(from, MSG.prevLocalidade);
+    }
+
+    if (estado.step === 'prev_localidade') {
+        const loc = String(msg.body || '').trim();
+        if (loc.length < 2) return sendReply(from, MSG.prevErroLocalidade);
+        estado.prev_localidade = loc;
+        estado.step = 'prev_pm';
+        estados.set(from, estado);
+        const resumo = `*${estado.prev_nome_completo}* · 🪪 ${estado.prev_matricula} · 📍 ${loc}`;
+        return sendReply(from, MSG.prevPm(resumo));
+    }
+
+    if (estado.step === 'prev_pm') {
+        const pm = parsePm(msg.body);
+        if (!pm) return sendReply(from, MSG.erroPm);
+        estado.prev_pm = pm;
+        estado.step = 'prev_tarefas';
+        estados.set(from, estado);
+        return sendReply(from, MSG.prevTarefas(pm));
+    }
+
+    if (estado.step === 'prev_tarefas') {
+        const tarefas = parsePrevTarefas(msg.body);
+        if (!tarefas || tarefas.length === 0) return sendReply(from, MSG.prevErroTarefa);
+        estado.prev_tarefas = tarefas;
+        estado.step = 'prev_obs';
+        estados.set(from, estado);
+        return sendReply(from, MSG.prevObs);
+    }
+
+    if (estado.step === 'prev_obs') {
+        let obs = String(msg.body || '').trim();
+        const low = obs.toLowerCase();
+        if (low === '-' || low === 'não' || low === 'nao' || low === 'nada' || low === 'sem') obs = '';
+        if (obs.length > 500) obs = obs.substring(0, 500);
+        const nomeCompleto = estado.prev_nome_completo || '';
+        const matricula = estado.prev_matricula || '';
+        const localidade = estado.prev_localidade || '';
+        const usuario = nomeCompleto || (estado.prev_matricula_nome_cadastro || '');
+        const pm = estado.prev_pm || '';
+        const tarefas = estado.prev_tarefas || [];
+        estados.delete(from);
+        if (registerPreventiva) {
+            try {
+                await registerPreventiva({
+                    usuario: usuario,
+                    nomeCompleto: nomeCompleto,
+                    matriculaAxis: matricula,
+                    localidade: localidade,
+                    numeroPm: pm,
+                    tarefas: tarefas,
+                    observacao: obs,
+                    phone: from,
+                    dataHora: new Date().toISOString()
+                });
+            } catch (e) {
+                return sendReply(from, MSG.erroGeral);
+            }
+        }
+        return sendReply(from, MSG.prevOk(nomeCompleto || usuario, matricula || '—', localidade || '—', pm, tarefas, obs));
+    }
 
     if (estado.step === 'pecas_submenu') {
         const t = String(msg.body || '').trim();

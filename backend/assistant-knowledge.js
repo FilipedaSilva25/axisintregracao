@@ -18,11 +18,11 @@ ${userLine}
 ■ PÁGINA INICIAL (#page-home)
 - Título: "BEM-VINDO AO AXIS" + nome do usuário. Data e hora (Brasília).
 - Cards: "Módulos" e "Sessão Ativo".
-- Seção "Módulos Técnicos" com grid de cards: Inventário, Rondas, Manutenção Preventiva, Suporte Técnico, Notas Fiscais, Bloco de Notas, Registro de Chamados, Peças, PACKING MACHINE, Status de Bancada, SAURON, Jovem Aprendiz, Configurações.
+- Seção "Módulos Técnicos" com grid de cards: Inventário, Rondas, Manutenção Preventiva, Suporte Técnico, Notas Fiscais, Bloco de Notas, Registro de Chamados, Peças, PACKING MACHINE, Status de Bancada, Sauron, Selbetti, Jovem Aprendiz, Configurações.
 - Acesso: menu ☰ → "Início" ou clique em qualquer card na home.
 
 ■ MENU LATERAL (ícone ☰ canto superior esquerdo)
-- Itens: Início, Inventário, Rondas, Manutenções Preventivas, Suporte Técnico, Bloco de Notas, Registro de Chamados, Peças, PACKING MACHINE, Notas Fiscais, Status de Bancada, SAURON, Jovem Aprendiz, Configurações, (admin) Administração, Sair do AXIS.
+- Itens: Início, Inventário, Rondas, Manutenções Preventivas, Suporte Técnico, Bloco de Notas, Registro de Chamados, Peças, PACKING MACHINE, Notas Fiscais, Status de Bancada, Sauron, Selbetti, Jovem Aprendiz, Configurações, (admin) Administração, Sair do AXIS.
 
 ■ INVENTÁRIO (#page-inventario)
 - Inventário de impressoras Zebra. Modelos: ZT411, ZD421, ZQ630 PLUS.
@@ -53,12 +53,12 @@ ${userLine}
 - Apenas visualização; não atualiza status nesta página.
 - Acesso: Menu → "Status de Bancada" ou card "Status de Bancada" na home.
 
-■ SAURON (página: pages/sauron.html)
+■ SAURON / Sauron (página: pages/sauron.html)
 - Onde se ATUALIZA o status de bancada. Formulário para enviar/atualizar status.
-- Menu → "SAURON" ou card "SAURON" na home.
+- Menu → "Sauron" ou card "Sauron" na home.
 
 ■ JOVEM APRENDIZ (página: pages/jovem-aprendiz.html)
-- Módulo para jovens aprendizes; inclui biblioteca (jovem-aprendiz-biblioteca.html).
+- Registo de atividades (formulário em passos) e mapa com filtros por mês/ano; dados no navegador por mês (chave axis_jovem_aprendiz_v1_atividades_YYYY_MM). Ver/biblioteca: mesmo URL com #mapa ou antigo jovem-aprendiz-biblioteca.html redireciona.
 - Menu → "Jovem Aprendiz" ou card "Jovem Aprendiz" na home.
 
 ■ BLOCOS DE NOTAS
@@ -86,7 +86,7 @@ ${userLine}
 - Arquivos (PDF, imagens HD/4K, vídeos, etc., até ~100 MB por ficheiro) ficam no armazenamento local do navegador por pasta; a cota total depende do aparelho (não usa disco do servidor até existir upload para API).
 - Links dos portais: botão de configuração (⚙️) no canto superior direito — o técnico cola a URL; Teams/Outlook/Engage podem vir com padrão Microsoft.
 - Tema claro/escuro no ícone lua/sol. Voltar ao AXIS pelo link no topo.
-- Acesso: card "SELBETTI" na home.
+- Acesso: menu → "Selbetti" ou card "Selbetti" na home.
 
 ■ CONFIGURAÇÕES (#page-configuracoes)
 - Tema (claro/escuro), alto contraste, itens por página, exportar/limpar configurações.
@@ -113,6 +113,6 @@ ${userLine}
 - Responda de forma curta e útil. Use o nome do usuário quando tiver.
 - Para "onde fica X": diga o menu e/ou o card na home e o que ele faz.
 - Para "como faço Y": descreva os passos concretos (menu → página → botão/ação).
-- Reconheça sinônimos: "cadastrar impressora" = Inventário → Criar Dispositivo; "atualizar status" = SAURON; "ver status" = Status de Bancada; "troca de cabeça" = PACKING MACHINE ou WhatsApp; "preventiva packing" = PACKING MACHINE → Preventivas ou WhatsApp *preventiva*.
+- Reconheça sinônimos: "cadastrar impressora" = Inventário → Criar Dispositivo; "atualizar status" = Sauron; "ver status" = Status de Bancada; "troca de cabeça" = PACKING MACHINE ou WhatsApp; "preventiva packing" = PACKING MACHINE → Preventivas ou WhatsApp *preventiva*; "hub selbetti" = Selbetti.
 - Se não souber algo específico do AXIS, diga que está disponível para o que conhece do sistema.`;
 };

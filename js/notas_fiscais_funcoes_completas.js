@@ -3,6 +3,9 @@
 
 // ================= FUNÇÕES DE MODAIS =================
 function closeModal(modalId) {
+    if (modalId === 'upload-modal' && typeof window.revokeNfUploadPreviewUrls === 'function') {
+        window.revokeNfUploadPreviewUrls();
+    }
     const modal = document.getElementById(modalId);
     if (modal) {
         modal.classList.remove('show');
@@ -11,6 +14,9 @@ function closeModal(modalId) {
 }
 
 function closeAllModals() {
+    if (typeof window.revokeNfUploadPreviewUrls === 'function') {
+        window.revokeNfUploadPreviewUrls();
+    }
     document.querySelectorAll('.modal').forEach(function(modal) {
         modal.classList.remove('show');
         modal.style.display = 'none';
@@ -222,21 +228,20 @@ function refreshCaptcha() {
 }
 
 // ================= FUNÇÕES DE NOTAS FISCAIS =================
-function editarNF() {
-    const modal = document.getElementById('nf-details-modal');
-    const notaId = modal?.dataset?.notaId;
-    
-    if (!notaId) {
+function editarNF(notaId) {
+    var id = notaId;
+    if (id === undefined || id === null || String(id).trim() === '') {
+        var detModal = document.getElementById('nf-details-modal');
+        id = detModal && detModal.dataset ? detModal.dataset.notaId : '';
+    }
+    if (!id) {
         if (typeof mostrarToast !== 'undefined') {
             mostrarToast('Nota não identificada', 'error');
         }
         return;
     }
-    
-    if (typeof mostrarToast !== 'undefined') {
-        mostrarToast('Funcionalidade de edição será implementada', 'info');
-    } else {
-        alert('Funcionalidade de edição será implementada');
+    if (typeof window.abrirModalEditarNotaFiscal === 'function') {
+        window.abrirModalEditarNotaFiscal(String(id));
     }
 }
 
@@ -867,6 +872,7 @@ function resetAllData() {
     if (typeof state !== 'undefined') {
         state.notasFiscais = [];
         state.clientes = [];
+        state.fornecedores = [];
         
         if (typeof salvarDados !== 'undefined') {
             salvarDados();
@@ -965,6 +971,7 @@ function initNotasFiscaisComplete() {
     setTimeout(function() {
         if (typeof renderizarNotasFiscais !== 'undefined') renderizarNotasFiscais();
         if (typeof atualizarDashboardCompleto !== 'undefined') atualizarDashboardCompleto();
+        if (typeof renderizarTabelaFornecedores !== 'undefined') renderizarTabelaFornecedores();
     }, 1000);
     if (typeof initReportFilters === 'function') initReportFilters();
 }

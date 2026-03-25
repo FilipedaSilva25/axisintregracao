@@ -1,61 +1,14 @@
 <!DOCTYPE html>
-<!-- AXIS | JOVEM APRENDIZ - Biblioteca de atividades -->
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AXIS | Jovem Aprendiz - Biblioteca</title>
-    <link rel="stylesheet" href="../css/jovem-aprendiz.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>AXIS | Jovem Aprendiz — Redirecionar</title>
+    <meta http-equiv="refresh" content="0;url=jovem-aprendiz.html#mapa">
 </head>
-<body class="ja-page">
-    <div class="ja-container">
-        <header class="ja-header">
-            <div class="ja-header-brand">
-                <div class="ja-header-icon"><i class="fas fa-graduation-cap"></i></div>
-                <div>
-                    <h1 class="ja-header-title">Jovem Aprendiz</h1>
-                    <p class="ja-header-sub">Biblioteca de atividades</p>
-                </div>
-            </div>
-            <div class="ja-header-actions">
-                <button type="button" class="ja-btn-theme" id="ja-theme-toggle" title="Tema claro/escuro"><i class="fas fa-moon"></i></button>
-                <div class="ja-dropdown-wrap">
-                    <button type="button" class="ja-btn-hamburger" id="ja-hamburger" title="Menu" aria-label="Abrir menu">
-                        <i class="fas fa-bars"></i>
-                    </button>
-                    <div class="ja-dropdown" id="ja-dropdown">
-                        <a href="../index.html#page-home" class="ja-dropdown-item"><i class="fas fa-th-large"></i> Dashboard</a>
-                        <a href="jovem-aprendiz-biblioteca.html" class="ja-dropdown-item"><i class="fas fa-book"></i> Biblioteca</a>
-                        <a href="jovem-aprendiz.html" class="ja-dropdown-item"><i class="fas fa-pen-to-square"></i> Registrar</a>
-                    </div>
-                </div>
-            </div>
-        </header>
-
-        <section class="ja-card">
-            <div class="ja-library-header">
-                <h2 class="ja-library-title"><i class="fas fa-book"></i> Biblioteca de atividades</h2>
-                <input type="search" id="ja-search" class="ja-search" placeholder="Buscar por nome, equipamento, tarefa...">
-                <select id="ja-filter-nome" class="ja-filter-select" title="Filtrar por aprendiz">
-                    <option value="">Todos os aprendizes</option>
-                </select>
-                <select id="ja-filter-tipo" class="ja-filter-select" title="Filtrar por tipo de tarefa">
-                    <option value="">Todos os tipos</option>
-                    <option value="Configurar">Configurar</option>
-                    <option value="Formatar">Formatar</option>
-                    <option value="Desmontar">Desmontar</option>
-                    <option value="Reparar">Reparar</option>
-                    <option value="Validar">Validar</option>
-                </select>
-                <button type="button" class="ja-btn-primary" id="ja-export-csv" title="Exportar para planilha (CSV)"><i class="fas fa-file-csv"></i> Exportar CSV</button>
-            </div>
-            <ul class="ja-activity-list" id="ja-activity-list"></ul>
-            <p class="ja-empty" id="ja-empty">Nenhuma atividade registrada. Use a página Registrar para criar o primeiro documento.</p>
-        </section>
-    </div>
-
-    <script src="../js/jovem-aprendiz.js"></script>
+<body style="font-family:system-ui,sans-serif;padding:2rem;background:#f0fdfa;">
+    <p>A biblioteca de atividades está no separador <strong>Mapa de atividades</strong> na mesma área.</p>
+    <p><a href="jovem-aprendiz.html#mapa">Abrir Jovem Aprendiz — Mapa</a></p>
+    <script>location.replace('jovem-aprendiz.html#mapa');</script>
 </body>
 </html>

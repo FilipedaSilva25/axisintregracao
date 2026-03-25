@@ -9,6 +9,16 @@ const PORT = Number(process.env.PORT) || 3006;
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const ROOT_DIR = path.resolve(__dirname, '..');
 
+/** Versão exibida no site (Configurações, GET /health): campo "version" em package.json na raiz. Suba 2.7.0 → 2.7.1 ao publicar alterações. Opcional: AXIS_APP_VERSION no .env sobrescreve. */
+let AXIS_APP_VERSION = String(process.env.AXIS_APP_VERSION || '').trim();
+if (!AXIS_APP_VERSION) {
+    try {
+        AXIS_APP_VERSION = require('../package.json').version || '0.0.0';
+    } catch (_) {
+        AXIS_APP_VERSION = '0.0.0';
+    }
+}
+
 const DATA_DIR = path.join(ROOT_DIR, 'config', 'data');
 const PAGES_DIR = path.join(ROOT_DIR, 'pages');
 const CONFIG_MODULOS = path.join(ROOT_DIR, 'Novos Módulos', 'config');
@@ -42,7 +52,11 @@ const MIME_TYPES = {
     '.xml': 'application/xml',
     '.pdf': 'application/pdf',
     '.zip': 'application/zip',
-    '.bin': 'application/octet-stream'
+    '.bin': 'application/octet-stream',
+    '.zeb': 'application/octet-stream',
+    '.zpl': 'text/plain',
+    '.lbl': 'application/octet-stream',
+    '.nlbl': 'application/octet-stream'
 };
 
 /** Número oficial do bot AXIS (WhatsApp da empresa) - usado nas instruções e validação */
@@ -52,14 +66,25 @@ const HEADERS = {
     'X-Content-Type-Options': 'nosniff',
     'X-Frame-Options': 'DENY',
     'X-XSS-Protection': '1; mode=block',
+    /** Reduz vazamento de URL completa para terceiros; não bloqueia F12 */
+    'Referrer-Policy': 'strict-origin-when-cross-origin',
+    /** Alinhado à política da Apple/WebKit: câmara só em contexto seguro; o header reforça o meta no HTML. */
+    'Permissions-Policy': 'camera=(self), microphone=()',
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET, POST, PUT, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Content-Disposition'
 };
 
+/** Headers para GET /api/docs/.../file — permite iframe na mesma origem (pré-visualização no modal). */
+const HEADERS_DOC_FILE_PREVIEW = {
+    ...HEADERS,
+    'X-Frame-Options': 'SAMEORIGIN'
+};
+
 module.exports = {
     PORT,
     NODE_ENV,
+    AXIS_APP_VERSION,
     AXIS_BOT_NUMBER,
     ROOT_DIR,
     DATA_DIR,
@@ -68,5 +93,6 @@ module.exports = {
     DOCS_STORAGE_DIR,
     DOCS_METADATA_FILE,
     MIME_TYPES,
-    HEADERS
+    HEADERS,
+    HEADERS_DOC_FILE_PREVIEW
 };

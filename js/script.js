@@ -1503,12 +1503,16 @@ function axisChangePassword() {
         if (btn) { btn.disabled = true; btn.textContent = 'Salvando...'; }
         db.pass = String(np).trim();
         delete db.senhaTemporaria;
-        // Mantém expiração: após troca, define 90 dias (padrão) – pode ajustar depois nas políticas internas
-        try {
-            var exp = new Date();
-            exp.setDate(exp.getDate() + 90);
-            db.senhaExpiracao = exp.toISOString();
-        } catch (_) {}
+        if (typeof axisUsuarioOperacaoSemLimite === 'function' && axisUsuarioOperacaoSemLimite(login)) {
+            delete db.senhaExpiracao;
+        } else {
+            // Mantém expiração: após troca, define 90 dias (padrão) – pode ajustar depois nas políticas internas
+            try {
+                var exp = new Date();
+                exp.setDate(exp.getDate() + 90);
+                db.senhaExpiracao = exp.toISOString();
+            } catch (_) {}
+        }
         var storeKey = 'db_' + (typeof axisLoginCanonico === 'function' ? axisLoginCanonico(login) : login);
         localStorage.setItem(storeKey, JSON.stringify(db));
 
@@ -1760,6 +1764,7 @@ function startInactivityTimer() {
         if (typeof userLogado === 'undefined' || !userLogado) return;
         var login = (localStorage.getItem('current_user_login') || '').trim().toLowerCase().replace(/\s+/g, '_');
         if (login === 'admin_filipe_silva') return;
+        if (typeof axisUsuarioOperacaoSemLimite === 'function' && axisUsuarioOperacaoSemLimite(login)) return;
         var mins = AXIS_IDLE_LOGOUT_MINUTES;
         var elapsed = (Date.now() - axisLastActivity) / 60000;
         if (elapsed >= mins) {
@@ -2057,13 +2062,58 @@ function inicializarUsuarioAdmin() {
         }
     }
     try {
+        axisRemoverUsuarioSeedFilipeColaborador();
+    } catch (eRm) {}
+    try {
         axisSeedUsuariosOperacaoPacking();
     } catch (eSeed) {}
+    try {
+        axisMigrarUsuariosOperacaoSemLimite();
+    } catch (eMig) {}
+    try {
+        if (typeof axisGarantirMatriculasSequenciaisDb === 'function') axisGarantirMatriculasSequenciaisDb();
+    } catch (eMat) {}
+    try {
+        axisMigrarMatriculaFilipeSilvaPara0002SeLivre();
+    } catch (eMig2) {}
 }
 
-/** Cria utilizadores de exemplo para Packing (login canónico) se ainda não existirem. */
+/** Remove o utilizador automático antigo (cadastro passa a ser só pela página). */
+function axisRemoverUsuarioSeedFilipeColaborador() {
+    try { localStorage.removeItem('db_filipe_colaborador'); } catch (_) {}
+}
+
+/**
+ * Se existir db_filipe_silva e ninguém mais tiver 0002, corrige a matrícula para 0002
+ * (ex.: utilizador criado na página recebeu 0005 por falha na sequência).
+ */
+function axisMigrarMatriculaFilipeSilvaPara0002SeLivre() {
+    var key = 'db_filipe_silva';
+    var raw = localStorage.getItem(key);
+    if (!raw) return;
+    var u;
+    try { u = JSON.parse(raw); } catch (e) { return; }
+    if (!u || typeof u !== 'object' || !u.name) return;
+    var cur = u.matriculaAxis != null ? parseInt(String(u.matriculaAxis).replace(/\D/g, ''), 10) : NaN;
+    if (!isNaN(cur) && cur === 2) return;
+    var n2livre = typeof axisMatriculaNumeroOcupadaNaoAdmin === 'function'
+        ? !axisMatriculaNumeroOcupadaNaoAdmin(2, key)
+        : true;
+    if (!n2livre) return;
+    u.matriculaAxis = '0002';
+    try { localStorage.setItem(key, JSON.stringify(u)); } catch (_) {}
+}
+
+/** Cria utilizadores de exemplo para Packing (login canónico) se ainda não existirem. Matrículas 0003 e 0004 para não ocupar 0002 (utilizador real). */
 function axisSeedUsuariosOperacaoPacking() {
-    function ensure(loginCanon, displayName, setorLabel) {
+    function matriculaParaNovoOperador(preferida4) {
+        var pn = parseInt(String(preferida4 || '').replace(/\D/g, ''), 10);
+        if (!isNaN(pn) && pn >= 2 && typeof axisMatriculaNumeroOcupadaNaoAdmin === 'function' && !axisMatriculaNumeroOcupadaNaoAdmin(pn, null)) {
+            return String(pn).padStart(4, '0');
+        }
+        return typeof axisMatriculaFallbackLocal === 'function' ? axisMatriculaFallbackLocal() : '0005';
+    }
+    function ensure(loginCanon, displayName, setorLabel, matriculaPreferida) {
         var k = 'db_' + loginCanon;
         if (localStorage.getItem(k)) return;
         var o = {
@@ -2072,17 +2122,29 @@ function axisSeedUsuariosOperacaoPacking() {
             perfil: 'operador',
             setor: setorLabel,
             dataCadastro: new Date().toISOString(),
-            senhaTemporaria: true
+            matriculaAxis: matriculaParaNovoOperador(matriculaPreferida)
         };
-        try {
-            var exp = new Date();
-            exp.setDate(exp.getDate() + 90);
-            o.senhaExpiracao = exp.toISOString();
-        } catch (e1) {}
         localStorage.setItem(k, JSON.stringify(o));
     }
-    ensure('operacao_packing_mono', 'Operação Packing Mono', 'Operação Packing Mono');
-    ensure('operacao_packing_ptw', 'Operação Packing PTW', 'Operação Packing PTW');
+    ensure('operacao_packing_mono', 'Operação Packing Mono', 'Operação Packing Mono', '0003');
+    ensure('operacao_packing_ptw', 'Operação Packing PTW', 'Operação Packing PTW', '0004');
+}
+
+/** Garante que as contas de operação não tenham expiração, senha temporária nem bloqueio (dados antigos). */
+function axisMigrarUsuariosOperacaoSemLimite() {
+    ['operacao_packing_mono', 'operacao_packing_ptw'].forEach(function (log) {
+        var k = 'db_' + log;
+        var raw = localStorage.getItem(k);
+        if (!raw) return;
+        try {
+            var o = JSON.parse(raw);
+            if (!o || typeof o !== 'object') return;
+            delete o.senhaExpiracao;
+            delete o.senhaTemporaria;
+            delete o.bloqueadoSenhaExpirada;
+            localStorage.setItem(k, JSON.stringify(o));
+        } catch (_) {}
+    });
 }
 
 // Inicializa admin ao carregar (garante que seja executado imediatamente)
@@ -2108,6 +2170,15 @@ function axisUserDbStorageKey(login) {
     if (login == null || String(login).trim() === '') return '';
     var norm = axisLoginCanonico(String(login));
     return norm ? 'db_' + norm : '';
+}
+
+/**
+ * Contas fixas da operação Packing: sem logout por inatividade e sem expiração / troca obrigatória de senha.
+ * Login canónico: operacao_packing_mono, operacao_packing_ptw.
+ */
+function axisUsuarioOperacaoSemLimite(login) {
+    var n = typeof axisLoginCanonico === 'function' ? axisLoginCanonico(String(login || '')) : String(login || '').trim().toLowerCase().replace(/\s+/g, '_').replace(/\./g, '_');
+    return n === 'operacao_packing_mono' || n === 'operacao_packing_ptw';
 }
 
 /** Lê o JSON do utilizador pela chave canónica ou por qualquer db_* que case com axisLoginCanonico. */
@@ -2275,6 +2346,11 @@ function axisExecuteLoginSession(loginNormalizado, db, dbKey, chaveAntiga, userI
             }
         }, 300);
 
+        if (typeof axisUsuarioOperacaoSemLimite === 'function' && axisUsuarioOperacaoSemLimite(loginNormalizado)) {
+            delete db.senhaExpiracao;
+            delete db.senhaTemporaria;
+            delete db.bloqueadoSenhaExpirada;
+        }
         db.ultimoAcesso = new Date().toISOString();
         localStorage.setItem('db_' + loginNormalizado, JSON.stringify(db));
         if (chaveAntiga && chaveAntiga !== dbKey) {
@@ -2314,6 +2390,7 @@ function axisExecuteLoginSession(loginNormalizado, db, dbKey, chaveAntiga, userI
 /** Avisos 5…1 dias antes da expiração da senha (uma vez por dia de sessão). */
 function axisPasswordExpiryWarnings(loginNorm, db) {
     if (!db || !db.senhaExpiracao || loginNorm === 'admin_filipe_silva') return;
+    if (typeof axisUsuarioOperacaoSemLimite === 'function' && axisUsuarioOperacaoSemLimite(loginNorm)) return;
     var expMs = 0;
     try {
         expMs = new Date(db.senhaExpiracao).getTime();
@@ -2404,7 +2481,7 @@ function handleAuth() {
             const db = JSON.parse(dbRaw);
             console.log('✅ Dados do usuário carregados:', { name: db.name, perfil: db.perfil, pass: db.pass ? '***' : '(vazia)' });
 
-            if (db.bloqueadoSenhaExpirada === true) {
+            if (db.bloqueadoSenhaExpirada === true && !(typeof axisUsuarioOperacaoSemLimite === 'function' && axisUsuarioOperacaoSemLimite(loginNormalizado))) {
                 if (typeof showToast === 'function') {
                     showToast('Acesso suspenso: prazo de senha expirou. Peça a um administrador para desbloquear e definir nova senha.', 'error');
                 } else {
@@ -2415,7 +2492,7 @@ function handleAuth() {
 
             if (String(db.pass || '').trim() === pass) {
                 var expMs = db.senhaExpiracao ? new Date(db.senhaExpiracao).getTime() : 0;
-                if (expMs > 0 && Date.now() > expMs) {
+                if (!(typeof axisUsuarioOperacaoSemLimite === 'function' && axisUsuarioOperacaoSemLimite(loginNormalizado)) && expMs > 0 && Date.now() > expMs) {
                     db.bloqueadoSenhaExpirada = true;
                     try {
                         localStorage.setItem(dbKey, JSON.stringify(db));
@@ -3763,8 +3840,8 @@ function formatarSetor(setor) {
         'inventario': 'INVENTÁRIO',
         'cx': 'CX',
         'returns': 'RETURNS',
-        'packing-mono': 'PACKING MONO',
-        'packing-ptw': 'PACKING PTW',
+        'packing-mono': 'Packing mono',
+        'packing-ptw': 'Packing ptw',
         'sauron': 'Sauron',
         'insumos': 'INSUMOS',
         'docas-de-expedicao': 'DOCAS DE EXPEDIÇÃO',
@@ -5429,8 +5506,8 @@ function fecharDetalhes() {
 var SETORES_EDIT = [
     { v: 'internal-systems', l: 'INTERNAL SYSTEMS' }, { v: 'lideranca', l: 'LIDERANÇA' }, { v: 'mhw', l: 'MHW' }, { v: 'p2m', l: 'P2M' },
     { v: 'check-in', l: 'CHECK-IN' }, { v: 'reciving', l: 'RECIVING' }, { v: 'mz1', l: 'MZ1' }, { v: 'mz2', l: 'MZ2' }, { v: 'mz3', l: 'MZ3' },
-    { v: 'inventario', l: 'INVENTÁRIO' }, { v: 'cx', l: 'CX' }, { v: 'returns', l: 'RETURNS' }, { v: 'packing-mono', l: 'PACKING MONO' },
-    { v: 'packing-ptw', l: 'PACKING PTW' }, { v: 'sauron', l: 'Sauron' }, { v: 'insumos', l: 'INSUMOS' }, { v: 'docas-de-expedicao', l: 'DOCAS DE EXPEDIÇÃO' },
+    { v: 'inventario', l: 'INVENTÁRIO' }, { v: 'cx', l: 'CX' }, { v: 'returns', l: 'RETURNS' }, { v: 'packing-mono', l: 'Packing mono' },
+    { v: 'packing-ptw', l: 'Packing ptw' }, { v: 'sauron', l: 'Sauron' }, { v: 'insumos', l: 'INSUMOS' }, { v: 'docas-de-expedicao', l: 'DOCAS DE EXPEDIÇÃO' },
     { v: 'linha-de-peixe-1', l: 'LINHA DE PEIXE 1' }, { v: 'sorter', l: 'SORTER' }, { v: 'linha-de-peixe-2', l: 'LINHA DE PEIXE 2' },
     { v: 'rk', l: 'RK' }, { v: 'nt-rk', l: 'NT RK' }, { v: 'qualidade', l: 'QUALIDADE' }, { v: 'aquario-outbound', l: 'AQUÁRIO OUTBOUND' },
     { v: 'adm', l: 'ADM' }, { v: 'gate', l: 'GATE' }, { v: 'ambulatorio-interno', l: 'AMBULATÓRIO INTERNO' }, { v: 'ambulatorio-externo', l: 'AMBULATÓRIO EXTERNO' },
@@ -5680,6 +5757,7 @@ function fecharBemVindoModal() {
 function axisUsuarioPrecisaTrocarSenhaTemporaria() {
     var login = localStorage.getItem('current_user_login');
     if (!login) return false;
+    if (typeof axisUsuarioOperacaoSemLimite === 'function' && axisUsuarioOperacaoSemLimite(login)) return false;
     var key = 'db_' + (typeof axisLoginCanonico === 'function' ? axisLoginCanonico(login) : String(login).trim().toLowerCase().replace(/\s+/g, '_').replace(/\./g, '_'));
     var raw = localStorage.getItem(key);
     if (!raw) {
@@ -5755,11 +5833,15 @@ function axisConfirmarNovaSenhaTemporaria() {
     }
     db.pass = nv;
     delete db.senhaTemporaria;
-    try {
-        var exp = new Date();
-        exp.setDate(exp.getDate() + 90);
-        db.senhaExpiracao = exp.toISOString();
-    } catch (_) {}
+    if (!(typeof axisUsuarioOperacaoSemLimite === 'function' && axisUsuarioOperacaoSemLimite(loginNorm))) {
+        try {
+            var exp = new Date();
+            exp.setDate(exp.getDate() + 90);
+            db.senhaExpiracao = exp.toISOString();
+        } catch (_) {}
+    } else {
+        delete db.senhaExpiracao;
+    }
     try {
         localStorage.setItem(userKey, JSON.stringify(db));
     } catch (e) {
@@ -6171,6 +6253,21 @@ function atualizarEstatisticasAdmin() {
     if (usuariosAtivosEl) usuariosAtivosEl.textContent = usuariosAtivos;
 }
 
+function abrirAdminMapeamentoChamados() {
+    if (typeof currentUserProfile !== 'undefined' && currentUserProfile !== 'admin') {
+        if (typeof showToast === 'function') showToast('Apenas administradores podem abrir este painel.', 'error');
+        return;
+    }
+    var url;
+    try {
+        url = new URL('pages/admin-mapeamento-chamados.html', window.location.href).href;
+    } catch (_) {
+        url = 'pages/admin-mapeamento-chamados.html';
+    }
+    /* Mesma aba (igual ao fluxo do conector WhatsApp quando abre a página dedicada). */
+    window.location.href = url;
+}
+
 function abrirGerenciarUsuarios() {
     const modal = document.getElementById('modal-gerenciar-usuarios');
     if (modal) {
@@ -6256,7 +6353,7 @@ const MODULOS_PERMISSOES = [
     { id: 'manutencao', nome: 'Manutenções Preventivas', icon: '🖨️' },
     { id: 'page-suporte', nome: 'Suporte Técnico', icon: '💬' },
     { id: 'bloco', nome: 'Bloco de Notas', icon: '📝' },
-    { id: 'registro', nome: 'Registro de Chamados', icon: '📋' },
+    { id: 'registro', nome: 'Mapeamento de Chamados de Impressoras (BRSC02)', icon: '📋' },
     { id: 'pecas', nome: 'Peças', icon: '🔧' },
     { id: 'packing', nome: 'Packing Machine', icon: '⚙️' },
     { id: 'status-bancada', nome: 'Status de Bancada', icon: '📊' },
@@ -6317,6 +6414,9 @@ const PERFIS_LABEL = {
     aprendiz: '📚 Aprendiz'
 };
 
+/** overflow do body antes de abrir o modal de permissões (evita scroll da página por trás). */
+var _axisBodyOverflowAntesPermissoes = '';
+
 // Permissões por USUÁRIO (não por perfil) - aberto ao lado de Editar
 function abrirModalPermissoesUsuario(login) {
     const modal = document.getElementById('modal-permissoes');
@@ -6364,6 +6464,8 @@ function abrirModalPermissoesUsuario(login) {
         cb.addEventListener('change', () => salvarPermissaoUsuario(login));
     });
     
+    _axisBodyOverflowAntesPermissoes = document.body.style.overflow || '';
+    document.body.style.overflow = 'hidden';
     modal.style.display = 'flex';
     modal.onclick = function(e) { if (e.target === modal) fecharModalPermissoes(); };
 }
@@ -6391,6 +6493,7 @@ function salvarPermissaoUsuario(login) {
 function fecharModalPermissoes() {
     const m = document.getElementById('modal-permissoes');
     if (m) m.style.display = 'none';
+    document.body.style.overflow = _axisBodyOverflowAntesPermissoes;
 }
 
 function abrirEstatisticasSistema() {
@@ -6619,22 +6722,115 @@ function axisMatriculaPerfilDisplay(login, userData) {
     return m != null && String(m).trim() !== '' ? String(m) : '';
 }
 
-/** Próxima matrícula local se a API não responder (varre usuários em localStorage). */
-function axisMatriculaFallbackLocal() {
-    var max = 0;
+/** Até 0004: bloco inicial (admin 0001 + utilizadores 0002–0004). Novos cadastros pela página: a partir de 0005 até este máximo. */
+var AXIS_MATRICULA_SEQUENCIA_BASE = 4;
+var AXIS_MATRICULA_MAX = 9999;
+
+/**
+ * true se algum utilizador não-admin (exceto excludeDbKey) já usa este número (0001 reservado ao admin).
+ */
+function axisMatriculaNumeroOcupadaNaoAdmin(num, excludeDbKey) {
+    if (num < 2) return true;
     for (var i = 0; i < localStorage.length; i++) {
         var k = localStorage.key(i);
         if (!k || k.indexOf('db_') !== 0) continue;
+        if (excludeDbKey && k === excludeDbKey) continue;
+        var loginPart = k.replace(/^db_/, '');
+        if (typeof axisLoginCanonico === 'function' && axisLoginCanonico(loginPart) === 'admin_filipe_silva') continue;
         try {
             var u = JSON.parse(localStorage.getItem(k) || '{}');
             var m = u.matriculaAxis != null ? String(u.matriculaAxis).replace(/\D/g, '') : '';
-            if (m) {
-                var n = parseInt(m, 10);
-                if (!isNaN(n) && n > max) max = n;
-            }
+            var n = m ? parseInt(m, 10) : NaN;
+            if (!isNaN(n) && n === num) return true;
         } catch (e) { /* ignore */ }
     }
-    return String(max + 1).padStart(4, '0');
+    return false;
+}
+
+/**
+ * Próxima matrícula para novos não-admin: max(utilizados entre 0002 e AXIS_MATRICULA_MAX, BASE) + 1 (mínimo 0005).
+ * Retorna null se já existir 9999 utilizadores na faixa ou o próximo exceder o limite.
+ */
+function axisMatriculaFallbackLocal() {
+    var maxFound = 0;
+    for (var i = 0; i < localStorage.length; i++) {
+        var k = localStorage.key(i);
+        if (!k || k.indexOf('db_') !== 0) continue;
+        var loginPart = k.replace(/^db_/, '');
+        if (typeof axisLoginCanonico === 'function' && axisLoginCanonico(loginPart) === 'admin_filipe_silva') continue;
+        try {
+            var u = JSON.parse(localStorage.getItem(k) || '{}');
+            var m = u.matriculaAxis != null ? String(u.matriculaAxis).replace(/\D/g, '') : '';
+            var n = m ? parseInt(m, 10) : NaN;
+            if (!isNaN(n) && n >= 2 && n <= AXIS_MATRICULA_MAX && n > maxFound) maxFound = n;
+        } catch (e) { /* ignore */ }
+    }
+    var maxN = Math.max(maxFound, AXIS_MATRICULA_SEQUENCIA_BASE);
+    var next = maxN + 1;
+    if (next > AXIS_MATRICULA_MAX) return null;
+    return String(next).padStart(4, '0');
+}
+
+/** Atribui matrícula sequencial a utilizadores `db_*` que ainda não têm (ordem: data de cadastro, depois login). 0001 só para admin. */
+function axisGarantirMatriculasSequenciaisDb() {
+    try {
+        var ak = 'db_admin_filipe_silva';
+        var ra = localStorage.getItem(ak);
+        if (ra) {
+            var adm = JSON.parse(ra);
+            if (adm && typeof adm === 'object' && adm.name) {
+                adm.matriculaAxis = '0001';
+                localStorage.setItem(ak, JSON.stringify(adm));
+            }
+        }
+    } catch (_) {}
+
+    var keys = [];
+    try {
+        keys = Object.keys(localStorage).filter(function (k) { return k.indexOf('db_') === 0; });
+    } catch (e) { return; }
+    var semMat = [];
+    keys.forEach(function (k) {
+        try {
+            var u = JSON.parse(localStorage.getItem(k) || '{}');
+            if (!u || typeof u !== 'object' || !u.name) return;
+            var loginCanon = typeof axisLoginCanonico === 'function' ? axisLoginCanonico(k.replace(/^db_/, '')) : '';
+            if (loginCanon === 'admin_filipe_silva') return;
+            var m = u.matriculaAxis != null ? String(u.matriculaAxis).replace(/\D/g, '') : '';
+            var n = m ? parseInt(m, 10) : NaN;
+            if (!m || isNaN(n) || n <= 0) {
+                semMat.push({ key: k, data: u });
+            }
+        } catch (e2) { /* ignore */ }
+    });
+    if (!semMat.length) return;
+    var maxNum = 0;
+    keys.forEach(function (k) {
+        try {
+            var u = JSON.parse(localStorage.getItem(k) || '{}');
+            if (!u || typeof u !== 'object' || !u.name) return;
+            var loginCanon = typeof axisLoginCanonico === 'function' ? axisLoginCanonico(k.replace(/^db_/, '')) : '';
+            if (loginCanon === 'admin_filipe_silva') return;
+            var m = u.matriculaAxis != null ? String(u.matriculaAxis).replace(/\D/g, '') : '';
+            var n = m ? parseInt(m, 10) : NaN;
+            if (m && !isNaN(n) && n >= 2 && n <= AXIS_MATRICULA_MAX && n > maxNum) maxNum = n;
+        } catch (e4) { /* ignore */ }
+    });
+    maxNum = Math.max(maxNum, AXIS_MATRICULA_SEQUENCIA_BASE);
+    semMat.sort(function (a, b) {
+        var ta = String(a.data.dataCadastro || '');
+        var tb = String(b.data.dataCadastro || '');
+        if (ta !== tb) return ta < tb ? -1 : ta > tb ? 1 : 0;
+        return String(a.key).localeCompare(String(b.key));
+    });
+    semMat.forEach(function (row) {
+        maxNum += 1;
+        if (maxNum > AXIS_MATRICULA_MAX) return;
+        row.data.matriculaAxis = String(maxNum).padStart(4, '0');
+        try {
+            localStorage.setItem(row.key, JSON.stringify(row.data));
+        } catch (e3) { /* ignore */ }
+    });
 }
 
 function axisSincronizarMatriculaPerfilSeFaltar(login, nomeFallback) {
@@ -6653,27 +6849,16 @@ function axisSincronizarMatriculaPerfilSeFaltar(login, nomeFallback) {
         }
         return;
     }
-    if (u.matriculaAxis) return;
+    if (u.matriculaAxis != null && String(u.matriculaAxis).replace(/\D/g, '').length > 0) return;
     var nome = (u.name || nomeFallback || '').trim();
     if (!nome || nome.length < 2) return;
-    if (typeof fetch === 'undefined') {
-        u.matriculaAxis = axisMatriculaFallbackLocal();
-        try { localStorage.setItem(key, JSON.stringify(u)); } catch (e2) {}
-        return;
-    }
-    fetch('/api/axis/colaboradores-matriculas/garantir', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nome: nome })
-    }).then(function (r) { return r.json(); }).then(function (data) {
-        if (data && data.ok && data.matricula) {
-            u.matriculaAxis = data.matricula;
-            try { localStorage.setItem(key, JSON.stringify(u)); } catch (e3) {}
-            if (typeof atualizarPerfilNav === 'function') atualizarPerfilNav();
-            var el = document.getElementById('axis-profile-mini-matricula');
-            if (el) el.textContent = data.matricula;
-        }
-    }).catch(function () { /* silencioso */ });
+    var matGerada = typeof axisMatriculaFallbackLocal === 'function' ? axisMatriculaFallbackLocal() : null;
+    if (!matGerada) return;
+    u.matriculaAxis = matGerada;
+    try { localStorage.setItem(key, JSON.stringify(u)); } catch (e2) {}
+    if (typeof atualizarPerfilNav === 'function') atualizarPerfilNav();
+    var el = document.getElementById('axis-profile-mini-matricula');
+    if (el) el.textContent = u.matriculaAxis;
 }
 
 function cadastrarUsuario(event) {
@@ -6729,30 +6914,18 @@ function cadastrarUsuario(event) {
         senhaTemporaria: true
     };
 
-    function finalizarCadastroUsuario(matricula) {
-        if (matricula) novoUsuario.matriculaAxis = matricula;
-        localStorage.setItem(userKey, JSON.stringify(novoUsuario));
-        showToast(`Usuário ${nome} cadastrado! Login: ${loginNorm}` + (matricula ? ` · Matrícula ${matricula}` : ''), 'success');
-        limparFormularioUsuario();
-        fecharModalCadastrarUsuario();
-        carregarUsuarios();
-        atualizarEstatisticasAdmin();
+    var matriculaNova = typeof axisMatriculaFallbackLocal === 'function' ? axisMatriculaFallbackLocal() : null;
+    if (!matriculaNova) {
+        showToast('Limite de matrículas atingido (' + (typeof AXIS_MATRICULA_MAX !== 'undefined' ? AXIS_MATRICULA_MAX : 9999) + '). Não é possível cadastrar mais utilizadores.', 'error');
+        return;
     }
-
-    if (typeof fetch !== 'undefined') {
-        fetch('/api/axis/colaboradores-matriculas/garantir', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ nome: nome })
-        }).then(function (r) { return r.json(); }).then(function (data) {
-            if (data && data.ok && data.matricula) finalizarCadastroUsuario(data.matricula);
-            else finalizarCadastroUsuario(axisMatriculaFallbackLocal());
-        }).catch(function () {
-            finalizarCadastroUsuario(axisMatriculaFallbackLocal());
-        });
-    } else {
-        finalizarCadastroUsuario(axisMatriculaFallbackLocal());
-    }
+    novoUsuario.matriculaAxis = matriculaNova;
+    localStorage.setItem(userKey, JSON.stringify(novoUsuario));
+    showToast('Usuário ' + nome + ' cadastrado! Login: ' + loginNorm + ' · Matrícula ' + matriculaNova, 'success');
+    limparFormularioUsuario();
+    fecharModalCadastrarUsuario();
+    carregarUsuarios();
+    atualizarEstatisticasAdmin();
 }
 
 function editarUsuario(login) {
@@ -6795,9 +6968,17 @@ function abrirModalEditarUsuario(login) {
 
     atualizarPerfilSelectEditar();
     atualizarSetorSelectEditar();
+    try {
+        if (modal && modal.parentNode !== document.body) {
+            document.body.appendChild(modal);
+        }
+    } catch (eModal) {}
     modal.style.display = 'flex';
     modal.onclick = function(e) { if (e.target === modal) fecharModalEditarUsuario(); };
     document.body.classList.add('modal-editar-usuario-open');
+    try {
+        document.documentElement.classList.add('modal-editar-usuario-open');
+    } catch (eHtml) {}
 }
 
 function atualizarPerfilSelectEditar() {
@@ -6979,6 +7160,9 @@ function fecharModalEditarUsuario() {
     const m = document.getElementById('modal-editar-usuario');
     if (m) m.style.display = 'none';
     document.body.classList.remove('modal-editar-usuario-open');
+    try {
+        document.documentElement.classList.remove('modal-editar-usuario-open');
+    } catch (eHtml2) {}
     abrirGerenciarUsuarios();
 }
 
@@ -7042,7 +7226,10 @@ function salvarUsuarioEditado(event) {
     if (novaSenha) {
         userData.pass = novaSenha;
         delete userData.bloqueadoSenhaExpirada;
-        if (wasBlockedSenha) {
+        if (typeof axisUsuarioOperacaoSemLimite === 'function' && axisUsuarioOperacaoSemLimite(loginNorm)) {
+            delete userData.senhaTemporaria;
+            delete userData.senhaExpiracao;
+        } else if (wasBlockedSenha) {
             userData.senhaTemporaria = true;
             delete userData.senhaExpiracao;
         } else {
@@ -7053,13 +7240,25 @@ function salvarUsuarioEditado(event) {
             userData.senhaExpiracao = dataExpiracao.toISOString();
         }
     }
+
+    if (typeof axisUsuarioOperacaoSemLimite === 'function' && axisUsuarioOperacaoSemLimite(loginNorm)) {
+        delete userData.senhaExpiracao;
+        delete userData.senhaTemporaria;
+        delete userData.bloqueadoSenhaExpirada;
+    }
     
     localStorage.setItem(userKey, JSON.stringify(userData));
     if (originalKey && originalKey !== userKey) localStorage.removeItem(originalKey);
     
     if (novaSenha) {
         const info = document.getElementById('editar-senha-expiracao-info');
-        if (wasBlockedSenha) {
+        if (typeof axisUsuarioOperacaoSemLimite === 'function' && axisUsuarioOperacaoSemLimite(loginNorm)) {
+            if (info) {
+                info.textContent = 'Conta de operação: sem prazo de expiração de senha.';
+                info.style.display = 'block';
+            }
+            showToast('Utilizador atualizado. Conta operação sem limite de sessão nem expiração de senha.', 'success');
+        } else if (wasBlockedSenha) {
             if (info) {
                 info.textContent = 'Conta desbloqueada. O utilizador deve definir nova senha ao entrar (senha temporária).';
                 info.style.display = 'block';
@@ -9008,7 +9207,7 @@ function atualizarPerfilNav() {
     var setor = userData.setor || AXIS_PERFIL_SETOR_TEXTO;
     var foto = userData.foto || '';
     var diasTexto = '—';
-    if (login === 'admin_filipe_silva') {
+    if (login === 'admin_filipe_silva' || (typeof axisUsuarioOperacaoSemLimite === 'function' && axisUsuarioOperacaoSemLimite(login))) {
         diasTexto = '—';
     } else if (userData.senhaExpiracao) {
         var exp = new Date(userData.senhaExpiracao).getTime();
@@ -9298,34 +9497,17 @@ function initAxisProfile() {
             var setorIn = document.getElementById('axis-profile-mini-setor');
             if (nome && nome.value.trim()) userData.name = nome.value.trim();
             var setorTxt = (setorIn && setorIn.value && String(setorIn.value).trim()) ? String(setorIn.value).trim() : (userData.setor && String(userData.setor).trim() ? String(userData.setor).trim() : AXIS_PERFIL_SETOR_TEXTO);
-            userData.setor = setorTxt;
-            if (setorIn) setorIn.value = setorTxt;
+            userData.setor = typeof axisSetorUsuarioValorCanonico === 'function' ? axisSetorUsuarioValorCanonico(setorTxt) : setorTxt;
+            if (setorIn) setorIn.value = typeof axisSetorUsuarioTextoExibicao === 'function' ? axisSetorUsuarioTextoExibicao(userData.setor) : String(userData.setor);
             if (fotoPendente !== null) userData.foto = fotoPendente;
-            if (!userData.matriculaAxis && userData.name && typeof fetch !== 'undefined') {
-                fetch('/api/axis/colaboradores-matriculas/garantir', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ nome: userData.name.trim() })
-                }).then(function (r) { return r.json(); }).then(function (data) {
-                    if (data && data.ok && data.matricula) userData.matriculaAxis = data.matricula;
-                    try { localStorage.setItem(storeKey, JSON.stringify(userData)); } catch (e) {}
-                    if (typeof atualizarPerfilNav === 'function') atualizarPerfilNav();
-                    if (typeof showToast === 'function') showToast('Perfil atualizado', 'success');
-                    fecharPerfilNav();
-                    fotoPendente = null;
-                    var ud = document.getElementById('user-display-name');
-                    if (ud && userData.name) ud.innerText = userData.name;
-                }).catch(function () {
-                    userData.matriculaAxis = axisMatriculaFallbackLocal();
-                    try { localStorage.setItem(storeKey, JSON.stringify(userData)); } catch (e2) {}
-                    if (typeof atualizarPerfilNav === 'function') atualizarPerfilNav();
-                    if (typeof showToast === 'function') showToast('Perfil atualizado', 'success');
-                    fecharPerfilNav();
-                    fotoPendente = null;
-                    var ud2 = document.getElementById('user-display-name');
-                    if (ud2 && userData.name) ud2.innerText = userData.name;
-                });
-                return;
+            var matOk = userData.matriculaAxis != null && String(userData.matriculaAxis).replace(/\D/g, '').length > 0;
+            if (!matOk && userData.name && String(userData.name).trim().length >= 2) {
+                var matPerfil = typeof axisMatriculaFallbackLocal === 'function' ? axisMatriculaFallbackLocal() : null;
+                if (!matPerfil) {
+                    if (typeof showToast === 'function') showToast('Limite de matrículas (' + AXIS_MATRICULA_MAX + ') atingido. Não foi possível atribuir matrícula.', 'error');
+                    return;
+                }
+                userData.matriculaAxis = matPerfil;
             }
             localStorage.setItem(storeKey, JSON.stringify(userData));
             if (userData.name) localStorage.setItem('current_user', userData.name);

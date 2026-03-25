@@ -101,8 +101,12 @@ Se o **frontend** estiver no GitHub Pages em outro repositório, configure no fr
 - Instale Node.js no servidor.
 - Envie o projeto (git clone ou upload).
 - Rode com `node server.js` ou use **PM2**:  
-  `pm2 start server.js --name "projeto-vida"`.
+  `pm2 start ecosystem.config.cjs` (ficheiro na raiz do projeto) ou `pm2 start server.js --name "axis"`.
 - Use um proxy reverso (Nginx/Apache) para HTTPS e apontar para a porta onde o Node está escutando.
+
+### Opção 4: Hostinger (VPS / cloud com Node)
+
+Passo a passo detalhado (domínio, Nginx, Certbot, PM2, WhatsApp em produção): **[DEPLOY_HOSTINGER.md](./DEPLOY_HOSTINGER.md)**.
 
 ---
 

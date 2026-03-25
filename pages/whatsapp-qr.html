@@ -3,64 +3,197 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AXIS INTEGRAÇÃO – QR Code Bot WhatsApp</title>
+    <title>AXIS INTEGRAÇÃO – Conector WhatsApp</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --wa-teal: #0d9488;
+            --wa-teal-soft: rgba(13, 148, 136, 0.12);
+            --wa-green: #22c55e;
+            --wa-green-glow: rgba(34, 197, 94, 0.35);
+            --wa-accent: #6366f1;
+            --wa-text: #0f172a;
+            --wa-text-soft: #475569;
+            --wa-glass: rgba(255, 255, 255, 0.52);
+            --wa-glass-edge: rgba(255, 255, 255, 0.72);
+            --wa-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.15);
+            --wa-radius: 22px;
+            --wa-font: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+        }
+
         * { box-sizing: border-box; }
+
+        html { -webkit-font-smoothing: antialiased; }
+
         body {
-            font-family: system-ui, -apple-system, sans-serif;
-            background: #ffffff;
-            color: #333;
+            font-family: var(--wa-font);
+            color: var(--wa-text);
             min-height: 100vh;
             margin: 0;
-            padding: 20px;
+            padding: clamp(20px, 4vw, 36px);
             display: flex;
             align-items: center;
             justify-content: center;
+            position: relative;
+            overflow-x: hidden;
         }
+
+        /* Fundo em camadas (suave, estilo Apple) */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            z-index: -2;
+            background:
+                radial-gradient(ellipse 90% 70% at 10% 20%, rgba(99, 102, 241, 0.18) 0%, transparent 55%),
+                radial-gradient(ellipse 80% 60% at 90% 30%, rgba(13, 148, 136, 0.16) 0%, transparent 50%),
+                radial-gradient(ellipse 70% 50% at 50% 100%, rgba(34, 197, 94, 0.12) 0%, transparent 45%),
+                linear-gradient(180deg, #f1f5f9 0%, #e8eef5 50%, #eef6f3 100%);
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+            pointer-events: none;
+        }
+
+        .wa-outer {
+            width: 100%;
+            max-width: 428px;
+            padding: 1px;
+            border-radius: calc(var(--wa-radius) + 4px);
+            background: linear-gradient(145deg,
+                rgba(255, 255, 255, 0.85) 0%,
+                rgba(255, 255, 255, 0.35) 50%,
+                rgba(255, 255, 255, 0.5) 100%);
+            box-shadow: var(--wa-shadow), 0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+        }
+
         .card {
-            background: linear-gradient(145deg, rgba(255,152,0,0.1) 0%, #ffffff 40%, rgba(37,211,102,0.1) 100%);
-            border: 2px solid rgba(245,124,0,0.35);
-            box-shadow: 0 0 0 1px rgba(37,211,102,0.2), 0 8px 24px rgba(0,0,0,.06), 0 0 0 2px rgba(245,124,0,.08);
-            border-radius: 16px;
-            padding: 24px;
-            max-width: 420px;
+            background: var(--wa-glass);
+            backdrop-filter: blur(32px) saturate(1.35);
+            -webkit-backdrop-filter: blur(32px) saturate(1.35);
+            border: 1px solid var(--wa-glass-edge);
+            border-radius: var(--wa-radius);
+            padding: clamp(22px, 4vw, 30px) clamp(18px, 4vw, 26px) 22px;
             text-align: center;
-            text-transform: uppercase;
-            letter-spacing: 0.02em;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65);
         }
-        h1 { font-size: 18px; margin: 0 0 4px; color: #1a1a1a; }
-        .sub { color: #555; margin-bottom: 14px; font-size: 11px; font-weight: 600; letter-spacing: 0.03em; line-height: 1.4; }
+
+        .wa-hero {
+            margin-bottom: 18px;
+        }
+
+        .wa-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            color: var(--wa-teal);
+            background: var(--wa-teal-soft);
+            border: 1px solid rgba(13, 148, 136, 0.2);
+            margin-bottom: 12px;
+        }
+
+        .wa-badge .fab.fa-whatsapp {
+            color: #25d366;
+            font-size: 14px;
+        }
+
+        h1.wa-title {
+            font-size: clamp(1.35rem, 4vw, 1.6rem);
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            margin: 0 0 6px;
+            color: var(--wa-text);
+            line-height: 1.2;
+        }
+
+        .sub {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--wa-text-soft);
+            letter-spacing: -0.01em;
+            line-height: 1.45;
+        }
+
+        .wa-support-strip {
+            margin-top: 14px;
+            padding: 12px 14px;
+            border-radius: 14px;
+            text-align: left;
+            font-size: 13px;
+            line-height: 1.55;
+            color: var(--wa-text-soft);
+            background: rgba(255, 255, 255, 0.45);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+        .wa-support-strip strong { color: var(--wa-text); font-weight: 600; }
+
+        .wa-support-strip a {
+            color: var(--wa-accent);
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .wa-support-strip a:hover { text-decoration: underline; }
+
         .qr-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 16px;
-            margin: 12px 0;
+            gap: 14px;
+            margin: 16px 0 12px;
             text-align: center;
         }
-        @media (max-width: 640px) { .qr-grid { grid-template-columns: 1fr; } }
+
+        @media (max-width: 640px) {
+            .qr-grid { grid-template-columns: 1fr; }
+        }
+
         .qr-section {
-            background: #fff;
-            border-radius: 12px;
-            padding: 14px;
+            background: rgba(255, 255, 255, 0.42);
+            border-radius: 18px;
+            padding: 16px 12px 14px;
             min-height: 220px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: flex-start;
-            border: 1px solid rgba(0,0,0,.06);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            box-shadow: 0 4px 20px rgba(15, 23, 42, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
         }
+
         .qr-section h3 {
             margin: 0 0 8px;
             font-size: 13px;
-            color: #333;
+            font-weight: 700;
+            letter-spacing: -0.02em;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 6px;
+            gap: 8px;
+            color: var(--wa-text);
         }
-        .qr-section.admin h3 { color: #e65100; }
-        .qr-section.tecnicos h3 { color: #1b5e20; }
+
+        .qr-section.admin h3 { color: #0f766e; }
+        .qr-section.tecnicos h3 { color: #15803d; }
+
         .qr-section .qr-box {
             width: 180px;
             height: 180px;
@@ -68,137 +201,226 @@
             align-items: center;
             justify-content: center;
             margin: 0 auto;
-            background: #fff;
-            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.85);
+            border-radius: 16px;
+            border: 1px solid rgba(15, 23, 42, 0.06);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95);
         }
-        .qr-section .qr-box img { width: 160px; height: 160px; display: block; }
-        .qr-section .qr-box .qr-placeholder { color: #94a3b8; font-size: 12px; padding: 8px; text-align: center; }
-        .qr-section .qr-status { font-size: 11px; margin-top: 6px; color: #555; }
-        .qr-section .qr-status.ativo { color: #25D366; font-weight: 600; }
-        /* Por perfil: admin vê só esquerda, técnicos só direita */
+
+        .qr-section .qr-box img {
+            width: 160px;
+            height: 160px;
+            display: block;
+            border-radius: 8px;
+        }
+
+        .qr-section .qr-box .qr-placeholder {
+            color: #64748b;
+            font-size: 12px;
+            font-weight: 500;
+            padding: 12px;
+            text-align: center;
+            line-height: 1.45;
+        }
+
+        .qr-section .qr-status {
+            font-size: 12px;
+            margin-top: 8px;
+            font-weight: 500;
+            color: var(--wa-text-soft);
+            line-height: 1.4;
+        }
+
+        .qr-section .qr-status.ativo {
+            color: var(--wa-green);
+            font-weight: 600;
+        }
+
         body.role-admin .qr-section.tecnicos { display: none !important; }
         body.role-tecnico .qr-section.admin { display: none !important; }
         body.role-admin .qr-grid,
-        body.role-tecnico .qr-grid { grid-template-columns: 1fr; max-width: 320px; margin-left: auto; margin-right: auto; }
+        body.role-tecnico .qr-grid {
+            grid-template-columns: 1fr;
+            max-width: 320px;
+            margin-left: auto;
+            margin-right: auto;
+        }
         body.role-tecnico .nav-btn-logout { display: none !important; }
-        .status { font-size: 12px; font-weight: 600; margin: 8px 0; color: #25D366; }
-        .status.err { color: #ef4444; }
-        .status.warn { color: #fd7e14; }
+
+        #alertaBox {
+            text-align: left;
+        }
+
         .alerta-box {
-            background: rgba(253,126,20,0.15);
-            border: 2px solid rgba(253,126,20,0.5);
-            border-radius: 10px;
-            padding: 10px 12px;
-            margin-bottom: 10px;
-            font-size: 12px;
-            text-align: left;
-            color: #333;
-            line-height: 1.5;
+            border-radius: 14px;
+            padding: 12px 14px;
+            margin-bottom: 12px;
+            font-size: 13px;
+            line-height: 1.55;
+            color: var(--wa-text);
+            background: rgba(255, 237, 213, 0.55);
+            border: 1px solid rgba(251, 146, 60, 0.35);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
         }
-        .alerta-box.verde { background: rgba(37,211,102,0.15); border-color: rgba(37,211,102,0.5); }
-        .alerta-box.verde strong { color: #1b5e20; }
-        .alerta-box strong { color: #e65100; }
+
+        .alerta-box.verde {
+            background: rgba(220, 252, 231, 0.55);
+            border-color: rgba(34, 197, 94, 0.35);
+        }
+
+        .alerta-box.verde strong { color: #166534; }
+        .alerta-box strong { color: #c2410c; }
+
+        .status {
+            font-size: 13px;
+            font-weight: 600;
+            margin: 10px 0 6px;
+            color: var(--wa-teal);
+            letter-spacing: -0.01em;
+        }
+
+        .status.err { color: #dc2626; }
+        .status.warn { color: #d97706; }
+
         .instrucoes {
-            font-size: 11px;
-            color: #444;
-            margin-top: 12px;
+            font-size: 13px;
+            color: var(--wa-text-soft);
+            margin-top: 8px;
             text-align: left;
-            padding: 12px;
-            background: rgba(0,0,0,.04);
-            border-radius: 10px;
+            padding: 14px 16px;
+            background: rgba(255, 255, 255, 0.38);
+            border: 1px solid rgba(255, 255, 255, 0.65);
+            border-radius: 14px;
             line-height: 1.6;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
         }
-        .instrucoes ol { margin: 6px 0 0; padding-left: 18px; }
-        .instrucoes li { margin-bottom: 4px; }
-        /* Botões de navegação */
+
+        .instrucoes p { margin: 0 0 8px; }
+        .instrucoes p:last-child { margin-bottom: 0; }
+        .instrucoes strong { color: var(--wa-text); }
+
         .nav-buttons {
             display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            justify-content: center;
-            margin-top: 16px;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 18px;
         }
-        .nav-buttons a {
+
+        .nav-buttons a,
+        .nav-buttons .nav-btn-logout {
             display: inline-flex;
             align-items: center;
-            gap: 6px;
-            padding: 10px 16px;
-            border-radius: 10px;
+            justify-content: center;
+            gap: 8px;
+            padding: 13px 18px;
+            border-radius: 14px;
             font-weight: 600;
-            font-size: 12px;
+            font-size: 14px;
             text-decoration: none;
-            transition: transform .15s, box-shadow .15s;
+            transition: transform 0.18s ease, box-shadow 0.18s ease;
+            letter-spacing: -0.01em;
+            border: none;
+            cursor: pointer;
+            font-family: inherit;
         }
+
         .nav-buttons a:hover { transform: translateY(-1px); }
-        .nav-btn-packing {
-            background: linear-gradient(135deg, #25D366, #20bd5a);
-            color: #fff;
-            box-shadow: 0 4px 14px rgba(37,211,102,.35);
-        }
-        .nav-btn-packing:hover { box-shadow: 0 6px 20px rgba(37,211,102,.45); }
+
         .nav-btn-axis {
-            background: linear-gradient(135deg, #F57C00, #e65100);
-            color: #fff;
-            box-shadow: 0 4px 14px rgba(245,124,0,.35);
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            color: #fff !important;
+            box-shadow: 0 8px 24px rgba(99, 102, 241, 0.35);
         }
-        .nav-btn-axis:hover { box-shadow: 0 6px 20px rgba(245,124,0,.45); }
+
+        .nav-btn-axis:hover {
+            box-shadow: 0 12px 28px rgba(99, 102, 241, 0.42);
+        }
+
+        .nav-btn-packing {
+            background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+            color: #fff !important;
+            box-shadow: 0 8px 24px rgba(13, 148, 136, 0.32);
+        }
+
+        .nav-btn-packing:hover {
+            box-shadow: 0 12px 28px rgba(13, 148, 136, 0.4);
+        }
+
         .nav-btn-logout {
-            background: #fff;
-            color: #d32f2f;
-            border: 2px solid #ef5350;
-            box-shadow: 0 2px 8px rgba(211,47,47,.15);
+            background: rgba(255, 255, 255, 0.55);
+            color: #b91c1c !important;
+            border: 1px solid rgba(239, 68, 68, 0.45) !important;
+            box-shadow: 0 2px 12px rgba(239, 68, 68, 0.12);
         }
-        .nav-btn-logout:hover { box-shadow: 0 4px 12px rgba(211,47,47,.25); }
-        /* Notificação em vidro (desconexão) */
+
+        .nav-btn-logout:hover {
+            background: rgba(254, 226, 226, 0.5);
+            box-shadow: 0 4px 16px rgba(239, 68, 68, 0.2);
+        }
+
+        /* Modal desconectar — vidro sobre escurecimento */
         .pm-notif-overlay {
             display: none;
             position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.5);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
+            inset: 0;
             z-index: 9999;
             align-items: center;
             justify-content: center;
-            padding: 20px;
+            padding: 24px;
+            background: rgba(15, 23, 42, 0.45);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
         }
+
         .pm-notif-overlay.show { display: flex; }
+
         .pm-notif-glass {
-            background: rgba(255,255,255,0.12);
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
-            border: 1px solid rgba(255,255,255,0.25);
-            border-radius: 20px;
-            padding: 28px 32px;
+            width: 100%;
             max-width: 380px;
+            background: rgba(255, 255, 255, 0.72);
+            backdrop-filter: blur(28px) saturate(1.2);
+            -webkit-backdrop-filter: blur(28px) saturate(1.2);
+            border: 1px solid rgba(255, 255, 255, 0.85);
+            border-radius: 22px;
+            padding: 28px 26px;
             text-align: center;
-            box-shadow: 0 16px 48px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.15);
+            box-shadow: var(--wa-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.9);
         }
+
         .pm-notif-glass h3 {
             margin: 0 0 12px;
-            font-size: 18px;
-            color: #25D366;
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--wa-text);
+            letter-spacing: -0.02em;
         }
+
         .pm-notif-glass p {
             margin: 0;
             font-size: 14px;
-            line-height: 1.5;
-            color: rgba(255,255,255,0.9);
+            line-height: 1.55;
+            color: var(--wa-text-soft);
         }
+
         .pm-notif-glass .pm-notif-close {
             display: inline-block;
-            margin-top: 20px;
-            padding: 10px 24px;
-            background: rgba(0,229,255,0.2);
-            border: 1px solid rgba(0,229,255,0.4);
+            margin-top: 22px;
+            padding: 11px 22px;
+            background: rgba(13, 148, 136, 0.15);
+            border: 1px solid rgba(13, 148, 136, 0.35);
             border-radius: 12px;
-            color: #00e5ff;
+            color: #0f766e;
             font-weight: 600;
-            font-size: 13px;
+            font-size: 14px;
             cursor: pointer;
+            font-family: inherit;
+            transition: background 0.15s ease;
         }
+
         .pm-notif-glass .pm-notif-close:hover {
-            background: rgba(0,229,255,0.3);
+            background: rgba(13, 148, 136, 0.22);
         }
     </style>
 </head>
@@ -206,49 +428,69 @@
     <div id="pmNotifOverlay" class="pm-notif-overlay" onclick="if(event.target===this)this.classList.remove('show')">
         <div class="pm-notif-glass" onclick="event.stopPropagation()">
             <h3><i class="fab fa-whatsapp" style="color:#25D366;"></i> Bot desconectado</h3>
-            <p id="pmNotifMsg">Escaneie o novo QR com um número DEDICADO (chip secundário ou linha da empresa).</p>
+            <p id="pmNotifMsg">Escaneie o novo QR com um número dedicado (chip secundário ou linha da empresa).</p>
             <button type="button" class="pm-notif-close" onclick="document.getElementById('pmNotifOverlay').classList.remove('show')">Entendi</button>
         </div>
     </div>
 
-    <div class="card">
-        <h1><i class="fab fa-whatsapp" style="color:#25D366;"></i> AXIS INTEGRAÇÃO</h1>
-        <p class="sub">TROCA DE CABEÇA DE IMPRESSÃO (PACKING MACHINE)</p>
+    <div class="wa-outer">
+        <div class="card">
+            <div class="wa-hero">
+                <div class="wa-badge"><i class="fab fa-whatsapp"></i> Conector oficial</div>
+                <h1 class="wa-title">AXIS Integração</h1>
+                <p class="sub">WhatsApp para <strong>troca de cabeça</strong> e <strong>preventivas</strong> de Packing Machine (e mais opções no menu). O QR abaixo liga o aparelho da empresa ao bot.</p>
+            </div>
 
-        <div id="alertaBox" style="display:none;"></div>
+            <div class="wa-support-strip">
+                A conexão é feita pela <strong>administração do site</strong> (área restrita). Dúvidas ou falhas: <a href="mailto:axis.upport@icloud.com">axis.upport@icloud.com</a>
+            </div>
 
-        <div class="qr-grid">
-            <div class="qr-section admin">
-                <h3><i class="fas fa-user-shield"></i> Administrador</h3>
-                <p class="qr-status" id="adminStatus">Conexão do bot (celular AXIS)</p>
-                <div class="qr-box" id="qrAdmin">
-                    <span class="qr-placeholder" id="qrAdminPlaceholder">Carregando...</span>
+            <div id="alertaBox" style="display:none;"></div>
+
+            <div class="qr-grid">
+                <div class="qr-section admin">
+                    <h3><i class="fas fa-user-shield"></i> Administrador</h3>
+                    <p class="qr-status" id="adminStatus">Conexão do bot (celular AXIS)</p>
+                    <div class="qr-box" id="qrAdmin">
+                        <span class="qr-placeholder" id="qrAdminPlaceholder">Carregando...</span>
+                    </div>
+                </div>
+                <div class="qr-section tecnicos">
+                    <h3><i class="fas fa-tools"></i> Equipe técnica</h3>
+                    <p class="qr-status" id="tecnicosStatus">Abrir chat no WhatsApp</p>
+                    <div class="qr-box" id="qrTecnicos">
+                        <span class="qr-placeholder" id="qrTecnicosPlaceholder">Carregando...</span>
+                    </div>
                 </div>
             </div>
-            <div class="qr-section tecnicos">
-                <h3><i class="fas fa-tools"></i> Técnicos</h3>
-                <p class="qr-status" id="tecnicosStatus">Abrir chat no WhatsApp</p>
-                <div class="qr-box" id="qrTecnicos">
-                    <span class="qr-placeholder" id="qrTecnicosPlaceholder">Carregando...</span>
-                </div>
+
+            <p id="status" class="status">Aguardando…</p>
+            <div class="instrucoes" id="instrucoes"></div>
+
+            <div class="nav-buttons">
+                <a href="../index.html#page-administracao" class="nav-btn-axis"><i class="fas fa-shield-halved"></i> Painel de administração</a>
+                <a href="../index.html#page-home" class="nav-btn-packing"><i class="fas fa-house"></i> Início AXIS</a>
+                <a href="#" id="pmBtnDesconectar" class="nav-btn-logout"><i class="fas fa-unlink"></i> Desconectar bot</a>
             </div>
-        </div>
-
-        <p id="status" class="status">Aguardando...</p>
-        <div class="instrucoes" id="instrucoes"></div>
-
-        <div class="nav-buttons">
-            <a href="packing_machine.html" class="nav-btn-packing">Packing Machine</a>
-            <a href="../index.html" class="nav-btn-axis">AXIS</a>
-            <a href="#" id="pmBtnDesconectar" class="nav-btn-logout">Desconectar bot</a>
         </div>
     </div>
 
     <script>
         (function() {
+            function canonLogin(s) {
+                var t = (s || '').trim().toLowerCase();
+                return t.replace(/\s+/g, '_').replace(/\./g, '_');
+            }
             try {
                 var login = localStorage.getItem('current_user_login');
-                var userData = login ? localStorage.getItem('db_' + login) : null;
+                var norm = login ? canonLogin(login) : '';
+                var userData = norm ? localStorage.getItem('db_' + norm) : null;
+                if (!userData && norm) {
+                    var k = Object.keys(localStorage).find(function(key) {
+                        return key.indexOf('db_') === 0 && canonLogin(key.replace('db_', '')) === norm;
+                    });
+                    if (k) userData = localStorage.getItem(k);
+                }
                 var db = userData ? JSON.parse(userData) : null;
                 if (db && db.perfil === 'admin') document.body.classList.add('role-admin');
                 else document.body.classList.add('role-tecnico');
@@ -302,21 +544,21 @@
                     adminStatus.className = 'qr-status';
                     setQrBox(qrAdmin, adminPlaceholder, d.qr || null);
                     if (d.qr) adminPlaceholder.style.display = 'none';
-                    else adminPlaceholder.textContent = 'Aguardando QR... Recarregue em 5s.';
+                    else adminPlaceholder.textContent = 'Aguardando QR… Recarregue em alguns segundos.';
                 }
 
                 if (d.waMeQr) {
                     setQrBox(qrTecnicos, tecnicosPlaceholder, d.waMeQr);
                     tecnicosPlaceholder.style.display = 'none';
                     if (conectado) {
-                        tecnicosStatus.textContent = 'Bot ativo – escaneie para abrir o chat';
+                        tecnicosStatus.textContent = 'Bot ativo — escaneie para abrir o chat';
                         tecnicosStatus.className = 'qr-status ativo';
                     } else {
-                        tecnicosStatus.textContent = 'Abrir chat (conecte o bot para responder)';
+                        tecnicosStatus.textContent = 'Abrir chat (conecte o bot para haver resposta)';
                         tecnicosStatus.className = 'qr-status';
                     }
                 } else {
-                    tecnicosPlaceholder.textContent = 'Carregando...';
+                    tecnicosPlaceholder.textContent = 'Carregando…';
                     tecnicosPlaceholder.style.display = 'inline';
                     qrTecnicos.querySelectorAll('img').forEach(function(el) { el.remove(); });
                     tecnicosStatus.className = 'qr-status';
@@ -335,28 +577,28 @@
                     var numCon = normalizaBR(d.numeroConectado || d.botNumber);
                     var numAxis = normalizaBR(d.axisBotNumber || '5548991578172');
                     if (numCon && numAxis && numCon !== numAxis) {
-                        alertaBox.innerHTML = '<strong>⚠️ Número errado!</strong><br>Conectado: ' + (d.numeroConectadoFormatado || d.numeroConectado || d.botNumber) + '<br>AXIS: +55 48 99157-8172. Desconectar bot e escanear com celular AXIS.';
+                        alertaBox.innerHTML = '<strong>Atenção ao número</strong><br>Conectado: ' + (d.numeroConectadoFormatado || d.numeroConectado || d.botNumber) + '<br>Esperado AXIS: +55 48 99157-8172. Desconecte o bot e escaneie com o celular AXIS.';
                         alertaBox.className = 'alerta-box';
                     } else {
-                        alertaBox.innerHTML = 'Bot conectado (+55 48 99157-8172).<br>QR ao lado: técnicos abrem o chat e enviam <strong>troca</strong>.';
+                        alertaBox.innerHTML = 'Bot conectado (+55 48 99157-8172). O QR da direita permite que a equipe abra o chat e envie <strong>troca</strong> ou <strong>preventiva</strong>.';
                     }
                     alertaBox.style.display = 'block';
                     if (document.body.classList.contains('role-tecnico')) {
-                        alertaBox.innerHTML = 'Escaneie o QR acima para abrir o chat.<br>Envie <strong>troca</strong> para registrar.';
-                        instrucoes.innerHTML = '<strong>Passos:</strong><ol><li>Escaneie o QR com a câmera</li><li>Toque em "Abrir link" ou "WhatsApp"</li><li>Envie <strong>troca</strong> para registrar</li></ol>';
+                        alertaBox.innerHTML = 'Escaneie o QR para abrir o WhatsApp. Envie <strong>troca</strong> ou <strong>preventiva</strong> (ou <strong>menu</strong>).';
+                        instrucoes.innerHTML = '<p>Use a câmera do celular no QR, confirme abrir o link e envie <strong>troca</strong>, <strong>preventiva</strong> ou <strong>menu</strong> no chat.</p>';
                     } else {
-                        instrucoes.innerHTML = 'Para reconectar:<br>Desconectar bot → Escanear o QR.';
+                        instrucoes.innerHTML = '<p>Para reconectar outro aparelho: use <strong>Desconectar bot</strong> e escaneie o novo QR com o WhatsApp em <em>Aparelhos conectados</em>.</p>';
                     }
                 } else {
-                    statusEl.textContent = document.body.classList.contains('role-tecnico') ? 'Aguardando bot' : 'Conecte o bot (QR acima)';
+                    statusEl.textContent = document.body.classList.contains('role-tecnico') ? 'Aguardando o bot' : 'Conecte o bot pelo QR acima';
                     statusEl.className = 'status warn';
                     alertaBox.className = 'alerta-box';
                     if (document.body.classList.contains('role-tecnico')) {
-                        alertaBox.innerHTML = 'Bot offline.<br>Administrador precisa conectar primeiro.';
-                        instrucoes.innerHTML = 'Quando o bot estiver ativo:<br>Escaneie o QR e envie <strong>troca</strong>.';
+                        alertaBox.innerHTML = 'O bot ainda não está conectado. Um administrador precisa concluir o pareamento no site.';
+                        instrucoes.innerHTML = '<p>Assim que o bot estiver ativo, escaneie o QR e envie <strong>troca</strong> ou <strong>preventiva</strong> para gerar o registro.</p>';
                     } else {
-                        alertaBox.innerHTML = '<strong>Administrador</strong><br>Escaneie o QR com o celular AXIS.<br>WhatsApp → Menu → Aparelhos conectados → Conectar aparelho.';
-                    instrucoes.innerHTML = '<strong>Passos:</strong><ol><li>Celular AXIS</li><li>WhatsApp → Aparelhos conectados → Conectar</li><li>Escanear o QR</li></ol>';
+                        alertaBox.innerHTML = '<strong>Administrador</strong> — Escaneie o QR com o celular AXIS. No WhatsApp: menu <strong>⋮</strong> → <strong>Aparelhos conectados</strong> → <strong>Conectar um aparelho</strong>.';
+                        instrucoes.innerHTML = '<p>Mantenha esta página aberta até o status indicar conectado. Problemas: <a href="mailto:axis.upport@icloud.com">axis.upport@icloud.com</a>.</p>';
                     }
                     alertaBox.style.display = 'block';
                 }
@@ -383,7 +625,7 @@
                     .then(function(d) {
                         var overlay = document.getElementById('pmNotifOverlay');
                         var msg = document.getElementById('pmNotifMsg');
-                        msg.textContent = (d && d.message) || 'Escaneie o novo QR com um número DEDICADO (chip secundário ou linha da empresa).';
+                        msg.textContent = (d && d.message) || 'Escaneie o novo QR com um número dedicado (chip secundário ou linha da empresa).';
                         overlay.classList.add('show');
                         poll();
                     })

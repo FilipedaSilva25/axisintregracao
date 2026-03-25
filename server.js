@@ -2,14 +2,14 @@
  * Servidor principal - Projeto Vida / AXIS
  * Backend completo: API + arquivos estáticos.
  * Porta padrão 3006 (ou variável de ambiente PORT).
- * Para deploy online: use Render, Railway, etc. (ver docs/BACKEND_DEPLOY.md)
+ * Para deploy online: Render, Railway, VPS, Hostinger (ver docs/BACKEND_DEPLOY.md e docs/DEPLOY_HOSTINGER.md)
  */
 
 require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
 const http = require('http');
-const { PORT, ROOT_DIR, DATA_DIR } = require('./backend/config');
+const { PORT, ROOT_DIR, DATA_DIR, AXIS_APP_VERSION } = require('./backend/config');
 const { handleApi } = require('./backend/routes');
 const { serveFile, normalizeUrlPath } = require('./backend/static');
 
@@ -20,9 +20,13 @@ function ensureBotDataDir() {
             fs.mkdirSync(DATA_DIR, { recursive: true });
         }
         const packingFile = path.join(DATA_DIR, 'packing-trocas.json');
+        const packingPrevFile = path.join(DATA_DIR, 'packing-preventivas.json');
         const bancadasFile = path.join(DATA_DIR, 'bancadas-status.json');
         if (!fs.existsSync(packingFile)) {
             fs.writeFileSync(packingFile, JSON.stringify([], null, 2), 'utf8');
+        }
+        if (!fs.existsSync(packingPrevFile)) {
+            fs.writeFileSync(packingPrevFile, JSON.stringify([], null, 2), 'utf8');
         }
         if (!fs.existsSync(bancadasFile)) {
             fs.writeFileSync(bancadasFile, JSON.stringify({ bancadas: {}, updatedAt: null }, null, 2), 'utf8');
@@ -53,6 +57,7 @@ const server = http.createServer(async (req, res) => {
 
 server.listen(PORT, '0.0.0.0', () => {
     console.log('\n🚀 Servidor Projeto Vida / AXIS');
+    console.log(`   Versão: ${AXIS_APP_VERSION}`);
     console.log(`   http://localhost:${PORT}`);
     console.log(`   Pasta: ${ROOT_DIR}`);
     console.log('\n🤖 Bot WhatsApp: http://localhost:' + PORT + '/pages/whatsapp-qr.html');

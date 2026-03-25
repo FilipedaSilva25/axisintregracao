@@ -6,6 +6,17 @@ const fs = require('fs');
 const path = require('path');
 const { ROOT_DIR, PAGES_DIR, MIME_TYPES, HEADERS } = require('./config');
 
+/** Injeta o escudo da consola no <head> de todas as páginas HTML (desligar: AXIS_CONSOLE_SHIELD=0 no .env) */
+const AXIS_CONSOLE_SHIELD_OFF = String(process.env.AXIS_CONSOLE_SHIELD || '').trim() === '0';
+
+function maybeInjectConsoleShieldHtml(html) {
+    if (AXIS_CONSOLE_SHIELD_OFF || !html || typeof html !== 'string') return html;
+    if (html.includes('axis-console-shield.js')) return html;
+    return html.replace(/<head(\s[^>]*)?>/i, function (m) {
+        return m + '\n    <script src="/js/axis-console-shield.js"><\/script>';
+    });
+}
+
 const TEXT_EXT = ['.html', '.css', '.js', '.json', '.txt', '.xml'];
 
 function normalizeUrlPath(urlPath) {
@@ -88,7 +99,8 @@ function tryPagesFallback(req, res, urlPath, extname, contentType, encoding) {
                 ? { ...HEADERS, 'Content-Type': contentType + '; charset=utf-8', 'Cache-Control': 'no-cache' }
                 : { ...HEADERS, 'Content-Type': contentType };
             res.writeHead(200, ct);
-            res.end(content2, 'utf-8');
+            const out2 = extname === '.html' ? maybeInjectConsoleShieldHtml(content2) : content2;
+            res.end(out2, 'utf-8');
         });
     });
 }

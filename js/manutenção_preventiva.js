@@ -1,4 +1,16 @@
 /* ==========================================================
+   0. RUÍDO DE EXTENSÕES NO CONSOLE (NÃO É BUG DO AXIS)
+   ========================================================== */
+window.addEventListener('unhandledrejection', function (ev) {
+    try {
+        var msg = (ev.reason && (ev.reason.message || String(ev.reason))) || '';
+        if (typeof msg === 'string' && msg.toLowerCase().indexOf('message channel closed') !== -1) {
+            ev.preventDefault();
+        }
+    } catch (_) {}
+});
+
+/* ==========================================================
    1. MOTOR DE GERAÇÃO DE PDF + AVISO MODERNO (UNIFICADO)
    ========================================================== */
 document.addEventListener('DOMContentLoaded', function() {

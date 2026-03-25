@@ -2,7 +2,7 @@
   "bancadas": {
     "13": "DISPONIVEL",
     "15": "DISPONIVEL",
-    "20": "DISPONIVEL",
+    "20": "IMPRESSORA",
     "27": "DISPONIVEL",
     "30": "DISPONIVEL",
     "31": "DISPONIVEL",
@@ -37,5 +37,5 @@
     "PTW_11": "DISPONIVEL",
     "R01": "DISPONIVEL"
   },
-  "updatedAt": "2026-03-16T02:28:01.361Z"
+  "updatedAt": "2026-03-21T16:52:07.830Z"
 }

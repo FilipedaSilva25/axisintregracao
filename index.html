@@ -389,6 +389,21 @@
             font-weight: 400;
         }
 
+        .mod-card.chamados-master .mod-card-unit-sub {
+            margin: 8px 0 0 0;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.07em;
+            color: var(--text-secondary, #86868b);
+            text-transform: uppercase;
+            line-height: 1.2;
+        }
+
+        .mod-card.chamados-master .mod-content h3 {
+            font-size: clamp(11px, 1.9vw, 14px);
+            line-height: 1.25;
+        }
+
         /* Card Packing Machine - Vidro estilo Apple, destaque teal industrial */
         .mod-card.packing-master {
             background: linear-gradient(135deg, rgba(255, 255, 255, 0.85) 0%, rgba(0, 131, 143, 0.08) 50%, rgba(0, 188, 212, 0.06) 100%) !important;
@@ -1765,7 +1780,7 @@
                 <button data-nav-page="manutencao" onclick="window.location.href='pages/manutencao_preventiva.html'" class="side-item">🖨️ Manutenções Preventivas</button>
                 <button data-nav-page="page-suporte" onclick="if(typeof navigate === 'function') { navigate('page-suporte'); } return false;" class="side-item">💬 Suporte</button>
                 <button data-nav-page="bloco" onclick="window.location.href='pages/bloco_de_notas_apple.html'" class="side-item">📝 Bloco de Notas</button>
-                <button data-nav-page="registro" onclick="window.location.href='pages/registro_chamados.html'" class="side-item">📋 Registro de Chamados</button>
+                <button data-nav-page="registro" onclick="window.location.href='pages/registro_chamados.html'" class="side-item">📋 Mapeamento Chamados (BRSC02)</button>
                 <button data-nav-page="pecas" onclick="window.location.href='pages/pecas.html'" class="side-item">🔧 Peças</button>
                 <button data-nav-page="packing" onclick="window.location.href='pages/packing_machine.html'" class="side-item">🏭 Packing Machine</button>
                 <button data-nav-page="status-bancada" onclick="window.location.href='pages/status_bancada.html'" class="side-item">📊 Status de Bancada</button>
@@ -1872,11 +1887,12 @@
                         </div>
                     </div>
 
-                    <!-- Card Registro de Chamados (design vidro, cores do site) -->
+                    <!-- Card Mapeamento de Chamados BRSC02 -->
                     <div class="mod-card chamados-master" onclick="window.location.href='pages/registro_chamados.html'" tabindex="0" role="button">
                         <div class="mod-icon">📋</div>
                         <div class="mod-content">
-                            <h3 class="txt-axis-gradient">REGISTRO DE CHAMADOS</h3>
+                            <h3 class="txt-axis-gradient">MAPEAMENTO DE CHAMADOS DE IMPRESSORAS</h3>
+                            <p class="mod-card-unit-sub">UNIDADE DE BRSC02</p>
                         </div>
                     </div>
 
@@ -2051,8 +2067,8 @@
                                         <option value="inventario">INVENTÁRIO</option>
                                         <option value="cx">CX</option>
                                         <option value="returns">RETURNS</option>
-                                        <option value="packing-mono">PACKING MONO</option>
-                                        <option value="packing-ptw">PACKING PTW</option>
+                                        <option value="packing-mono">Packing mono</option>
+                                        <option value="packing-ptw">Packing ptw</option>
                                         <option value="sauron">Sauron</option>
                                         <option value="insumos">INSUMOS</option>
                                         <option value="docas-de-expedicao">DOCAS DE EXPEDIÇÃO</option>
@@ -2088,8 +2104,8 @@
                                         <div class="setor-selector-option" data-value="inventario" role="option">INVENTÁRIO</div>
                                         <div class="setor-selector-option" data-value="cx" role="option">CX</div>
                                         <div class="setor-selector-option" data-value="returns" role="option">RETURNS</div>
-                                        <div class="setor-selector-option" data-value="packing-mono" role="option">PACKING MONO</div>
-                                        <div class="setor-selector-option" data-value="packing-ptw" role="option">PACKING PTW</div>
+                                        <div class="setor-selector-option" data-value="packing-mono" role="option">Packing mono</div>
+                                        <div class="setor-selector-option" data-value="packing-ptw" role="option">Packing ptw</div>
                                         <div class="setor-selector-option" data-value="sauron" role="option">Sauron</div>
                                         <div class="setor-selector-option" data-value="insumos" role="option">INSUMOS</div>
                                         <div class="setor-selector-option" data-value="docas-de-expedicao" role="option">DOCAS DE EXPEDIÇÃO</div>
@@ -2621,6 +2637,18 @@
                         </div>
                     </div>
 
+                    <!-- Card: Mapeamento de chamados — abre página dedicada (como Conector WhatsApp) -->
+                    <div class="admin-dashboard-card admin-card-mapeamento-rc" onclick="if(typeof abrirAdminMapeamentoChamados === 'function') abrirAdminMapeamentoChamados();">
+                        <div class="admin-card-icon-wrapper">
+                            <div class="admin-card-icon" aria-hidden="true">🖨️</div>
+                        </div>
+                        <div class="admin-card-content">
+                            <h3>Mapeamento de chamados (BRSC02)</h3>
+                            <p>Atualize o <strong>status</strong> pelo <strong>IS</strong> (um registo por chamado). Abre numa página segura, como o conector do WhatsApp.</p>
+                            <button type="button" class="admin-card-btn" onclick="event.stopPropagation(); if(typeof abrirAdminMapeamentoChamados === 'function') abrirAdminMapeamentoChamados();">Abrir painel de status</button>
+                        </div>
+                    </div>
+
                     <!-- Card: Conector WhatsApp (QR só aqui — administrador) -->
                     <div class="admin-dashboard-card admin-card-whatsapp" onclick="if(typeof abrirWhatsappBotAdmin === 'function') abrirWhatsappBotAdmin();">
                         <div class="admin-card-icon-wrapper">
@@ -2829,7 +2857,7 @@
                             <button class="admin-modal-close" onclick="fecharModalEditarUsuario()">×</button>
                         </div>
                         <div class="admin-modal-body">
-                            <form id="editar-usuario-form" class="admin-form" onsubmit="salvarUsuarioEditado(event)">
+                            <form id="editar-usuario-form" class="admin-form editar-usuario-form-layout" action="#" method="post">
                                 <input type="hidden" id="editar-usuario-login">
                                 <input type="hidden" id="editar-usuario-original-key">
                                 <div class="form-row">
@@ -2876,8 +2904,8 @@
                                                 <option value="">Selecione um setor</option>
                                                 <option value="Internal Systems">Internal Systems</option>
                                                 <option value="Sauron">Sauron</option>
-                                                <option value="PACKING MONO">PACKING MONO</option>
-                                                <option value="PACKING PTW">PACKING PTW</option>
+                                                <option value="PACKING MONO">Packing mono</option>
+                                                <option value="PACKING PTW">Packing ptw</option>
                                                 <option value="Operação Packing Mono">Operação Packing Mono</option>
                                                 <option value="Operação Packing PTW">Operação Packing PTW</option>
                                             </select>
@@ -2891,16 +2919,16 @@
                                                 <div class="perfil-select-option" data-value="" role="option">Selecione um setor</div>
                                                 <div class="perfil-select-option" data-value="Internal Systems" role="option"><span class="perfil-option-icon">💻</span>Internal Systems</div>
                                                 <div class="perfil-select-option" data-value="Sauron" role="option"><span class="perfil-option-icon">🔮</span>Sauron</div>
-                                                <div class="perfil-select-option" data-value="PACKING MONO" role="option"><span class="perfil-option-icon">📦</span>PACKING MONO</div>
-                                                <div class="perfil-select-option" data-value="PACKING PTW" role="option"><span class="perfil-option-icon">📦</span>PACKING PTW</div>
+                                                <div class="perfil-select-option" data-value="PACKING MONO" role="option"><span class="perfil-option-icon">📦</span>Packing mono</div>
+                                                <div class="perfil-select-option" data-value="PACKING PTW" role="option"><span class="perfil-option-icon">📦</span>Packing ptw</div>
                                                 <div class="perfil-select-option" data-value="Operação Packing Mono" role="option"><span class="perfil-option-icon">📦</span>Operação Packing Mono</div>
                                                 <div class="perfil-select-option" data-value="Operação Packing PTW" role="option"><span class="perfil-option-icon">📦</span>Operação Packing PTW</div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="form-row">
-                                    <div class="input-group">
+                                <div class="form-row form-row-editar-matricula">
+                                    <div class="input-group input-group--matricula">
                                         <label for="editar-usuario-matricula">Matrícula AXIS</label>
                                         <input type="text" id="editar-usuario-matricula" readonly class="input-readonly" placeholder="Atribuída automaticamente" title="Gerada automaticamente ao criar o usuário; ajuda administradores a localizar colaboradores.">
                                     </div>
@@ -3735,8 +3763,8 @@
                                             <option value="inventario">INVENTÁRIO</option>
                                             <option value="cx">CX</option>
                                             <option value="returns">RETURNS</option>
-                                            <option value="packing-mono">PACKING MONO</option>
-                                            <option value="packing-ptw">PACKING PTW</option>
+                                            <option value="packing-mono">Packing mono</option>
+                                            <option value="packing-ptw">Packing ptw</option>
                                             <option value="sauron">Sauron</option>
                                             <option value="insumos">INSUMOS</option>
                                             <option value="docas-de-expedicao">DOCAS DE EXPEDIÇÃO</option>
@@ -3772,8 +3800,8 @@
                                             <div class="setor-selector-option" data-value="inventario" role="option">INVENTÁRIO</div>
                                             <div class="setor-selector-option" data-value="cx" role="option">CX</div>
                                             <div class="setor-selector-option" data-value="returns" role="option">RETURNS</div>
-                                            <div class="setor-selector-option" data-value="packing-mono" role="option">PACKING MONO</div>
-                                            <div class="setor-selector-option" data-value="packing-ptw" role="option">PACKING PTW</div>
+                                            <div class="setor-selector-option" data-value="packing-mono" role="option">Packing mono</div>
+                                            <div class="setor-selector-option" data-value="packing-ptw" role="option">Packing ptw</div>
                                             <div class="setor-selector-option" data-value="sauron" role="option">Sauron</div>
                                             <div class="setor-selector-option" data-value="insumos" role="option">INSUMOS</div>
                                             <div class="setor-selector-option" data-value="docas-de-expedicao" role="option">DOCAS DE EXPEDIÇÃO</div>
@@ -3933,7 +3961,7 @@
                     </div>
                     <div class="info-row">
                         <span class="info-label">Setor:</span>
-                        <span class="info-value" id="detail-setor">PACKING MONO</span>
+                        <span class="info-value" id="detail-setor">Packing mono</span>
                     </div>
                     <div class="info-row">
                         <span class="info-label">Bancada:</span>

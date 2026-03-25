@@ -58,6 +58,7 @@ function atualizarDashboardCompleto() {
         
         atualizarKPIs(notasFiscais);
         atualizarGraficos(notasFiscais);
+        atualizarUltimasNotasDashboard(notasFiscais);
         
         // Atualizar contador no menu
         const nfCountEl = document.getElementById('nf-count');
@@ -328,6 +329,104 @@ function atualizarGraficos(notas) {
     }
 }
 
+function axisEscHtml(str) {
+    if (str == null) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function axisIdParaOnclick(id) {
+    return String(id == null ? '' : id).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\r|\n/g, '');
+}
+
+function timestampOrdenacaoNota(n) {
+    if (n.uploadDate) {
+        var u = new Date(n.uploadDate).getTime();
+        if (!isNaN(u)) return u;
+    }
+    if (n.data) {
+        var d = new Date(n.data).getTime();
+        if (!isNaN(d)) return d;
+    }
+    return 0;
+}
+
+/** Preenche a tabela «Últimas notas fiscais» com dados reais (mais recentes primeiro). */
+function atualizarUltimasNotasDashboard(notas) {
+    var tbody = document.getElementById('recent-nfs-table');
+    if (!tbody) return;
+    if (!notas || !Array.isArray(notas) || notas.length === 0) {
+        tbody.innerHTML =
+            '<tr><td colspan="6" style="text-align:center;padding:28px;color:var(--text-secondary);">Nenhuma nota cadastrada ainda</td></tr>';
+        return;
+    }
+
+    var copia = notas.slice().sort(function (a, b) {
+        return timestampOrdenacaoNota(b) - timestampOrdenacaoNota(a);
+    });
+    var limite = Math.min(12, copia.length);
+    var html = '';
+    var fmtData = typeof formatarData === 'function' ? formatarData : null;
+    var fmtMoeda = typeof formatarMoeda === 'function' ? formatarMoeda : null;
+
+    for (var i = 0; i < limite; i++) {
+        var n = copia[i];
+        var nid = n.id != null ? n.id : n.numero;
+        var safeClick = axisIdParaOnclick(nid);
+        var numLimpo = String(n.numero != null ? n.numero : '—').replace(/^NF-?/i, '');
+        var num = axisEscHtml(numLimpo);
+        var forn = axisEscHtml(n.cliente || n.fornecedor || '—');
+        var dataStr = fmtData ? fmtData(n.data) : axisEscHtml(n.data || '—');
+        var valorStr = fmtMoeda ? fmtMoeda(n.valor) : axisEscHtml(n.valor != null ? n.valor : '—');
+        var st = (n.status || 'pendente').toString();
+        var stLower = st.toLowerCase();
+        var badgeClass =
+            stLower === 'pago' || stLower === 'paga'
+                ? 'pago'
+                : stLower === 'vencido' || stLower === 'vencida'
+                  ? 'vencido'
+                  : 'pendente';
+        html +=
+            '<tr>' +
+            '<td><strong>NF-' +
+            num +
+            '</strong></td>' +
+            '<td>' +
+            forn +
+            '</td>' +
+            '<td>' +
+            dataStr +
+            '</td>' +
+            '<td>' +
+            valorStr +
+            '</td>' +
+            '<td><span class="status-badge ' +
+            badgeClass +
+            '">' +
+            axisEscHtml(st) +
+            '</span></td>' +
+            '<td class="col-acoes-recent">' +
+            '<button type="button" class="btn-icon dash-nf-view" title="Ver documento" onclick="event.stopPropagation();if(typeof abrirModalVisualizarNF===\'function\')abrirModalVisualizarNF(\'' +
+            safeClick +
+            '\');else if(typeof mostrarPreviewRapidoNF===\'function\')mostrarPreviewRapidoNF(\'' +
+            safeClick +
+            '\');">' +
+            '<i class="fas fa-eye"></i></button>' +
+            '</td>' +
+            '</tr>';
+    }
+    tbody.innerHTML = html;
+}
+
+function irParaBibliotecaNotas() {
+    if (typeof showSection === 'function') {
+        showSection('notas');
+    }
+}
+
 // Busca inteligente
 function buscarNotasFiscais(termo) {
     if (!termo || termo.trim() === '') {
@@ -413,6 +512,7 @@ function renderizarNotasFiscais(notas) {
     
     renderizarGridNotas(notas);
     renderizarListaNotas(notas);
+    atualizarUltimasNotasDashboard(notas);
 }
 
 function renderizarGridNotas(notas) {
@@ -433,30 +533,36 @@ function renderizarGridNotas(notas) {
         const notaIdUnico = nota.id || nota.numero || ('nota_' + index);
         html += `
             <div class="nf-card axis-card nf-card-selectable" data-nf-id="${notaIdUnico}" onclick="abrirDetalhesNF('${notaIdUnico}')">
+                <div class="nf-card-glow" aria-hidden="true"></div>
                 <div class="nf-card-check-wrap">
                     <input type="checkbox" class="nf-checkbox" data-nf-id="${notaIdUnico}" onclick="event.stopPropagation(); toggleSelecaoNF('${notaIdUnico}');" title="Selecionar para exclusão em massa">
                 </div>
-                <div class="nf-card-header">
-                    <span class="nf-number">NF-${nota.numero || 'N/A'}</span>
-                    <span class="status-badge ${statusClass}">${nota.status || 'pendente'}</span>
+                <div class="nf-card-top">
+                    <span class="nf-card-pdf-badge" aria-hidden="true"><i class="fas fa-file-pdf"></i></span>
+                    <div class="nf-card-header">
+                        <span class="nf-number">NF-${nota.numero || 'N/A'}</span>
+                        <span class="status-badge ${statusClass}">${nota.status || 'pendente'}</span>
+                    </div>
                 </div>
                 <div class="nf-card-body">
-                    <h4>${nota.cliente || nota.fornecedor || 'Fornecedor não informado'}</h4>
-                    <p><i class="fas fa-calendar"></i> ${formatarData(nota.data)}</p>
-                    <p><i class="fas fa-dollar-sign"></i> ${formatarMoeda(nota.valor)}</p>
+                    <h4 class="nf-card-cliente">${nota.cliente || nota.fornecedor || 'Fornecedor não informado'}</h4>
+                    <div class="nf-card-meta">
+                        <span class="nf-card-meta-item"><i class="fas fa-calendar-alt"></i> ${formatarData(nota.data)}</span>
+                        <span class="nf-card-meta-item nf-card-valor">${formatarMoeda(nota.valor)}</span>
+                    </div>
                 </div>
                 <div class="nf-card-actions">
-                    <button type="button" class="btn-icon" onclick="event.stopPropagation(); if(typeof mostrarPreviewRapidoNF !== 'undefined') mostrarPreviewRapidoNF('${notaIdUnico}'); else if(typeof visualizarNF !== 'undefined') visualizarNF('${notaIdUnico}');" title="Visualizar">
+                    <button type="button" class="nf-btn nf-btn-view" onclick="event.stopPropagation(); if(typeof abrirModalVisualizarNF==='function')abrirModalVisualizarNF('${notaIdUnico}'); else if(typeof mostrarPreviewRapidoNF==='function')mostrarPreviewRapidoNF('${notaIdUnico}');" title="Ver documento">
                         <i class="fas fa-eye"></i>
                     </button>
-                    <button type="button" class="btn-icon" onclick="event.stopPropagation(); editarNF('${notaIdUnico}')" title="Editar">
+                    <button type="button" class="nf-btn nf-btn-icon" onclick="event.stopPropagation(); editarNF('${notaIdUnico}')" title="Editar">
                         <i class="fas fa-edit"></i>
                     </button>
-                    <button type="button" class="btn-icon" onclick="event.stopPropagation(); if(typeof confirmarDownloadPDF !== 'undefined') confirmarDownloadPDF('${notaIdUnico}'); else if(typeof baixarPDF !== 'undefined') baixarPDF('${notaIdUnico}');" title="Baixar PDF">
+                    <button type="button" class="nf-btn nf-btn-icon" onclick="event.stopPropagation(); if(typeof confirmarDownloadPDF==='function')confirmarDownloadPDF('${notaIdUnico}'); else if(typeof baixarPDF==='function')baixarPDF('${notaIdUnico}');" title="Baixar">
                         <i class="fas fa-download"></i>
                     </button>
-                    <button type="button" class="btn-icon btn-trash" onclick="event.stopPropagation(); moverParaLixeiraNF('${notaIdUnico}');" title="Mover para Lixeira">
-                        <i class="fas fa-trash"></i>
+                    <button type="button" class="nf-btn nf-btn-icon nf-btn-trash" onclick="event.stopPropagation(); moverParaLixeiraNF('${notaIdUnico}');" title="Lixeira">
+                        <i class="fas fa-trash-alt"></i>
                     </button>
                 </div>
             </div>
@@ -494,7 +600,7 @@ function renderizarListaNotas(notas) {
                 <td>${formatarMoeda(nota.valor)}</td>
                 <td><span class="status-badge ${statusClass}">${nota.status || 'pendente'}</span></td>
                 <td class="col-acoes">
-                    <button class="btn-icon" onclick="event.stopPropagation(); if(typeof mostrarPreviewRapidoNF !== 'undefined') mostrarPreviewRapidoNF('${notaIdUnico}'); else if(typeof visualizarNF !== 'undefined') visualizarNF('${notaIdUnico}');" title="Visualizar Rápido">
+                    <button type="button" class="nf-btn nf-btn-view nf-btn-view--table" onclick="event.stopPropagation(); if(typeof abrirModalVisualizarNF==='function')abrirModalVisualizarNF('${notaIdUnico}'); else if(typeof mostrarPreviewRapidoNF==='function')mostrarPreviewRapidoNF('${notaIdUnico}');" title="Ver documento">
                         <i class="fas fa-eye"></i>
                     </button>
                     <button class="btn-icon" onclick="event.stopPropagation(); editarNF('${notaIdUnico}')" title="Editar">
@@ -700,8 +806,140 @@ function visualizarNF(id) {
     alert('Visualizar NF ' + id);
 }
 
-function editarNF(id) {
-    alert('Editar NF ' + id);
+function buscarNotaNoStateAxis(notaId) {
+    if (typeof state === 'undefined' || !state.notasFiscais) return null;
+    var id = String(notaId);
+    return state.notasFiscais.find(function (n) {
+        return String(n.id) === id || String(n.numero) === id;
+    });
+}
+
+function nfDataParaInputDate(data) {
+    if (!data) return '';
+    var d = new Date(data);
+    if (!isNaN(d.getTime())) {
+        return d.toISOString().split('T')[0];
+    }
+    var m = String(data).match(/(\d{4})-(\d{2})-(\d{2})/);
+    return m ? m[0] : '';
+}
+
+function nfValorParaInput(valor) {
+    if (valor === undefined || valor === null || valor === '') return '';
+    var n = parseFloat(valor);
+    if (isNaN(n)) return String(valor);
+    return n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function abrirModalEditarNotaFiscal(notaId) {
+    var nota = buscarNotaNoStateAxis(notaId);
+    if (!nota) {
+        if (typeof mostrarToast !== 'undefined') {
+            mostrarToast('Nota fiscal não encontrada', 'error');
+        }
+        return;
+    }
+    if (typeof fecharModalVisualizarNF === 'function') {
+        fecharModalVisualizarNF();
+    }
+    if (typeof fecharPreviewRapidoNF === 'function') {
+        fecharPreviewRapidoNF();
+    }
+
+    var modal = document.getElementById('nf-edit-modal');
+    if (!modal) return;
+
+    document.getElementById('nf-edit-nota-id').value = nota.id != null ? String(nota.id) : String(nota.numero);
+    document.getElementById('nf-edit-numero').value = nota.numero != null ? String(nota.numero) : '';
+    document.getElementById('nf-edit-cliente').value = nota.cliente || nota.fornecedor || '';
+    document.getElementById('nf-edit-data').value = nfDataParaInputDate(nota.data);
+    document.getElementById('nf-edit-venc').value = nfDataParaInputDate(nota.dataVencimento);
+    document.getElementById('nf-edit-valor').value = nfValorParaInput(nota.valor);
+
+    var st = (nota.status || 'pendente').toLowerCase();
+    var sel = document.getElementById('nf-edit-status');
+    if (sel) {
+        var ok = false;
+        for (var i = 0; i < sel.options.length; i++) {
+            if (sel.options[i].value === st) {
+                sel.selectedIndex = i;
+                ok = true;
+                break;
+            }
+        }
+        if (!ok) sel.value = 'pendente';
+    }
+
+    modal.style.display = '';
+    modal.classList.add('show');
+}
+
+function salvarEdicaoNotaFiscal() {
+    var hiddenId = document.getElementById('nf-edit-nota-id');
+    if (!hiddenId) return;
+    var notaId = hiddenId.value;
+    var nota = buscarNotaNoStateAxis(notaId);
+    if (!nota) {
+        if (typeof mostrarToast !== 'undefined') {
+            mostrarToast('Nota não encontrada', 'error');
+        }
+        return;
+    }
+
+    var numEl = document.getElementById('nf-edit-numero');
+    var cliEl = document.getElementById('nf-edit-cliente');
+    var dataEl = document.getElementById('nf-edit-data');
+    var vencEl = document.getElementById('nf-edit-venc');
+    var valorEl = document.getElementById('nf-edit-valor');
+    var stEl = document.getElementById('nf-edit-status');
+
+    if (numEl) nota.numero = numEl.value.trim() || nota.numero;
+    if (cliEl) {
+        nota.cliente = cliEl.value.trim();
+        nota.fornecedor = nota.cliente;
+    }
+    if (dataEl && dataEl.value) {
+        nota.data = dataEl.value;
+    }
+    if (vencEl) {
+        nota.dataVencimento = vencEl.value || null;
+    }
+    if (valorEl && valorEl.value) {
+        var raw = valorEl.value.replace(/\./g, '').replace(',', '.');
+        var v = parseFloat(raw);
+        if (!isNaN(v)) nota.valor = v;
+    }
+    if (stEl) nota.status = stEl.value;
+
+    if (typeof window.axisSincronizarFornecedorDaNota === 'function') {
+        try {
+            window.axisSincronizarFornecedorDaNota(nota);
+        } catch (eSync) {}
+    }
+
+    if (typeof salvarDados === 'function') {
+        salvarDados();
+    }
+    if (typeof renderizarNotasFiscais === 'function') {
+        renderizarNotasFiscais(state.notasFiscais);
+    }
+    if (typeof atualizarDashboardCompleto === 'function') {
+        atualizarDashboardCompleto();
+    }
+
+    if (typeof closeModal === 'function') {
+        closeModal('nf-edit-modal');
+    } else {
+        var m = document.getElementById('nf-edit-modal');
+        if (m) {
+            m.classList.remove('show');
+            m.style.display = 'none';
+        }
+    }
+
+    if (typeof mostrarToast !== 'undefined') {
+        mostrarToast('Nota atualizada', 'success');
+    }
 }
 
 function baixarPDF(id) {
@@ -709,11 +947,17 @@ function baixarPDF(id) {
 }
 
 function abrirDetalhesNF(id) {
-    alert('Abrir detalhes da NF ' + id);
+    if (typeof mostrarPreviewRapidoNF === 'function') {
+        mostrarPreviewRapidoNF(id);
+    } else if (typeof abrirModalVisualizarNF === 'function') {
+        abrirModalVisualizarNF(id);
+    }
 }
 
 // Exportar funções globais
 window.atualizarDashboardCompleto = atualizarDashboardCompleto;
+window.atualizarUltimasNotasDashboard = atualizarUltimasNotasDashboard;
+window.irParaBibliotecaNotas = irParaBibliotecaNotas;
 window.buscarNotasFiscais = buscarNotasFiscais;
 window.filtrarPorStatus = filtrarPorStatus;
 window.changeView = changeView;
@@ -728,7 +972,8 @@ window.enviarEmailEmMassa = enviarEmailEmMassa;
 window.aplicarTagEmMassa = aplicarTagEmMassa;
 window.excluirEmMassa = excluirEmMassa;
 window.visualizarNF = visualizarNF;
-window.editarNF = editarNF;
+window.abrirModalEditarNotaFiscal = abrirModalEditarNotaFiscal;
+window.salvarEdicaoNotaFiscal = salvarEdicaoNotaFiscal;
 window.baixarPDF = baixarPDF;
 window.abrirDetalhesNF = abrirDetalhesNF;
 
@@ -747,8 +992,8 @@ function showSection(sectionId) {
     
     // Atualizar título da página
     const titles = {
-        'dashboard': 'Dashboard',
-        'notas': 'Notas Fiscais',
+        'dashboard': 'Dashboard Financeiro',
+        'notas': 'AXIS NOTAS FISCAIS',
         'fornecedores': 'Fornecedores',
         'relatorios': 'Relatórios',
         'backup': 'Backup',
@@ -758,20 +1003,36 @@ function showSection(sectionId) {
     
     const titleEl = document.getElementById('page-title');
     const subtitleEl = document.querySelector('.page-subtitle');
+    const subtitleDetailEl = document.getElementById('page-subtitle-detail');
     
     if (titleEl) {
-        titleEl.textContent = titles[sectionId] || 'Dashboard';
+        titleEl.textContent = titles[sectionId] || 'Dashboard Financeiro';
+    }
+    
+    if (subtitleDetailEl) {
+        if (sectionId === 'dashboard') {
+            subtitleDetailEl.style.display = 'flex';
+            subtitleDetailEl.innerHTML =
+                '<i class="fas fa-sync-alt" aria-hidden="true"></i> Dados atualizados em tempo real';
+        } else {
+            subtitleDetailEl.style.display = 'none';
+            subtitleDetailEl.innerHTML = '';
+        }
     }
     
     if (subtitleEl) {
-        if (sectionId === 'dashboard') {
-            subtitleEl.textContent = 'Sistema inteligente de gestão fiscal';
-        } else if (sectionId === 'notas') {
-            subtitleEl.textContent = 'Gerencie todas as suas notas fiscais';
+        if (sectionId === 'notas') {
+            subtitleEl.textContent = '';
+            subtitleEl.style.display = 'none';
+        } else if (sectionId === 'dashboard') {
+            subtitleEl.style.display = '';
+            subtitleEl.textContent = 'Visão geral inteligente das suas notas fiscais';
         } else if (sectionId === 'lixeira') {
+            subtitleEl.style.display = '';
             subtitleEl.textContent = 'Notas fiscais excluídas';
         } else {
             subtitleEl.textContent = '';
+            subtitleEl.style.display = 'none';
         }
     }
     
@@ -794,12 +1055,17 @@ function showSection(sectionId) {
     if (sectionId === 'dashboard') {
         setTimeout(function() {
             if (typeof atualizarDashboardCompleto === 'function') atualizarDashboardCompleto();
-        }, 100);
+        }, 80);
     }
     if (sectionId === 'relatorios') {
         setTimeout(function() {
             if (typeof gerarRelatorioAvancado === 'function') gerarRelatorioAvancado();
         }, 100);
+    }
+    if (sectionId === 'fornecedores') {
+        setTimeout(function() {
+            if (typeof renderizarTabelaFornecedores === 'function') renderizarTabelaFornecedores();
+        }, 50);
     }
 }
 
@@ -904,6 +1170,8 @@ window.limparFiltros = limparFiltros;
 window.mostrarToast = mostrarToast;
 window.adicionarNotificacao = adicionarNotificacao;
 window.atualizarDashboardCompleto = atualizarDashboardCompleto;
+window.atualizarUltimasNotasDashboard = atualizarUltimasNotasDashboard;
+window.irParaBibliotecaNotas = irParaBibliotecaNotas;
 window.atualizarKPIs = atualizarKPIs;
 window.atualizarGraficos = atualizarGraficos;
 window.buscarNotasFiscais = buscarNotasFiscais;
@@ -925,10 +1193,12 @@ if (typeof formatarMoeda === 'undefined') {
 
 // Inicializar dashboard quando possível
 function inicializarDashboardAutomatico() {
-    // Esperar um pouco para garantir que state esteja disponível
     setTimeout(function() {
         atualizarDashboardCompleto();
-    }, 1500);
+    }, 200);
+    setTimeout(function() {
+        atualizarDashboardCompleto();
+    }, 900);
 }
 
 // Inicializar quando a página carregar

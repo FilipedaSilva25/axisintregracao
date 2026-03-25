@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- AXIS | PACKING MACHINE - Troca de Cabeça de Impressão -->
+<!-- AXIS | PACKING MACHINE - Cabeça de impressão e preventivas -->
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AXIS | PACKING MACHINE - Troca de Cabeça</title>
+    <title>AXIS | PACKING MACHINE</title>
     <link rel="stylesheet" href="../css/packing_machine.css">
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -27,39 +27,28 @@
         </div>
     </header>
 
+    <nav class="pm-main-tabs" role="tablist" aria-label="Módulos Packing Machine">
+        <button type="button" class="pm-main-tab pm-main-tab--active" role="tab" aria-selected="true" data-pm-tab="trocas" id="pm-tab-trocas">CABEÇA DE IMPRESSÃO</button>
+        <button type="button" class="pm-main-tab" role="tab" aria-selected="false" data-pm-tab="preventivas" id="pm-tab-preventivas">PREVENTIVAS</button>
+    </nav>
+
+    <div id="pm-view-trocas" class="pm-view pm-view--active" role="tabpanel" aria-labelledby="pm-tab-trocas">
     <main class="pm-main">
         <!-- Coluna esquerda: Formulários -->
         <div class="pm-left-column">
             <!-- Card: Registro rápido (data/hora atual) -->
             <section class="pm-glass-card pm-card-registro">
                 <h2 class="pm-form-title">
-                    <span class="pm-title-accent">TROCA DE CABEÇA</span>
-                    <span class="pm-title-dark"> DE IMPRESSÃO</span>
+                    <span class="pm-title-accent">CABEÇA DE IMPRESSÃO</span>
                 </h2>
                 <div class="pm-whatsapp-block">
                     <p class="pm-whatsapp-text">Envie <strong>troca</strong> pelo WhatsApp ao bot AXIS e o registro aparecerá aqui automaticamente.</p>
-                    <span id="pm-admin-links" style="display:none;">
-                        <a href="whatsapp-qr.html" class="pm-btn-qr-glass">Ver QR Code</a>
-                    </span>
-                    <span id="pm-tecnico-qr-link" style="display:none;">
-                        <a href="whatsapp-qr.html" class="pm-btn-qr-glass pm-btn-qr-tecnico">Escanear QR do bot WhatsApp</a>
-                    </span>
-                </div>
-
-                <div class="pm-instructions">
-                    <p class="pm-instructions-title">Passo a passo para validação do ciclo de impressão</p>
-                    <ol class="pm-instructions-list">
-                        <li>Faça login com o usuário de manutenção</li>
-                        <li>Clique no ícone de engrenagem</li>
-                        <li>Clique em Métricas de Produtividade</li>
-                        <li>Nesta página, informe a contagem de ciclos no campo abaixo</li>
-                        <li>Após trocar a cabeça: redefina as métricas em Reset User Metrics</li>
-                    </ol>
+                    <p class="pm-whatsapp-hint pm-whatsapp-support">Dúvidas ou problemas: reporte ao e-mail <a href="mailto:axis.upport@icloud.com">axis.upport@icloud.com</a>.</p>
                 </div>
 
                 <form id="pm-form">
                     <div class="pm-field">
-                        <label>NÚMERO DA PM *</label>
+                        <label>NÚMERO DA PM</label>
                         <div class="pm-radio-group">
                             <label class="pm-radio-label"><input type="radio" name="pm-numero" value="PM 1" required> PM 1</label>
                             <label class="pm-radio-label"><input type="radio" name="pm-numero" value="PM 2"> PM 2</label>
@@ -70,15 +59,15 @@
                         </div>
                     </div>
                     <div class="pm-field">
-                        <label for="pm-quantidade">QUANTIDADE DE IMPRESSÕES *</label>
+                        <label for="pm-quantidade">QUANTIDADE DE IMPRESSÕES</label>
                         <input type="number" id="pm-quantidade" name="pm-quantidade" placeholder="Ex: 70303" min="0" max="999999999" required>
                     </div>
                     <div class="pm-field">
-                        <label for="pm-tecnico">NOME DO TÉCNICO RESPONSÁVEL *</label>
+                        <label for="pm-tecnico">NOME DO TÉCNICO RESPONSÁVEL</label>
                         <input type="text" id="pm-tecnico" name="pm-tecnico" placeholder="Seu nome" maxlength="100" required>
                     </div>
                     <button type="submit" class="pm-btn-submit pm-btn-teal">
-                        <i class="fas fa-paper-plane"></i> REGISTRAR TROCA
+                        <i class="fas fa-paper-plane"></i> REGISTRAR
                     </button>
                 </form>
             </section>
@@ -93,14 +82,14 @@
                 <form id="pm-form-manual">
                     <div class="pm-form-row-inline pm-form-row-data-hora">
                         <div class="pm-field pm-field-half">
-                            <label for="pm-manual-data">DATA *</label>
+                            <label for="pm-manual-data">DATA</label>
                             <div class="pm-input-glass pm-input-date-wrap">
                                 <i class="fas fa-calendar-alt pm-input-icon"></i>
                                 <input type="text" id="pm-manual-data" name="pm-manual-data" class="pm-input-glass-inner" placeholder="dd/mm/aaaa" required>
                             </div>
                         </div>
                         <div class="pm-field pm-field-time">
-                            <label>HORA * (hora, minutos e segundos)</label>
+                            <label>HORA (hora, minutos e segundos)</label>
                             <div class="pm-time-glass">
                                 <div class="pm-time-segment">
                                     <input type="number" id="pm-manual-hora" min="0" max="23" placeholder="HH" value="" required>
@@ -120,7 +109,7 @@
                         </div>
                     </div>
                     <div class="pm-field">
-                        <label>NÚMERO DA PM *</label>
+                        <label>NÚMERO DA PM</label>
                         <div class="pm-radio-group">
                             <label class="pm-radio-label"><input type="radio" name="pm-manual-numero" value="PM 1" required> PM 1</label>
                             <label class="pm-radio-label"><input type="radio" name="pm-manual-numero" value="PM 2"> PM 2</label>
@@ -131,11 +120,11 @@
                         </div>
                     </div>
                     <div class="pm-field">
-                        <label for="pm-manual-quantidade">QUANTIDADE DE IMPRESSÕES *</label>
+                        <label for="pm-manual-quantidade">QUANTIDADE DE IMPRESSÕES</label>
                         <input type="number" id="pm-manual-quantidade" name="pm-manual-quantidade" placeholder="Ex: 70303" min="0" max="999999999" required>
                     </div>
                     <div class="pm-field">
-                        <label for="pm-manual-tecnico">NOME DO TÉCNICO RESPONSÁVEL *</label>
+                        <label for="pm-manual-tecnico">NOME DO TÉCNICO RESPONSÁVEL</label>
                         <input type="text" id="pm-manual-tecnico" name="pm-manual-tecnico" placeholder="Nome do técnico" maxlength="100" required>
                     </div>
                     <button type="submit" class="pm-btn-submit pm-btn-coral">
@@ -150,7 +139,7 @@
                 <div class="pm-dash-tres-blocos">
                     <div class="pm-dash-card pm-dash-teal">
                         <span class="pm-dash-value" id="pm-dash-total">0</span>
-                        <span class="pm-dash-label">TOTAL DE TROCAS</span>
+                        <span class="pm-dash-label">TOTAL DE REGISTROS</span>
                     </div>
                     <div class="pm-dash-card pm-dash-violet">
                         <span class="pm-dash-value" id="pm-dash-mes">0</span>
@@ -165,13 +154,13 @@
             <!-- Gráficos -->
             <div class="pm-charts-row">
                 <section class="pm-glass-card pm-chart-card pm-chart-pm pm-chart-3d">
-                    <h3 class="pm-chart-title">TROCAS POR PM</h3>
+                    <h3 class="pm-chart-title">REGISTROS POR PM</h3>
                     <div class="pm-chart-wrap pm-chart-round-3d">
                         <canvas id="pm-chart-por-pm"></canvas>
                     </div>
                 </section>
                 <section class="pm-glass-card pm-chart-card pm-chart-tempo">
-                    <h3 class="pm-chart-title">TEMPO MÉDIO ENTRE TROCAS (dias)</h3>
+                    <h3 class="pm-chart-title">TEMPO MÉDIO ENTRE REGISTROS (dias)</h3>
                     <div class="pm-chart-wrap">
                         <canvas id="pm-chart-tempo-troca"></canvas>
                     </div>
@@ -181,7 +170,7 @@
             <!-- Painel: Histórico -->
             <section class="pm-glass-card pm-panel-trocas">
                 <div class="pm-panel-header">
-                    <h3>HISTÓRICO DE TROCAS</h3>
+                    <h3>HISTÓRICO — CABEÇA DE IMPRESSÃO</h3>
                     <div class="pm-panel-actions pm-panel-actions-row">
                         <input type="search" id="pm-search" placeholder="Buscar por PM, técnico..." class="pm-search">
                         <div class="pm-filter-wrap">
@@ -216,27 +205,181 @@
                         <tbody id="pm-tbody"></tbody>
                     </table>
                 </div>
-                <div class="pm-empty" id="pm-empty">Nenhuma troca registrada.</div>
+                <div class="pm-empty" id="pm-empty">Nenhum registro de cabeça de impressão.</div>
             </section>
         </div>
     </main>
+    </div>
 
-    <script>
-        (function() {
-            var adminEl = document.getElementById('pm-admin-links');
-            var tecnicoEl = document.getElementById('pm-tecnico-qr-link');
-            try {
-                var login = localStorage.getItem('current_user_login');
-                var userData = login ? localStorage.getItem('db_' + login) : null;
-                var db = userData ? JSON.parse(userData) : null;
-                var isAdmin = db && db.perfil === 'admin';
-                if (adminEl) adminEl.style.display = isAdmin ? 'inline' : 'none';
-                if (tecnicoEl) tecnicoEl.style.display = isAdmin ? 'none' : 'inline';
-            } catch (e) {
-                if (tecnicoEl) tecnicoEl.style.display = 'inline';
-            }
-        })();
-    </script>
+    <div id="pm-view-preventivas" class="pm-view pm-prev-page" role="tabpanel" aria-labelledby="pm-tab-preventivas" hidden>
+        <main class="pm-main">
+            <div class="pm-left-column">
+                <section class="pm-glass-card pm-card-manual">
+                    <h2 class="pm-form-title">
+                        <span class="pm-title-accent">PREVENTIVAS</span>
+                        <span class="pm-title-dark"> DE PACKING MACHINE</span>
+                    </h2>
+                    <div class="pm-whatsapp-block pm-prev-info-block">
+                        <p class="pm-whatsapp-text pm-prev-info-lead">Registre preventivas pelo bot <strong>AXIS</strong> no WhatsApp: envie <strong>preventiva</strong> ou escolha a <strong>opção 2</strong> no menu. O registro aparece nesta página automaticamente.</p>
+                        <div class="pm-prev-contact-grid" aria-label="Contato do suporte">
+                            <div class="pm-prev-contact-row">
+                                <span class="pm-prev-contact-label">E-mail</span>
+                                <a href="mailto:axis.support@icloud.com" class="pm-prev-contact-value">axis.support@icloud.com</a>
+                            </div>
+                            <div class="pm-prev-contact-row">
+                                <span class="pm-prev-contact-label">WhatsApp</span>
+                                <a href="https://wa.me/5548991578172" target="_blank" rel="noopener" class="pm-prev-contact-value">+55 (48) 99157-8172</a>
+                            </div>
+                        </div>
+                        <p class="pm-whatsapp-hint pm-prev-info-foot">Em caso de dúvidas, entre em contato com o suporte pelo próprio bot ou pelo e-mail acima.</p>
+                    </div>
+                    <form id="pm-prev-form" class="pm-prev-form">
+                        <div class="pm-field">
+                            <label for="pm-prev-usuario">USUÁRIO</label>
+                            <div class="pm-custom-select" data-pm-select="usuario">
+                                <button type="button" class="pm-custom-select-trigger" aria-haspopup="listbox" aria-expanded="false">
+                                    <span class="pm-custom-select-value">Selecione…</span>
+                                    <span class="pm-custom-select-chevron"><i class="fas fa-chevron-down"></i></span>
+                                </button>
+                                <div class="pm-custom-select-dropdown" role="listbox" aria-hidden="true">
+                                    <div class="pm-custom-select-option" role="option" data-value="" data-label="Selecione…">Selecione…</div>
+                                    <div class="pm-custom-select-option" role="option" data-value="FILIPE DA SILVA">FILIPE DA SILVA</div>
+                                    <div class="pm-custom-select-option" role="option" data-value="THIAGO LEONARDO SILVA">THIAGO LEONARDO SILVA</div>
+                                    <div class="pm-custom-select-option" role="option" data-value="JOÃO VICTOR MACHADO CORREA">JOÃO VICTOR MACHADO CORREA</div>
+                                    <div class="pm-custom-select-option" role="option" data-value="RAFFAEL DOS SANTOS PEREIRA">RAFFAEL DOS SANTOS PEREIRA</div>
+                                    <div class="pm-custom-select-option" role="option" data-value="JESUS DAVID ESPINOZA GRANADO">JESUS DAVID ESPINOZA GRANADO</div>
+                                    <div class="pm-custom-select-option" role="option" data-value="HENRIQUE MARAFIGO DA COSTA">HENRIQUE MARAFIGO DA COSTA</div>
+                                    <div class="pm-custom-select-option" role="option" data-value="CLEBER AUGUSTO FONTORA SCHENCKEL">CLEBER AUGUSTO FONTORA SCHENCKEL</div>
+                                    <div class="pm-custom-select-option" role="option" data-value="GABRIEL PLATT">GABRIEL PLATT</div>
+                                    <div class="pm-custom-select-option" role="option" data-value="ADALBINO CAUNCRA FERNANDES GOMES">ADALBINO CAUNCRA FERNANDES GOMES</div>
+                                    <div class="pm-custom-select-option" role="option" data-value="NITAY DE LIMA RABELO">NITAY DE LIMA RABELO</div>
+                                    <div class="pm-custom-select-option" role="option" data-value="BEATRIZ SILVA DA CONCEIÇÃO">BEATRIZ SILVA DA CONCEIÇÃO</div>
+                                    <div class="pm-custom-select-option" role="option" data-value="RAFAELA DO SOCORRO DA SILVA PIRES">RAFAELA DO SOCORRO DA SILVA PIRES</div>
+                                    <div class="pm-custom-select-option" role="option" data-value="TAINA DALCHIAVON MARCOS">TAINA DALCHIAVON MARCOS</div>
+                                </div>
+                                <input type="hidden" id="pm-prev-usuario" name="pm-prev-usuario" value="" required>
+                            </div>
+                        </div>
+                        <div class="pm-field">
+                            <label for="pm-prev-pm">NÚMERO DA PM</label>
+                            <div class="pm-custom-select" data-pm-select="pm">
+                                <button type="button" class="pm-custom-select-trigger" aria-haspopup="listbox" aria-expanded="false">
+                                    <span class="pm-custom-select-value">Selecione a PM…</span>
+                                    <span class="pm-custom-select-chevron"><i class="fas fa-chevron-down"></i></span>
+                                </button>
+                                <div class="pm-custom-select-dropdown" role="listbox" aria-hidden="true">
+                                    <div class="pm-custom-select-option" role="option" data-value="" data-label="Selecione a PM…">Selecione a PM…</div>
+                                    <div class="pm-custom-select-option" role="option" data-value="PM 1" data-label="PM 01">PM 01</div>
+                                    <div class="pm-custom-select-option" role="option" data-value="PM 2" data-label="PM 02">PM 02</div>
+                                    <div class="pm-custom-select-option" role="option" data-value="PM 3" data-label="PM 03">PM 03</div>
+                                    <div class="pm-custom-select-option" role="option" data-value="PM 4" data-label="PM 04">PM 04</div>
+                                    <div class="pm-custom-select-option" role="option" data-value="PM 5" data-label="PM 05">PM 05</div>
+                                    <div class="pm-custom-select-option" role="option" data-value="PM 6" data-label="PM 06">PM 06</div>
+                                </div>
+                                <input type="hidden" id="pm-prev-pm" name="pm-prev-pm" value="" required>
+                            </div>
+                        </div>
+                        <div class="pm-field">
+                            <label for="pm-prev-tipo">PREVENTIVA REALIZADA</label>
+                            <div class="pm-custom-select" data-pm-select="tipo">
+                                <button type="button" class="pm-custom-select-trigger" aria-haspopup="listbox" aria-expanded="false">
+                                    <span class="pm-custom-select-value">Selecione o serviço…</span>
+                                    <span class="pm-custom-select-chevron"><i class="fas fa-chevron-down"></i></span>
+                                </button>
+                                <div class="pm-custom-select-dropdown" role="listbox" aria-hidden="true">
+                                    <div class="pm-custom-select-option" role="option" data-value="" data-label="Selecione o serviço…">Selecione o serviço…</div>
+                                    <div class="pm-custom-select-option" role="option" data-value="CABEÇA DE IMPRESSÃO" data-label="CABEÇA DE IMPRESSÃO">CABEÇA DE IMPRESSÃO</div>
+                                    <div class="pm-custom-select-option" role="option" data-value="ROLOS TRACIONADORES" data-label="ROLOS TRACIONADORES">ROLOS TRACIONADORES</div>
+                                    <div class="pm-custom-select-option" role="option" data-value="__both__" data-label="AMBAS">AMBAS</div>
+                                </div>
+                                <input type="hidden" id="pm-prev-tipo" name="pm-prev-tipo" value="" required>
+                            </div>
+                        </div>
+                        <div class="pm-field">
+                            <label for="pm-prev-obs">ALGUMA OBSERVAÇÃO</label>
+                            <textarea id="pm-prev-obs" name="pm-prev-obs" rows="3" maxlength="500" placeholder="Opcional"></textarea>
+                        </div>
+                        <button type="submit" class="pm-btn-submit pm-btn-teal">
+                            <i class="fas fa-paper-plane"></i> REGISTRAR PREVENTIVA
+                        </button>
+                    </form>
+                </section>
+                <section class="pm-glass-card pm-card-stats">
+                    <span class="pm-dash-label">RESUMO</span>
+                    <div class="pm-dash-tres-blocos">
+                        <div class="pm-dash-card pm-dash-teal">
+                            <span class="pm-dash-value" id="pm-prev-dash-total">0</span>
+                            <span class="pm-dash-label">TOTAL DE PREVENTIVAS</span>
+                        </div>
+                        <div class="pm-dash-card pm-dash-violet">
+                            <span class="pm-dash-value" id="pm-prev-dash-mes">0</span>
+                            <span class="pm-dash-label">ESTE MÊS</span>
+                        </div>
+                    </div>
+                </section>
+            </div>
+            <div class="pm-right-column">
+                <div class="pm-charts-row">
+                    <section class="pm-glass-card pm-chart-card pm-chart-pm pm-chart-3d">
+                        <h3 class="pm-chart-title">PREVENTIVAS POR PM</h3>
+                        <div class="pm-chart-wrap pm-chart-round-3d">
+                            <canvas id="pm-prev-chart-por-pm"></canvas>
+                        </div>
+                    </section>
+                    <section class="pm-glass-card pm-chart-card pm-chart-tempo">
+                        <h3 class="pm-chart-title">TEMPO MÉDIO ENTRE PREVENTIVAS (dias)</h3>
+                        <div class="pm-chart-wrap">
+                            <canvas id="pm-prev-chart-tempo"></canvas>
+                        </div>
+                    </section>
+                </div>
+                <section class="pm-glass-card pm-panel-trocas">
+                    <div class="pm-panel-header">
+                        <h3>HISTÓRICO — PREVENTIVAS</h3>
+                        <div class="pm-panel-actions pm-panel-actions-row">
+                            <input type="search" id="pm-prev-search" placeholder="Buscar por PM, usuário, matrícula, localidade…" class="pm-search">
+                            <div class="pm-filter-wrap">
+                                <input type="hidden" id="pm-prev-filter-pm" value="">
+                                <button type="button" class="pm-filter-btn" id="pm-prev-filter-pm-trigger" title="Filtrar por PM">
+                                    <i class="fas fa-filter"></i>
+                                    <span id="pm-prev-filter-pm-label">TODAS AS PM</span>
+                                    <i class="fas fa-chevron-down"></i>
+                                </button>
+                                <div class="pm-filter-dropdown" id="pm-prev-filter-pm-dropdown">
+                                    <button type="button" class="pm-filter-opt" data-pm="">TODAS AS PM</button>
+                                    <button type="button" class="pm-filter-opt" data-pm="PM 1">PM 1</button>
+                                    <button type="button" class="pm-filter-opt" data-pm="PM 2">PM 2</button>
+                                    <button type="button" class="pm-filter-opt" data-pm="PM 3">PM 3</button>
+                                    <button type="button" class="pm-filter-opt" data-pm="PM 4">PM 4</button>
+                                    <button type="button" class="pm-filter-opt" data-pm="PM 5">PM 5</button>
+                                    <button type="button" class="pm-filter-opt" data-pm="PM 6">PM 6</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="pm-table-wrap">
+                        <table class="pm-table" id="pm-prev-table">
+                            <thead>
+                                <tr>
+                                    <th>DATA / HORA</th>
+                                    <th>USUÁRIO</th>
+                                    <th>MATRÍCULA AXIS</th>
+                                    <th>LOCALIDADE</th>
+                                    <th>NÚMERO DA PM</th>
+                                    <th>PREVENTIVA REALIZADA</th>
+                                    <th>OBSERVAÇÃO</th>
+                                </tr>
+                            </thead>
+                            <tbody id="pm-prev-tbody"></tbody>
+                        </table>
+                    </div>
+                    <div class="pm-empty" id="pm-prev-empty">Nenhuma preventiva registrada.</div>
+                </section>
+            </div>
+        </main>
+    </div>
+
     <script src="../js/packing_machine.js"></script>
+    <script src="../js/packing_preventiva.js"></script>
 </body>
 </html>

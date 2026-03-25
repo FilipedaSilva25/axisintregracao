@@ -150,6 +150,9 @@
         }
         if (chartPorPm) chartPorPm.update('none');
         if (chartTempoTroca) chartTempoTroca.update('none');
+        try {
+            window.dispatchEvent(new CustomEvent('pm-theme-changed', { detail: { theme: theme } }));
+        } catch (e) {}
     }
 
     function updateStats() {
@@ -277,7 +280,7 @@
             data: {
                 labels: dadosTempoObj.labels,
                 datasets: [{
-                    label: 'Dias entre trocas',
+                    label: 'Dias entre registros',
                     data: dadosTempoObj.values,
                     backgroundColor: barColors.map(function(c) {
                         return isDark ? c + 'cc' : c;
@@ -305,7 +308,7 @@
                         callbacks: {
                             label: function(ctx) {
                                 var v = ctx.raw;
-                                if (v === 0) return 'Sem dados suficientes (mín. 2 trocas)';
+                                if (v === 0) return 'Sem dados suficientes (mín. 2 registros)';
                                 if (v < 1) return (Math.round(v * 24 * 10) / 10) + ' horas em média';
                                 return (Math.round(v * 10) / 10) + ' dias em média';
                             }
@@ -436,7 +439,7 @@
             salvarTroca(troca);
             form.reset();
             document.getElementById('pm-quantidade').value = '';
-            showFeedback('Troca registrada com sucesso!', 'teal');
+            showFeedback('Registro salvo com sucesso!', 'teal');
         });
     }
 

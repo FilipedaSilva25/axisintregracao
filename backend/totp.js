@@ -115,8 +115,17 @@ async function setLastVerifiedAt(login) {
     const key = canonKey(login);
     if (!key) return;
     const data = await loadSecrets();
-    if (data[key]) {
-        data[key].lastVerifiedAt = new Date().toISOString();
+    let resolvedKey = key;
+    if (!data[resolvedKey]) {
+        for (const k in data) {
+            if (canonKey(k) === key) {
+                resolvedKey = k;
+                break;
+            }
+        }
+    }
+    if (data[resolvedKey]) {
+        data[resolvedKey].lastVerifiedAt = new Date().toISOString();
         await saveSecrets(data);
     }
 }
@@ -125,9 +134,18 @@ async function resetTotpRequire(login) {
     const key = canonKey(login);
     if (!key) return;
     const data = await loadSecrets();
-    if (data[key]) {
-        data[key].requireEveryEntry = false;
-        data[key].lastVerifiedAt = new Date().toISOString();
+    let resolvedKey = key;
+    if (!data[resolvedKey]) {
+        for (const k in data) {
+            if (canonKey(k) === key) {
+                resolvedKey = k;
+                break;
+            }
+        }
+    }
+    if (data[resolvedKey]) {
+        data[resolvedKey].requireEveryEntry = false;
+        data[resolvedKey].lastVerifiedAt = new Date().toISOString();
         await saveSecrets(data);
     }
 }
@@ -136,10 +154,19 @@ async function enableTotp(login) {
     const key = canonKey(login);
     if (!key) return;
     const data = await loadSecrets();
-    if (data[key]) {
-        data[key].enabled = true;
+    let resolvedKey = key;
+    if (!data[resolvedKey]) {
+        for (const k in data) {
+            if (canonKey(k) === key) {
+                resolvedKey = k;
+                break;
+            }
+        }
+    }
+    if (data[resolvedKey]) {
+        data[resolvedKey].enabled = true;
         // Ao ativar 2FA, força pedir código no próximo login (sem lastVerifiedAt)
-        if (data[key].lastVerifiedAt) delete data[key].lastVerifiedAt;
+        if (data[resolvedKey].lastVerifiedAt) delete data[resolvedKey].lastVerifiedAt;
         await saveSecrets(data);
     }
 }
@@ -148,7 +175,7 @@ async function enableTotp(login) {
 // - nunca foi verificado (sem lastVerifiedAt), OU
 // - requireEveryEntry=true (modo \"mais rígido\"), OU
 // - já passou mais de MAX_AGE_MIN minutos desde a última verificação
-const MAX_TOTP_AGE_MINUTES = 60;
+const MAX_TOTP_AGE_MINUTES = 3 * 24 * 60; // 3 dias
 
 function shouldRequireTotp(login) {
     return getDataForLogin(login).then(d => {
