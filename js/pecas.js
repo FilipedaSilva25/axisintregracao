@@ -270,7 +270,11 @@
         if (btn) {
             var icon = btn.querySelector('i');
             if (icon) icon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+            btn.setAttribute('title', theme === 'dark' ? 'Usar tema claro' : 'Usar tema escuro');
         }
+        try {
+            updateDashboards();
+        } catch (e) { /* init antes de dados */ }
     }
 
     function getVariant() {
@@ -456,10 +460,10 @@
                 });
             }
             if (entradasMes > 0) {
-                html += '<div class="pecas-assistente-item"><i class="fas fa-arrow-down"></i><span><strong>Este mês:</strong> ' + entradasMes + ' entrada(s) registrada(s).</span></div>';
+                html += '<div class="pecas-assistente-item"><i class="fas fa-arrow-up"></i><span><strong>Este mês:</strong> ' + entradasMes + ' entrada(s) registrada(s).</span></div>';
             }
             if (saidasMes > 0) {
-                html += '<div class="pecas-assistente-item"><i class="fas fa-arrow-up"></i><span><strong>Este mês:</strong> ' + saidasMes + ' saída(s) registrada(s).</span></div>';
+                html += '<div class="pecas-assistente-item"><i class="fas fa-arrow-down"></i><span><strong>Este mês:</strong> ' + saidasMes + ' saída(s) registrada(s).</span></div>';
             }
             if (totalEstoque > 0 && html === '') {
                 html = '<div class="pecas-assistente-item"><i class="fas fa-check-circle"></i><span>Estoque em dia. Total: ' + totalEstoque + ' unidades.</span></div>';
@@ -514,8 +518,8 @@
                     '<td>' + (p.quantidade || 0) + '</td>' +
                     '<td>' + proj.html + '</td>' +
                     '<td class="pecas-actions-cell">' +
-                    '<button type="button" class="pecas-btn-action pecas-btn-entrada" data-id="' + escapeHtml(p.id || '') + '" title="Registrar entrada"><i class="fas fa-arrow-down"></i> ENTRADA</button>' +
-                    '<button type="button" class="pecas-btn-action" data-id="' + escapeHtml(p.id || '') + '" title="Registrar saída"><i class="fas fa-arrow-up"></i> SAÍDA</button>' +
+                    '<button type="button" class="pecas-btn-action pecas-btn-entrada" data-id="' + escapeHtml(p.id || '') + '" title="Registrar entrada"><i class="fas fa-arrow-up"></i> ENTRADA</button>' +
+                    '<button type="button" class="pecas-btn-action" data-id="' + escapeHtml(p.id || '') + '" title="Registrar saída"><i class="fas fa-arrow-down"></i> SAÍDA</button>' +
                     '<button type="button" class="pecas-btn-edit" data-id="' + escapeHtml(p.id || '') + '" title="Editar"><i class="fas fa-edit"></i></button>' +
                     '<button type="button" class="pecas-btn-detalhes" data-id="' + escapeHtml(p.id || '') + '" title="Histórico"><i class="fas fa-history"></i></button>' +
                     '<button type="button" class="pecas-btn-delete" data-id="' + escapeHtml(p.id || '') + '" title="Excluir do inventário">🗑️</button>' +
@@ -605,12 +609,15 @@
                     '<div class="pecas-estoque-card-qtd">' + (p.quantidade || 0) + ' un.</div>' +
                     '<div class="pecas-estoque-card-projec">' + proj.html + '</div>' +
                     '<div class="pecas-estoque-card-actions">' +
-                    '<button type="button" class="pecas-btn-action pecas-btn-entrada" data-id="' + id + '" title="Registrar entrada"><i class="fas fa-arrow-down"></i> ENTRADA</button>' +
-                    '<button type="button" class="pecas-btn-action" data-id="' + id + '" title="Registrar saída"><i class="fas fa-arrow-up"></i> SAÍDA</button>' +
-                    '<button type="button" class="pecas-btn-edit" data-id="' + id + '" title="Editar"><i class="fas fa-edit"></i></button>' +
-                    '<button type="button" class="pecas-btn-detalhes" data-id="' + id + '" title="Histórico"><i class="fas fa-history"></i></button>' +
-                    '<button type="button" class="pecas-btn-delete" data-id="' + id + '" title="Excluir">🗑️</button>' +
-                    '</div></div>';
+                    '<div class="pecas-estoque-card-actions-primary">' +
+                    '<button type="button" class="pecas-btn-action pecas-btn-entrada pecas-card-btn-flow" data-id="' + id + '" title="Registrar entrada"><i class="fas fa-arrow-up" aria-hidden="true"></i> ENTRADA</button>' +
+                    '<button type="button" class="pecas-btn-action pecas-btn-saida pecas-card-btn-flow" data-id="' + id + '" title="Registrar saída"><i class="fas fa-arrow-down" aria-hidden="true"></i> SAÍDA</button>' +
+                    '</div>' +
+                    '<div class="pecas-estoque-card-actions-secondary">' +
+                    '<button type="button" class="pecas-btn-edit pecas-card-tool-btn" data-id="' + id + '" title="Editar"><span class="pecas-sr-only">Editar</span><i class="fas fa-edit" aria-hidden="true"></i></button>' +
+                    '<button type="button" class="pecas-btn-detalhes pecas-card-tool-btn" data-id="' + id + '" title="Histórico"><span class="pecas-sr-only">Histórico</span><i class="fas fa-history" aria-hidden="true"></i></button>' +
+                    '<button type="button" class="pecas-btn-delete pecas-card-tool-btn pecas-card-tool-btn-danger" data-id="' + id + '" title="Excluir"><span class="pecas-sr-only">Excluir</span><i class="fas fa-trash-alt" aria-hidden="true"></i></button>' +
+                    '</div></div></div>';
             }).join('');
             container.innerHTML = html;
             container.querySelectorAll('.pecas-btn-entrada').forEach(function(btn) {
@@ -990,13 +997,45 @@
             var elSai = document.getElementById('pecas-dash-saidas-mes');
             if (elSai) elSai.textContent = totalSaidas;
 
+            var totalItens = estoque.filter(function(p) { return (p.quantidade || 0) > 0; }).length;
+            var elSkus = document.getElementById('pecas-dash-skus');
+            if (elSkus) elSkus.textContent = totalItens;
+
+            var movsMesList = movimentos.filter(function(m) {
+                try {
+                    var d = new Date(m.dataHora);
+                    return d.getFullYear() === anoAtual && d.getMonth() === mesAtual;
+                } catch (_) { return false; }
+            });
+            var elMovs = document.getElementById('pecas-dash-movs-mes');
+            if (elMovs) elMovs.textContent = movsMesList.length;
+
+            var ultE = movsMesList.filter(function(m) { return (m.tipo || '') === 'entrada'; })
+                .sort(function(a, b) { return new Date(b.dataHora) - new Date(a.dataHora); })[0];
+            var elUe = document.getElementById('pecas-dash-ultima-entrada');
+            if (elUe) elUe.textContent = ultE ? formatarDataHora(ultE.dataHora) : '—';
+
+            var ultS = movsMesList.filter(function(m) { return (m.tipo || '') === 'saída'; })
+                .sort(function(a, b) { return new Date(b.dataHora) - new Date(a.dataHora); })[0];
+            var elUs = document.getElementById('pecas-dash-ultima-saida');
+            if (elUs) elUs.textContent = ultS ? formatarDataHora(ultS.dataHora) : '—';
+
+            var elTm = document.getElementById('pecas-dash-total-movs');
+            if (elTm) elTm.textContent = String(movimentos.length);
+
+            var catsAtivas = {};
+            estoque.forEach(function(p) {
+                if ((p.quantidade || 0) > 0) catsAtivas[p.categoria || 'peca'] = true;
+            });
+            var elCats = document.getElementById('pecas-dash-cats');
+            if (elCats) elCats.textContent = Object.keys(catsAtivas).length;
+
             updateChart(totalEstoque, totalEntradas, totalSaidas);
             updateChartBars();
             updateChartCategoria();
             updateAlertas();
             updateAssistente();
             updateAvencer();
-            var totalItens = estoque.filter(function(p) { return (p.quantidade || 0) > 0; }).length;
             var countEl = document.getElementById('pecas-count-itens');
             if (countEl) countEl.textContent = totalItens + (totalItens === 1 ? ' item' : ' itens');
         } catch (err) { console.error('Erro ao atualizar dashboards:', err); }
@@ -1205,7 +1244,7 @@
             }
             var base = 'pecas-movimentos-' + new Date().toISOString().slice(0, 10);
             var bom = '\uFEFF';
-            var csv = 'DATA/HORA;TIPO;PRODUTO;QUANTIDADE;OBSERVAÇÃO\n';
+            var csv = 'DATA/HORA;TIPO;PRODUTO;UNIDADES;OBSERVAÇÃO\n';
             movimentos.forEach(function(m) {
                 var data = formatarDataHora(m.dataHora);
                 var tipo = (m.tipo || 'saída') === 'entrada' ? 'Entrada' : 'Saída';
@@ -1348,7 +1387,7 @@
                 return;
             }
             var bom = '\uFEFF';
-            var csv = 'PRODUTO;FABRICANTE;CONTEÚDO;LOTE;VALIDADE;QUANTIDADE;DATA RECEB.;LOCAL;OBSERVAÇÃO\n';
+            var csv = 'PRODUTO;FABRICANTE;CONTEÚDO;LOTE;VALIDADE;UNIDADES;DATA RECEBIDA;LOCAL;OBSERVAÇÃO\n';
             estoque.forEach(function(p) {
                 var prod = (getProdutoNome(p) || '').replace(/;/g, ',');
                 var fab = (p.fabricante || '').replace(/;/g, ',');
@@ -1451,16 +1490,47 @@
         } catch (err) { console.error('Erro ao configurar toggle de vista:', err); }
     }
 
+    function pecasSetViewHash(target) {
+        try {
+            if (target === 'tabela') {
+                history.replaceState(null, '', '#tabela');
+            } else if (target === 'cadastro') {
+                history.replaceState(null, '', '#cadastro');
+            } else {
+                history.replaceState(null, '', window.location.pathname + window.location.search);
+            }
+        } catch (e) { /* ignore */ }
+    }
+
+    function pecasViewFromHash() {
+        var h = (window.location.hash || '').replace(/^#/, '').toLowerCase().trim();
+        if (h === 'tabela' || h === 'inventario-em-linha' || h === 'linha') return 'tabela';
+        if (h === 'cadastro') return 'cadastro';
+        return 'inventario';
+    }
+
     function toggleView(target) {
         var inv = document.getElementById('pecas-view-inventario');
         var cad = document.getElementById('pecas-view-cadastro');
+        var tbl = document.getElementById('pecas-view-tabela');
         if (!inv || !cad) return;
+        if (target === 'tabela' && !tbl) target = 'inventario';
+        document.body.classList.toggle('pecas-body-tabela-page', target === 'tabela');
+        inv.style.display = 'none';
+        cad.style.display = 'none';
+        if (tbl) tbl.style.display = 'none';
         if (target === 'cadastro') {
-            inv.style.display = 'none';
             cad.style.display = 'flex';
+        } else if (target === 'tabela' && tbl) {
+            tbl.style.display = 'flex';
+            var vtw = document.getElementById('pecas-view-toggle-wrap');
+            if (vtw) {
+                var activeTab = document.querySelector('.pecas-tab.active[data-tab]');
+                var tabId = activeTab && activeTab.getAttribute('data-tab');
+                vtw.style.display = tabId === 'movimentos' ? 'none' : '';
+            }
         } else {
             inv.style.display = 'flex';
-            cad.style.display = 'none';
         }
     }
 
@@ -1484,6 +1554,110 @@
                 origForm.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
             }
         });
+    }
+
+    function initPecasFiltroCategoriaModern() {
+        var wrap = document.getElementById('pecas-filtro-cat-modern');
+        var sel = document.getElementById('pecas-filter-categoria');
+        var trigger = document.getElementById('pecas-filtro-cat-trigger');
+        var panel = document.getElementById('pecas-filtro-cat-panel');
+        var labelEl = document.getElementById('pecas-filtro-cat-trigger-label');
+        if (!wrap || !sel || !trigger || !panel || !labelEl) return;
+        if (wrap.dataset.pecasFiltroCatInited === '1') return;
+        wrap.dataset.pecasFiltroCatInited = '1';
+
+        function syncLabel() {
+            var v = sel.value || '';
+            labelEl.textContent = v === '' ? 'Todas as categorias' : getCategoriaLabel(v);
+            panel.querySelectorAll('.pecas-filtro-cat-item').forEach(function(el) {
+                var on = (el.getAttribute('data-value') || '') === v;
+                el.classList.toggle('is-active', on);
+                el.setAttribute('aria-selected', on ? 'true' : 'false');
+            });
+        }
+
+        function placePanelFixed() {
+            var r = trigger.getBoundingClientRect();
+            var w = Math.max(220, r.width);
+            var left = Math.min(Math.max(8, r.left), window.innerWidth - w - 8);
+            panel.style.position = 'fixed';
+            panel.style.top = (r.bottom + 6) + 'px';
+            panel.style.left = left + 'px';
+            panel.style.width = w + 'px';
+            panel.style.right = 'auto';
+            panel.style.bottom = 'auto';
+            panel.style.zIndex = '2500';
+        }
+
+        function closePanel() {
+            panel.hidden = true;
+            trigger.setAttribute('aria-expanded', 'false');
+            wrap.classList.remove('is-open');
+            if (panel.parentNode === document.body) {
+                wrap.insertBefore(panel, sel);
+            }
+            panel.style.position = '';
+            panel.style.top = '';
+            panel.style.left = '';
+            panel.style.width = '';
+            panel.style.right = '';
+            panel.style.bottom = '';
+            panel.style.zIndex = '';
+        }
+
+        function openPanel() {
+            document.body.appendChild(panel);
+            panel.hidden = false;
+            trigger.setAttribute('aria-expanded', 'true');
+            wrap.classList.add('is-open');
+            requestAnimationFrame(function() {
+                placePanelFixed();
+            });
+        }
+
+        function togglePanel() {
+            if (panel.hidden) openPanel();
+            else closePanel();
+        }
+
+        function onScrollOrResize() {
+            if (wrap.classList.contains('is-open')) placePanelFixed();
+        }
+
+        trigger.addEventListener('click', function(e) {
+            e.stopPropagation();
+            togglePanel();
+        });
+
+        panel.querySelectorAll('.pecas-filtro-cat-item').forEach(function(item) {
+            item.addEventListener('click', function(e) {
+                e.stopPropagation();
+                var val = item.getAttribute('data-value') || '';
+                sel.value = val;
+                syncLabel();
+                sel.dispatchEvent(new Event('change', { bubbles: true }));
+                closePanel();
+            });
+        });
+
+        document.addEventListener('click', function(e) {
+            var t = e.target;
+            if (wrap.contains(t) || panel.contains(t)) return;
+            closePanel();
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && wrap.classList.contains('is-open')) {
+                closePanel();
+                try { trigger.focus(); } catch (_) {}
+            }
+        });
+
+        window.addEventListener('resize', onScrollOrResize);
+        window.addEventListener('scroll', onScrollOrResize, true);
+
+        sel.addEventListener('change', syncLabel);
+        syncLabel();
     }
 
     function initMenu() {
@@ -1510,10 +1684,22 @@
                 if (view === 'cadastro') {
                     cloneCadastroFormIntoStandalone();
                     toggleView('cadastro');
+                    pecasSetViewHash('cadastro');
+                } else if (view === 'tabela') {
+                    toggleView('tabela');
+                    pecasSetViewHash('tabela');
                 } else if (view === 'inventario') {
                     toggleView('inventario');
+                    pecasSetViewHash('inventario');
                 }
             });
+        });
+        window.addEventListener('hashchange', function() {
+            var v = pecasViewFromHash();
+            if (v === 'cadastro') {
+                cloneCadastroFormIntoStandalone();
+            }
+            toggleView(v);
         });
     }
 
@@ -1662,6 +1848,7 @@
             }
             var filterCat = document.getElementById('pecas-filter-categoria');
             if (filterCat) filterCat.addEventListener('change', renderEstoque);
+            initPecasFiltroCategoriaModern();
 
             var searchMov = document.getElementById('pecas-search-movimentos');
             if (searchMov) {
@@ -1694,10 +1881,18 @@
                 updateDashboards();
             }, 3000);
 
-            // Inicializar views e menu
-            toggleView('inventario');
+            // Inicializar views e menu (hash #tabela | #cadastro)
+            var startView = pecasViewFromHash();
+            if (startView === 'cadastro') {
+                cloneCadastroFormIntoStandalone();
+            }
+            toggleView(startView);
             var viewToggleWrap = document.getElementById('pecas-view-toggle-wrap');
-            if (viewToggleWrap) viewToggleWrap.style.display = ''; /* visível na aba Estoque */
+            if (viewToggleWrap) {
+                var st = document.querySelector('.pecas-tab.active[data-tab]');
+                var stTab = st && st.getAttribute('data-tab');
+                viewToggleWrap.style.display = stTab === 'movimentos' ? 'none' : '';
+            }
             initMenu();
         } catch (err) { console.error('Erro ao inicializar peças:', err); }
     }

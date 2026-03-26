@@ -6336,6 +6336,12 @@ body.axis-reduce-motion *::after {
     border-color: rgba(0, 122, 255, 0.55);
 }
 
+/* Mapeamento BRSC02: ícone alinhado ao cartão «Cadastrar Novo Usuário» (➕ 36px) */
+.admin-card-mapeamento-rc .admin-card-icon {
+    font-size: 36px;
+    line-height: 1;
+}
+
 [data-theme="dark"] .admin-card-selbetti-portais:hover {
     border-color: rgba(90, 200, 250, 0.45);
 }
@@ -6514,7 +6520,7 @@ body.axis-reduce-motion *::after {
 }
 
 .admin-card-mapeamento-rc .admin-card-btn {
-    margin-top: 0;
+    margin-top: auto;
 }
 
 .admin-card-btn-muted {

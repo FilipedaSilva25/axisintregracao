@@ -1,5 +1,14 @@
 [
   {
+    "id": "mov-1774492590639",
+    "pecaId": "peca-1772897972101",
+    "tipo": "saída",
+    "produto": "CÍTRUS LIMPANTE",
+    "quantidade": 1,
+    "observacao": "LATA DE FILIPE | DATA DE RETIRADA DO ESTOQUE | 25 DE MARÇO DE 2026",
+    "dataHora": "2026-03-26T02:36:30.639Z"
+  },
+  {
     "id": "mov-1773648998620",
     "pecaId": "peca-1773648702605",
     "tipo": "entrada",
