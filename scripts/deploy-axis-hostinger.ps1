@@ -20,6 +20,8 @@ tar -czf $archive `
 
 scp $archive "${server}:/tmp/axis-deploy.tar.gz"
 
+# NUNCA usar: ssh user@host $multiLineString — o PowerShell parte em varios argumentos e o bash recebe lixo ("set" vira "invalid option").
+# Enviar o script completo no stdin do bash remoto:
 $remoteScript = @"
 set -e
 mkdir -p $remote
@@ -29,11 +31,11 @@ npm install --omit=dev
 pm2 restart axis || pm2 start ecosystem.config.cjs --name axis
 pm2 save || true
 rm -f /tmp/axis-deploy.tar.gz
-curl -sS http://127.0.0.1:3006/health
+curl -sS 'http://127.0.0.1:3006/health'
 echo ""
 test -f $remote/config/data/axis-browser-users.json && echo OK_axis-browser-users || echo AVISO_ficheiro_users
-"@
+"@.Replace("`r`n", "`n")
 
-ssh $server $remoteScript
+$remoteScript | ssh $server "bash -s"
 Remove-Item $archive -Force
 Write-Host "Deploy concluido."
