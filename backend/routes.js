@@ -26,6 +26,47 @@ const BANCADAS_STATUS_FILE = path.join(DATA_DIR, 'bancadas-status.json');
 const PECAS_ESTOQUE_FILE = path.join(DATA_DIR, 'pecas-estoque.json');
 const PECAS_MOVIMENTOS_FILE = path.join(DATA_DIR, 'pecas-movimentos.json');
 const REGISTRO_CHAMADOS_FILE = path.join(DATA_DIR, 'registro-chamados.json');
+const AXIS_BROWSER_USERS_FILE = path.join(DATA_DIR, 'axis-browser-users.json');
+
+/** Mesma regra que axisLoginCanonico no cliente (login canónico). */
+function canonicalAxisLogin(s) {
+    return String(s || '').trim().toLowerCase().replace(/\s+/g, '_').replace(/\./g, '_');
+}
+
+function parseBodyLimited(req, maxBytes) {
+    return new Promise((resolve) => {
+        let body = '';
+        let total = 0;
+        let tooLarge = false;
+        req.on('data', (chunk) => {
+            if (tooLarge) return;
+            total += chunk.length;
+            if (total > maxBytes) {
+                tooLarge = true;
+                resolve({ __parseError: 'too_large' });
+                return;
+            }
+            body += chunk.toString();
+        });
+        req.on('end', () => {
+            if (tooLarge) return;
+            if (!body) return resolve({});
+            try {
+                resolve(JSON.parse(body));
+            } catch (e) {
+                resolve({});
+            }
+        });
+        req.on('error', () => resolve({ __parseError: 'read' }));
+    });
+}
+
+async function loadAxisBrowserUsersDoc() {
+    const d = await readJson(AXIS_BROWSER_USERS_FILE, { version: 1, byLogin: {}, updatedAt: null });
+    if (!d || typeof d !== 'object') return { version: 1, byLogin: {}, updatedAt: null };
+    if (!d.byLogin || typeof d.byLogin !== 'object') d.byLogin = {};
+    return d;
+}
 
 /** Um registo por IS (sem duplicar linhas): preserva o mais recente e agrega mapeamento dos outros. */
 function dedupeRegistroChamadosPorIs(list) {
@@ -136,6 +177,46 @@ async function handleApi(req, res, urlPath) {
                 }
             }
         });
+        return true;
+    }
+
+    // ---- Persistência de contas no servidor (localStorage espelhado em JSON; site na nuvem) ----
+    if (urlPath === '/api/persist/browser-users' && method === 'GET') {
+        try {
+            const d = await loadAxisBrowserUsersDoc();
+            sendJson(res, { ok: true, byLogin: d.byLogin, updatedAt: d.updatedAt || null });
+        } catch (e) {
+            sendErr(res, 500, 'Erro ao ler utilizadores: ' + (e.message || ''));
+        }
+        return true;
+    }
+    if (urlPath === '/api/persist/browser-users' && method === 'POST') {
+        try {
+            const body = await parseBodyLimited(req, 26 * 1024 * 1024);
+            if (body && body.__parseError === 'too_large') {
+                sendErr(res, 413, 'Dados demasiado grandes (ex.: foto). Reduza o tamanho da imagem.');
+                return true;
+            }
+            const d = await loadAxisBrowserUsersDoc();
+            if (body.removeLogins && Array.isArray(body.removeLogins)) {
+                for (const lg of body.removeLogins) {
+                    const k = canonicalAxisLogin(lg);
+                    if (k) delete d.byLogin[k];
+                }
+            }
+            if (body.byLogin && typeof body.byLogin === 'object') {
+                for (const [k, v] of Object.entries(body.byLogin)) {
+                    const canon = canonicalAxisLogin(k);
+                    if (!canon || v == null || typeof v !== 'object') continue;
+                    d.byLogin[canon] = v;
+                }
+            }
+            d.updatedAt = new Date().toISOString();
+            await writeJson(AXIS_BROWSER_USERS_FILE, d);
+            sendJson(res, { ok: true, updatedAt: d.updatedAt });
+        } catch (e) {
+            sendErr(res, 500, 'Erro ao gravar utilizadores: ' + (e.message || ''));
+        }
         return true;
     }
 

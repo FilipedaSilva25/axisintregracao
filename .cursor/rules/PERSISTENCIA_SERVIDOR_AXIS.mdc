@@ -1,0 +1,20 @@
+---
+description: Novos dados AXIS devem persistir no servidor (nuvem), não só no localStorage.
+alwaysApply: true
+---
+
+# Persistência no servidor (AXIS em produção)
+
+O site em **nuvem** (`axisintegracao.com.br` / VPS) partilha utilizadores entre browsers via `config/data/axis-browser-users.json` e API `/api/persist/browser-users`.
+
+## Regra para alterações futuras
+
+1. **Contas / perfil / foto / senha** — qualquer fluxo que grave em `localStorage` (`db_*`) deve também chamar `axisPushUserToServer(login, userObj)` (ou `axisRemoveUserFromServer` ao apagar). Não adicionar apenas dados “só no browser”.
+2. **Novos módulos** — preferir gravar em `config/data/` via rotas em `backend/routes.js` (padrão já usado em inventário, packing, etc.), não depender só de `localStorage` para dados de negócio partilhados.
+3. **Ficheiros grandes** — fotos em base64 aumentam o POST; manter imagens razoáveis (o servidor recusa body > ~26 MB).
+4. **Segurança** — `axis-browser-users.json` contém senhas em texto (igual ao modelo anterior no cliente). Não commitar; ficheiro está no `.gitignore`. Proteger o VPS e backups.
+
+## Referência técnica
+
+- API: `GET/POST /api/persist/browser-users`
+- Cliente: `js/script.js` — bloco `axisServerBrowserUsersSync`, `axisPushUserToServer`, `axisRemoveUserFromServer`

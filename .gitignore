@@ -39,3 +39,6 @@ mylife-os/
 
 # Bot WhatsApp – sessão local (não versionar)
 config/data/whatsapp-auth/
+
+# Contas AXIS espelhadas no servidor (senhas em texto — não versionar)
+config/data/axis-browser-users.json

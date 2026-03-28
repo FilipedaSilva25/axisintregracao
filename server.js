@@ -31,6 +31,10 @@ function ensureBotDataDir() {
         if (!fs.existsSync(bancadasFile)) {
             fs.writeFileSync(bancadasFile, JSON.stringify({ bancadas: {}, updatedAt: null }, null, 2), 'utf8');
         }
+        const browserUsersFile = path.join(DATA_DIR, 'axis-browser-users.json');
+        if (!fs.existsSync(browserUsersFile)) {
+            fs.writeFileSync(browserUsersFile, JSON.stringify({ version: 1, byLogin: {}, updatedAt: null }, null, 2), 'utf8');
+        }
     } catch (e) {
         console.warn('Aviso: não foi possível criar pasta/ficheiros de dados do bot:', e.message);
     }

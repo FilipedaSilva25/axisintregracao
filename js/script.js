@@ -44,6 +44,75 @@ function getAxisApiBase() {
 }
 window.getAxisApiBase = getAxisApiBase;
 
+/**
+ * Sincronização de contas (db_*) com o servidor — ficheiro config/data/axis-browser-users.json.
+ * Pull no arranque (servidor tem prioridade); push após cadastro, edição, login, foto, etc.
+ */
+(function axisServerBrowserUsersSync() {
+    function canonLocal(s) {
+        return String(s || '').trim().toLowerCase().replace(/\s+/g, '_').replace(/\./g, '_');
+    }
+    function apiBaseUrl() {
+        var b = (typeof getAxisApiBase === 'function' ? getAxisApiBase() : '') || (typeof window !== 'undefined' && window.location && window.location.origin) || '';
+        if (!/^https?:\/\//i.test(b)) b = (typeof window !== 'undefined' && window.location && window.location.origin) ? window.location.origin : '';
+        return String(b).replace(/\/+$/, '');
+    }
+    function dispatchPulled() {
+        try {
+            window._axisServerUsersPulled = true;
+            window.dispatchEvent(new CustomEvent('axis-server-users-pulled'));
+        } catch (e0) {}
+    }
+    function pull() {
+        fetch(apiBaseUrl() + '/api/persist/browser-users')
+            .then(function (r) { return r.json(); })
+            .catch(function () { return {}; })
+            .then(function (data) {
+                if (data && data.ok && data.byLogin && typeof data.byLogin === 'object') {
+                    var bl = data.byLogin;
+                    for (var login in bl) {
+                        if (!Object.prototype.hasOwnProperty.call(bl, login)) continue;
+                        var c = canonLocal(login);
+                        try {
+                            localStorage.setItem('db_' + c, JSON.stringify(bl[login]));
+                        } catch (e1) {}
+                    }
+                }
+                try {
+                    if (typeof inicializarUsuarioAdmin === 'function') inicializarUsuarioAdmin();
+                } catch (eM) {}
+                dispatchPulled();
+            });
+    }
+    window.axisPushUserToServer = function (login, userObj) {
+        if (!login || !userObj) return;
+        var c = typeof axisLoginCanonico === 'function' ? axisLoginCanonico(login) : canonLocal(login);
+        if (!c) return;
+        var payload = { byLogin: {} };
+        payload.byLogin[c] = userObj;
+        fetch(apiBaseUrl() + '/api/persist/browser-users', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        }).catch(function () {});
+    };
+    window.axisRemoveUserFromServer = function (login) {
+        var c = typeof axisLoginCanonico === 'function' ? axisLoginCanonico(login) : canonLocal(login);
+        if (!c) return;
+        fetch(apiBaseUrl() + '/api/persist/browser-users', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ removeLogins: [c] })
+        }).catch(function () {});
+    };
+    if (typeof document === 'undefined') return;
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function () { setTimeout(pull, 30); });
+    } else {
+        setTimeout(pull, 30);
+    }
+})();
+
 /** Extensões do Chrome (password managers, tradutores, etc.) geram este erro; não é bug do AXIS. */
 (function axisSuppressExtensionMessageChannelNoise() {
     if (typeof window === 'undefined') return;
@@ -564,6 +633,7 @@ document.addEventListener('DOMContentLoaded', () => {
             var ud = document.getElementById('user-display-name');
             if (ud) ud.innerText = currentUser;
             if (typeof atualizarPerfilNav === 'function') atualizarPerfilNav();
+            if (typeof axisSyncTotpBadgeFromApi === 'function') axisSyncTotpBadgeFromApi();
             var ma = document.getElementById('menu-admin');
             if (ma) {
                 var login = localStorage.getItem('current_user_login');
@@ -1515,6 +1585,9 @@ function axisChangePassword() {
         }
         var storeKey = 'db_' + (typeof axisLoginCanonico === 'function' ? axisLoginCanonico(login) : login);
         localStorage.setItem(storeKey, JSON.stringify(db));
+        try {
+            if (typeof window.axisPushUserToServer === 'function') window.axisPushUserToServer(canonLogin, db);
+        } catch (ePu) {}
 
         if (curEl) curEl.value = '';
         if (newEl) newEl.value = '';
@@ -2047,6 +2120,9 @@ function inicializarUsuarioAdmin() {
             matriculaAxis: '0001'
         };
         localStorage.setItem(adminKey, JSON.stringify(adminData));
+        try {
+            if (typeof window.axisPushUserToServer === 'function') window.axisPushUserToServer('admin_filipe_silva', adminData);
+        } catch (ePush) {}
         console.log('✅ Usuário administrador criado: admin_filipe_silva / 123456');
     } else {
         console.log('✅ Usuário administrador já existe no localStorage');
@@ -2055,6 +2131,9 @@ function inicializarUsuarioAdmin() {
             if (userData.matriculaAxis == null || String(userData.matriculaAxis).trim() === '') {
                 userData.matriculaAxis = '0001';
                 localStorage.setItem(adminKey, JSON.stringify(userData));
+                try {
+                    if (typeof window.axisPushUserToServer === 'function') window.axisPushUserToServer('admin_filipe_silva', userData);
+                } catch (ePush2) {}
             }
             console.log('📋 Dados do admin:', { name: userData.name, perfil: userData.perfil });
         } catch (e) {
@@ -2125,6 +2204,9 @@ function axisSeedUsuariosOperacaoPacking() {
             matriculaAxis: matriculaParaNovoOperador(matriculaPreferida)
         };
         localStorage.setItem(k, JSON.stringify(o));
+        try {
+            if (typeof window.axisPushUserToServer === 'function') window.axisPushUserToServer(loginCanon, o);
+        } catch (eS) {}
     }
     ensure('operacao_packing_mono', 'Operação Packing Mono', 'Operação Packing Mono', '0003');
     ensure('operacao_packing_ptw', 'Operação Packing PTW', 'Operação Packing PTW', '0004');
@@ -2147,9 +2229,8 @@ function axisMigrarUsuariosOperacaoSemLimite() {
     });
 }
 
-// Inicializa admin ao carregar (garante que seja executado imediatamente)
+// Inicializa admin ao carregar; o pull do servidor (acima) volta a correr migrations depois de fundir contas.
 if (typeof window !== 'undefined') {
-    // Executa imediatamente se já estiver no DOM
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', inicializarUsuarioAdmin);
     } else {
@@ -2353,6 +2434,9 @@ function axisExecuteLoginSession(loginNormalizado, db, dbKey, chaveAntiga, userI
         }
         db.ultimoAcesso = new Date().toISOString();
         localStorage.setItem('db_' + loginNormalizado, JSON.stringify(db));
+        try {
+            if (typeof window.axisPushUserToServer === 'function') window.axisPushUserToServer(loginNormalizado, db);
+        } catch (ePl) {}
         if (chaveAntiga && chaveAntiga !== dbKey) {
             localStorage.removeItem(chaveAntiga);
         }
@@ -2384,6 +2468,9 @@ function axisExecuteLoginSession(loginNormalizado, db, dbKey, chaveAntiga, userI
         try {
             axisPasswordExpiryWarnings(loginNormalizado, db);
         } catch (ePw) {}
+        if (typeof axisSyncTotpBadgeFromApi === 'function') {
+            try { axisSyncTotpBadgeFromApi(); } catch (eSync) {}
+        }
     }
 }
 
@@ -3025,6 +3112,32 @@ function update2FABadge(show) {
     badge.style.display = show ? 'inline-flex' : 'none';
 }
 window.update2FABadge = update2FABadge;
+
+/**
+ * Sincroniza o estado 2FA com o servidor e atualiza o badge no header,
+ * sem depender da página Configurações (refreshTotpSettings exige elementos do DOM lá).
+ */
+function axisSyncTotpBadgeFromApi() {
+    var login = typeof getTotpLoginNormalized === 'function' ? getTotpLoginNormalized() : '';
+    if (!login) return;
+    var apiBase = (typeof getAxisApiBase === 'function' ? getAxisApiBase() : null) || (window.location && window.location.origin) || '';
+    if (!/^https?:\/\//i.test(apiBase)) apiBase = (window.location && window.location.origin) ? window.location.origin : '';
+    fetch(apiBase.replace(/\/+$/, '') + '/api/auth/totp-status?login=' + encodeURIComponent(login))
+        .then(function (r) {
+            if (!r.ok) return { enabled: false };
+            return r.json();
+        })
+        .catch(function () { return { enabled: false }; })
+        .then(function (data) {
+            var en = data && data.enabled;
+            try {
+                if (en) localStorage.setItem('axis_2fa_enabled', '1');
+                else localStorage.removeItem('axis_2fa_enabled');
+            } catch (e1) {}
+            if (typeof update2FABadge === 'function') update2FABadge(!!en);
+        });
+}
+window.axisSyncTotpBadgeFromApi = axisSyncTotpBadgeFromApi;
 
 // Ligar o botão 2FA assim que o DOM estiver pronto (e novamente ao carregar)
 function bindTotpEnableButton() {
@@ -6921,6 +7034,9 @@ function cadastrarUsuario(event) {
     }
     novoUsuario.matriculaAxis = matriculaNova;
     localStorage.setItem(userKey, JSON.stringify(novoUsuario));
+    try {
+        if (typeof window.axisPushUserToServer === 'function') window.axisPushUserToServer(loginNorm, novoUsuario);
+    } catch (eCad) {}
     showToast('Usuário ' + nome + ' cadastrado! Login: ' + loginNorm + ' · Matrícula ' + matriculaNova, 'success');
     limparFormularioUsuario();
     fecharModalCadastrarUsuario();
@@ -6934,11 +7050,13 @@ function editarUsuario(login) {
 
 function abrirModalEditarUsuario(login) {
     fecharModalUsuarios();
-    const loginNorm = (login || '').trim().toLowerCase().replace(/\s+/g, '_');
+    var loginNorm = typeof axisLoginCanonico === 'function' ? axisLoginCanonico(login) : (login || '').trim().toLowerCase().replace(/\s+/g, '_');
     let userKey = 'db_' + loginNorm;
     let userData = JSON.parse(localStorage.getItem(userKey) || '{}');
     if (!userData.name) {
-        const chave = Object.keys(localStorage).find(k => k.startsWith('db_') && k.replace('db_', '').toLowerCase() === loginNorm);
+        const chave = Object.keys(localStorage).find(function (k) {
+            return k.indexOf('db_') === 0 && typeof axisLoginCanonico === 'function' && axisLoginCanonico(k.replace('db_', '')) === loginNorm;
+        });
         if (chave) {
             userKey = chave;
             userData = JSON.parse(localStorage.getItem(chave) || '{}');
@@ -7180,8 +7298,8 @@ function salvarUsuarioEditado(event) {
     const nome = document.getElementById('editar-usuario-nome').value.trim();
     const perfil = document.getElementById('editar-usuario-perfil').value;
     const setor = (document.getElementById('editar-usuario-setor') && document.getElementById('editar-usuario-setor').value) ? document.getElementById('editar-usuario-setor').value.trim() : '';
-    const novaSenha = document.getElementById('editar-usuario-nova-senha').value;
-    const confirmarSenha = document.getElementById('editar-usuario-confirmar-senha').value;
+    const novaSenha = String(document.getElementById('editar-usuario-nova-senha').value || '').trim();
+    const confirmarSenha = String(document.getElementById('editar-usuario-confirmar-senha').value || '').trim();
     
     if (!nome) {
         showToast('Nome é obrigatório', 'warning');
@@ -7248,6 +7366,9 @@ function salvarUsuarioEditado(event) {
     }
     
     localStorage.setItem(userKey, JSON.stringify(userData));
+    try {
+        if (typeof window.axisPushUserToServer === 'function') window.axisPushUserToServer(loginNorm, userData);
+    } catch (eEd) {}
     if (originalKey && originalKey !== userKey) localStorage.removeItem(originalKey);
     
     if (novaSenha) {
@@ -7285,7 +7406,7 @@ function salvarUsuarioEditado(event) {
 
 function excluirUsuario(login) {
     if (!login) return;
-    const loginNorm = (login || '').trim().toLowerCase().replace(/\s+/g, '_');
+    var loginNorm = typeof axisLoginCanonico === 'function' ? axisLoginCanonico(login) : (login || '').trim().toLowerCase().replace(/\s+/g, '_');
     if (loginNorm === 'admin_filipe_silva') {
         showToast('Não é possível excluir o usuário administrador principal', 'error');
         return;
@@ -7302,10 +7423,15 @@ function excluirUsuario(login) {
 function excluirUsuarioConfirmado(login, loginNorm) {
     let userKey = 'db_' + loginNorm;
     if (!localStorage.getItem(userKey)) {
-        const chave = Object.keys(localStorage).find(k => k.startsWith('db_') && k.replace('db_', '').toLowerCase() === loginNorm);
+        const chave = Object.keys(localStorage).find(function (k) {
+            return k.indexOf('db_') === 0 && typeof axisLoginCanonico === 'function' && axisLoginCanonico(k.replace('db_', '')) === loginNorm;
+        });
         if (chave) userKey = chave;
     }
     localStorage.removeItem(userKey);
+    try {
+        if (typeof window.axisRemoveUserFromServer === 'function') window.axisRemoveUserFromServer(loginNorm);
+    } catch (eEx) {}
     
     showToast(`Usuário ${login} excluído com sucesso!`, 'success');
     carregarUsuarios();
@@ -9510,6 +9636,9 @@ function initAxisProfile() {
                 userData.matriculaAxis = matPerfil;
             }
             localStorage.setItem(storeKey, JSON.stringify(userData));
+            try {
+                if (typeof window.axisPushUserToServer === 'function') window.axisPushUserToServer(login, userData);
+            } catch (ePer) {}
             if (userData.name) localStorage.setItem('current_user', userData.name);
             if (typeof atualizarPerfilNav === 'function') atualizarPerfilNav();
             if (typeof showToast === 'function') showToast('Perfil atualizado', 'success');
@@ -9620,6 +9749,9 @@ function initModalFotoPerfil() {
                 if (typeof showToast === 'function') showToast('Armazenamento cheio ou bloqueado — não foi possível guardar a foto.', 'error');
                 return;
             }
+            try {
+                if (typeof window.axisPushUserToServer === 'function') window.axisPushUserToServer(login, userData);
+            } catch (eFoto) {}
             if (typeof atualizarPerfilNav === 'function') atualizarPerfilNav();
             if (typeof showToast === 'function') showToast('Foto guardada no perfil', 'success');
             fecharModalFotoPerfil();

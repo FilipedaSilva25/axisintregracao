@@ -230,3 +230,27 @@ Nesta fase foram implementadas e devem continuar consistentes:
 - `js/selbetti-hub.js`, `pages/selbetti.html`, `js/selbetti-chrome-runtime-shim.js`, `assets/IMAGENS/O_Patrimonio_Ta_On.png.png`: correção do 404 de imagem e mitigação de `runtime.lastError` no contexto SELBETTI.
 
 **Nota de segurança operacional:** manter `.env`, `config/data/whatsapp-auth/*` e credenciais fora de commits públicos.
+
+---
+
+### Login, utilizadores e 2FA — localhost vs domínio (27/03/2026)
+
+**Contexto:** Contas (`db_*`), senhas em texto no objeto do utilizador, foto em base64 e grande parte das preferências vivem no **localStorage do browser**, por **origem** (`http://localhost:3006` ≠ `https://axisintegracao.com.br`). Por isso o número de utilizadores e os dados de perfil podem diferir entre local e produção; não são “o mesmo site” ao nível de armazenamento.
+
+**2FA (servidor):** O estado visual do badge no header dependia de `refreshTotpSettings()`, que só corre com sucesso na página **Configurações** (exige elementos do DOM). Foi adicionada `axisSyncTotpBadgeFromApi()` — chamada após login e ao restaurar sessão — para consultar `/api/auth/totp-status` e atualizar `axis_2fa_enabled` + badge sem abrir Configurações.
+
+**Edição de utilizador:** `abrirModalEditarUsuario`, `excluirUsuarioConfirmado` passam a usar `axisLoginCanonico` na resolução de chaves; `salvarUsuarioEditado` faz **trim** nas senhas novas, alinhado ao login (`handleAuth` já faz trim), evitando “senha incorreta” por espaço final.
+
+---
+
+### Contas no servidor (persistência nuvem) — 27/03/2026
+
+**Problema:** Utilizadores e fotos viviam só no `localStorage` de cada browser; em produção na nuvem os dados não eram partilhados entre equipamentos.
+
+**Solução:** Ficheiro `config/data/axis-browser-users.json` (criado pelo servidor se não existir) + API `GET/POST /api/persist/browser-users`. O cliente (`js/script.js`) faz pull no arranque (servidor funde em `db_*`) e push após cadastro, edição, exclusão, login (último acesso), troca de senha, guardar perfil e foto.
+
+**Git:** `axis-browser-users.json` está em `.gitignore` (contém senhas em texto — mesmo modelo que antes no cliente).
+
+**Regra Cursor:** `.cursor/rules/PERSISTENCIA_SERVIDOR_AXIS.mdc` (sempre aplicar em sessões futuras).
+
+**Deploy:** `scripts/deploy-axis-hostinger.ps1` (PowerShell; pede senha SSH).
