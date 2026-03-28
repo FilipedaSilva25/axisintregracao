@@ -65,8 +65,11 @@ window.getAxisApiBase = getAxisApiBase;
     }
     function pull() {
         fetch(apiBaseUrl() + '/api/persist/browser-users')
-            .then(function (r) { return r.json(); })
-            .catch(function () { return {}; })
+            .then(function (r) {
+                if (!r || !r.ok) return { ok: false };
+                return r.json().catch(function () { return { ok: false }; });
+            })
+            .catch(function () { return { ok: false }; })
             .then(function (data) {
                 if (data && data.ok && data.byLogin && typeof data.byLogin === 'object') {
                     var bl = data.byLogin;
@@ -104,6 +107,51 @@ window.getAxisApiBase = getAxisApiBase;
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ removeLogins: [c] })
         }).catch(function () {});
+    };
+    /**
+     * Janela anónima / pull falhou: busca o utilizador no servidor e grava em localStorage antes do login.
+     * @param {string} loginCanon ex. filipe_silva
+     * @param {function(boolean)} cb true se encontrou e gravou
+     */
+    window.axisTryHydrateUserFromServer = function (loginCanon, cb) {
+        if (!loginCanon) {
+            if (cb) cb(false);
+            return;
+        }
+        fetch(apiBaseUrl() + '/api/persist/browser-users')
+            .then(function (r) {
+                if (!r || !r.ok) return null;
+                return r.json().catch(function () { return null; });
+            })
+            .catch(function () { return null; })
+            .then(function (data) {
+                if (!data || !data.ok || !data.byLogin || typeof data.byLogin !== 'object') {
+                    if (cb) cb(false);
+                    return;
+                }
+                var bl = data.byLogin;
+                var u = bl[loginCanon];
+                if (!u) {
+                    for (var k in bl) {
+                        if (!Object.prototype.hasOwnProperty.call(bl, k)) continue;
+                        if (canonLocal(k) === loginCanon) {
+                            u = bl[k];
+                            break;
+                        }
+                    }
+                }
+                if (u && typeof u === 'object') {
+                    try {
+                        localStorage.setItem('db_' + loginCanon, JSON.stringify(u));
+                    } catch (e2) {
+                        if (cb) cb(false);
+                        return;
+                    }
+                    if (cb) cb(true);
+                    return;
+                }
+                if (cb) cb(false);
+            });
     };
     if (typeof document === 'undefined') return;
     if (document.readyState === 'loading') {
@@ -2598,13 +2646,16 @@ function handleAuth() {
                 axisExecuteLoginSession(loginNormalizado, db, dbKey, chaveAntiga, userInput);
             } else {
                 console.log('❌ Senha incorreta');
-                // Animação de erro
                 passField.classList.add('shake-animation');
-                setTimeout(() => passField.classList.remove('shake-animation'), 500);
+                setTimeout(function () { passField.classList.remove('shake-animation'); }, 500);
+                var hintSenha = 'Senha incorreta.';
+                if (db.senhaTemporaria === true) {
+                    hintSenha += ' No cadastro foi gerada uma senha automática (ex.: Axis…): copie-a da lista de utilizadores ou peça ao admin para redefinir.';
+                }
                 if (typeof showToast === 'function') {
-                    showToast('Senha incorreta.', 'warning');
+                    showToast(hintSenha, 'warning', 9000);
                 } else {
-                    alert('Senha incorreta.');
+                    alert(hintSenha);
                 }
             }
         } catch (error) {
@@ -2616,14 +2667,38 @@ function handleAuth() {
             }
         }
     } else {
-        console.log('❌ Usuário não encontrado no localStorage');
-        console.log('🔍 Chaves disponíveis no localStorage:', Object.keys(localStorage).filter(k => k.startsWith('db_')));
-        userField.classList.add('shake-animation');
-        setTimeout(() => userField.classList.remove('shake-animation'), 500);
-        if (typeof showToast === 'function') {
-            showToast('Usuário não encontrado.', 'warning');
+        function axisShowUsuarioNaoEncontrado() {
+            console.log('❌ Usuário não encontrado no localStorage');
+            console.log('🔍 Chaves disponíveis no localStorage:', Object.keys(localStorage).filter(k => k.startsWith('db_')));
+            userField.classList.add('shake-animation');
+            setTimeout(function () { userField.classList.remove('shake-animation'); }, 500);
+            if (typeof showToast === 'function') {
+                showToast('Usuário não encontrado.', 'warning');
+            } else {
+                if (typeof showModalErroLogin === 'function') {
+                    showModalErroLogin('Usuário não encontrado', 'Use o login canónico (ex.: filipe.silva ou filipe_silva). Em janela anónima o site sincroniza com o servidor; se o erro continuar, o administrador deve voltar a gravar o utilizador ou verificar o deploy da API /api/persist/browser-users.');
+                } else {
+                    alert('Usuário não encontrado. Verifique se o usuário foi criado corretamente.');
+                }
+            }
+        }
+        if (handleAuth._axisHydratingLogin) {
+            axisShowUsuarioNaoEncontrado();
+        } else if (typeof window.axisTryHydrateUserFromServer === 'function') {
+            handleAuth._axisHydratingLogin = true;
+            if (typeof showToast === 'function') {
+                showToast('A sincronizar conta com o servidor…', 'info', 3200);
+            }
+            window.axisTryHydrateUserFromServer(loginNormalizado, function (found) {
+                handleAuth._axisHydratingLogin = false;
+                if (found) {
+                    handleAuth();
+                } else {
+                    axisShowUsuarioNaoEncontrado();
+                }
+            });
         } else {
-            if (typeof showModalErroLogin === 'function') showModalErroLogin('Usuário não encontrado', 'Use o login exatamente como cadastrado (ex: joao.silva, em minúsculas). O sistema aceita login com maiúsculas ou minúsculas.'); else alert('Usuário não encontrado. Verifique se o usuário foi criado corretamente.');
+            axisShowUsuarioNaoEncontrado();
         }
     }
 }

@@ -181,7 +181,7 @@ async function handleApi(req, res, urlPath) {
     }
 
     // ---- Persistência de contas no servidor (localStorage espelhado em JSON; site na nuvem) ----
-    if (urlPath === '/api/persist/browser-users' && method === 'GET') {
+    if ((urlPath === '/api/persist/browser-users' || urlPath === '/api/persist/browser-users/') && method === 'GET') {
         try {
             const d = await loadAxisBrowserUsersDoc();
             sendJson(res, { ok: true, byLogin: d.byLogin, updatedAt: d.updatedAt || null });
@@ -190,7 +190,7 @@ async function handleApi(req, res, urlPath) {
         }
         return true;
     }
-    if (urlPath === '/api/persist/browser-users' && method === 'POST') {
+    if ((urlPath === '/api/persist/browser-users' || urlPath === '/api/persist/browser-users/') && method === 'POST') {
         try {
             const body = await parseBodyLimited(req, 26 * 1024 * 1024);
             if (body && body.__parseError === 'too_large') {
