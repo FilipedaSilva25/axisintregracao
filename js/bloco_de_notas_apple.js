@@ -1150,8 +1150,8 @@ function openNote(noteId) {
     
     if (richEditor) {
         var content = note.content && note.content.trim();
-        var isEmpty = !content || content === '<p></p>' || content === '<p><br></p>' || content === '<p>Comece a escrever...</p>';
-        richEditor.innerHTML = isEmpty ? (typeof EMPTY_EDITOR_HTML !== 'undefined' ? EMPTY_EDITOR_HTML : '<p><br></p>') : note.content;
+        var isEmpty = !content || content === '<p></p>' || content === '<p><br></p>' || content === '<p>Comece a escrever...</p>' || content === '<p>\u200b</p>' || content === '<p>&#8203;</p>';
+        richEditor.innerHTML = isEmpty ? (typeof EMPTY_EDITOR_HTML !== 'undefined' ? EMPTY_EDITOR_HTML : '<p>\u200b</p>') : note.content;
         sanitizeEditorTextColor(richEditor);
         var isDark = document.body.getAttribute('data-theme') === 'dark';
         richEditor.style.color = isDark ? '#f5f5f7' : '#000000';
@@ -1181,7 +1181,14 @@ function openNote(noteId) {
                 var range = doc.createRange();
                 var sel = win ? win.getSelection() : window.getSelection();
                 if (sel) {
-                    if (richEditor.childNodes.length > 0) {
+                    var p0 = richEditor.querySelector('p');
+                    if (p0) {
+                        if (p0.firstChild && p0.firstChild.nodeType === 3) {
+                            range.setStart(p0.firstChild, 0);
+                        } else {
+                            range.setStart(p0, 0);
+                        }
+                    } else if (richEditor.childNodes.length > 0) {
                         range.setStart(richEditor.childNodes[0], 0);
                     } else {
                         range.setStart(richEditor, 0);
@@ -1319,13 +1326,20 @@ function applyFormat(format) {
 }
 
 // Placeholder "Comece a escrever...": visível só quando o editor está vazio
-var EMPTY_EDITOR_HTML = '<p><br></p>';
+/** Parágrafo vazio com ZWSP (não &lt;br&gt;): o cursor fica na 1.ª linha, alinhado ao placeholder. */
+var EMPTY_EDITOR_HTML = '<p>\u200b</p>';
+function stripInvisibleEditorText(s) {
+    return String(s || '').replace(/\u200b/g, '').replace(/\ufeff/g, '');
+}
 function isEditorEmpty(editor) {
     if (!editor) return true;
     var html = editor.innerHTML.trim();
     if (!html) return true;
     if (html === '<p></p>' || html === '<p><br></p>' || html === '<p><br/></p>') return true;
     if (html === '<p>Comece a escrever...</p>') return true;
+    if (html === '<p>\u200b</p>' || html === '<p>&#8203;</p>') return true;
+    var vis = stripInvisibleEditorText(editor.innerText || editor.textContent || '').trim();
+    if (vis === '' && !editor.querySelector('img,table,ul,ol,li')) return true;
     return false;
 }
 function updatePlaceholderVisibility() {
@@ -1995,7 +2009,8 @@ function updateWordCount() {
     const editor = getRichEditor();
     if (!editor) return;
     
-    const text = editor.innerText || editor.textContent || '';
+    const rawText = editor.innerText || editor.textContent || '';
+    const text = stripInvisibleEditorText(rawText);
     const words = text.trim().split(/\s+/).filter(w => w.length > 0);
     const chars = text.length;
     const images = editor.querySelectorAll('img').length;

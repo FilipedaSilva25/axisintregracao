@@ -1,0 +1,146 @@
+{
+  "byYearMonth": {
+    "2026": {
+      "02": [
+        {
+          "id": "wa_1775323897625_llq3nbvc",
+          "wNorm": "072.34122",
+          "wDisplay": "072.34122",
+          "addedAt": "2026-04-04T17:31:37.625Z",
+          "source": "whatsapp",
+          "whatsappPhone": "276922462380171"
+        },
+        {
+          "id": "wa_1775340189617_ez3wr4wb",
+          "wNorm": "077.89615",
+          "wDisplay": "077.89615",
+          "addedAt": "2026-02-04T22:03:09.617Z",
+          "source": "whatsapp",
+          "whatsappPhone": "559940189611"
+        }
+      ],
+      "01": [
+        {
+          "id": "wa_1775338679540_xn52sob5",
+          "wNorm": "075.01920",
+          "wDisplay": "075.01920",
+          "addedAt": "2026-04-04T21:37:59.540Z",
+          "source": "whatsapp",
+          "whatsappPhone": "276922462380171"
+        },
+        {
+          "id": "wa_1775339173021_3sf4zvbw",
+          "wNorm": "070.60870",
+          "wDisplay": "070.60870",
+          "addedAt": "2026-04-04T21:46:13.021Z",
+          "source": "whatsapp",
+          "whatsappPhone": "276922462380171"
+        },
+        {
+          "id": "wa_1775340387989_b3dafh4o",
+          "wNorm": "065.48586",
+          "wDisplay": "065.48586",
+          "addedAt": "2026-01-04T22:06:27.989Z",
+          "source": "whatsapp",
+          "whatsappPhone": "276922462380171"
+        }
+      ],
+      "09": [
+        {
+          "id": "wa_1775339690176_fgcq35gz",
+          "wNorm": "070.60870",
+          "wDisplay": "070.60870",
+          "addedAt": "2026-04-04T21:54:50.176Z",
+          "source": "whatsapp",
+          "whatsappPhone": "276922462380171"
+        }
+      ],
+      "06": [
+        {
+          "id": "wa_1775340222583_v37u7oz7",
+          "wNorm": "HTTP.E2E.94569",
+          "wDisplay": "HTTP.E2E.94569",
+          "addedAt": "2026-04-04T22:03:42.583Z",
+          "source": "e2e_curl"
+        },
+        {
+          "id": "wa_1775340234285_y32hhrtp",
+          "wNorm": "HTTP.E2E.22389",
+          "wDisplay": "HTTP.E2E.22389",
+          "addedAt": "2026-04-04T22:03:54.285Z",
+          "source": "e2e_curl"
+        },
+        {
+          "id": "wa_1775340295942_xcizome5",
+          "wNorm": "HTTP.POSTRESTART.9299",
+          "wDisplay": "HTTP.POSTRESTART.9299",
+          "addedAt": "2026-06-04T22:04:55.942Z",
+          "source": "post_restart"
+        }
+      ],
+      "07": [
+        {
+          "id": "wa_1775389276421_pkpfkv0d",
+          "wNorm": "088.76417",
+          "wDisplay": "088.76417",
+          "addedAt": "2026-07-05T11:41:16.421Z",
+          "source": "whatsapp_line",
+          "whatsappPhone": "55991775389276417"
+        }
+      ],
+      "08": [
+        {
+          "id": "wa_1775389276430_4rs2ttlk",
+          "wNorm": "066.77701",
+          "wDisplay": "066.77701",
+          "addedAt": "2026-08-05T11:41:16.430Z",
+          "source": "whatsapp",
+          "whatsappPhone": "55991775389276429"
+        }
+      ],
+      "04": [
+        {
+          "id": "wa_1775389737444_pqybrqoo",
+          "wNorm": "073.28010",
+          "wDisplay": "073.28010",
+          "addedAt": "2026-04-05T11:48:57.444Z",
+          "source": "whatsapp",
+          "whatsappPhone": "276922462380171"
+        },
+        {
+          "id": "wa_1775389989344_xhh2gkr0",
+          "wNorm": "099.89337",
+          "wDisplay": "099.89337",
+          "addedAt": "2026-04-05T11:53:09.344Z",
+          "source": "whatsapp",
+          "whatsappPhone": "5511999888777"
+        },
+        {
+          "id": "wa_1775389989353_vb9eqpk2",
+          "wNorm": "LINHA4.9352",
+          "wDisplay": "LINHA4.9352",
+          "addedAt": "2026-04-05T11:53:09.353Z",
+          "source": "whatsapp_line",
+          "whatsappPhone": "5511887766554"
+        },
+        {
+          "id": "wa_1775390196027_qtst7lou",
+          "wNorm": "070.60870",
+          "wDisplay": "070.60870",
+          "addedAt": "2026-04-05T11:56:36.027Z",
+          "source": "whatsapp",
+          "whatsappPhone": "276922462380171"
+        },
+        {
+          "id": "wa_1775391518736_iavg3shj",
+          "wNorm": "06364684",
+          "wDisplay": "06364684",
+          "addedAt": "2026-04-05T12:18:38.737Z",
+          "source": "whatsapp_mh_flow",
+          "whatsappPhone": "276922462380171"
+        }
+      ]
+    }
+  },
+  "updatedAt": "2026-04-05T12:18:38.737Z"
+}

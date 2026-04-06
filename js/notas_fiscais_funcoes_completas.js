@@ -981,7 +981,5 @@ if (document.readyState === 'loading') {
     initNotasFiscaisComplete();
 }
 
-console.log('✅ Todas as funções completas foram carregadas!');
-
 
 

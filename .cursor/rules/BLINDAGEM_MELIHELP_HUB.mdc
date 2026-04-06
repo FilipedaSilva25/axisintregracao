@@ -1,0 +1,30 @@
+---
+description: MeliHelp Hub — página concluída; não alterar hub, rotas, storage ou lixeira sem autorização
+globs: pages/melihelp.html,css/melihelp.css,js/melihelp-hub.js
+alwaysApply: false
+---
+
+# MeliHelp Hub — blindagem (concluído)
+
+**Estado:** Página **100% concluída** (27/03/2026). Alterações só com **autorização explícita** do utilizador; preferir recusar pedidos vagos de “refatorar” ou “limpar” estes ficheiros.
+
+## Ficheiros
+
+- `pages/melihelp.html` — Shell: drawer, topbar, modais (upload, renomear, cordão, lixeira, pré-visualização). Não remover IDs usados por `melihelp-hub.js` (`melihelp-nav-root`, `melihelp-main`, backdrops, etc.).
+- `css/melihelp.css` — Estilos `.melihelp-*`; drawer sem barra de rolagem visível no nav; painel do drawer sem borda forte; botão “Voltar ao início” sem moldura. Não reintroduzir barra grossa nem “riscos” sem pedido explícito.
+- `js/melihelp-hub.js` — Toda a SPA: `parseRoute`, `buildNavHtml`, `render*`, lixeira, IndexedDB (`axis_melihelp_hub_v1_docs_idb`), `axis_melihelp_hub_v1_*` em `localStorage`.
+
+## Invariantes (não quebrar)
+
+1. **Storage:** prefixo `axis_melihelp_hub_v1`. Não renomear chaves (`_docs_trash`, `_cordao_*`, pastas de documentos) sem migração — utilizadores perdem dados.
+2. **Rotas:** manter coerência entre `parseRoute()`, `setRoute()`, `breadcrumb()`, `highlightNav()` e `buildNavHtml()` (home, certificados, cordão, recebimento, orcamentos/atas, lixeira).
+3. **Lixeira:** ficheiros + registos de cordão; restaurar/apagar definitivo com modais vidro; não apagar em um clique sem confirmação.
+4. **Menu:** conteúdo atual (CRACHÁS com anos do menu, CORDÃO retiradas/recebimento, CARTÃO AVULSO, LIXEIRA, link AXIS) — não substituir por estrutura antiga sem alinhamento com o utilizador.
+5. **Cache:** ao alterar `melihelp-hub.js` ou `melihelp.css`, incrementar `?v=` em `melihelp.html`.
+
+## Integração
+
+- `window.melihelpCordao` e APIs expostas no fim de `melihelp-hub.js`: não remover sem substituir integrações.
+- `js/selbetti-chrome-runtime-shim.js` carregado antes do hub na mesma página — manter ordem se existir dependência em extensão Chrome.
+
+Documentar qualquer alteração autorizada em `BLINDAGEM.md` (secção MeliHelp).

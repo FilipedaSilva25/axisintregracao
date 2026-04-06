@@ -237,9 +237,8 @@ html[data-selbetti-theme="dark"] .selbetti-nav-summary:hover {
 }
 
 .selbetti-nav-nested {
-    padding: 4px 0 8px 8px;
-    border-left: 2px solid rgba(0, 122, 255, 0.2);
-    margin-left: 10px;
+    padding: 4px 0 8px 10px;
+    margin-left: 0;
 }
 
 .selbetti-nav-hub-root {
@@ -1262,6 +1261,473 @@ html[data-selbetti-theme="dark"] .selbetti-settings-row input {
 
 .selbetti-toast.is-on {
     transform: translateX(-50%) translateY(0);
+}
+
+/* Orçamentos — pesquisa na pasta mensal */
+.selbetti-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.selbetti-panel-head-orc-tools {
+    flex: 1 1 220px;
+    min-width: 0;
+    max-width: 420px;
+    margin-left: auto;
+}
+
+.selbetti-doc-search {
+    width: 100%;
+    padding: 11px 16px;
+    border-radius: 12px;
+    border: 1px solid var(--sh-border);
+    background: rgba(255, 255, 255, 0.55);
+    color: var(--sh-text);
+    font-size: 14px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+html[data-selbetti-theme="dark"] .selbetti-doc-search {
+    background: rgba(0, 0, 0, 0.22);
+}
+
+.selbetti-doc-search:focus {
+    outline: none;
+    border-color: rgba(0, 122, 255, 0.45);
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.15);
+}
+
+.selbetti-doc-item-manual {
+    border-left: 3px solid rgba(0, 122, 255, 0.35);
+}
+
+/* CADASTRAR ORÇAMENTO */
+.selbetti-cadastro-orc-panel {
+    padding-bottom: 28px;
+}
+
+.selbetti-cadastro-orc-head h2 {
+    font-size: 1.2rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin: 0;
+}
+
+.selbetti-cadastro-orc-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    margin-top: 8px;
+}
+
+.selbetti-cadastro-card {
+    border-radius: var(--sh-radius);
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+}
+
+.selbetti-cadastro-card-upload {
+    min-height: 260px;
+    display: flex;
+    align-items: stretch;
+}
+
+.selbetti-cadastro-card-upload-inner {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 14px;
+    position: relative;
+    z-index: 1;
+    padding: 12px;
+}
+
+.selbetti-cadastro-auto-badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #007aff;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: rgba(0, 122, 255, 0.12);
+    border: 1px solid rgba(0, 122, 255, 0.22);
+}
+
+html[data-selbetti-theme="dark"] .selbetti-cadastro-auto-badge {
+    color: #5ac8fa;
+    background: rgba(90, 200, 250, 0.12);
+    border-color: rgba(90, 200, 250, 0.25);
+}
+
+.selbetti-cadastro-auto-title {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--sh-text);
+    max-width: 260px;
+    line-height: 1.4;
+}
+
+.selbetti-cadastro-upload-glow {
+    position: absolute;
+    inset: -40%;
+    background: radial-gradient(circle at 50% 40%, rgba(0, 122, 255, 0.18), transparent 55%),
+        radial-gradient(circle at 80% 80%, rgba(255, 149, 0, 0.12), transparent 45%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.selbetti-cadastro-upload-icon {
+    font-size: 2.75rem;
+    color: #007aff;
+    opacity: 0.9;
+    filter: drop-shadow(0 8px 20px rgba(0, 122, 255, 0.35));
+}
+
+html[data-selbetti-theme="dark"] .selbetti-cadastro-upload-icon {
+    color: #5ac8fa;
+}
+
+.selbetti-cadastro-destino-label {
+    margin: 0;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--sh-muted);
+}
+
+.selbetti-cadastro-card-manual {
+    display: flex;
+    flex-direction: column;
+}
+
+.selbetti-cadastro-manual-inner {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    flex: 1;
+    min-width: 0;
+}
+
+.selbetti-cadastro-manual-head {
+    margin: 0;
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--sh-border);
+}
+
+.selbetti-cadastro-manual-h3 {
+    margin: 0 0 8px;
+    font-size: 1.05rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+}
+
+.selbetti-cadastro-manual-sub {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.45;
+    color: var(--sh-muted);
+}
+
+.selbetti-cadastro-sec {
+    padding: 14px 16px;
+    border-radius: 14px;
+    border: 1px solid var(--sh-border);
+    background: rgba(255, 255, 255, 0.45);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.5) inset;
+}
+
+html[data-selbetti-theme="dark"] .selbetti-cadastro-sec {
+    background: rgba(0, 0, 0, 0.2);
+    box-shadow: none;
+}
+
+.selbetti-cadastro-sec-dest {
+    border-color: rgba(0, 122, 255, 0.22);
+    background: linear-gradient(160deg, rgba(0, 122, 255, 0.07) 0%, rgba(255, 255, 255, 0.4) 100%);
+}
+
+html[data-selbetti-theme="dark"] .selbetti-cadastro-sec-dest {
+    background: linear-gradient(160deg, rgba(90, 200, 250, 0.08) 0%, rgba(0, 0, 0, 0.22) 100%);
+    border-color: rgba(90, 200, 250, 0.2);
+}
+
+.selbetti-cadastro-sec-kicker {
+    display: block;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--sh-muted);
+    margin-bottom: 12px;
+}
+
+.selbetti-cadastro-preview-kicker {
+    margin-bottom: 10px;
+}
+
+.selbetti-manual-select-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+@media (max-width: 380px) {
+    .selbetti-manual-select-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.selbetti-cadastro-field {
+    margin: 0;
+}
+
+.selbetti-cadastro-optional {
+    font-weight: 500;
+    text-transform: none;
+    letter-spacing: 0;
+    opacity: 0.85;
+}
+
+.selbetti-cadastro-manual-form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.selbetti-cadastro-field-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--sh-muted);
+    margin-bottom: 6px;
+}
+
+.selbetti-cadastro-dt-block {
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.selbetti-cadastro-hms-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.selbetti-cadastro-hms-field {
+    min-width: 0;
+}
+
+.selbetti-input-hms {
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+}
+
+.selbetti-cadastro-sec-file .selbetti-cadastro-file-row {
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.03);
+    border: 1px dashed rgba(0, 0, 0, 0.12);
+}
+
+html[data-selbetti-theme="dark"] .selbetti-cadastro-sec-file .selbetti-cadastro-file-row {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+.selbetti-cadastro-file-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+}
+
+.selbetti-cadastro-file-label {
+    font-size: 13px;
+    color: var(--sh-muted);
+    flex: 1 1 140px;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.selbetti-cadastro-file-clear {
+    font-size: 11px;
+    padding: 8px 12px;
+}
+
+.selbetti-input {
+    width: 100%;
+    padding: 11px 14px;
+    border-radius: 12px;
+    border: 1px solid var(--sh-border);
+    background: rgba(255, 255, 255, 0.55);
+    color: var(--sh-text);
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.selbetti-input-strong {
+    border-width: 1.5px;
+    border-color: rgba(0, 0, 0, 0.14);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.selbetti-input-strong:not(.selbetti-select) {
+    background: rgba(255, 255, 255, 0.85);
+}
+
+html[data-selbetti-theme="dark"] .selbetti-input-strong {
+    border-color: rgba(255, 255, 255, 0.18);
+    box-shadow: none;
+}
+
+html[data-selbetti-theme="dark"] .selbetti-input-strong:not(.selbetti-select) {
+    background: rgba(0, 0, 0, 0.35);
+}
+
+.selbetti-select.selbetti-input-strong {
+    background-color: rgba(255, 255, 255, 0.92);
+}
+
+html[data-selbetti-theme="dark"] .selbetti-select.selbetti-input-strong {
+    background-color: rgba(0, 0, 0, 0.38);
+}
+
+.selbetti-input-strong:focus {
+    outline: none;
+    border-color: rgba(0, 122, 255, 0.55);
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.12);
+}
+
+html[data-selbetti-theme="dark"] .selbetti-input-strong:focus {
+    border-color: rgba(90, 200, 250, 0.55);
+    box-shadow: 0 0 0 3px rgba(90, 200, 250, 0.12);
+}
+
+.selbetti-select {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 36px;
+}
+
+html[data-selbetti-theme="dark"] .selbetti-select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23aaa' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+}
+
+html[data-selbetti-theme="dark"] .selbetti-input {
+    background: rgba(0, 0, 0, 0.22);
+}
+
+.selbetti-cadastro-manual-save {
+    width: 100%;
+    justify-content: center;
+    margin-top: 4px;
+    padding-top: 13px;
+    padding-bottom: 13px;
+}
+
+.selbetti-cadastro-manual-preview-section {
+    margin-top: 4px;
+    padding-top: 16px;
+    border-top: 1px solid var(--sh-border);
+}
+
+.selbetti-manual-orc-preview-wrap {
+    min-height: 48px;
+}
+
+.selbetti-cadastro-preview-empty {
+    margin: 0;
+    padding: 14px 12px;
+    font-size: 13px;
+    line-height: 1.45;
+    color: var(--sh-muted);
+    text-align: center;
+    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.03);
+}
+
+html[data-selbetti-theme="dark"] .selbetti-cadastro-preview-empty {
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.selbetti-cadastro-manual-preview {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-height: 220px;
+    overflow-y: auto;
+    border-radius: 12px;
+    border: 1px solid var(--sh-border);
+    background: rgba(255, 255, 255, 0.35);
+}
+
+html[data-selbetti-theme="dark"] .selbetti-cadastro-manual-preview {
+    background: rgba(0, 0, 0, 0.18);
+}
+
+.selbetti-cadastro-manual-preview li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 6px 12px;
+    padding: 12px 14px;
+    font-size: 13px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.selbetti-cadastro-manual-preview li:last-child {
+    border-bottom: none;
+}
+
+html[data-selbetti-theme="dark"] .selbetti-cadastro-manual-preview li {
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+.selbetti-cadastro-manual-preview-title {
+    font-weight: 600;
+    color: var(--sh-text);
+    flex: 1 1 100%;
+}
+
+.selbetti-cadastro-manual-preview-meta {
+    flex: 1 1 100%;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--sh-muted);
+    line-height: 1.35;
+}
+
+.selbetti-cadastro-manual-preview-amt {
+    font-weight: 700;
+    color: var(--sh-muted);
+    white-space: nowrap;
 }
 
 @media (max-width: 600px) {

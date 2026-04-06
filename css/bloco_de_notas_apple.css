@@ -2396,16 +2396,22 @@ body {
     display: flex;
     flex-direction: column;
 }
+/* Mesma geometria que #rich-editor no iframe: padding área 40px + editor 32px/48px, coluna max 720px centrada */
 .rich-editor-placeholder {
     position: absolute;
-    top: 72px;
-    left: 88px;
-    right: 88px;
+    top: calc(40px + 32px);
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(720px, calc(100% - 80px));
+    max-width: 720px;
+    padding-left: 48px;
+    padding-right: 48px;
+    box-sizing: border-box;
     pointer-events: none;
     font-size: 16px;
     line-height: 1.6;
     color: #86868b;
-    font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'SF Pro Text', sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'SF Pro Text', system-ui, sans-serif;
 }
 .rich-editor-placeholder[aria-hidden="true"] {
     visibility: hidden;

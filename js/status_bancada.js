@@ -80,7 +80,12 @@
     const BANCADAS_RETIROS = ['R01', 'R02', 'R03', 'R04', 'R05', 'R06'];
     const RETIROS_LAYOUT = [null, null, 'R06', 'R05', null, 'R04', 'R03', 'R02', 'R01'];
 
-    const BANCADAS_ALL = BANCADAS_MONO.concat(BANCADAS_PTW).concat(BANCADAS_REJEITOS).concat(BANCADAS_PM).concat(BANCADAS_RETIROS);
+    /* RETURNS: RS01–RS08; grelha 4×2 — 1 3 5 7 em cima, 2 4 6 8 em baixo (ids RS01…RS08) */
+    const BANCADAS_RETURNS = ['RS01', 'RS02', 'RS03', 'RS04', 'RS05', 'RS06', 'RS07', 'RS08'];
+    const RETURNS_DISPLAY = { RS01: '1', RS02: '2', RS03: '3', RS04: '4', RS05: '5', RS06: '6', RS07: '7', RS08: '8' };
+    const RETURNS_LAYOUT = ['RS01', 'RS03', 'RS05', 'RS07', 'RS02', 'RS04', 'RS06', 'RS08'];
+
+    const BANCADAS_ALL = BANCADAS_MONO.concat(BANCADAS_PTW).concat(BANCADAS_REJEITOS).concat(BANCADAS_PM).concat(BANCADAS_RETIROS).concat(BANCADAS_RETURNS);
 
     /** Setor (value do select) → lista de IDs de bancadas para o dropdown */
     const SETOR_TO_BANCADAS = {
@@ -88,7 +93,8 @@
         'PACKING PTW': BANCADAS_PTW,
         'REJEITOS': BANCADAS_REJEITOS,
         'PACKING MACHINE': BANCADAS_PM,
-        'RETIROS': BANCADAS_RETIROS
+        'RETIROS': BANCADAS_RETIROS,
+        'RETURNS': BANCADAS_RETURNS
     };
 
     const API_STATUS = '/api/bancadas/status';
@@ -255,6 +261,26 @@
         renderGridMono(containerId, layout, statusMap);
     }
 
+    function renderGridReturns(containerId, layout, statusMap) {
+        var container = document.getElementById(containerId);
+        if (!container) return;
+        container.innerHTML = '';
+        layout.forEach(function (id) {
+            var cell = document.createElement('div');
+            if (id === null || id === undefined) {
+                cell.className = 'sb-cell sb-cell-black';
+                cell.setAttribute('title', 'Sem bancada');
+            } else {
+                var status = statusMap[id] || 'DISPONIVEL';
+                cell.className = 'sb-cell ' + statusToClass(status);
+                cell.setAttribute('title', id + ' – ' + status);
+                cell.setAttribute('data-bancada', id);
+                cell.textContent = RETURNS_DISPLAY[id] || id;
+            }
+            container.appendChild(cell);
+        });
+    }
+
     function updateResumos(statusMap) {
         function calc(ids) {
             var cap = ids.length;
@@ -281,6 +307,7 @@
         var rejeitos = calc(BANCADAS_REJEITOS);
         var pm = calc(BANCADAS_PM);
         var retiros = calc(BANCADAS_RETIROS);
+        var returns = calc(BANCADAS_RETURNS);
 
         var monoCap = document.getElementById('mono-cap');
         var monoDisp = document.getElementById('mono-disp');
@@ -366,6 +393,23 @@
         var retirosSemnb = document.getElementById('retiros-semnb');
         if (retirosSemimp) retirosSemimp.textContent = retiros.semImp;
         if (retirosSemnb) retirosSemnb.textContent = retiros.semNb;
+
+        var returnsCap = document.getElementById('returns-cap');
+        var returnsDisp = document.getElementById('returns-disp');
+        var returnsIndisp = document.getElementById('returns-indisp');
+        var returnsPct = document.getElementById('returns-pct');
+        var returnsImp = document.getElementById('returns-imp');
+        var returnsNb = document.getElementById('returns-nb');
+        if (returnsCap) returnsCap.textContent = returns.cap;
+        if (returnsDisp) returnsDisp.textContent = returns.disp;
+        if (returnsIndisp) returnsIndisp.textContent = returns.indisp;
+        if (returnsPct) returnsPct.textContent = returns.pct + '%';
+        if (returnsImp) returnsImp.textContent = returns.imp;
+        if (returnsNb) returnsNb.textContent = returns.nb;
+        var returnsSemimp = document.getElementById('returns-semimp');
+        var returnsSemnb = document.getElementById('returns-semnb');
+        if (returnsSemimp) returnsSemimp.textContent = returns.semImp;
+        if (returnsSemnb) returnsSemnb.textContent = returns.semNb;
     }
 
     function showMsg(el, text, isError) {
@@ -388,6 +432,7 @@
         renderGrid('sb-grid-rejeitos', REJEITOS_LAYOUT, empty);
         renderGridMono('sb-grid-pm', PM_LAYOUT, empty);
         renderGridRetiros('sb-grid-retiros', RETIROS_LAYOUT, empty);
+        renderGridReturns('sb-grid-returns', RETURNS_LAYOUT, empty);
         updateResumos(empty);
 
         fetchStatus()
@@ -397,6 +442,7 @@
                 renderGrid('sb-grid-rejeitos', REJEITOS_LAYOUT, bancadas);
                 renderGridMono('sb-grid-pm', PM_LAYOUT, bancadas);
                 renderGridRetiros('sb-grid-retiros', RETIROS_LAYOUT, bancadas);
+                renderGridReturns('sb-grid-returns', RETURNS_LAYOUT, bancadas);
                 updateResumos(bancadas);
             })
             .catch(function (err) {
@@ -421,6 +467,7 @@
                 renderGrid('sb-grid-rejeitos', REJEITOS_LAYOUT, bancadas);
                 renderGridMono('sb-grid-pm', PM_LAYOUT, bancadas);
                 renderGridRetiros('sb-grid-retiros', RETIROS_LAYOUT, bancadas);
+                renderGridReturns('sb-grid-returns', RETURNS_LAYOUT, bancadas);
                 updateResumos(bancadas);
             })
             .catch(function () {});
@@ -633,7 +680,7 @@
             btn.addEventListener('click', function () {
                 var secao = (btn.getAttribute('data-secao') || '').trim();
                 var body = document.body;
-                body.classList.remove('sb-filter-rejeitos', 'sb-filter-ptw', 'sb-filter-mono', 'sb-filter-pm', 'sb-filter-retiros');
+                body.classList.remove('sb-filter-rejeitos', 'sb-filter-ptw', 'sb-filter-mono', 'sb-filter-pm', 'sb-filter-retiros', 'sb-filter-returns');
                 if (secao) body.classList.add('sb-filter-' + secao);
                 closeMenu();
             });

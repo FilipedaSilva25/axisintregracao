@@ -109,6 +109,106 @@
     font-size: 18px;
 }
 
+.settings-group h3.nf-settings-group-title {
+    display: block;
+    letter-spacing: 0.04em;
+}
+
+/* Seletores customizados (mesmo padrão dos filtros de inventário — glass) */
+#configuracoes .setor-selector-native-hidden {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+}
+
+#configuracoes .setor-selector,
+#configuracoes .nf-config-select {
+    position: relative;
+    width: 100%;
+}
+
+#configuracoes .setor-selector-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--glass-border);
+    font-size: 14px;
+    color: var(--text-main);
+    background: var(--card-bg);
+    cursor: pointer;
+    text-align: left;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    font-family: inherit;
+}
+
+#configuracoes .setor-selector-trigger:hover {
+    border-color: var(--accent-blue);
+}
+
+#configuracoes .setor-selector-trigger::after {
+    content: '▼';
+    font-size: 10px;
+    opacity: 0.6;
+    margin-left: 8px;
+    display: inline-block;
+    transition: transform 0.2s ease;
+}
+
+#configuracoes .setor-selector-trigger[aria-expanded='true']::after {
+    transform: rotate(180deg);
+}
+
+#configuracoes .setor-selector-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    margin-top: 4px;
+    max-height: 260px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background: var(--card-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    z-index: 1200;
+    display: none;
+}
+
+#configuracoes .setor-selector-dropdown.is-open {
+    display: block;
+}
+
+#configuracoes .setor-selector-option {
+    padding: 10px 12px;
+    font-size: 14px;
+    color: var(--text-main);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    border: none;
+    width: 100%;
+    text-align: left;
+    background: transparent;
+    font-family: inherit;
+}
+
+#configuracoes .setor-selector-option:hover {
+    background: var(--accent-blue);
+    color: #fff;
+}
+
+#configuracoes .setor-selector-option.selected {
+    background: var(--accent-blue);
+    color: #fff;
+}
+
 /* Setting Item */
 .setting-item {
     margin-bottom: 24px;
@@ -454,6 +554,26 @@
 
 [data-theme="dark"] .btn-secondary:hover {
     background: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] #configuracoes .setor-selector-trigger {
+    background: var(--card-bg);
+    border-color: var(--glass-border);
+    color: var(--text-main);
+}
+
+[data-theme="dark"] #configuracoes .setor-selector-dropdown {
+    background: var(--card-bg);
+    border-color: var(--glass-border);
+}
+
+[data-theme="dark"] #configuracoes .setor-selector-option {
+    color: var(--text-main);
+}
+
+[data-theme="dark"] #configuracoes .setor-selector-option:hover,
+[data-theme="dark"] #configuracoes .setor-selector-option.selected {
+    color: #fff;
 }
 
 /* Responsivo */

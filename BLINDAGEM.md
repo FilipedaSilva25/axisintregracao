@@ -5,6 +5,8 @@
 **Atualização (Status de Bancada):** 15/03/2026  
 **Atualização (Modal perfil e foto):** 15/03/2026  
 **Atualização (consola / F12 — expectativas):** 22/03/2026  
+**Atualização (MeliHelp Hub):** 27/03/2026  
+**Atualização (MeliHelp — emissão de crachá):** 30/03/2026  
 
 ## O que foi blindado
 
@@ -20,6 +22,64 @@
 4. **Cabeçalho `Referrer-Policy`** em `backend/config.js` (`strict-origin-when-cross-origin`) — reforço de privacidade; não relacionado com F12.
 
 **Regra:** alterações a esta política ou ao ficheiro do escudo devem ser documentadas aqui.
+
+---
+
+### MELIHELP HUB – blindado / concluído (27/03/2026)
+
+O **MeliHelp** (`pages/melihelp.html`) está declarado **concluído (100%)**: hub por `location.hash`, menu lateral, crachás, cordão (retiradas, recebimento), cartão avulso, lixeira (ficheiros + registos de cordão), modais em vidro, tema claro/escuro, armazenamento local + IndexedDB.
+
+**Ficheiros protegidos (regra Cursor: `.cursor/rules/BLINDAGEM_MELIHELP_HUB.mdc`):** `pages/melihelp.html`, `css/melihelp.css`, `js/melihelp-hub.js` (e referência a `js/selbetti-chrome-runtime-shim.js` carregado pela página).
+
+**Regra:** não alterar rotas, `buildNavHtml()`, prefixo de storage `axis_melihelp_hub_v1`, lixeira, modais de confirmação ou layout do drawer/menu sem **autorização explícita** do utilizador; alterações mínimas e documentadas aqui; incrementar `?v=` em CSS/JS no HTML quando mudar assets.
+
+**Nota:** não é possível impedir alterações via F12 noutra máquina; a blindagem orienta agentes/repositório e reduz regressões acidentais.
+
+**Alteração autorizada (30/03/2026):** área **Emissão de crachá** — rota `#/emissao-cracha`, item no menu CRACHÁS e card na home; ficheiros novos `css/melihelp-cracha-editor.css`, `js/melihelp-cracha-editor.js`; integração em `js/melihelp-hub.js` e scripts/CSS em `pages/melihelp.html` (incl. qrcodejs por CDN). Rascunho em `localStorage` chave `axis_melihelp_hub_v1_cracha_editor_draft`.
+
+**Alteração (31/03/2026):** modelo visual do PDF de referência — ficheiro estático `assets/cracha-template/design-referencia.pdf` (cópia do PDF do utilizador); **PDF.js** (CDN) renderiza pág. 2 como frente e pág. 1 como verso nos cartões; gráficos em `images/melihelp/` como fallback se o PDF falhar.
+
+**Alteração autorizada (02/04/2026):** rota **`#/certificados/cadastrar`** — área só para escolher ano/mês (menu CRACHÁS) e adicionar ficheiros com o mesmo modal e storage que a vista mensal; botão no painel CRACHÁS e item **CADASTRAR CRACHÁ** no drawer. Ficheiros: `js/melihelp-hub.js`, `css/melihelp.css`, `?v=hub71` em `pages/melihelp.html`.
+
+**Alteração (02/04/2026):** vistas mensais de crachá (2025/2026) **sem** botão ADICIONAR ARQUIVOS; inclusão só em **CADASTRAR CRACHÁ**. `?v=hub73`.
+
+**Alteração (02/04/2026):** CADASTRAR CRACHÁ **sem** selects Ano/Mês; destino = `cadastroCrachaDestinoYmHoje()` (mês corrente; ano fora do menu → primeiro ano listado). Botão **VER MÊS ATUAL**. `?v=hub74`.
+
+**Alteração (02/04/2026):** linha **DESTINO ATUAL** com `id=melihelp-cadastro-destino-subtitle`, `aria-live=polite`, atualização a cada 30s + ao voltar ao separador (`visibilitychange`); texto de ajuda só sobre cadastro de crachá. `?v=hub75`.
+
+**Alteração (02/04/2026):** vista mensal crachás — lista **ordem alfabética** (`sortCertificadosDocsByName`); rodapé à direita com **card de contagem** + **pesquisa** (painel vidro, filtro por nome). `?v=hub76`.
+
+**Alteração (02/04/2026):** contagem + pesquisa na **mesma linha** do título interno CRACHÁS (`selbetti-panel-head--with-toolbar`); altura ~**40px** / `border-radius: 12px` alinhada aos botões BAIXAR. `?v=hub77`.
+
+**Alteração (02/04/2026):** vista mensal 2025/2026 — barra contagem + pesquisa **sempre** (lista vazia = 0); textos do cabeçalho alinhados ao assunto (consulta do mês/ano); estado vazio sem referência a «adicionar ficheiros» nesta página. `?v=hub78`.
+
+**Alteração (02/04/2026):** textos da vista mensal, vazios, pesquisa (placeholder/aria), desativados vazio, aria da contagem e secções — **maiúsculas**; classe `.melihelp-cracha-text-allcaps`. `?v=hub79`.
+
+**Alteração autorizada (02/04/2026, continuação):** rota **`#/certificados/desativados`** — lista única de crachás desativados (todos os meses 2025/2026); item no menu CRACHÁS; removido o botão **DESATIVADOS** por mês; mantido **DESATIVAR** na tabela do mês. Links antigos `#/certificados/ANO/MM/desativados` abrem a mesma página global. Cadastro alinhado ao painel interno tipo vista mensal (`selbetti-panel`). Cache bust `?v=hub72` em `melihelp.html`; atalho no texto do bot WhatsApp (`melihelpLinks`).
+
+**Alteração (03/04/2026):** menu CRACHÁS — **MESES POR ANO** renomeado para **HISTÓRICO**, posicionado logo abaixo de **CADASTRAR CRACHÁ** com recuo visual (subpágina); anos **2026** e **2025** mantidos dentro de HISTÓRICO; **CRACHÁS DESATIVADOS** e **EMISSÃO DE CRACHÁ** passam a ficar abaixo desse bloco. `melihelp-hub.js`, `melihelp.css`, `?v=hub80`.
+
+**Alteração (03/04/2026, continuação):** à direita de **CADASTRAR CRACHÁ**, botão com seta (estilo chevron dos summaries) que **mostra ou oculta** o bloco HISTÓRICO; o clique no texto **CADASTRAR CRACHÁ** mantém a navegação para `#/certificados/cadastrar`. `?v=hub81`.
+
+**Alteração (03/04/2026, unidades cadastro):** sob o bloco do histórico (CADASTRAR CRACHÁ), unidades **BRSC02** e **PR01** — cada uma clicável para `#/certificados/unidade/…` com página **ÁREA EM CONSTRUÇÃO**; **HISTÓRICO** + anos + meses duplicados por unidade (meses com rotas globais `certificados/ANO/MM`). `?v=hub82`.
+
+**Alteração (03/04/2026):** seta ao lado de **CADASTRAR CRACHÁ** — mesmo aspeto que a chevron do **CRACHÁS** (sem “botão” quadrado); fundo ativo/hover na faixa inteira. `melihelp.css` `?v=hub83`.
+
+**Alteração (03/04/2026):** página **ÁREA EM CONSTRUÇÃO** da unidade **BRSC02** — banner `assets/IMAGENS/BRSC02.png` no topo do cartão; texto e botões na zona `.melihelp-unidade-wip-inner` abaixo. `melihelp-hub.js`, `melihelp.css`, `?v=hub84`.
+
+**Alteração (03/04/2026):** banner BRSC02 — várias URLs de tentativa (`URL` relativo a `pages/melihelp.html`, `/assets/…`, `../assets/…`); mensagem visível se o PNG não existir no servidor. `?v=hub85`.
+
+**Correção (03/04/2026):** banner BRSC02 — ficheiro no disco estava como **BRSC02.png.png** (extensão duplicada); cópia canónica **BRSC02.png** em `assets/IMAGENS/`; código tenta ambos os nomes. `?v=hub86`.
+
+**Alteração (03/04/2026):** página unidade em construção — removidos botões voltar; bloco **ACESSO RÁPIDO** com três cards vidro (HISTÓRICO → painel certificados; **2026** / **2025** → `certificados/ANO/01`). `?v=hub87`.
+
+**Alteração (03/04/2026):** unidade WIP — título **UNIDADE [código]** (ex.: BRSC02), texto mais junto ao banner; **ACESSO RÁPIDO** em secção `melihelp-home-shortcuts` separada (igual à home: grelha, vidro, ícones). `?v=hub88`.
+
+**Alteração (03/04/2026):** crachás — ano **2024** em `CRACHA_ANOS_MENU` (menu, painel, desativados); página unidade: cards estilo **AXIS** (`melihelp-axis-mod`, tons índigo/ciano/verde/âmbar); **BRSC02/PR01** no drawer com linha **nome + seta** (igual CADASTRAR CRACHÁ) e painel **HISTÓRICO** recolhível. `?v=hub89`.
+
+**Alteração (03/04/2026) — Hub SELBETTI / orçamentos:** menu **Cadastrar orçamento** (automático mês atual; manual com mês/ano, data/hora, anexo); pesquisa nas pastas mensais; menu sem linhas azuis. Ficheiros: `pages/selbetti.html`, `js/selbetti-hub.js`, `css/selbetti.css`.
+
+**Alteração (03/04/2026) — Novidades AXIS:** modal estilo Apple «Sobre esta atualização»; conteúdo via `GET /api/axis-news` (`config/data/axis-news.json`); textos para utilizador final; narrativa **v2.8.0 → v2.8.1 → v2.9.0**; `featuredVersion` **2.9.0**; app **2.9.0** (`package.json`, `backend/config.js`, cache bust em `index.html`). Ficheiros: `index.html`, `css/style.css`, `js/script.js`, `backend/routes.js`.
 
 ---
 
@@ -254,3 +314,25 @@ Nesta fase foram implementadas e devem continuar consistentes:
 **Regra Cursor:** `.cursor/rules/PERSISTENCIA_SERVIDOR_AXIS.mdc` (sempre aplicar em sessões futuras).
 
 **Deploy:** `scripts/deploy-axis-hostinger.ps1` (PowerShell; pede senha SSH).
+
+---
+
+### Encerramento blindado (30/03/2026)
+
+**Autorização do utilizador:** encerrar com “blinde tudo e proteja tudo”.
+
+**Atualizações protegidas desta sessão:**
+- `js/script.js`: correção de permissões por utilizador após recarregar (F5), com fusão segura no pull do servidor para não perder `modulosPermitidos` quando o payload remoto vier legado/incompleto.
+- `js/script.js`: home (cards clássicos + bento + favoritos) passa a respeitar a mesma regra de visibilidade por utilizador e reaplica filtros após `axis-server-users-pulled`.
+- `index.html`: versionamento de cache de assets atualizado para carregar imediatamente os ajustes de permissões e UI.
+- `js/script.js`, `css/style.css`, `index.html`: perfil no topo e no modal ajustado para nome completo (sem corte fixo de 12 caracteres, com expansão responsiva).
+- `index.html`, `css/style.css`, `js/script.js`: modal **Editar Usuário** recebeu botões de olho em **Nova Senha** e **Confirmar Nova Senha**, no mesmo padrão visual/posição do login, incluindo reset seguro ao abrir o modal.
+
+**Proteções ativas mantidas:**
+- Persistência de contas/perfil/foto/senha com API `/api/persist/browser-users` (não depender só de `localStorage`).
+- Regras de blindagem existentes para módulos críticos (Status de Bancada, Perfil/Foto, MeliHelp e scripts de arranque) permanecem válidas.
+
+**Retomada rápida (próxima sessão):**
+1) Executar `start.bat` e validar login local.
+2) Testar utilizador com permissões restritas: login -> home filtrada -> F5 -> home continua filtrada.
+3) Após validação, fazer deploy para produção (`scripts/deploy-axis-hostinger.ps1`).

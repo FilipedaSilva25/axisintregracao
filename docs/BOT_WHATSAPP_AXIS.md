@@ -4,6 +4,15 @@ O AXIS BOT permite que os colaboradores usem o WhatsApp para:
 - **Troca de Cabeça de Impressão** (Packing Machine) – registrar PM 1 a 6, quantidade de impressões e técnico
 - **Status de Bancada** – atualizar status (Disponível / Impressora / Notebook) por setor e bancada
 - **Manutenção Preventiva** – em desenvolvimento
+- **Chamado Selbetti (Portal do Cliente)** – opção *8* no menu ou envie *selbetti* / *chamado selbetti*
+
+### Envio ao portal Selbetti (opção 8)
+
+1. **Recomendado — webhook** (`SELBETTI_CHAMADO_WEBHOOK_URL`): o servidor AXIS envia um POST JSON com os campos recolhidos (tipo, selb, serie, nome, email, telefone, prioridade, problema, whatsappPhone, …). O seu integrador (n8n, Make, script próprio) trata de abrir o chamado no portal ou noutro sistema. Opcional: `SELBETTI_CHAMADO_WEBHOOK_SECRET` (cabeçalho `X-AXIS-Webhook-Secret`).
+
+2. **Playwright** (automático quando **não** há webhook): defina `SELBETTI_PORTAL_USER` e `SELBETTI_PORTAL_PASSWORD` no `.env`. **Não** precisa de `SELBETTI_USE_PLAYWRIGHT=1` (isso era obrigatório antes). Para **desligar** a automação: `SELBETTI_USE_PLAYWRIGHT=0`. No servidor execute uma vez: `npm run playwright:install` ou `npx playwright install chromium`. Diagnóstico: `config/data/selbetti-playwright.log` e `selbetti-playwright-failure.png`. Debug visual: `SELBETTI_PLAYWRIGHT_HEADED=1`. O site Selbetti pode mudar — em produção grande, prefira webhook.
+
+3. **Fila local** — se nada estiver configurado, o pedido fica em `config/data/selbetti-chamados-fila.json` com referência `AXIS-SB-…` para processamento manual.
 
 Há **duas formas** de o bot funcionar: por **QR Code** (rápido, sem custo) ou por **WhatsApp Cloud API** (24/7, requer conta Meta).
 

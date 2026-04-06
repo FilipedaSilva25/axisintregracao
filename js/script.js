@@ -63,10 +63,50 @@ window.getAxisApiBase = getAxisApiBase;
             window.dispatchEvent(new CustomEvent('axis-server-users-pulled'));
         } catch (e0) {}
     }
+    /** Funde utilizador do servidor com o que já está em localStorage; preserva modulosPermitidos locais se o servidor não enviar mapa opt-in válido. */
+    function mergeDbPreservingPermissions(storageKey, incomingUser) {
+        var prev = {};
+        try {
+            var raw = localStorage.getItem(storageKey);
+            if (raw) prev = JSON.parse(raw);
+            if (!prev || typeof prev !== 'object') prev = {};
+        } catch (_) {
+            prev = {};
+        }
+        if (!incomingUser || typeof incomingUser !== 'object') {
+            try {
+                localStorage.setItem(storageKey, JSON.stringify(prev));
+            } catch (e0) {}
+            return;
+        }
+        var merged = Object.assign({}, prev);
+        for (var ik in incomingUser) {
+            if (Object.prototype.hasOwnProperty.call(incomingUser, ik)) {
+                merged[ik] = incomingUser[ik];
+            }
+        }
+        var incMp = incomingUser.modulosPermitidos;
+        var hasInc = incMp && typeof incMp === 'object' && Object.keys(incMp).length > 0;
+        var prevMp = prev.modulosPermitidos;
+        var hasPrev = prevMp && typeof prevMp === 'object' && Object.keys(prevMp).length > 0;
+        if (!hasInc && hasPrev) {
+            merged.modulosPermitidos = prevMp;
+        }
+        try {
+            localStorage.setItem(storageKey, JSON.stringify(merged));
+        } catch (e1) {}
+    }
     function pull() {
         fetch(apiBaseUrl() + '/api/persist/browser-users')
             .then(function (r) {
-                if (!r || !r.ok) return { ok: false };
+                if (!r || !r.ok) {
+                    try {
+                        if (r && r.status === 404) {
+                            console.warn('[AXIS] /api/persist/browser-users → 404. Use o servidor Node na pasta do projeto (npm start ou start.bat), na mesma porta (ex.: 3006). Servidores só de ficheiros estáticos não expõem esta API.');
+                        }
+                    } catch (_) {}
+                    return { ok: false };
+                }
                 return r.json().catch(function () { return { ok: false }; });
             })
             .catch(function () { return { ok: false }; })
@@ -76,9 +116,7 @@ window.getAxisApiBase = getAxisApiBase;
                     for (var login in bl) {
                         if (!Object.prototype.hasOwnProperty.call(bl, login)) continue;
                         var c = canonLocal(login);
-                        try {
-                            localStorage.setItem('db_' + c, JSON.stringify(bl[login]));
-                        } catch (e1) {}
+                        mergeDbPreservingPermissions('db_' + c, bl[login]);
                     }
                 }
                 try {
@@ -88,16 +126,20 @@ window.getAxisApiBase = getAxisApiBase;
             });
     }
     window.axisPushUserToServer = function (login, userObj) {
-        if (!login || !userObj) return;
+        if (!login || !userObj) return Promise.resolve({ ok: false });
         var c = typeof axisLoginCanonico === 'function' ? axisLoginCanonico(login) : canonLocal(login);
-        if (!c) return;
+        if (!c) return Promise.resolve({ ok: false });
         var payload = { byLogin: {} };
         payload.byLogin[c] = userObj;
-        fetch(apiBaseUrl() + '/api/persist/browser-users', {
+        return fetch(apiBaseUrl() + '/api/persist/browser-users', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
-        }).catch(function () {});
+        })
+            .then(function (r) {
+                return r && r.json ? r.json().catch(function () { return { ok: r.ok }; }) : { ok: false };
+            })
+            .catch(function () { return { ok: false }; });
     };
     window.axisRemoveUserFromServer = function (login) {
         var c = typeof axisLoginCanonico === 'function' ? axisLoginCanonico(login) : canonLocal(login);
@@ -142,7 +184,7 @@ window.getAxisApiBase = getAxisApiBase;
                 }
                 if (u && typeof u === 'object') {
                     try {
-                        localStorage.setItem('db_' + loginCanon, JSON.stringify(u));
+                        mergeDbPreservingPermissions('db_' + loginCanon, u);
                     } catch (e2) {
                         if (cb) cb(false);
                         return;
@@ -426,16 +468,41 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             if (chaveAlt) userDataRaw = localStorage.getItem(chaveAlt);
         }
+        var axisContaDesativadaNaSessao = false;
         if (userDataRaw) {
             try {
                 const userData = JSON.parse(userDataRaw);
                 currentUserProfile = userData.perfil || 'operador';
+                if (userData.desativado === true) axisContaDesativadaNaSessao = true;
             } catch (e) {
                 currentUserProfile = 'operador';
             }
         } else {
             currentUserProfile = 'operador';
         }
+
+        if (axisContaDesativadaNaSessao) {
+            localStorage.removeItem('current_user');
+            localStorage.removeItem('current_user_login');
+            localStorage.removeItem('user_logged_in');
+            try { sessionStorage.setItem('axis_force_login_session', '1'); } catch (_) {}
+            currentUser = null;
+            currentUserProfile = 'operador';
+            if (authScreen) {
+                authScreen.style.display = 'flex';
+                authScreen.style.opacity = '1';
+                authScreen.style.visibility = 'visible';
+            }
+            if (mainContent) {
+                mainContent.style.display = 'none';
+                mainContent.style.opacity = '0';
+            }
+            if (typeof showToast === 'function') {
+                setTimeout(function () {
+                    showToast('Esta conta foi desativada. Inicie sessão com outra conta.', 'error');
+                }, 400);
+            }
+        } else {
         
         // Utilizador exemplo de segurança (admin_filipe_silva): pedir código 2FA em toda entrada, inclusive ao recarregar/abrir o site
         function showMainContentRestore() {
@@ -589,6 +656,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
         // 2FA: persistLoginCheck (load) fará o check se necessário; conteúdo já está visível sem esperar load.
+        }
     } else {
         // Não há usuário logado, mostra tela de login
         if (authScreen) {
@@ -729,11 +797,20 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(function(r) { return r.json(); })
             .catch(function() { return {}; })
             .then(function(data) {
-                if (data.required && typeof showModalTotpLogin === 'function') {
+                if (data.required) {
+                    try { sessionStorage.setItem('axis_user_totp_required', '1'); } catch (_) {}
+                    if (typeof axisTotpNeedsReverify === 'function' && axisTotpNeedsReverify() && typeof showModalTotpLogin === 'function') {
+                        showMainPersist();
+                        setTimeout(function() { showModalTotpLogin(loginParaTotp, function() {}, { mandatory: true }); }, 50);
+                        if (typeof axisMaybeStartTotpReverifyTimer === 'function') try { axisMaybeStartTotpReverifyTimer(); } catch (_) {}
+                        return;
+                    }
                     showMainPersist();
-                    setTimeout(function() { showModalTotpLogin(loginParaTotp, function() { }); }, 50);
+                    if (typeof axisMaybeStartTotpReverifyTimer === 'function') try { axisMaybeStartTotpReverifyTimer(); } catch (_) {}
                     return;
                 }
+                try { sessionStorage.removeItem('axis_user_totp_required'); } catch (_) {}
+                if (typeof axisStopTotpReverifyTimer === 'function') try { axisStopTotpReverifyTimer(); } catch (_) {}
                 showMainPersist();
             });
     }
@@ -838,6 +915,20 @@ document.addEventListener('DOMContentLoaded', () => {
     // Configura listeners para os cards da home
     setupHomeCards();
 
+    // Após pull de utilizadores do servidor, o db_* pode ter sido fundido com modulosPermitidos locais — re-renderiza home e reaplica menu/cards.
+    window.addEventListener('axis-server-users-pulled', function () {
+        try {
+            if (!localStorage.getItem('current_user_login')) return;
+            var onHome = (typeof activePage !== 'undefined' && activePage === 'page-home') ||
+                (localStorage.getItem('axis-current-page') === 'page-home');
+            if (onHome) {
+                if (typeof loadDashboardData === 'function') loadDashboardData();
+                if (typeof renderHomeModules === 'function') renderHomeModules();
+            }
+            if (typeof aplicarPermissoesModulos === 'function') aplicarPermissoesModulos();
+        } catch (ePull) {}
+    });
+
     if (typeof axisInitModalSenhaTemporaria === 'function') axisInitModalSenhaTemporaria();
     setTimeout(function() {
         if (typeof axisCheckSenhaTemporariaAposRestaurarSessao === 'function') axisCheckSenhaTemporariaAposRestaurarSessao();
@@ -922,23 +1013,131 @@ document.addEventListener('click', (e) => {
 // Overlay do menu: fechado via setupMenuOverlay (index) para evitar double-toggle
 
 // ================= CONFIGURAÇÃO DA HOME (Hero, Busca, Favoritos, Abas, Bento) =================
+/**
+ * Única fonte de verdade para módulos na home (bento + cards “MÓDULOS TÉCNICOS”).
+ * Para novo módulo: acrescente uma entrada; o card principal gera-se sozinho.
+ *
+ * - excludeFromMainDashboard: true → não aparece no grid clássico (ex.: Administração).
+ * - dashboardCardClass: classe CSS do card (ex.: inventario-master). Novos: use axis-mod-dashboard-generic.
+ * - dashboardTitle / dashboardSubtitle: texto no card (opcional; default = title).
+ * - dashboardIconHtml: opcional, HTML do ícone (ex.: Selbetti).
+ */
 var AXIS_HOME_MODULES = [
-    { id: 'inventario', title: 'INVENTÁRIO', icon: '📦', category: 'gestao', action: 'navigate', page: 'page-inventario', size: 'large' },
-    { id: 'rondas', title: 'RONDAS', icon: '🛡️', category: 'gestao', action: 'navigate', page: 'page-rondas', size: 'normal' },
-    { id: 'manutencao', title: 'MANUTENÇÃO PREVENTIVA', icon: '🖨️', category: 'tecnico', action: 'url', href: 'pages/manutenção_preventiva.html', size: 'normal' },
-    { id: 'suporte', title: 'SUPORTE TÉCNICO', icon: '💬', category: 'tecnico', action: 'navigate', page: 'page-suporte', size: 'normal' },
-    { id: 'notas', title: 'NOTAS FISCAIS', icon: '📄', category: 'gestao', action: 'url', href: 'pages/notas_fiscais.html', size: 'normal' },
-    { id: 'bloco', title: 'BLOCO DE NOTAS', icon: '📝', category: 'gestao', action: 'url', href: 'pages/bloco_de_notas_apple.html', size: 'normal' },
-    { id: 'chamados', title: 'REGISTRO DE CHAMADOS', icon: '📋', category: 'tecnico', action: 'url', href: 'pages/registro_chamados.html', size: 'normal' },
-    { id: 'pecas', title: 'PEÇAS', icon: '🔧', category: 'tecnico', action: 'url', href: 'pages/pecas.html', size: 'normal' },
-    { id: 'packing', title: 'PACKING MACHINE', icon: '🏭', category: 'tecnico', action: 'url', href: 'pages/packing_machine.html', size: 'normal' },
-    { id: 'status-bancada', title: 'STATUS DE BANCADA', icon: '📊', category: 'tecnico', action: 'url', href: 'pages/status_bancada.html', size: 'normal' },
-    { id: 'sauron', title: 'SAURON', icon: '👁', category: 'tecnico', action: 'url', href: 'pages/sauron.html', size: 'normal' },
-    { id: 'jovem-aprendiz', title: 'JOVEM APRENDIZ', icon: '🎓', category: 'gestao', action: 'url', href: 'pages/jovem-aprendiz.html', size: 'normal' },
-    { id: 'selbetti', title: 'SELBETTI', icon: '🤖', category: 'tecnico', action: 'url', href: 'pages/selbetti.html', size: 'normal' },
-    { id: 'configuracoes', title: 'CONFIGURAÇÕES', icon: '⚙️', category: 'admin', action: 'navigate', page: 'page-configuracoes', size: 'normal' },
-    { id: 'administracao', title: 'ADMINISTRAÇÃO', icon: '👤', category: 'admin', action: 'navigate', page: 'page-administracao', size: 'normal', adminOnly: true }
+    { id: 'inventario', title: 'INVENTÁRIO', icon: '📦', category: 'gestao', action: 'navigate', page: 'page-inventario', size: 'large', dashboardCardClass: 'inventario-master' },
+    { id: 'rondas', title: 'RONDAS', icon: '🛡️', category: 'gestao', action: 'navigate', page: 'page-rondas', size: 'normal', dashboardCardClass: 'rondas-master' },
+    { id: 'manutencao', title: 'MANUTENÇÃO PREVENTIVA', icon: '🖨️', category: 'tecnico', action: 'url', href: 'pages/manutencao_preventiva.html', size: 'normal', dashboardCardClass: 'preventiva-master' },
+    { id: 'suporte', title: 'SUPORTE TÉCNICO', icon: '💬', category: 'tecnico', action: 'navigate', page: 'page-suporte', size: 'normal', dashboardCardClass: 'suporte-master' },
+    { id: 'bloco', title: 'BLOCO DE NOTAS', icon: '📝', category: 'gestao', action: 'url', href: 'pages/bloco_de_notas_apple.html', size: 'normal', dashboardCardClass: 'bloco-master' },
+    { id: 'chamados', title: 'REGISTRO DE CHAMADOS', icon: '📋', category: 'tecnico', action: 'url', href: 'pages/registro_chamados.html', size: 'normal', dashboardCardClass: 'chamados-master', dashboardTitle: 'MAPEAMENTO DE CHAMADOS DE IMPRESSORAS', dashboardSubtitle: 'UNIDADE DE BRSC02' },
+    { id: 'pecas', title: 'PEÇAS', icon: '🔧', category: 'tecnico', action: 'url', href: 'pages/pecas.html', size: 'normal', dashboardCardClass: 'pecas-master' },
+    { id: 'packing', title: 'PACKING MACHINE', icon: '🏭', category: 'tecnico', action: 'url', href: 'pages/packing_machine.html', size: 'normal', dashboardCardClass: 'packing-master' },
+    { id: 'status-bancada', title: 'STATUS DE BANCADA', icon: '📊', category: 'tecnico', action: 'url', href: 'pages/status_bancada.html', size: 'normal', dashboardCardClass: 'status-bancada-master' },
+    { id: 'sauron', title: 'SAURON', icon: '👁', category: 'tecnico', action: 'url', href: 'pages/sauron.html', size: 'normal', dashboardCardClass: 'sauron-master', dashboardTitle: 'Sauron' },
+    { id: 'selbetti', title: 'SELBETTI', icon: '🤖', category: 'tecnico', action: 'url', href: 'pages/selbetti.html', size: 'normal', dashboardCardClass: 'selbetti-master', dashboardTitle: 'Selbetti', dashboardIconHtml: '<img src="assets/IMAGENS/Robo_Selbetti_Card.png" alt="SELBETTI" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'block\';" /><span style="display:none;font-size:38px;">🏭</span>' },
+    { id: 'melihelp', title: 'MELIHELP', icon: '🛟', category: 'tecnico', action: 'url', href: 'pages/melihelp.html', size: 'normal', dashboardCardClass: 'melihelp-master', dashboardTitle: 'MeliHelp' },
+    { id: 'jovem-aprendiz', title: 'JOVEM APRENDIZ', icon: '🎓', category: 'gestao', action: 'url', href: 'pages/jovem-aprendiz.html', size: 'normal', dashboardCardClass: 'jovem-aprendiz-master' },
+    { id: 'notas', title: 'NOTAS FISCAIS', icon: '📄', category: 'gestao', action: 'url', href: 'pages/notas_fiscais.html', size: 'normal', dashboardCardClass: 'notas-master' },
+    { id: 'configuracoes', title: 'CONFIGURAÇÕES', icon: '⚙️', category: 'admin', action: 'navigate', page: 'page-configuracoes', size: 'normal', dashboardCardClass: 'config-master' },
+    { id: 'administracao', title: 'ADMINISTRAÇÃO', icon: '👤', category: 'admin', action: 'navigate', page: 'page-administracao', size: 'normal', adminOnly: true, excludeFromMainDashboard: true, dashboardCardClass: 'config-master' }
 ];
+
+/** id em AXIS_HOME_MODULES → id em MODULOS_PERMISSOES (axisModuloVisivelParaUsuario). */
+function axisHomeModuleIdToPermModulo(homeId) {
+    var map = {
+        inventario: 'page-inventario',
+        rondas: 'page-rondas',
+        manutencao: 'manutencao',
+        suporte: 'page-suporte',
+        bloco: 'bloco',
+        chamados: 'registro',
+        pecas: 'pecas',
+        packing: 'packing',
+        'status-bancada': 'status-bancada',
+        sauron: 'sauron',
+        selbetti: 'selbetti',
+        melihelp: 'melihelp',
+        'jovem-aprendiz': 'jovem-aprendiz',
+        notas: 'notas',
+        configuracoes: 'page-configuracoes',
+        administracao: 'page-administracao'
+    };
+    return map[homeId] || homeId;
+}
+
+function axisGetCurrentUserLoginNormalized() {
+    return (localStorage.getItem('current_user_login') || '').trim().toLowerCase().replace(/\s+/g, '_').replace(/\./g, '_');
+}
+
+/** Respeita modulosPermitidos / perfil quando há sessão; sem login não filtra (landing). */
+function axisHomeModuloVisivel(homeModule) {
+    var login = axisGetCurrentUserLoginNormalized();
+    if (!login) return true;
+    if (typeof axisModuloVisivelParaUsuario !== 'function') return true;
+    return axisModuloVisivelParaUsuario(login, axisHomeModuleIdToPermModulo(homeModule.id));
+}
+
+function getAxisMainDashboardModules() {
+    var isAdmin = (typeof currentUserProfile !== 'undefined' && currentUserProfile === 'admin') || (typeof window.currentUserProfile !== 'undefined' && window.currentUserProfile === 'admin');
+    return AXIS_HOME_MODULES.filter(function (m) {
+        if (m.excludeFromMainDashboard === true) return false;
+        if (m.adminOnly && !isAdmin) return false;
+        if (!axisHomeModuloVisivel(m)) return false;
+        return true;
+    });
+}
+
+/** Cards do bloco “MÓDULOS TÉCNICOS” (#axis-main-dashboard-grid). */
+function renderAxisMainDashboardCards() {
+    var grid = document.getElementById('axis-main-dashboard-grid');
+    if (!grid) return;
+    var modules = getAxisMainDashboardModules();
+    grid.innerHTML = '';
+    modules.forEach(function (m) {
+        var card = document.createElement('div');
+        card.className = 'mod-card ' + (m.dashboardCardClass || 'axis-mod-dashboard-generic');
+        card.setAttribute('tabindex', '0');
+        card.setAttribute('role', 'button');
+        card.style.cursor = 'pointer';
+        card.addEventListener('click', function () {
+            if (m.action === 'navigate' && m.page) {
+                if (typeof navigate === 'function') navigate(m.page);
+                else alert('Erro: navegação indisponível. Recarregue a página.');
+            } else if (m.action === 'url' && m.href) {
+                window.location.href = m.href;
+            }
+        });
+        card.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                card.click();
+            }
+        });
+        var iconWrap = document.createElement('div');
+        iconWrap.className = 'mod-icon';
+        if (m.dashboardIconHtml) {
+            iconWrap.innerHTML = m.dashboardIconHtml;
+        } else {
+            iconWrap.textContent = m.icon || '';
+        }
+        var content = document.createElement('div');
+        content.className = 'mod-content';
+        var h3 = document.createElement('h3');
+        h3.className = 'txt-axis-gradient';
+        h3.textContent = m.dashboardTitle || m.title || '';
+        content.appendChild(h3);
+        if (m.dashboardSubtitle) {
+            var sub = document.createElement('p');
+            sub.className = 'mod-card-unit-sub';
+            sub.textContent = m.dashboardSubtitle;
+            content.appendChild(sub);
+        }
+        card.appendChild(iconWrap);
+        card.appendChild(content);
+        grid.appendChild(card);
+    });
+    var statEl = document.getElementById('home-hero-stat-modules');
+    if (statEl) statEl.textContent = String(modules.length);
+}
 
 function getAxisHomeFavorites() {
     try {
@@ -968,6 +1167,7 @@ function renderHomeModules() {
 
         var modules = AXIS_HOME_MODULES.filter(function(m) {
             if (m.adminOnly && !isAdmin) return false;
+            if (!axisHomeModuloVisivel(m)) return false;
             if (activeTab !== 'todos') {
                 if (activeTab === 'admin' && m.category !== 'admin') return false;
                 if (activeTab === 'gestao' && m.category !== 'gestao') return false;
@@ -995,7 +1195,7 @@ function renderHomeModules() {
         }).join('');
 
         if (favoritesList && favoritesWrap) {
-            var favMods = AXIS_HOME_MODULES.filter(function(m) { return favorites.indexOf(m.id) >= 0 && (!m.adminOnly || isAdmin); });
+            var favMods = AXIS_HOME_MODULES.filter(function(m) { return favorites.indexOf(m.id) >= 0 && (!m.adminOnly || isAdmin) && axisHomeModuloVisivel(m); });
             if (favMods.length === 0) {
                 favoritesWrap.style.display = 'none';
             } else {
@@ -1361,6 +1561,7 @@ function startHomeHeroClock() {
 function loadDashboardData() {
     updateHomeHero();
     startHomeHeroClock();
+    if (typeof renderAxisMainDashboardCards === 'function') renderAxisMainDashboardCards();
     setTimeout(function() {
         document.querySelectorAll('.stat-card').forEach(function(card, index) {
             setTimeout(function() {
@@ -1435,6 +1636,182 @@ function axisRefreshVersionDisplay() {
             el.textContent = '—';
         });
 }
+
+/** Novidades do AXIS: lê config/data/axis-news.json via GET /api/axis-news. */
+function axisNewsEscapeHtml(s) {
+    if (s == null) return '';
+    return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+
+function axisNewsFormatPtDateYmd(ymd) {
+    if (!ymd || typeof ymd !== 'string') return '';
+    var p = ymd.split('-');
+    if (p.length !== 3) return ymd;
+    try {
+        var d = new Date(parseInt(p[0], 10), parseInt(p[1], 10) - 1, parseInt(p[2], 10));
+        return d.toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' });
+    } catch (_) {
+        return ymd;
+    }
+}
+
+function axisNewsSummaryToParagraphs(text, className) {
+    var cls = className || 'axis-news-prose';
+    var t = (text || '').trim();
+    if (!t) return '';
+    return t.split(/\n\n+/).map(function (para) {
+        return '<p class="' + cls + '">' + axisNewsEscapeHtml(para.trim()).replace(/\n/g, '<br>') + '</p>';
+    }).join('');
+}
+
+/** Extrai bullets do JSON ou de linhas «- », «• », «1. » em summary; intro opcional. */
+function axisNewsExtractBullets(en) {
+    if (en && Array.isArray(en.bullets) && en.bullets.length) {
+        var intro = (en.summaryIntro != null ? String(en.summaryIntro) : '').trim();
+        return {
+            bullets: en.bullets.map(function (b) {
+                return String(b);
+            }),
+            intro: intro
+        };
+    }
+    var summary = (en && en.summary) ? String(en.summary) : '';
+    var lines = summary.split(/\n+/).map(function (l) {
+        return l.trim();
+    }).filter(Boolean);
+    var bullets = [];
+    var introLines = [];
+    lines.forEach(function (l) {
+        var m = l.match(/^[-•*]\s*(.+)$/) || l.match(/^\d+[\.)]\s*(.+)$/);
+        if (m) bullets.push(m[1]);
+        else introLines.push(l);
+    });
+    return { bullets: bullets, intro: introLines.join('\n\n') };
+}
+
+function axisNewsBuildAppleReleaseBody(en) {
+    var ext = axisNewsExtractBullets(en);
+    var parts = [];
+    if (ext.intro) {
+        parts.push(axisNewsSummaryToParagraphs(ext.intro, 'axis-news-apple-prose'));
+    }
+    if (ext.bullets.length) {
+        parts.push(
+            '<p class="axis-news-apple-lead">Esta atualização inclui:</p>' +
+                '<ul class="axis-news-apple-list">' +
+                ext.bullets
+                    .map(function (b) {
+                        return '<li>' + axisNewsEscapeHtml(b) + '</li>';
+                    })
+                    .join('') +
+                '</ul>'
+        );
+    }
+    if (!parts.length && en && en.summary) {
+        parts.push(axisNewsSummaryToParagraphs(en.summary, 'axis-news-apple-prose'));
+    }
+    if (!parts.length) {
+        parts.push(
+            '<p class="axis-news-apple-prose">(Sem conteúdo — use <code>bullets</code> ou <code>summary</code> em <code>axis-news.json</code>.)</p>'
+        );
+    }
+    return parts.join('');
+}
+
+function axisRefreshNewsModalContent() {
+    var meta = document.getElementById('axis-news-modal-meta');
+    var hero = document.getElementById('axis-news-hero-version');
+    var root = document.getElementById('axis-news-apple-root');
+    if (!root) return;
+    var base = '';
+    try {
+        base = typeof getAxisApiBase === 'function' ? String(getAxisApiBase() || '').replace(/\/+$/, '') : '';
+    } catch (_) {
+        base = '';
+    }
+    if (hero) hero.textContent = '';
+    if (!base) {
+        if (meta) meta.innerHTML = 'Sem ligação ao servidor — não foi possível carregar <code>axis-news.json</code>.';
+        root.innerHTML =
+            '<article class="axis-news-apple-release"><p class="axis-news-apple-prose">Abra o AXIS através do servidor Node. O ficheiro editável fica em <code>config/data/axis-news.json</code>.</p></article>';
+        return;
+    }
+    if (meta) meta.textContent = 'A carregar novidades…';
+    root.innerHTML = '';
+    fetch(base + '/api/axis-news', { cache: 'no-store' })
+        .then(function (r) {
+            return r.ok ? r.json() : Promise.reject(new Error('news'));
+        })
+        .then(function (d) {
+            if (!d || !d.ok) return Promise.reject(new Error('news'));
+            var listUpdatedAt = d.listUpdatedAt || '';
+            var featured = d.featuredVersion != null ? String(d.featuredVersion).trim() : '';
+            var appVer = d.axisAppVersion != null ? String(d.axisAppVersion).trim() : '';
+            var entries = Array.isArray(d.entries) ? d.entries : [];
+            var luPretty = axisNewsFormatPtDateYmd(listUpdatedAt) || listUpdatedAt || '—';
+            if (hero) {
+                var showV = featured || appVer;
+                hero.textContent = showV ? 'v' + showV : '';
+            }
+            if (meta) {
+                meta.innerHTML =
+                    'Lista atualizada a <time datetime="' +
+                    axisNewsEscapeHtml(listUpdatedAt) +
+                    '">' +
+                    axisNewsEscapeHtml(luPretty) +
+                    '</time>' +
+                    (appVer && appVer !== featured
+                        ? ' · servidor <strong>v' + axisNewsEscapeHtml(appVer) + '</strong>'
+                        : '');
+            }
+            if (!entries.length) {
+                root.innerHTML =
+                    '<article class="axis-news-apple-release"><p class="axis-news-apple-prose">Ficheiro vazio. Edite <code>config/data/axis-news.json</code> e reinicie o servidor.</p></article>';
+                return;
+            }
+            root.innerHTML = entries
+                .map(function (en) {
+                    var dt = en.date || '';
+                    var dp = axisNewsFormatPtDateYmd(dt) || dt;
+                    var ver = (en.version != null ? String(en.version) : '').trim();
+                    var title = axisNewsEscapeHtml(en.title || 'Atualização');
+                    var bodyHtml = axisNewsBuildAppleReleaseBody(en);
+                    return (
+                        '<article class="axis-news-apple-release" aria-label="' +
+                        axisNewsEscapeHtml(en.title || 'Atualização') +
+                        '">' +
+                        '<p class="axis-news-apple-date"><time datetime="' +
+                        axisNewsEscapeHtml(dt) +
+                        '">' +
+                        axisNewsEscapeHtml(dp) +
+                        '</time>' +
+                        (ver
+                            ? '<span class="axis-news-apple-ver-pill" title="Versão desta entrega">v' +
+                              axisNewsEscapeHtml(ver) +
+                              '</span>'
+                            : '') +
+                        '</p>' +
+                        '<h3 class="axis-news-apple-section-title">' +
+                        title +
+                        '</h3>' +
+                        bodyHtml +
+                        '</article>'
+                    );
+                })
+                .join('');
+        })
+        .catch(function () {
+            if (meta) meta.textContent = 'Não foi possível carregar as novidades.';
+            if (hero) hero.textContent = '';
+            root.innerHTML =
+                '<article class="axis-news-apple-release"><p class="axis-news-apple-prose">Verifique o servidor e a rota <code>GET /api/axis-news</code>.</p></article>';
+        });
+}
+window.axisRefreshNewsModalContent = axisRefreshNewsModalContent;
 
 function loadSettings() {
     try {
@@ -2406,18 +2783,20 @@ function axisExecuteLoginSession(loginNormalizado, db, dbKey, chaveAntiga, userI
         .catch(function () { return {}; })
         .then(function (data) {
             if (data.required) {
+                try { sessionStorage.setItem('axis_user_totp_required', '1'); } catch (_) {}
                 sessionStorage.setItem('axis_pending_totp', JSON.stringify({
                     login: loginNormalizado,
                     name: currentUser,
                     perfil: currentUserProfile
                 }));
                 if (typeof showModalTotpLogin === 'function') {
-                    showModalTotpLogin(loginNormalizado, axisDoCompleteLoginAfterTotp);
+                    showModalTotpLogin(loginNormalizado, axisDoCompleteLoginAfterTotp, { mandatory: true });
                 } else {
                     axisDoCompleteLoginAfterTotp();
                 }
                 return;
             }
+            try { sessionStorage.removeItem('axis_user_totp_required'); } catch (_) {}
             axisDoCompleteLoginAfterTotp();
         });
 
@@ -2519,6 +2898,9 @@ function axisExecuteLoginSession(loginNormalizado, db, dbKey, chaveAntiga, userI
         if (typeof axisSyncTotpBadgeFromApi === 'function') {
             try { axisSyncTotpBadgeFromApi(); } catch (eSync) {}
         }
+        if (typeof axisMaybeStartTotpReverifyTimer === 'function') {
+            try { axisMaybeStartTotpReverifyTimer(); } catch (_) {}
+        }
     }
 }
 
@@ -2615,6 +2997,15 @@ function handleAuth() {
         try {
             const db = JSON.parse(dbRaw);
             console.log('✅ Dados do usuário carregados:', { name: db.name, perfil: db.perfil, pass: db.pass ? '***' : '(vazia)' });
+
+            if (db.desativado === true) {
+                if (typeof showToast === 'function') {
+                    showToast('Esta conta foi desativada. Contacte um administrador.', 'error');
+                } else {
+                    alert('Esta conta foi desativada. Contacte um administrador.');
+                }
+                return;
+            }
 
             if (db.bloqueadoSenhaExpirada === true && !(typeof axisUsuarioOperacaoSemLimite === 'function' && axisUsuarioOperacaoSemLimite(loginNormalizado))) {
                 if (typeof showToast === 'function') {
@@ -2818,6 +3209,14 @@ function execLogout() {
         clearInterval(window._axisAdminStatsInterval);
         window._axisAdminStatsInterval = null;
     }
+    if (typeof axisStopTotpReverifyTimer === 'function') {
+        try { axisStopTotpReverifyTimer(); } catch (_) {}
+    }
+    try {
+        sessionStorage.removeItem('axis_totp_last_verified_at');
+        sessionStorage.removeItem('axis_user_totp_required');
+    } catch (_) {}
+    try { document.body.classList.remove('axis-totp-modal-open'); } catch (_) {}
     currentUser = null;
     currentUserProfile = 'operador';
     localStorage.removeItem('current_user');
@@ -2864,21 +3263,82 @@ function fecharModalErroLogin() {
     if (wrap) wrap.style.display = 'none';
 }
 
-function showModalTotpLogin(login, onSuccess) {
+/** Intervalo para voltar a pedir o código 2FA (1 hora). */
+var AXIS_TOTP_REVERIFY_MS = 60 * 60 * 1000;
+var AXIS_TOTP_LAST_KEY = 'axis_totp_last_verified_at';
+var AXIS_TOTP_REQUIRED_FLAG = 'axis_user_totp_required';
+
+function axisMarkTotpVerifiedNow() {
+    try { sessionStorage.setItem(AXIS_TOTP_LAST_KEY, String(Date.now())); } catch (_) {}
+}
+
+function axisTotpNeedsReverify() {
+    var ts = sessionStorage.getItem(AXIS_TOTP_LAST_KEY);
+    if (!ts) return true;
+    var n = parseInt(ts, 10);
+    if (isNaN(n)) return true;
+    return (Date.now() - n) >= AXIS_TOTP_REVERIFY_MS;
+}
+
+function axisStopTotpReverifyTimer() {
+    if (window._axisTotpReverifyTimerId) {
+        clearInterval(window._axisTotpReverifyTimerId);
+        window._axisTotpReverifyTimerId = null;
+    }
+}
+
+function axisStartTotpReverifyTimer() {
+    axisStopTotpReverifyTimer();
+    if (sessionStorage.getItem(AXIS_TOTP_REQUIRED_FLAG) !== '1') return;
+    if (localStorage.getItem('user_logged_in') !== 'true') return;
+    window._axisTotpReverifyTimerId = setInterval(function () {
+        if (localStorage.getItem('user_logged_in') !== 'true') {
+            axisStopTotpReverifyTimer();
+            return;
+        }
+        if (sessionStorage.getItem(AXIS_TOTP_REQUIRED_FLAG) !== '1') {
+            axisStopTotpReverifyTimer();
+            return;
+        }
+        if (!axisTotpNeedsReverify()) return;
+        var wrap = document.getElementById('modal-totp-login');
+        if (wrap && wrap.style.display === 'flex') return;
+        var login = (typeof getTotpLoginNormalized === 'function' ? getTotpLoginNormalized() : null) || (localStorage.getItem('current_user_login') || '').trim();
+        if (!login) return;
+        if (typeof showModalTotpLogin === 'function') {
+            showModalTotpLogin(login, function () {}, { mandatory: true });
+        }
+    }, 60 * 1000);
+}
+
+function axisMaybeStartTotpReverifyTimer() {
+    if (sessionStorage.getItem(AXIS_TOTP_REQUIRED_FLAG) === '1' && localStorage.getItem('user_logged_in') === 'true') {
+        axisStartTotpReverifyTimer();
+    } else {
+        axisStopTotpReverifyTimer();
+    }
+}
+
+function showModalTotpLogin(login, onSuccess, options) {
+    options = options || {};
+    var mandatory = options.mandatory !== false;
     var wrap = document.getElementById('modal-totp-login');
     var input = document.getElementById('totp-code-input');
     var errEl = document.getElementById('totp-login-err');
     var submitBtn = document.getElementById('totp-login-submit');
-    var cancelBtn = document.getElementById('totp-login-cancel');
     var overlay = document.getElementById('modal-totp-overlay');
     if (!wrap || !input) return;
     if (errEl) { errEl.style.display = 'none'; errEl.textContent = ''; }
     input.value = '';
     wrap.style.display = 'flex';
-    input.focus();
-    function close() {
+    if (mandatory) {
+        try { document.body.classList.add('axis-totp-modal-open'); } catch (_) {}
+    }
+    setTimeout(function () { try { input.focus(); } catch (_) {} }, 50);
+    function closeAfterSuccess() {
         wrap.style.display = 'none';
         try { sessionStorage.removeItem('axis_pending_totp'); } catch (_) {}
+        try { document.body.classList.remove('axis-totp-modal-open'); } catch (_) {}
     }
     function submit() {
         var code = (input.value || '').trim();
@@ -2887,37 +3347,46 @@ function showModalTotpLogin(login, onSuccess) {
             return;
         }
         if (errEl) errEl.style.display = 'none';
-        submitBtn.disabled = true;
+        if (submitBtn) submitBtn.disabled = true;
         fetch((getAxisApiBase && getAxisApiBase() || '') + '/api/auth/verify-totp', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ login: login, code: code })
         }).then(function(r) { return r.json().then(function(data) { return { ok: r.ok, data: data }; }); })
           .then(function(result) {
-            submitBtn.disabled = false;
+            if (submitBtn) submitBtn.disabled = false;
             if (result.ok && result.data && result.data.ok) {
+                axisMarkTotpVerifiedNow();
                 try { sessionStorage.removeItem('axis_pending_totp'); } catch (_) {}
-                close();
+                closeAfterSuccess();
                 if (typeof onSuccess === 'function') onSuccess();
+                if (typeof axisMaybeStartTotpReverifyTimer === 'function') {
+                    try { axisMaybeStartTotpReverifyTimer(); } catch (_) {}
+                }
             } else {
                 if (errEl) { errEl.textContent = result.data && result.data.error ? result.data.error : 'Código inválido ou expirado.'; errEl.style.display = 'block'; }
             }
           })
           .catch(function() {
-            submitBtn.disabled = false;
+            if (submitBtn) submitBtn.disabled = false;
             if (errEl) { errEl.textContent = 'Erro de ligação. Tente novamente.'; errEl.style.display = 'block'; }
           });
     }
-    if (overlay) overlay.onclick = close;
-    if (cancelBtn) cancelBtn.onclick = close;
+    if (overlay) {
+        overlay.onclick = mandatory ? function (ev) { try { ev.preventDefault(); ev.stopPropagation(); } catch (_) {} } : function () {};
+    }
     if (submitBtn) submitBtn.onclick = submit;
     input.onkeydown = function(e) {
         if (e.key === 'Enter') submit();
+        if (mandatory && e.key === 'Escape') {
+            try { e.preventDefault(); } catch (_) {}
+        }
     };
 }
 function fecharModalTotpLogin() {
     var wrap = document.getElementById('modal-totp-login');
     if (wrap) wrap.style.display = 'none';
+    try { document.body.classList.remove('axis-totp-modal-open'); } catch (_) {}
 }
 
 function showModalTotpReset() {
@@ -3515,7 +3984,13 @@ function filtrarInventario() {
             if (!camposBusca.some(campo => campo && campo.includes(busca))) return false;
         }
         if (modeloPanel && (eqp.modelo || '').toLowerCase() !== modeloPanel.toLowerCase()) return false;
-        if (setorPanel && (eqp.setor || '').toLowerCase() !== setorPanel.toLowerCase()) return false;
+        if (setorPanel) {
+            var seq = (eqp.setor || '').trim();
+            var sfp = setorPanel.trim();
+            var neq = typeof normalizarSetorSlugParaSelect === 'function' ? normalizarSetorSlugParaSelect(seq) : seq;
+            var nfp = typeof normalizarSetorSlugParaSelect === 'function' ? normalizarSetorSlugParaSelect(sfp) : sfp;
+            if (String(neq).toLowerCase() !== String(nfp).toLowerCase()) return false;
+        }
         return true;
     });
 
@@ -4016,37 +4491,51 @@ function excluirEquipamento(tag) {
 // ================= FUNÇÕES UTILITÁRIAS DO INVENTÁRIO =================
 function formatarSetor(setor) {
     const setores = {
-        'internal-systems': 'INTERNAL SYSTEMS',
-        'lideranca': 'LIDERANÇA',
-        'mhw': 'MHW',
-        'p2m': 'P2M',
+        '1p': '1P',
+        'administracao': 'ADMINISTRAÇÃO',
+        'ambulatorio-externo': 'AMBULATÓRIO EXTERNO',
+        'ambulatorio-interno': 'AMBULATÓRIO INTERNO',
+        'aquario-outbound': 'AQUÁRIO OUTBOUND',
+        'area-de-maquinas': 'ÁREA DE MÁQUINAS',
         'check-in': 'CHECK-IN',
-        'reciving': 'RECIVING',
+        'cx': 'CX',
+        'er': 'ER',
+        'gate': 'GATE',
+        'icqa': 'ICQA',
+        'insumos': 'INSUMOS',
+        'internal-systems': 'INTERNAL SYSTEMS',
+        'inventario': 'INVENTÁRIO',
+        'lideranca': 'LIDERANÇA',
+        'linha-de-peixe-1': 'LINHA DE PEIXE 1',
+        'linha-de-peixe-2': 'LINHA DE PEIXE 2',
+        'loss-prevention': 'LOSS PREVENTION',
+        'meli-help': 'MELI HELP',
+        'mhw': 'MHW',
+        'mz0': 'MZ0',
         'mz1': 'MZ1',
         'mz2': 'MZ2',
         'mz3': 'MZ3',
-        'inventario': 'INVENTÁRIO',
-        'cx': 'CX',
-        'returns': 'RETURNS',
-        'packing-mono': 'Packing mono',
-        'packing-ptw': 'Packing ptw',
-        'sauron': 'Sauron',
-        'insumos': 'INSUMOS',
-        'docas-de-expedicao': 'DOCAS DE EXPEDIÇÃO',
-        'linha-de-peixe-1': 'LINHA DE PEIXE 1',
-        'sorter': 'SORTER',
-        'linha-de-peixe-2': 'LINHA DE PEIXE 2',
-        'rk': 'RK',
         'nt-rk': 'NT RK',
+        'p2m': 'P2M',
+        'packing-machine': 'PACKING MACHINE',
+        'packing-mono': 'PACKING MONO',
+        'packing-ptw': 'PACKING PTW',
         'qualidade': 'QUALIDADE',
-        'aquario-outbound': 'AQUÁRIO OUTBOUND',
-        'adm': 'ADM',
-        'gate': 'GATE',
-        'ambulatorio-interno': 'AMBULATÓRIO INTERNO',
-        'ambulatorio-externo': 'AMBULATÓRIO EXTERNO',
-        'sala-de-epi': 'SALA DE EPI',
-        'er': 'ER',
+        'reciving': 'RECIVING',
+        'rejeitos': 'REJEITOS',
+        'retiros': 'RETIROS',
+        'returns': 'RETURNS',
+        'rk': 'RK',
+        'roboticas': 'ROBÓTICAS',
         'rr': 'RR',
+        'sala-de-epi': 'SALA DE EPI',
+        'sauron': 'SAURON',
+        'shipping': 'SHIPPING',
+        'sorter': 'SORTER',
+        'treinamento': 'TREINAMENTO',
+        /* legado (equipamentos já gravados) */
+        'adm': 'ADMINISTRAÇÃO',
+        'docas-de-expedicao': 'DOCAS DE EXPEDIÇÃO',
         'deposito-de-treinamento': 'DEPÓSITO DE TREINAMENTO',
         'hv': 'HV'
     };
@@ -5690,17 +6179,27 @@ function fecharDetalhes() {
     }, 300);
 }
 
-/** Lista de setores para o select do modal Editar (mesmo do cadastro). */
+/** Lista de setores para o modal Editar (igual filtro/cadastro; ordem alfabética pt). Slugs antigos: ver normalizarSetorSlugParaSelect. */
 var SETORES_EDIT = [
-    { v: 'internal-systems', l: 'INTERNAL SYSTEMS' }, { v: 'lideranca', l: 'LIDERANÇA' }, { v: 'mhw', l: 'MHW' }, { v: 'p2m', l: 'P2M' },
-    { v: 'check-in', l: 'CHECK-IN' }, { v: 'reciving', l: 'RECIVING' }, { v: 'mz1', l: 'MZ1' }, { v: 'mz2', l: 'MZ2' }, { v: 'mz3', l: 'MZ3' },
-    { v: 'inventario', l: 'INVENTÁRIO' }, { v: 'cx', l: 'CX' }, { v: 'returns', l: 'RETURNS' }, { v: 'packing-mono', l: 'Packing mono' },
-    { v: 'packing-ptw', l: 'Packing ptw' }, { v: 'sauron', l: 'Sauron' }, { v: 'insumos', l: 'INSUMOS' }, { v: 'docas-de-expedicao', l: 'DOCAS DE EXPEDIÇÃO' },
-    { v: 'linha-de-peixe-1', l: 'LINHA DE PEIXE 1' }, { v: 'sorter', l: 'SORTER' }, { v: 'linha-de-peixe-2', l: 'LINHA DE PEIXE 2' },
-    { v: 'rk', l: 'RK' }, { v: 'nt-rk', l: 'NT RK' }, { v: 'qualidade', l: 'QUALIDADE' }, { v: 'aquario-outbound', l: 'AQUÁRIO OUTBOUND' },
-    { v: 'adm', l: 'ADM' }, { v: 'gate', l: 'GATE' }, { v: 'ambulatorio-interno', l: 'AMBULATÓRIO INTERNO' }, { v: 'ambulatorio-externo', l: 'AMBULATÓRIO EXTERNO' },
-    { v: 'sala-de-epi', l: 'SALA DE EPI' }, { v: 'er', l: 'ER' }, { v: 'rr', l: 'RR' }, { v: 'deposito-de-treinamento', l: 'DEPÓSITO DE TREINAMENTO' }, { v: 'hv', l: 'HV' }
+    { v: '1p', l: '1P' }, { v: 'administracao', l: 'ADMINISTRAÇÃO' }, { v: 'ambulatorio-externo', l: 'AMBULATÓRIO EXTERNO' },
+    { v: 'ambulatorio-interno', l: 'AMBULATÓRIO INTERNO' }, { v: 'aquario-outbound', l: 'AQUÁRIO OUTBOUND' }, { v: 'area-de-maquinas', l: 'ÁREA DE MÁQUINAS' },
+    { v: 'check-in', l: 'CHECK-IN' }, { v: 'cx', l: 'CX' }, { v: 'er', l: 'ER' }, { v: 'gate', l: 'GATE' }, { v: 'icqa', l: 'ICQA' },
+    { v: 'insumos', l: 'INSUMOS' }, { v: 'internal-systems', l: 'INTERNAL SYSTEMS' }, { v: 'inventario', l: 'INVENTÁRIO' }, { v: 'lideranca', l: 'LIDERANÇA' },
+    { v: 'linha-de-peixe-1', l: 'LINHA DE PEIXE 1' }, { v: 'linha-de-peixe-2', l: 'LINHA DE PEIXE 2' }, { v: 'loss-prevention', l: 'LOSS PREVENTION' },
+    { v: 'meli-help', l: 'MELI HELP' }, { v: 'mhw', l: 'MHW' }, { v: 'mz0', l: 'MZ0' }, { v: 'mz1', l: 'MZ1' }, { v: 'mz2', l: 'MZ2' }, { v: 'mz3', l: 'MZ3' },
+    { v: 'nt-rk', l: 'NT RK' }, { v: 'p2m', l: 'P2M' }, { v: 'packing-machine', l: 'PACKING MACHINE' }, { v: 'packing-mono', l: 'PACKING MONO' },
+    { v: 'packing-ptw', l: 'PACKING PTW' }, { v: 'qualidade', l: 'QUALIDADE' }, { v: 'reciving', l: 'RECIVING' }, { v: 'rejeitos', l: 'REJEITOS' },
+    { v: 'retiros', l: 'RETIROS' }, { v: 'returns', l: 'RETURNS' }, { v: 'rk', l: 'RK' }, { v: 'roboticas', l: 'ROBÓTICAS' }, { v: 'rr', l: 'RR' },
+    { v: 'sala-de-epi', l: 'SALA DE EPI' }, { v: 'sauron', l: 'SAURON' }, { v: 'shipping', l: 'SHIPPING' }, { v: 'sorter', l: 'SORTER' }, { v: 'treinamento', l: 'TREINAMENTO' },
+    { v: 'hv', l: 'HV' }
 ];
+
+/** Mapeia slugs antigos para o valor do select atual (cadastro/filtro). */
+function normalizarSetorSlugParaSelect(slug) {
+    if (!slug || typeof slug !== 'string') return slug;
+    var legado = { adm: 'administracao', 'docas-de-expedicao': 'shipping', 'deposito-de-treinamento': 'treinamento' };
+    return legado[slug] || slug;
+}
 
 function abrirModalEditar(tag) {
     const equipamento = (typeof inventarioData !== 'undefined' && inventarioData.length > 0)
@@ -5738,7 +6237,10 @@ function abrirModalEditar(tag) {
     setVal('edit-contador', (eq.contador != null && eq.contador !== '') ? Number(eq.contador) : '');
 
     const setorSelect = document.getElementById('edit-setor');
-    if (setorSelect) setorSelect.value = eq.setor || '';
+    if (setorSelect) {
+        var setorNorm = typeof normalizarSetorSlugParaSelect === 'function' ? normalizarSetorSlugParaSelect(eq.setor || '') : (eq.setor || '');
+        setorSelect.value = setorNorm || '';
+    }
 
     const bancadaSelect = document.getElementById('edit-bancada');
     if (bancadaSelect) bancadaSelect.value = eq.bancada || '';
@@ -5958,6 +6460,7 @@ function axisUsuarioPrecisaTrocarSenhaTemporaria() {
     if (!raw) return false;
     try {
         var db = JSON.parse(raw);
+        if (db.desativado === true) return false;
         return db.senhaTemporaria === true;
     } catch (_) {
         return false;
@@ -6036,11 +6539,18 @@ function axisConfirmarNovaSenhaTemporaria() {
         if (errEl) errEl.textContent = 'Não foi possível salvar. Tente de novo.';
         return;
     }
+    try {
+        if (typeof window.axisPushUserToServer === 'function') window.axisPushUserToServer(loginNorm, db);
+    } catch (ePush) {}
     var m = document.getElementById('modal-senha-temporaria');
     if (m) m.style.display = 'none';
     document.body.classList.remove('modal-senha-temp-open');
-    if (n1) n1.value = '';
-    if (n2) n2.value = '';
+    if (n1) { n1.type = 'password'; n1.value = ''; }
+    if (n2) { n2.type = 'password'; n2.value = ''; }
+    var eye1 = document.getElementById('axis-senha-temp-eye-nova');
+    var eye2 = document.getElementById('axis-senha-temp-eye-confirma');
+    if (eye1) { eye1.textContent = '👁️'; eye1.title = 'Mostrar senha'; }
+    if (eye2) { eye2.textContent = '👁️'; eye2.title = 'Mostrar senha'; }
     if (typeof showToast === 'function') showToast('Senha definida com sucesso. Ambiente AXIS liberado.', 'success');
     try { if (typeof atualizarPerfilNav === 'function') atualizarPerfilNav(); } catch (_) {}
 }
@@ -6227,7 +6737,9 @@ function toggleTheme() {
     // Exporta IMEDIATAMENTE (sempre)
     window.toggleTheme = toggleTheme;
     
-    const currentTheme = document.body.getAttribute('data-theme') || 'light';
+    const currentTheme = document.body.getAttribute('data-theme')
+        || document.documentElement.getAttribute('data-theme')
+        || 'light';
     const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
     
     // Animação de transição
@@ -6241,6 +6753,9 @@ function toggleTheme() {
 
 function setTheme(theme) {
     console.log(`🎨 Alterando tema para: ${theme}`);
+    try {
+        document.documentElement.setAttribute('data-theme', theme);
+    } catch (_) {}
     document.body.setAttribute('data-theme', theme);
     localStorage.setItem('axis-theme', theme);
     
@@ -6415,8 +6930,12 @@ function startRealTimeSimulation() {
 }
 
 // ================= ADMINISTRAÇÃO DE USUÁRIOS =================
+function axisUsuarioRegistroDesativado(userData) {
+    return userData && userData.desativado === true;
+}
+
 function atualizarEstatisticasAdmin() {
-    // Atualiza estatísticas de usuários (exclui ADMIN_FILIPE_SILVA - duplicata)
+    // Atualiza estatísticas de usuários (exclui ADMIN_FILIPE_SILVA - duplicata; contas desativadas não entram no TOTAL)
     const usuarios = [];
     for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
@@ -6430,15 +6949,19 @@ function atualizarEstatisticasAdmin() {
             console.error('Erro ao carregar usuário:', key, e);
         }
     }
-    
-    const totalUsuarios = usuarios.length;
-    const usuariosAtivos = usuarios.filter(u => u.ultimoAcesso).length;
+
+    const cadastroAtivos = usuarios.filter(function (u) { return !axisUsuarioRegistroDesativado(u); });
+    const totalUsuarios = cadastroAtivos.length;
+    const usuariosAtivos = cadastroAtivos.filter(function (u) { return u.ultimoAcesso; }).length;
+    const countDesativados = usuarios.filter(function (u) { return axisUsuarioRegistroDesativado(u); }).length;
     
     const totalUsuariosEl = document.getElementById('total-usuarios');
     const usuariosAtivosEl = document.getElementById('usuarios-ativos');
+    const countDesEl = document.getElementById('admin-count-usuarios-desativados');
     
     if (totalUsuariosEl) totalUsuariosEl.textContent = totalUsuarios;
     if (usuariosAtivosEl) usuariosAtivosEl.textContent = usuariosAtivos;
+    if (countDesEl) countDesEl.textContent = countDesativados;
 }
 
 function abrirAdminMapeamentoChamados() {
@@ -6468,6 +6991,25 @@ function abrirGerenciarUsuarios() {
 
 function fecharModalUsuarios() {
     const m = document.getElementById('modal-gerenciar-usuarios');
+    if (m) m.style.display = 'none';
+}
+
+function abrirUsuariosDesativados() {
+    if (typeof currentUserProfile !== 'undefined' && currentUserProfile !== 'admin') {
+        if (typeof showToast === 'function') showToast('Apenas administradores.', 'error');
+        return;
+    }
+    var modal = document.getElementById('modal-usuarios-desativados');
+    if (modal) {
+        modal.style.display = 'flex';
+        carregarUsuariosDesativados();
+        atualizarEstatisticasAdmin();
+        modal.onclick = function (e) { if (e.target === modal) fecharModalUsuariosDesativados(); };
+    }
+}
+
+function fecharModalUsuariosDesativados() {
+    var m = document.getElementById('modal-usuarios-desativados');
     if (m) m.style.display = 'none';
 }
 
@@ -6547,6 +7089,7 @@ const MODULOS_PERMISSOES = [
     { id: 'status-bancada', nome: 'Status de Bancada', icon: '📊' },
     { id: 'sauron', nome: 'Sauron', icon: '🔮' },
     { id: 'selbetti', nome: 'Selbetti', icon: '🏭' },
+    { id: 'melihelp', nome: 'MeliHelp', icon: '🛟' },
     { id: 'jovem-aprendiz', nome: 'Jovem Aprendiz', icon: '🎓' },
     { id: 'notas', nome: 'Notas Fiscais', icon: '📄' },
     { id: 'page-configuracoes', nome: 'Configurações', icon: '⚙️' }
@@ -6566,30 +7109,82 @@ const CARD_TO_MODULO = {
     'status-bancada-master': 'status-bancada',
     'sauron-master': 'sauron',
     'selbetti-master': 'selbetti',
+    'melihelp-master': 'melihelp',
     'jovem-aprendiz-master': 'jovem-aprendiz',
     'config-master': 'page-configuracoes'
 };
 
-function aplicarPermissoesModulos() {
-    const login = (localStorage.getItem('current_user_login') || '').trim().toLowerCase().replace(/\s+/g, '_');
-    if (!login) return;
-    let userPerm = {};
+/** Lista de módulos permitidos pelo perfil (base antes de personalização por utilizador). */
+function axisGetModulosPermitidosPorPerfil(perfil) {
+    const modulosPorPerfil = {
+        admin: MODULOS_PERMISSOES,
+        tecnico: MODULOS_PERMISSOES,
+        operador: MODULOS_PERMISSOES.filter(m => !['page-configuracoes'].includes(m.id)),
+        visualizador: MODULOS_PERMISSOES.filter(m => ['page-inventario', 'page-rondas', 'manutencao', 'page-suporte', 'notas', 'bloco', 'registro', 'pecas', 'packing', 'status-bancada', 'sauron', 'selbetti', 'melihelp', 'jovem-aprendiz'].includes(m.id)),
+        aprendiz: MODULOS_PERMISSOES.filter(m => ['page-inventario', 'page-rondas', 'manutencao', 'page-suporte', 'notas', 'bloco', 'registro', 'pecas', 'packing', 'status-bancada', 'sauron', 'selbetti', 'melihelp', 'jovem-aprendiz'].includes(m.id))
+    };
+    return modulosPorPerfil[perfil] || modulosPorPerfil.operador;
+}
+
+/** Mapa explícito id → true/false para todos os módulos, conforme o perfil. */
+function axisBuildModulosMapFromPerfil(perfil) {
+    const lista = axisGetModulosPermitidosPorPerfil(perfil);
+    const allowed = new Set(lista.map(m => m.id));
+    const map = {};
+    MODULOS_PERMISSOES.forEach(m => { map[m.id] = allowed.has(m.id); });
+    return map;
+}
+
+/**
+ * Indica se o módulo deve aparecer para o login (sincronizado com servidor via db_* .modulosPermitidos).
+ * - admin_filipe_silva: tudo.
+ * - modulosPermitidos no utilizador: só true conta (opt-in).
+ * - legado axis_permissoes_usuario sem modulosPermitidos: comportamento antigo (!== false).
+ * - sem nada: omissão pelo perfil.
+ */
+function axisModuloVisivelParaUsuario(loginNorm, modId) {
+    if (!loginNorm || !modId) return false;
+    if (loginNorm === 'admin_filipe_silva') return true;
+    let u = {};
     try {
-        const permUsers = JSON.parse(localStorage.getItem('axis_permissoes_usuario') || '{}');
-        userPerm = permUsers[login] || permUsers[Object.keys(permUsers || {}).find(k => (k || '').toLowerCase().replace(/\s+/g, '_') === login)] || {};
+        u = JSON.parse(localStorage.getItem('db_' + loginNorm) || '{}');
     } catch (_) {}
-    const isAdmin = login === 'admin_filipe_silva';
+    const mp = u.modulosPermitidos;
+    if (mp && typeof mp === 'object' && Object.keys(mp).length > 0) {
+        return mp[modId] === true;
+    }
+    let permUsers = {};
+    try {
+        permUsers = JSON.parse(localStorage.getItem('axis_permissoes_usuario') || '{}');
+    } catch (_) {}
+    const up = permUsers[loginNorm] || permUsers[Object.keys(permUsers || {}).find(k => (k || '').toLowerCase().replace(/\s+/g, '_') === loginNorm)] || {};
+    const temLegado = up && typeof up === 'object' && Object.keys(up).some(k => MODULOS_PERMISSOES.some(m => m.id === k));
+    if (temLegado) return up[modId] !== false;
+    const defMap = axisBuildModulosMapFromPerfil(u.perfil || 'operador');
+    return defMap[modId] === true;
+}
+
+function aplicarPermissoesModulos() {
+    const login = axisGetCurrentUserLoginNormalized();
+    if (!login) return;
     Object.keys(CARD_TO_MODULO).forEach(cls => {
         const card = document.querySelector('.mod-card.' + cls);
         if (!card) return;
         const modId = CARD_TO_MODULO[cls];
-        const temPermissao = isAdmin ? true : (userPerm[modId] !== false);
+        const temPermissao = axisModuloVisivelParaUsuario(login, modId);
+        card.style.display = temPermissao ? '' : 'none';
+    });
+    document.querySelectorAll('.home-mod-card[data-module-id]').forEach(function (card) {
+        const hid = card.getAttribute('data-module-id');
+        if (!hid) return;
+        const modId = axisHomeModuleIdToPermModulo(hid);
+        const temPermissao = axisModuloVisivelParaUsuario(login, modId);
         card.style.display = temPermissao ? '' : 'none';
     });
     document.querySelectorAll('.side-item[data-nav-page]').forEach(el => {
         const modId = el.getAttribute('data-nav-page');
         if (!modId || modId === 'page-home' || modId === 'page-administracao') return;
-        const temPermissao = isAdmin ? true : (userPerm[modId] !== false);
+        const temPermissao = axisModuloVisivelParaUsuario(login, modId);
         el.style.display = temPermissao ? '' : 'none';
     });
 }
@@ -6621,28 +7216,15 @@ function abrirModalPermissoesUsuario(login) {
     if (titulo) titulo.textContent = nomeUser;
     if (desc) desc.style.display = 'none';
     
-    let permUsers = {};
-    try {
-        permUsers = JSON.parse(localStorage.getItem('axis_permissoes_usuario') || '{}');
-    } catch (_) {}
-    const loginNorm = (login || '').trim().toLowerCase().replace(/\s+/g, '_');
-    const userPerm = permUsers[loginNorm] || permUsers[login] || permUsers[Object.keys(permUsers || {}).find(k => (k || '').toLowerCase().replace(/\s+/g, '_') === loginNorm)] || {};
+    const loginNorm = (typeof axisLoginCanonico === 'function' ? axisLoginCanonico(login) : (login || '').trim().toLowerCase().replace(/\s+/g, '_').replace(/\./g, '_'));
     
-    // Módulos disponíveis conforme perfil (admin vê todos, visualizador vê menos)
-    const modulosPorPerfil = {
-        admin: MODULOS_PERMISSOES,
-        tecnico: MODULOS_PERMISSOES,
-        operador: MODULOS_PERMISSOES.filter(m => !['page-configuracoes'].includes(m.id)),
-        visualizador: MODULOS_PERMISSOES.filter(m => ['page-inventario', 'page-rondas', 'manutencao', 'page-suporte', 'notas', 'bloco', 'registro', 'pecas', 'packing', 'status-bancada', 'sauron', 'selbetti', 'jovem-aprendiz'].includes(m.id)),
-        aprendiz: MODULOS_PERMISSOES.filter(m => ['page-inventario', 'page-rondas', 'manutencao', 'page-suporte', 'notas', 'bloco', 'registro', 'pecas', 'packing', 'status-bancada', 'sauron', 'selbetti', 'jovem-aprendiz'].includes(m.id))
-    };
-    const modulos = modulosPorPerfil[perfil] || MODULOS_PERMISSOES;
+    const modulos = axisGetModulosPermitidosPorPerfil(perfil);
     
     let html = `<div class="permissoes-perfil-card permissoes-usuario-unico">
         <h4>${PERFIS_LABEL[perfil] || perfil}</h4>
         <div class="permissoes-checkboxes">`;
     modulos.forEach(mod => {
-        const checked = userPerm[mod.id] !== false;
+        const checked = axisModuloVisivelParaUsuario(loginNorm, mod.id);
         html += `<label class="perm-check-label"><input type="checkbox" data-login="${login}" data-modulo="${mod.id}" ${checked ? 'checked' : ''}> ${mod.icon} ${mod.nome}</label>`;
     });
     html += `</div></div>`;
@@ -6659,23 +7241,50 @@ function abrirModalPermissoesUsuario(login) {
 }
 
 function salvarPermissaoUsuario(login) {
-    const loginNorm = (login || '').trim().toLowerCase().replace(/\s+/g, '_');
+    const loginNorm = typeof axisLoginCanonico === 'function' ? axisLoginCanonico(login) : (login || '').trim().toLowerCase().replace(/\s+/g, '_').replace(/\./g, '_');
+    const merged = {};
+    MODULOS_PERMISSOES.forEach(m => {
+        merged[m.id] = axisModuloVisivelParaUsuario(loginNorm, m.id);
+    });
+    document.querySelectorAll('#permissoes-perfil-grid input[type="checkbox"]').forEach(cb => {
+        const m = cb.getAttribute('data-modulo');
+        if (m) merged[m] = cb.checked;
+    });
     let permUsers = {};
     try {
         permUsers = JSON.parse(localStorage.getItem('axis_permissoes_usuario') || '{}');
     } catch (_) {}
-    const oldKey = Object.keys(permUsers || {}).find(k => (k || '').toLowerCase().replace(/\s+/g, '_') === loginNorm);
+    const oldKey = Object.keys(permUsers || {}).find(k => (typeof axisLoginCanonico === 'function' ? axisLoginCanonico(k) : k) === loginNorm);
     if (oldKey && oldKey !== loginNorm) {
-        permUsers[loginNorm] = permUsers[oldKey] || {};
         delete permUsers[oldKey];
     }
-    if (!permUsers[loginNorm]) permUsers[loginNorm] = {};
-    document.querySelectorAll('#permissoes-perfil-grid input[type="checkbox"]').forEach(cb => {
-        const m = cb.getAttribute('data-modulo');
-        permUsers[loginNorm][m] = cb.checked;
-    });
+    permUsers[loginNorm] = merged;
     localStorage.setItem('axis_permissoes_usuario', JSON.stringify(permUsers));
+    let u = {};
+    try {
+        u = JSON.parse(localStorage.getItem('db_' + loginNorm) || '{}');
+    } catch (_) {}
+    u.modulosPermitidos = merged;
+    localStorage.setItem('db_' + loginNorm, JSON.stringify(u));
+    try {
+        if (typeof window.axisPushUserToServer === 'function') {
+            window.axisPushUserToServer(loginNorm, u).then(function (res) {
+                if (res && res.ok === false) {
+                    showToast('Permissões guardadas neste dispositivo. Verifique a ligação ao servidor.', 'warning');
+                }
+            });
+        }
+    } catch (_) {}
     showToast('Permissões salvas para o usuário', 'success');
+    try {
+        if (loginNorm === axisGetCurrentUserLoginNormalized()) {
+            if ((typeof activePage !== 'undefined' && activePage === 'page-home') || localStorage.getItem('axis-current-page') === 'page-home') {
+                if (typeof loadDashboardData === 'function') loadDashboardData();
+            }
+            if (typeof renderHomeModules === 'function') renderHomeModules();
+            if (typeof aplicarPermissoesModulos === 'function') aplicarPermissoesModulos();
+        }
+    } catch (_) {}
 }
 
 function fecharModalPermissoes() {
@@ -6717,7 +7326,7 @@ function preencherModalEstatisticas() {
     if (adminData.name && !usuarios.some(u => (u.login || '').toLowerCase() === 'admin_filipe_silva')) {
         usuarios.unshift({ login: 'admin_filipe_silva', ...adminData });
     }
-    const totalUsuarios = usuarios.length;
+    const totalUsuarios = usuarios.filter(function (u) { return !axisUsuarioRegistroDesativado(u); }).length;
     let totalEquipamentos = 0;
     try {
         const inv = JSON.parse(localStorage.getItem('axis_inventario_equipamentos') || '[]');
@@ -6822,11 +7431,12 @@ function carregarUsuarios() {
         });
     }
     
-    // Ordena por nome
+    // Ordena por nome; lista só contas ativas (desativadas aparecem no card abaixo)
     usuarios.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-    
+    const ativos = usuarios.filter(function (u) { return !axisUsuarioRegistroDesativado(u); });
+
     // Renderiza tabela
-    tbody.innerHTML = usuarios.map(user => {
+    tbody.innerHTML = ativos.map(user => {
         const dataCadastro = user.dataCadastro ? new Date(user.dataCadastro).toLocaleDateString('pt-BR') : '-';
         const ultimoAcesso = user.ultimoAcesso ? new Date(user.ultimoAcesso).toLocaleDateString('pt-BR') : '-';
         const perfilLabel = {
@@ -6837,9 +7447,9 @@ function carregarUsuarios() {
             'aprendiz': '📚 Aprendiz'
         }[user.perfil] || user.perfil || 'Operador';
         
-        // admin_filipe_silva: sem Permissões (tem tudo liberado) e sem Excluir
+        // admin_filipe_silva: sem Permissões (tem tudo liberado) e sem desativar
         const isAdminMax = (user.login || '').toLowerCase() === 'admin_filipe_silva';
-        const podeExcluir = !isAdminMax;
+        const podeDesativar = !isAdminMax;
         
         return `
             <tr>
@@ -6852,7 +7462,7 @@ function carregarUsuarios() {
                 <td class="acoes-usuario">
                     <button class="btn-icon-small" onclick="editarUsuario('${user.login}')" title="Editar">✏️</button>
                     ${!isAdminMax ? `<button class="btn-icon-small btn-permissoes" onclick="abrirModalPermissoesUsuario('${user.login}')" title="Permissões">⚙️</button>` : ''}
-                    ${podeExcluir ? `<button class="btn-icon-small btn-danger" onclick="excluirUsuario('${user.login}')" title="Excluir">🗑️</button>` : '<span class="text-muted" title="Usuário administrador principal">—</span>'}
+                    ${podeDesativar ? `<button type="button" class="btn-icon-small btn-desativar" onclick="desativarUsuario('${user.login}')" title="Desativar conta">⏸️</button>` : '<span class="text-muted" title="Usuário administrador principal">—</span>'}
                 </td>
             </tr>
         `;
@@ -6867,6 +7477,79 @@ function filtrarUsuarios() {
     const linhas = document.querySelectorAll('#usuarios-tbody tr');
     
     linhas.forEach(linha => {
+        const texto = linha.textContent.toLowerCase();
+        linha.style.display = texto.includes(busca) ? '' : 'none';
+    });
+}
+
+function carregarUsuariosDesativados() {
+    const tbody = document.getElementById('usuarios-desativados-tbody');
+    if (!tbody) return;
+
+    const usuarios = [];
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (!key || !key.startsWith('db_')) continue;
+        const login = key.replace('db_', '');
+        if (login.toLowerCase() === 'admin_filipe_silva') continue;
+        if (login === 'ADMIN_FILIPE_SILVA') continue;
+        try {
+            const userData = JSON.parse(localStorage.getItem(key));
+            usuarios.push({ login, ...userData });
+        } catch (e) {
+            console.error('Erro ao carregar usuário:', key, e);
+        }
+    }
+    const adminData = JSON.parse(localStorage.getItem('db_admin_filipe_silva') || '{}');
+    if (adminData.name && axisUsuarioRegistroDesativado(adminData)) {
+        usuarios.unshift({ login: 'admin_filipe_silva', ...adminData });
+    }
+
+    usuarios.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    const desativados = usuarios.filter(function (u) { return axisUsuarioRegistroDesativado(u); });
+
+    if (!desativados.length) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-muted" style="text-align:center;padding:22px">Nenhum usuário desativado.</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = desativados.map(function (user) {
+        const dataCadastro = user.dataCadastro ? new Date(user.dataCadastro).toLocaleDateString('pt-BR') : '-';
+        const dataDes = user.dataDesativacao ? new Date(user.dataDesativacao).toLocaleDateString('pt-BR') : '—';
+        const perfilLabel = {
+            'admin': '👑 Administrador',
+            'tecnico': '🔧 Técnico',
+            'operador': '👤 Operador',
+            'visualizador': '👁️ Visualizador',
+            'aprendiz': '📚 Aprendiz'
+        }[user.perfil] || user.perfil || 'Operador';
+        const isAdminMax = (user.login || '').toLowerCase() === 'admin_filipe_silva';
+        const acoes = isAdminMax
+            ? '<span class="text-muted" title="Administrador principal">—</span>'
+            : `<button type="button" class="btn-icon-small btn-reativar" onclick="reativarUsuario('${user.login}')" title="Reativar conta">↩️</button>
+                    <button type="button" class="btn-icon-small btn-danger" onclick="excluirUsuario('${user.login}')" title="Remover definitivamente">🗑️</button>`;
+        return `
+            <tr>
+                <td>${user.name || '-'}</td>
+                <td><strong>${user.login}</strong></td>
+                <td>${user.matriculaAxis ? String(user.matriculaAxis) : '—'}</td>
+                <td>${perfilLabel}</td>
+                <td>${dataCadastro}</td>
+                <td>${dataDes}</td>
+                <td class="acoes-usuario">${acoes}</td>
+            </tr>`;
+    }).join('');
+}
+
+function filtrarUsuariosDesativados() {
+    const inp = document.getElementById('buscar-usuario-desativado');
+    if (!inp) return;
+    const busca = inp.value.toLowerCase();
+    document.querySelectorAll('#usuarios-desativados-tbody tr').forEach(function (linha) {
+        if (linha.querySelector('td[colspan]')) {
+            linha.style.display = '';
+            return;
+        }
         const texto = linha.textContent.toLowerCase();
         linha.style.display = texto.includes(busca) ? '' : 'none';
     });
@@ -7075,12 +7758,25 @@ function cadastrarUsuario(event) {
     var loginNorm = axisLoginCanonico(login);
     var userKey = 'db_' + loginNorm;
 
-    var existe = !!localStorage.getItem(userKey);
-    if (!existe) {
-        var todasDb = Object.keys(localStorage).filter(function(k) { return k.indexOf('db_') === 0; });
-        existe = todasDb.some(function(k) { return axisLoginCanonico(k.replace('db_', '')) === loginNorm; });
+    var rawExiste = localStorage.getItem(userKey);
+    var keyExiste = userKey;
+    if (!rawExiste) {
+        var chDup = Object.keys(localStorage).find(function (k) {
+            return k.indexOf('db_') === 0 && axisLoginCanonico(k.replace('db_', '')) === loginNorm;
+        });
+        if (chDup) {
+            keyExiste = chDup;
+            rawExiste = localStorage.getItem(chDup);
+        }
     }
-    if (existe) {
+    if (rawExiste) {
+        try {
+            var uDup = JSON.parse(rawExiste);
+            if (axisUsuarioRegistroDesativado(uDup)) {
+                showToast('Este login pertence a um utilizador desativado. Reative em «Usuários desativados» ou escolha outro login.', 'warning');
+                return;
+            }
+        } catch (_) {}
         showToast('Usuário já existe! Escolha outro login.', 'warning');
         return;
     }
@@ -7099,7 +7795,8 @@ function cadastrarUsuario(event) {
         dataCadastro: new Date().toISOString(),
         ultimoAcesso: null,
         senhaExpiracao: dataExpiracao.toISOString(),
-        senhaTemporaria: true
+        senhaTemporaria: true,
+        modulosPermitidos: axisBuildModulosMapFromPerfil(perfil)
     };
 
     var matriculaNova = typeof axisMatriculaFallbackLocal === 'function' ? axisMatriculaFallbackLocal() : null;
@@ -7110,13 +7807,28 @@ function cadastrarUsuario(event) {
     novoUsuario.matriculaAxis = matriculaNova;
     localStorage.setItem(userKey, JSON.stringify(novoUsuario));
     try {
-        if (typeof window.axisPushUserToServer === 'function') window.axisPushUserToServer(loginNorm, novoUsuario);
-    } catch (eCad) {}
-    showToast('Usuário ' + nome + ' cadastrado! Login: ' + loginNorm + ' · Matrícula ' + matriculaNova, 'success');
-    limparFormularioUsuario();
-    fecharModalCadastrarUsuario();
-    carregarUsuarios();
-    atualizarEstatisticasAdmin();
+        var permUsersCad = JSON.parse(localStorage.getItem('axis_permissoes_usuario') || '{}');
+        permUsersCad[loginNorm] = novoUsuario.modulosPermitidos;
+        localStorage.setItem('axis_permissoes_usuario', JSON.stringify(permUsersCad));
+    } catch (_) {}
+    var pushCad = (typeof window.axisPushUserToServer === 'function') ? window.axisPushUserToServer(loginNorm, novoUsuario) : Promise.resolve({ ok: true });
+    Promise.resolve(pushCad).then(function (res) {
+        if (res && res.ok === false) {
+            showToast('Utilizador criado localmente; a sincronizar com o servidor falhou — tente «Gerir utilizadores» ou recarregue.', 'warning');
+        } else {
+            showToast('Usuário ' + nome + ' cadastrado! Login: ' + loginNorm + ' · Matrícula ' + matriculaNova, 'success');
+        }
+        limparFormularioUsuario();
+        fecharModalCadastrarUsuario();
+        carregarUsuarios();
+        atualizarEstatisticasAdmin();
+    }).catch(function () {
+        showToast('Utilizador guardado localmente; confirme a ligação ao servidor.', 'warning');
+        limparFormularioUsuario();
+        fecharModalCadastrarUsuario();
+        carregarUsuarios();
+        atualizarEstatisticasAdmin();
+    });
 }
 
 function editarUsuario(login) {
@@ -7153,8 +7865,26 @@ function abrirModalEditarUsuario(login) {
     if (setorEl) setorEl.value = userData.setor || '';
     var matEl = document.getElementById('editar-usuario-matricula');
     if (matEl) matEl.value = userData.matriculaAxis || '—';
-    document.getElementById('editar-usuario-nova-senha').value = '';
-    document.getElementById('editar-usuario-confirmar-senha').value = '';
+    var inpNova = document.getElementById('editar-usuario-nova-senha');
+    var inpConf = document.getElementById('editar-usuario-confirmar-senha');
+    if (inpNova) {
+        inpNova.value = '';
+        inpNova.type = 'password';
+    }
+    if (inpConf) {
+        inpConf.value = '';
+        inpConf.type = 'password';
+    }
+    var eyeNova = document.getElementById('editar-usuario-eye-nova');
+    var eyeConf = document.getElementById('editar-usuario-eye-confirma');
+    if (eyeNova) {
+        eyeNova.textContent = '👁️';
+        eyeNova.title = 'Mostrar senha';
+    }
+    if (eyeConf) {
+        eyeConf.textContent = '👁️';
+        eyeConf.title = 'Mostrar senha';
+    }
     document.getElementById('editar-senha-expiracao-info').style.display = 'none';
     var alertaBloq = document.getElementById('editar-usuario-alerta-bloqueio');
     if (alertaBloq) alertaBloq.style.display = userData.bloqueadoSenhaExpirada === true ? 'block' : 'none';
@@ -7401,6 +8131,7 @@ function salvarUsuarioEditado(event) {
     const userKey = 'db_' + loginNorm;
     let userData = JSON.parse(localStorage.getItem(originalKey) || localStorage.getItem(userKey) || '{}');
     var wasBlockedSenha = userData.bloqueadoSenhaExpirada === true;
+    var perfilAntigo = userData.perfil;
     // Preservar foto e outros campos não editados neste modal
     var fotoExistente = userData.foto;
     var ultimoAcessoExistente = userData.ultimoAcesso;
@@ -7408,6 +8139,14 @@ function salvarUsuarioEditado(event) {
 
     userData.name = nome;
     userData.perfil = perfil;
+    if (perfilAntigo !== perfil) {
+        userData.modulosPermitidos = axisBuildModulosMapFromPerfil(perfil);
+        try {
+            var permUsersEd = JSON.parse(localStorage.getItem('axis_permissoes_usuario') || '{}');
+            permUsersEd[loginNorm] = userData.modulosPermitidos;
+            localStorage.setItem('axis_permissoes_usuario', JSON.stringify(permUsersEd));
+        } catch (_) {}
+    }
     userData.setor = setor;
     if (matriculaExistente !== undefined && matriculaExistente !== null && matriculaExistente !== '') {
         userData.matriculaAxis = matriculaExistente;
@@ -7479,19 +8218,130 @@ function salvarUsuarioEditado(event) {
     }
 }
 
+function desativarUsuario(login) {
+    if (!login) return;
+    var loginNorm = typeof axisLoginCanonico === 'function' ? axisLoginCanonico(login) : (login || '').trim().toLowerCase().replace(/\s+/g, '_');
+    if (loginNorm === 'admin_filipe_silva') {
+        showToast('Não é possível desativar o usuário administrador principal.', 'error');
+        return;
+    }
+    showConfirmExcluirModal({
+        title: 'Desativar usuário',
+        message: 'O utilizador «' + login + '» deixará de poder iniciar sessão. Os dados ficam guardados em «Usuários desativados» e sincronizam com o servidor.',
+        icon: '⏸️',
+        onConfirm: function () { desativarUsuarioConfirmado(login, loginNorm); }
+    });
+}
+
+function desativarUsuarioConfirmado(login, loginNorm) {
+    var userKey = 'db_' + loginNorm;
+    if (!localStorage.getItem(userKey)) {
+        var chave = Object.keys(localStorage).find(function (k) {
+            return k.indexOf('db_') === 0 && typeof axisLoginCanonico === 'function' && axisLoginCanonico(k.replace('db_', '')) === loginNorm;
+        });
+        if (chave) userKey = chave;
+    }
+    var raw = localStorage.getItem(userKey);
+    if (!raw) {
+        showToast('Utilizador não encontrado.', 'error');
+        return;
+    }
+    var db;
+    try {
+        db = JSON.parse(raw);
+    } catch (_) {
+        showToast('Dados inválidos.', 'error');
+        return;
+    }
+    if (!db.name) {
+        showToast('Utilizador não encontrado.', 'error');
+        return;
+    }
+    db.desativado = true;
+    db.dataDesativacao = new Date().toISOString();
+    try {
+        localStorage.setItem(userKey, JSON.stringify(db));
+    } catch (e1) {
+        showToast('Não foi possível guardar.', 'error');
+        return;
+    }
+    try {
+        if (typeof window.axisPushUserToServer === 'function') window.axisPushUserToServer(loginNorm, db);
+    } catch (e2) {}
+    showToast('Utilizador «' + login + '» desativado.', 'success');
+    carregarUsuarios();
+    carregarUsuariosDesativados();
+    atualizarEstatisticasAdmin();
+    try {
+        var cur = localStorage.getItem('current_user_login');
+        if (cur && typeof axisLoginCanonico === 'function' && axisLoginCanonico(cur) === loginNorm && typeof execLogout === 'function') {
+            execLogout();
+            if (typeof showToast === 'function') showToast('A sua conta foi desativada.', 'warning');
+        }
+    } catch (_) {}
+}
+
+function reativarUsuario(login) {
+    if (!login) return;
+    var loginNorm = typeof axisLoginCanonico === 'function' ? axisLoginCanonico(login) : (login || '').trim().toLowerCase().replace(/\s+/g, '_');
+    if (loginNorm === 'admin_filipe_silva') {
+        showToast('Use a conta administrador principal normalmente.', 'info');
+        return;
+    }
+    showConfirmExcluirModal({
+        title: 'Reativar usuário',
+        message: 'O utilizador «' + login + '» voltará a poder iniciar sessão. Confirma?',
+        icon: '↩️',
+        onConfirm: function () { reativarUsuarioConfirmado(login, loginNorm); }
+    });
+}
+
+function reativarUsuarioConfirmado(login, loginNorm) {
+    var userKey = 'db_' + loginNorm;
+    if (!localStorage.getItem(userKey)) {
+        var chave = Object.keys(localStorage).find(function (k) {
+            return k.indexOf('db_') === 0 && typeof axisLoginCanonico === 'function' && axisLoginCanonico(k.replace('db_', '')) === loginNorm;
+        });
+        if (chave) userKey = chave;
+    }
+    var raw = localStorage.getItem(userKey);
+    if (!raw) return;
+    var db;
+    try {
+        db = JSON.parse(raw);
+    } catch (_) {
+        return;
+    }
+    delete db.desativado;
+    delete db.dataDesativacao;
+    try {
+        localStorage.setItem(userKey, JSON.stringify(db));
+    } catch (_) {
+        showToast('Não foi possível guardar.', 'error');
+        return;
+    }
+    try {
+        if (typeof window.axisPushUserToServer === 'function') window.axisPushUserToServer(loginNorm, db);
+    } catch (_) {}
+    showToast('Utilizador «' + login + '» reativado.', 'success');
+    carregarUsuarios();
+    carregarUsuariosDesativados();
+    atualizarEstatisticasAdmin();
+}
+
 function excluirUsuario(login) {
     if (!login) return;
     var loginNorm = typeof axisLoginCanonico === 'function' ? axisLoginCanonico(login) : (login || '').trim().toLowerCase().replace(/\s+/g, '_');
     if (loginNorm === 'admin_filipe_silva') {
-        showToast('Não é possível excluir o usuário administrador principal', 'error');
+        showToast('Não é possível remover o usuário administrador principal', 'error');
         return;
     }
     
     showConfirmExcluirModal({
-        title: 'Excluir usuário',
-        message: `Tem certeza que deseja excluir o usuário ${login}?`,
-        icon: '👤',
-        onConfirm: () => excluirUsuarioConfirmado(login, loginNorm)
+        title: 'Remover definitivamente',
+        message: 'Tem a certeza que deseja remover permanentemente o utilizador «' + login + '» da base? Esta ação não pode ser anulada e sincroniza com o servidor.',
+        icon: '🗑️',
+        onConfirm: function () { excluirUsuarioConfirmado(login, loginNorm); }
     });
 }
 
@@ -7508,8 +8358,9 @@ function excluirUsuarioConfirmado(login, loginNorm) {
         if (typeof window.axisRemoveUserFromServer === 'function') window.axisRemoveUserFromServer(loginNorm);
     } catch (eEx) {}
     
-    showToast(`Usuário ${login} excluído com sucesso!`, 'success');
+    showToast('Utilizador «' + login + '» removido definitivamente da base.', 'success');
     carregarUsuarios();
+    carregarUsuariosDesativados();
     atualizarEstatisticasAdmin();
 }
 
@@ -7600,11 +8451,18 @@ const CATEGORIA_LABELS = {
     'manuais': '📖 Manuais',
     'firmware': '⚙️ Firmware',
     'passo-a-passo': '📋 Passo a passo',
-    'orcamentos': '💰 Orçamentos',
     'documentos': '📄 Documentos',
     'etiquetas': '🏷️ Etiquetas',
     'outros': '📄 Outros'
 };
+
+/** Orçamentos passaram para o hub Selbetti; no inventário AXIS tratamos legado como "documentos" na UI. */
+function docCategoriaUIFiltro(c) {
+    return c === 'orcamentos' ? 'documentos' : c;
+}
+function docCategoriaUILabel(c) {
+    return CATEGORIA_LABELS[docCategoriaUIFiltro(c)] || docCategoriaUIFiltro(c);
+}
 
 let documentosCache = [];
 let documentosCacheLoaded = false;
@@ -7670,7 +8528,9 @@ async function renderizarDocumentos() {
 
     const docs = await getDocumentos();
     let filtrados = docs;
-    if (categoriaFiltro !== 'todos') filtrados = filtrados.filter(d => d.categoria === categoriaFiltro);
+    if (categoriaFiltro !== 'todos') {
+        filtrados = filtrados.filter(d => docCategoriaUIFiltro(d.categoria) === categoriaFiltro);
+    }
     if (busca) filtrados = filtrados.filter(d =>
         (d.titulo || '').toLowerCase().includes(busca) ||
         (d.descricao || '').toLowerCase().includes(busca) ||
@@ -7696,8 +8556,8 @@ async function renderizarDocumentos() {
     filtrados.forEach(doc => {
         const card = document.createElement('div');
         card.className = 'doc-item-card doc-card-quick';
-        card.setAttribute('data-categoria', doc.categoria);
-        const label = CATEGORIA_LABELS[doc.categoria] || doc.categoria;
+        card.setAttribute('data-categoria', docCategoriaUIFiltro(doc.categoria));
+        const label = docCategoriaUILabel(doc.categoria);
         const desc = (doc.descricao || '').substring(0, 90);
         const icon = iconByType(doc.tipo);
         card.innerHTML = `
@@ -7740,7 +8600,9 @@ async function abrirModalDocumento(editId) {
         if (doc) {
             document.getElementById('doc-titulo').value = doc.titulo || '';
             document.getElementById('doc-descricao').value = doc.descricao || '';
-            document.getElementById('doc-categoria').value = doc.categoria || 'manuais';
+            var _docCat = doc.categoria || 'manuais';
+            if (_docCat === 'orcamentos') _docCat = 'documentos';
+            document.getElementById('doc-categoria').value = _docCat;
             document.getElementById('doc-tipo').value = doc.tipo || 'arquivo';
             document.getElementById('doc-conteudo').value = doc.conteudo || '';
             if (arqGrp) arqGrp.style.display = 'none';
@@ -7967,8 +8829,9 @@ function initDocTabs() {
     document.querySelectorAll('.doc-tab').forEach(tab => {
         if (tab.dataset.docInited) return;
         tab.dataset.docInited = '1';
+        if (!tab.hasAttribute('data-categoria')) return;
         tab.addEventListener('click', function() {
-            document.querySelectorAll('.doc-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.doc-tab[data-categoria]').forEach(t => t.classList.remove('active'));
             this.classList.add('active');
             renderizarDocumentos();
         });
@@ -9142,11 +10005,29 @@ if (typeof editarUsuario === 'function') {
 if (typeof excluirUsuario === 'function') {
     window.excluirUsuario = excluirUsuario;
 }
+if (typeof desativarUsuario === 'function') {
+    window.desativarUsuario = desativarUsuario;
+}
+if (typeof reativarUsuario === 'function') {
+    window.reativarUsuario = reativarUsuario;
+}
+if (typeof filtrarUsuariosDesativados === 'function') {
+    window.filtrarUsuariosDesativados = filtrarUsuariosDesativados;
+}
+if (typeof carregarUsuariosDesativados === 'function') {
+    window.carregarUsuariosDesativados = carregarUsuariosDesativados;
+}
 if (typeof abrirGerenciarUsuarios === 'function') {
     window.abrirGerenciarUsuarios = abrirGerenciarUsuarios;
 }
 if (typeof fecharModalUsuarios === 'function') {
     window.fecharModalUsuarios = fecharModalUsuarios;
+}
+if (typeof abrirUsuariosDesativados === 'function') {
+    window.abrirUsuariosDesativados = abrirUsuariosDesativados;
+}
+if (typeof fecharModalUsuariosDesativados === 'function') {
+    window.fecharModalUsuariosDesativados = fecharModalUsuariosDesativados;
 }
 if (typeof fecharModalEstatisticas === 'function') {
     window.fecharModalEstatisticas = fecharModalEstatisticas;
@@ -9323,6 +10204,35 @@ function axisMarkAllNotificationsRead() {
 }
 window.axisAddNotification = axisAddNotification;
 
+function toggleAxisNewsModal(force) {
+    var modal = document.getElementById('modal-axis-news');
+    if (!modal) return;
+    var isOpen = modal.classList.contains('open');
+    var open = force === true ? true : force === false ? false : !isOpen;
+    if (open) {
+        modal.classList.add('open');
+        modal.setAttribute('aria-hidden', 'false');
+        try {
+            document.body.classList.add('axis-news-modal-open');
+        } catch (_) {}
+        if (typeof axisRefreshNewsModalContent === 'function') {
+            axisRefreshNewsModalContent();
+        }
+        var np = document.getElementById('nav-notifications-dropdown');
+        if (np && np.classList.contains('open')) {
+            np.classList.remove('open');
+            np.setAttribute('aria-hidden', 'true');
+        }
+    } else {
+        modal.classList.remove('open');
+        modal.setAttribute('aria-hidden', 'true');
+        try {
+            document.body.classList.remove('axis-news-modal-open');
+        } catch (_) {}
+    }
+}
+window.toggleAxisNewsModal = toggleAxisNewsModal;
+
 function toggleNavNotifications() {
     var panel = document.getElementById('nav-notifications-dropdown');
     if (!panel) return;
@@ -9331,6 +10241,14 @@ function toggleNavNotifications() {
         panel.classList.remove('open');
         panel.setAttribute('aria-hidden', 'true');
     } else {
+        var newsModal = document.getElementById('modal-axis-news');
+        if (newsModal && newsModal.classList.contains('open')) {
+            newsModal.classList.remove('open');
+            newsModal.setAttribute('aria-hidden', 'true');
+            try {
+                document.body.classList.remove('axis-news-modal-open');
+            } catch (_) {}
+        }
         panel.classList.add('open');
         panel.setAttribute('aria-hidden', 'false');
         window.carregarNavNotifications();
@@ -9371,6 +10289,14 @@ document.addEventListener('click', function(e) {
     if (panel && panel.classList.contains('open') && wrap && !wrap.contains(e.target)) {
         panel.classList.remove('open');
         panel.setAttribute('aria-hidden', 'true');
+    }
+});
+
+document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') return;
+    var newsModal = document.getElementById('modal-axis-news');
+    if (newsModal && newsModal.classList.contains('open')) {
+        toggleAxisNewsModal(false);
     }
 });
 
@@ -9420,7 +10346,7 @@ function atualizarPerfilNav() {
     }
     var initial = (nome.charAt(0) || 'U').toUpperCase();
     wrap.style.display = 'flex';
-    setEl('axis-profile-name-short', nome.length > 15 ? nome.substring(0, 12) + '…' : nome);
+    setEl('axis-profile-name-short', nome);
     setEl('axis-profile-initial', initial);
     setEl('axis-profile-dropdown-initial', initial);
     setEl('axis-profile-dropdown-name', nome);

@@ -1,42 +1,50 @@
 /**
- * AXIS Robot Assistant - Robô em holograma
- * Assistente IA flutuante, integrado à API mais inteligente (OpenAI GPT-4o).
- * Conhece todo o site e cada função.
+ * AXIS Bot — assistente flutuante (avatar humano em miniatura + IA).
+ * Integra OpenAI / Anthropic / Gemini via servidor; especialista no AXIS e ajuda geral.
  */
 
 (function() {
     'use strict';
 
-    var ROBOT_SVG = '<svg class="axis-robot-icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
-        '<defs><linearGradient id="axis-robot-grad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#00d4ff"/><stop offset="100%" style="stop-color:#2ecc71"/></linearGradient>' +
-        '<filter id="axis-robot-glow"><feGaussianBlur stdDeviation="1.5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>' +
-        '<circle cx="32" cy="34" r="18" fill="url(#axis-robot-grad)" opacity="0.9" filter="url(#axis-robot-glow)"/>' +
-        '<circle cx="26" cy="32" r="4" fill="#0a1420"/><circle cx="38" cy="32" r="4" fill="#0a1420"/>' +
-        '<rect x="28" y="40" width="8" height="4" rx="1" fill="#0a1420"/>' +
-        '<path d="M32 14 L32 22 M28 18 L32 14 L36 18" stroke="url(#axis-robot-grad)" stroke-width="2" stroke-linecap="round" fill="none"/>' +
+    /* Miniatura humana estilizada (SVG neutro); gradientes com IDs únicos por instância no DOM */
+    var HUMAN_TRIGGER_SVG = '<svg class="axis-robot-icon axis-human-avatar-svg" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+        '<defs><linearGradient id="axisHumTrig" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#5ac8fa"/><stop offset="100%" stop-color="#34c759"/></linearGradient></defs>' +
+        '<ellipse cx="32" cy="55" rx="23" ry="10" fill="url(#axisHumTrig)" opacity="0.42"/>' +
+        '<circle cx="32" cy="25" r="17" fill="#3d2c22"/>' +
+        '<ellipse cx="32" cy="29" rx="14" ry="15" fill="#e8c4a8"/>' +
+        '<ellipse cx="26" cy="27" rx="2.4" ry="3" fill="#1c1c1e"/><ellipse cx="38" cy="27" rx="2.4" ry="3" fill="#1c1c1e"/>' +
+        '<ellipse cx="25.5" cy="26" rx="0.9" ry="1.1" fill="#fff" opacity="0.5"/><ellipse cx="37.5" cy="26" rx="0.9" ry="1.1" fill="#fff" opacity="0.5"/>' +
+        '<path d="M24 36q8 6 16 0" stroke="#a67c52" stroke-width="1.7" stroke-linecap="round"/>' +
         '</svg>';
 
-    var HEADER_SVG = '<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="32" cy="34" r="16" fill="rgba(0,212,255,0.4)"/><circle cx="26" cy="32" r="3" fill="#0a1420"/><circle cx="38" cy="32" r="3" fill="#0a1420"/><rect x="29" y="40" width="6" height="3" rx="1" fill="#0a1420"/><path d="M32 18 L32 24 M29 21 L32 18 L35 21" stroke="rgba(255,255,255,0.8)" stroke-width="1.5" fill="none"/></svg>';
+    var HUMAN_HEADER_SVG = '<svg class="axis-human-header-svg" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+        '<defs><linearGradient id="axisHumHead" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#34c759"/><stop offset="100%" stop-color="#007aff"/></linearGradient></defs>' +
+        '<ellipse cx="32" cy="52" rx="18" ry="8" fill="url(#axisHumHead)" opacity="0.35"/>' +
+        '<circle cx="32" cy="26" r="14" fill="#3d2c22"/>' +
+        '<ellipse cx="32" cy="29" rx="11" ry="12" fill="#deb896"/>' +
+        '<circle cx="27" cy="27" r="2" fill="#1c1c1e"/><circle cx="37" cy="27" r="2" fill="#1c1c1e"/>' +
+        '<path d="M26 35q6 4 12 0" stroke="#8b6914" stroke-width="1.4" stroke-linecap="round" opacity="0.85"/>' +
+        '</svg>';
 
     function createRobot() {
         if (document.querySelector('.axis-robot-wrap')) return;
         var wrap = document.createElement('div');
         wrap.className = 'axis-robot-wrap';
         wrap.innerHTML =
-            '<button type="button" class="axis-robot-trigger" aria-label="Abrir assistente AXIS" title="Assistente AXIS – tire dúvidas sobre o sistema">' +
-            '  <div class="axis-robot-avatar">' + ROBOT_SVG + '</div>' +
+            '<button type="button" class="axis-robot-trigger" aria-label="Abrir assistente AXIS" title="Assistente AXIS — sistema e perguntas gerais">' +
+            '  <div class="axis-robot-avatar">' + HUMAN_TRIGGER_SVG + '</div>' +
             '</button>' +
             '<div class="axis-robot-panel" id="axis-robot-panel" role="dialog" aria-label="Chat com assistente AXIS" aria-hidden="true">' +
             '  <div class="axis-robot-panel-header">' +
-            '    <div class="axis-robot-panel-avatar">' + HEADER_SVG + '</div>' +
-            '    <div class="axis-robot-panel-title-wrap"><div class="axis-robot-panel-title">AXIS Bot</div><div class="axis-robot-panel-subtitle">IA: OpenAI / Anthropic / Google Gemini (servidor) + dados AXIS</div></div>' +
+            '    <div class="axis-robot-panel-avatar">' + HUMAN_HEADER_SVG + '</div>' +
+            '    <div class="axis-robot-panel-title-wrap"><div class="axis-robot-panel-title">AXIS Bot</div><div class="axis-robot-panel-subtitle">Assistente geral + AXIS • IA no servidor (OpenAI / Anthropic / Gemini)</div></div>' +
             '    <label class="axis-robot-tts-toggle" title="Falar respostas automaticamente (voz masculina)"><input type="checkbox" id="axis-robot-tts-auto" aria-label="Falar respostas"/><span class="axis-robot-tts-icon" aria-hidden="true">🔊</span></label>' +
             '    <button type="button" class="axis-robot-panel-close" aria-label="Fechar">×</button>' +
             '  </div>' +
             '  <div class="axis-robot-messages" id="axis-robot-messages"></div>' +
             '  <div class="axis-robot-input-wrap">' +
             '    <div class="axis-robot-input-row">' +
-            '      <textarea class="axis-robot-input" id="axis-robot-input" placeholder="Pergunte sobre o AXIS..." rows="1"></textarea>' +
+            '      <textarea class="axis-robot-input" id="axis-robot-input" placeholder="Pergunte sobre o AXIS ou qualquer assunto…" rows="1"></textarea>' +
             '      <button type="button" class="axis-robot-send" id="axis-robot-send" aria-label="Enviar">' +
             '        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>' +
             '      </button>' +
@@ -183,6 +191,21 @@
             inputEl.value = '';
             chatHistory.push({ role: 'user', content: text });
             appendMessage('user', text);
+
+            if (document.body && document.body.classList.contains('melihelp-hub-body') && typeof window.axisMelihelpChatDispatch === 'function') {
+                var handled = window.axisMelihelpChatDispatch(text, {
+                    appendBot: function (msg) {
+                        chatHistory.push({ role: 'assistant', content: msg });
+                        appendMessage('bot', msg);
+                    }
+                });
+                if (handled) {
+                    setSendLoading(false);
+                    setTimeout(function () { sendCooldown = false; }, 650);
+                    return;
+                }
+            }
+
             appendMessage('bot', '', true);
             setSendLoading(true);
 
@@ -240,17 +263,39 @@
 
         if (!messagesEl.querySelector('.axis-robot-msg')) {
             var firstName = (typeof currentUser === 'string' && currentUser) ? currentUser.split(/\s+/)[0] : (localStorage.getItem('current_user') || '').split(/\s+/)[0];
-            var welcome = firstName ? 'Olá, ' + firstName + '! Sou o AXIS Bot, seu assistente no sistema. Pergunte como usar um módulo, onde fica uma função ou qualquer dúvida sobre o AXIS. Estou aqui para ajudar.' : 'Olá! Sou o AXIS Bot, seu assistente no sistema. Pergunte como usar um módulo, onde fica uma função ou qualquer dúvida sobre o AXIS. Estou aqui para ajudar.';
+            var welcome;
+            if (document.body && document.body.classList.contains('melihelp-hub-body')) {
+                welcome =
+                    (firstName ? 'Olá, ' + firstName + '!\n\n' : 'Olá!\n\n') +
+                    'No MeliHelp você pode usar o menu numérico (tipo WhatsApp) ou escrever perguntas livres — sobre o hub ou assuntos gerais — quando a IA do servidor estiver ativa.\n\n' +
+                    'Digite o número:\n' +
+                    '1 – Retirada de cordão\n' +
+                    '2 – Recebimento de cordão\n' +
+                    '3 – Links do hub (crachás, cordão, cartão avulso)\n' +
+                    '4 – Colar linha (retirada;re;nome ou recebimento;qtd;ano;mês)\n' +
+                    '0 – Só modo IA (perguntas sobre o AXIS ou outras)\n\n' +
+                    'Envie *menu* para ver estas opções de novo.';
+            } else {
+                welcome = firstName
+                    ? 'Olá, ' + firstName + '! Sou o AXIS Bot — posso ajudar com o sistema AXIS (módulos, menus, fluxos) e também com dúvidas gerais: estudo, redação, ideias, explicações e outras perguntas do dia a dia, quando a IA do servidor estiver ativa. Em que posso ajudar?'
+                    : 'Olá! Sou o AXIS Bot — ajudo com o sistema AXIS e com perguntas gerais (estudo, texto, explicações, etc.) via IA no servidor. Como posso ajudar?';
+            }
             appendMessage('bot', welcome);
             chatHistory.push({ role: 'assistant', content: welcome });
         }
     }
 
     function maybeShowRobot() {
-        var mainContent = document.getElementById('main-content');
-        var authScreen = document.getElementById('auth-screen');
         var wrap = document.querySelector('.axis-robot-wrap');
         if (!wrap) return;
+        if (document.body && document.body.classList.contains('melihelp-hub-body')) {
+            wrap.style.visibility = 'visible';
+            wrap.style.pointerEvents = 'auto';
+            wrap.style.opacity = '1';
+            return;
+        }
+        var mainContent = document.getElementById('main-content');
+        var authScreen = document.getElementById('auth-screen');
         var mainDisplay = mainContent ? getComputedStyle(mainContent).display : 'none';
         var authDisplay = authScreen ? getComputedStyle(authScreen).display : 'none';
         var mainVis = mainContent && mainDisplay !== 'none';

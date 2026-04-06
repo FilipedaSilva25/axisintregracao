@@ -9,7 +9,7 @@ const PORT = Number(process.env.PORT) || 3006;
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const ROOT_DIR = path.resolve(__dirname, '..');
 
-/** Versão exibida no site (Configurações, GET /health): campo "version" em package.json na raiz. Suba 2.7.0 → 2.7.1 ao publicar alterações. Opcional: AXIS_APP_VERSION no .env sobrescreve. */
+/** Versão exibida no site (Configurações, GET /health): campo "version" em package.json na raiz. Em cada entrega relevante suba o semver (ex.: 2.9.0 → 2.9.1). Opcional: AXIS_APP_VERSION no .env sobrescreve. Atualize também config/data/axis-news.json (featuredVersion, listUpdatedAt, entradas com summaryIntro/bullets). */
 let AXIS_APP_VERSION = String(process.env.AXIS_APP_VERSION || '').trim();
 if (!AXIS_APP_VERSION) {
     try {

@@ -169,7 +169,7 @@ function fallbackReply(userMessage, userName = '', meta = {}) {
     const t = String(userMessage || '').toLowerCase().trim();
 
     if (/oi|olá|ola|bom dia|boa tarde|boa noite|hey|preciso de ajuda|me ajude|ajuda\s*$/.test(t)) {
-        return cumprimento + 'Sou o AXIS Bot. Pode perguntar onde fica cada módulo (Inventário, Rondas, Packing Machine, Status de Bancada, etc.) ou como fazer algo no AXIS. Em que posso ajudar?';
+        return cumprimento + 'Sou o AXIS Bot. Posso ajudar com o sistema (Inventário, Rondas, Packing, MeliHelp, etc.) e, quando as chaves de IA estiverem configuradas no servidor, também com perguntas gerais. O que precisa?';
     }
     if (/cadastrar|adicionar|criar\s+dispositivo|registrar\s+impressora|nova\s+impressora|zt411|zd421|zq630/.test(t) && /inventario|inventário|impressora|zebra|dispositivo/.test(t)) {
         return 'Para *cadastrar uma impressora*: menu ☰ → Inventário → botão "Criar Dispositivo". Preencha serial, IP, modelo (ZT411, ZD421 ou ZQ630 PLUS), setor e alocação.';
@@ -187,7 +187,7 @@ function fallbackReply(userMessage, userName = '', meta = {}) {
         return 'Para *atualizar o status de bancada* use o *Sauron*: menu → "Sauron" ou card "Sauron" na home. Lá fica o formulário para enviar ou alterar o status.';
     }
     if (/\bver\s+status\b|consultar\s+bancada|status\s+de\s+bancada|grids\s+bancada/.test(t)) {
-        return 'Para *ver o status de bancada* (só visualização): menu → "Status de Bancada" ou card na home. A página mostra os grids (PACKING MONO, PTW, REJEITOS, etc.). Use o menu hambúrguer na página para filtrar por seção.';
+        return 'Para *ver o status de bancada* (só visualização): menu → "Status de Bancada" ou card na home. A página mostra os grids (PACKING MONO, PTW, REJEITOS, PACKING MACHINE, RETIROS, RETURNS, etc.). Use o menu hambúrguer na página para filtrar por seção.';
     }
     if (/status de bancada|bancada|sauron/.test(t)) {
         return 'O *Status de Bancada* (só ver) está no menu → "Status de Bancada". Para *atualizar* status use o *Sauron* (menu ou card "Sauron"). Ambos aparecem na home.';
@@ -214,7 +214,7 @@ function fallbackReply(userMessage, userName = '', meta = {}) {
         return 'O módulo *Jovem Aprendiz* fica no menu → "Jovem Aprendiz" ou no card "Jovem Aprendiz" na home. Inclui a biblioteca para jovens aprendizes.';
     }
     if (/menu|onde fica|como acesso|navegação|navegar/.test(t)) {
-        return 'O *menu* é o ícone ☰ (três riscos) no canto superior esquerdo. Itens: Início, Inventário, Rondas, Manutenções, Suporte, Bloco de Notas, Registro de Chamados, Peças, PACKING MACHINE, Notas Fiscais, Status de Bancada, Sauron, Selbetti, Jovem Aprendiz, Configurações e Sair. Clique num item para ir à página.';
+        return 'O *menu* é o ícone ☰ (três riscos) no canto superior esquerdo. Itens: Início, Inventário, Rondas, Manutenções, Suporte, Bloco de Notas, Registro de Chamados, Peças, PACKING MACHINE, Notas Fiscais, Status de Bancada, Sauron, Selbetti, MeliHelp, Jovem Aprendiz, Configurações e Sair. Clique num item para ir à página.';
     }
     if (/configuração|configuracoes|tema|escuro|claro|dark|modo\s+escuro/.test(t)) {
         return 'As *Configurações* ficam no menu → "Configurações" ou no card "Configurações" na home. Lá você altera tema (claro/escuro), itens por página, exportar dados, etc.';
@@ -258,7 +258,7 @@ function fallbackReply(userMessage, userName = '', meta = {}) {
     if (/quantas bancadas|resumo.*bancada|lista.*bancada|estado das bancadas|dados das bancadas/i.test(t) && snap.bancadasCount > 0) {
         return cumprimento + 'No servidor há *' + snap.bancadasCount + '* bancada(s) com registo. Última atualização: ' + (snap.bancadasUpdatedAt || '—') + '. Resumo: ' + (snap.bancadasPreview || '—') + '. Para ver os grids completos, abra *Status de Bancada* no menu.';
     }
-    return cumprimento + 'Estou aqui para ajudar no AXIS. Pode perguntar onde fica um módulo (Inventário, Rondas, Packing Machine, Status de Bancada, Sauron, Selbetti, Jovem Aprendiz...) ou como fazer algo. Em que posso ajudar?';
+    return cumprimento + 'Posso orientar no AXIS (módulos, menus, fluxos). Para assuntos gerais fora desta lista, configure OPENAI_API_KEY, ANTHROPIC_API_KEY ou GOOGLE_AI_API_KEY no servidor para a IA responder. O que você precisa?';
 }
 
 async function chat(userMessage, history = [], userName = '', meta = {}) {

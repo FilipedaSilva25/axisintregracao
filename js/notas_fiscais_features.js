@@ -426,7 +426,8 @@ function fecharPreviewPDF() {
 function mostrarBarraAcoes() {
     const bar = document.getElementById('batch-actions-bar');
     if (bar && state.selectedItems.length > 0) {
-        bar.style.display = 'block';
+        bar.classList.add('batch-actions-bar--visible');
+        bar.setAttribute('aria-hidden', 'false');
         const countEl = document.getElementById('batch-count');
         if (countEl) countEl.textContent = state.selectedItems.length + ' selecionados';
     }
@@ -435,7 +436,8 @@ function mostrarBarraAcoes() {
 function fecharBarraAcoes() {
     const bar = document.getElementById('batch-actions-bar');
     if (bar) {
-        bar.style.display = 'none';
+        bar.classList.remove('batch-actions-bar--visible');
+        bar.setAttribute('aria-hidden', 'true');
     }
     state.selectedItems = [];
     renderizarConteudo();

@@ -1,0 +1,4037 @@
+/**
+ * MeliHelp Hub — estilos (vidro estilo Apple). Prefixo: .melihelp-*
+ * BLINDADO (27/03/2026): ver .cursor/rules/BLINDAGEM_MELIHELP_HUB.mdc e BLINDAGEM.md
+ */
+
+:root {
+    --sh-bg: #e8eef6;
+    --sh-bg-mesh:
+        radial-gradient(120% 90% at 0% -10%, rgba(0, 122, 255, 0.16) 0%, transparent 55%),
+        radial-gradient(90% 70% at 100% 0%, rgba(52, 199, 89, 0.12) 0%, transparent 50%),
+        radial-gradient(80% 60% at 50% 100%, rgba(88, 86, 214, 0.08) 0%, transparent 45%),
+        linear-gradient(180deg, #f5f8fc 0%, #e8eef6 45%, #e2ebf4 100%);
+    --sh-text: #1d1d1f;
+    --sh-muted: #6e6e73;
+    --sh-glass: rgba(255, 255, 255, 0.58);
+    --sh-glass-strong: rgba(255, 255, 255, 0.78);
+    --sh-border: rgba(255, 255, 255, 0.72);
+    --sh-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+    --sh-shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.12);
+    --sh-blue: #007aff;
+    --sh-green: #34c759;
+    --sh-radius: 18px;
+    --sh-radius-sm: 12px;
+    --sh-blur: 24px;
+    /* Cabeçalho de tabela cordão: opaco para linhas não aparecerem por baixo ao rolar (sticky) */
+    --sh-cordao-thead-bg: #ffffff;
+}
+
+html[data-melihelp-theme="dark"] {
+    --sh-bg: #0d0d0f;
+    --sh-bg-mesh:
+        radial-gradient(120% 90% at 0% -10%, rgba(10, 132, 255, 0.22) 0%, transparent 55%),
+        radial-gradient(90% 70% at 100% 0%, rgba(48, 209, 88, 0.14) 0%, transparent 50%),
+        linear-gradient(180deg, #161618 0%, #0d0d0f 50%, #0a0a0c 100%);
+    --sh-text: #f5f5f7;
+    --sh-muted: #98989d;
+    --sh-glass: rgba(28, 28, 30, 0.72);
+    --sh-glass-strong: rgba(44, 44, 46, 0.88);
+    --sh-border: rgba(255, 255, 255, 0.12);
+    --sh-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+    --sh-shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.55);
+    --sh-cordao-thead-bg: #2c2c2e;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+.melihelp-hub-body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    min-height: 100vh;
+    color: var(--sh-text);
+    background: var(--sh-bg-mesh);
+    background-attachment: fixed;
+    line-height: 1.5;
+}
+
+.glass-panel {
+    background: var(--sh-glass);
+    backdrop-filter: blur(var(--sh-blur)) saturate(180%);
+    -webkit-backdrop-filter: blur(var(--sh-blur)) saturate(180%);
+    border: 1px solid var(--sh-border);
+    box-shadow: var(--sh-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+
+html[data-melihelp-theme="dark"] .glass-panel {
+    box-shadow: var(--sh-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+/* Overlay transparente + blur */
+.melihelp-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 800;
+    background: rgba(0, 0, 0, 0.18);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    opacity: 0;
+    transition: opacity 0.35s ease;
+    pointer-events: none;
+}
+
+.melihelp-overlay.is-visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Drawer */
+.melihelp-drawer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 900;
+    width: min(360px, 92vw);
+    padding: 12px;
+    padding-top: max(12px, env(safe-area-inset-top));
+    transform: translateX(-104%);
+    transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+    pointer-events: none;
+}
+
+.melihelp-drawer.is-open {
+    transform: translateX(0);
+    pointer-events: auto;
+}
+
+.melihelp-drawer-inner {
+    height: 100%;
+    border-radius: var(--sh-radius);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.42);
+}
+
+/* Vidro do drawer sem moldura (evita “risco” à volta do painel) */
+.melihelp-drawer-inner.glass-panel {
+    border: none;
+    box-shadow: 0 20px 48px rgba(0, 0, 0, 0.1);
+}
+
+html[data-melihelp-theme="dark"] .melihelp-drawer-inner {
+    background: rgba(22, 22, 24, 0.55);
+}
+
+html[data-melihelp-theme="dark"] .melihelp-drawer-inner.glass-panel {
+    box-shadow: 0 20px 48px rgba(0, 0, 0, 0.42);
+}
+
+.melihelp-drawer-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 18px 6px;
+}
+
+.melihelp-drawer-brand {
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.2em;
+    color: var(--sh-muted);
+}
+
+.melihelp-nav {
+    flex: 1;
+    overflow-y: auto;
+    padding: 2px 10px 18px;
+    -webkit-overflow-scrolling: touch;
+    /* Rolagem invisível (como antes): sem barra desenhada, mantém scroll */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.melihelp-nav::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none;
+}
+
+/* Aproximar só um pouco LIXEIRA do fim do último hub (CARTÃO AVULSO) */
+.melihelp-nav > details.melihelp-nav-hub-root:last-of-type {
+    margin-bottom: 6px;
+}
+
+/* CADASTRAR CRACHÁ + seta (igual ideia ao summary CRACHÁS): texto navega, seta expande histórico */
+/* Uma só “faixa” como o summary CRACHÁS: fundo no contentor, seta só ícone (sem botão quadrado) */
+.melihelp-nav-cadastro-row {
+    display: flex;
+    align-items: stretch;
+    width: 100%;
+    box-sizing: border-box;
+    margin-bottom: 4px;
+    gap: 0;
+    border-radius: var(--sh-radius-sm);
+    overflow: hidden;
+    transition: background 0.2s;
+}
+
+.melihelp-nav-cadastro-row:hover {
+    background: rgba(0, 122, 255, 0.1);
+}
+
+html[data-melihelp-theme="dark"] .melihelp-nav-cadastro-row:hover {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.melihelp-nav-cadastro-row:has(.melihelp-nav-item--cadastro-main.is-active),
+.melihelp-nav-unidade-cadastro-row:has(.melihelp-nav-item--unidade-main.is-active) {
+    background: linear-gradient(135deg, rgba(0, 122, 255, 0.18), rgba(52, 199, 89, 0.12));
+}
+
+.melihelp-nav-item--cadastro-main,
+.melihelp-nav-item--unidade-main {
+    flex: 1 1 auto;
+    min-width: 0;
+    margin-bottom: 0;
+    border-radius: 0;
+    text-align: left;
+    background: transparent;
+}
+
+.melihelp-nav-item--unidade-main {
+    font-weight: 800;
+    letter-spacing: 0.06em;
+}
+
+.melihelp-nav-cadastro-row:hover .melihelp-nav-item--cadastro-main,
+.melihelp-nav-cadastro-row:has(.melihelp-nav-item--cadastro-main.is-active) .melihelp-nav-item--cadastro-main,
+.melihelp-nav-unidade-cadastro-row:hover .melihelp-nav-item--unidade-main,
+.melihelp-nav-unidade-cadastro-row:has(.melihelp-nav-item--unidade-main.is-active) .melihelp-nav-item--unidade-main {
+    background: transparent;
+}
+
+.melihelp-nav-cadastro-row:has(.melihelp-nav-item--cadastro-main.is-active) .melihelp-nav-item--cadastro-main,
+.melihelp-nav-unidade-cadastro-row:has(.melihelp-nav-item--unidade-main.is-active) .melihelp-nav-item--unidade-main {
+    color: var(--sh-blue);
+}
+
+.melihelp-nav-cadastro-row .melihelp-nav-item--cadastro-main:hover,
+.melihelp-nav-unidade-cadastro-row .melihelp-nav-item--unidade-main:hover {
+    background: transparent;
+}
+
+.melihelp-nav-branch-toggle {
+    flex: 0 0 36px;
+    min-width: 36px;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    appearance: none;
+    -webkit-appearance: none;
+    background: transparent;
+    color: var(--sh-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    align-self: stretch;
+    transition: color 0.2s;
+    -webkit-tap-highlight-color: rgba(0, 122, 255, 0.15);
+}
+
+.melihelp-nav-branch-toggle:hover {
+    background: transparent;
+}
+
+.melihelp-nav-branch-toggle:focus-visible {
+    background: transparent;
+    outline: 2px solid rgba(0, 122, 255, 0.45);
+    outline-offset: -2px;
+}
+
+.melihelp-nav-branch-toggle::after {
+    content: '\f078';
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    font-size: 10px;
+    opacity: 0.55;
+    transition: transform 0.25s;
+    line-height: 1;
+}
+
+.melihelp-nav-branch-toggle[aria-expanded="true"]::after {
+    transform: rotate(180deg);
+}
+
+.melihelp-nav-cadastro-row:has(.melihelp-nav-item--cadastro-main.is-active) .melihelp-nav-branch-toggle,
+.melihelp-nav-unidade-cadastro-row:has(.melihelp-nav-item--unidade-main.is-active) .melihelp-nav-branch-toggle {
+    color: var(--sh-blue);
+}
+
+.melihelp-nav-cadastro-row:has(.melihelp-nav-item--cadastro-main.is-active) .melihelp-nav-branch-toggle::after,
+.melihelp-nav-unidade-cadastro-row:has(.melihelp-nav-item--unidade-main.is-active) .melihelp-nav-branch-toggle::after {
+    opacity: 0.75;
+}
+
+/* HISTÓRICO (crachás) — subpágina visual de CADASTRAR CRACHÁ: recuo tipo parágrafo */
+.melihelp-nav-cracha-historico-block {
+    margin: 8px 0 12px;
+    padding-left: 1.25rem;
+    margin-left: 2px;
+}
+
+.melihelp-nav-cracha-historico-block.melihelp-nav-historico-panel--collapsed {
+    display: none;
+}
+
+.melihelp-nav-unidade-historico-panel {
+    margin-top: 2px;
+    margin-bottom: 4px;
+    padding-left: 1.25rem;
+    margin-left: 2px;
+}
+
+.melihelp-nav-unidade-historico-panel.melihelp-nav-historico-panel--collapsed {
+    display: none;
+}
+
+.melihelp-nav-cracha-unidade-block {
+    margin-bottom: 14px;
+}
+
+.melihelp-nav-cracha-unidade-block:last-child {
+    margin-bottom: 0;
+}
+
+.melihelp-nav-cracha-historico-block .melihelp-nav-historico-under-unidade > .melihelp-nav-summary {
+    padding-left: 10px;
+}
+
+.melihelp-nav-cracha-historico-block .melihelp-nav-historico-under-unidade > .melihelp-nav-nested {
+    margin-left: 6px;
+    padding-left: 6px;
+}
+
+/* Página unidade: cartão superior (banner + título); atalhos = secção à parte, igual à home */
+.melihelp-unidade-wip-panel.melihelp-unidade-wip-panel--has-banner {
+    padding: 0;
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+
+.melihelp-unidade-wip-panel.melihelp-unidade-wip-panel--has-banner .melihelp-unidade-wip-inner--below-banner {
+    padding: 10px 22px 18px;
+}
+
+.melihelp-unidade-wip-head.melihelp-dash-head {
+    margin-bottom: 0;
+}
+
+.melihelp-unidade-wip-head.melihelp-cracha-dash-head--stacked .melihelp-dash-title {
+    margin-top: 0;
+    margin-bottom: 10px;
+}
+
+.melihelp-unidade-wip-head.melihelp-cracha-dash-head--stacked .melihelp-cracha-lead--allcaps {
+    margin-top: 8px;
+}
+
+.melihelp-unidade-wip-lead {
+    margin-bottom: 0;
+}
+
+.melihelp-unidade-wip-panel:not(.melihelp-unidade-wip-panel--has-banner) {
+    margin-bottom: 20px;
+}
+
+/* Cards estilo AXIS (#page-home / mod-card) na página unidade BRSC02/PR01 */
+@keyframes melihelp-axis-rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.melihelp-unidade-wip-axis-section.glass-panel {
+    padding: 22px 20px 26px;
+    border-radius: var(--sh-radius);
+    margin-bottom: 24px;
+    text-align: center;
+}
+
+.melihelp-unidade-wip-axis-section-title {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    color: var(--sh-muted);
+    text-align: center;
+    margin: 0 0 14px;
+}
+
+.melihelp-axis-dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 8px;
+    max-width: 100%;
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+@media (max-width: 960px) {
+    .melihelp-axis-dashboard-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 440px) {
+    .melihelp-axis-dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Painel CRACHÁS: três atalhos (cadastrar / desativados / emissão) */
+.melihelp-axis-dashboard-grid.melihelp-axis-dashboard-grid--cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (max-width: 960px) {
+    .melihelp-axis-dashboard-grid.melihelp-axis-dashboard-grid--cols-3 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 440px) {
+    .melihelp-axis-dashboard-grid.melihelp-axis-dashboard-grid--cols-3 {
+        grid-template-columns: 1fr;
+    }
+}
+
+.melihelp-axis-mod {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    min-height: 118px;
+    padding: 16px 10px;
+    border-radius: 18px;
+    font-family: inherit;
+    width: 100%;
+    border: 2px solid rgba(255, 255, 255, 0.55);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.35s ease, border-color 0.35s ease;
+}
+
+button.melihelp-axis-mod {
+    cursor: pointer;
+}
+
+.melihelp-axis-stat.melihelp-axis-mod {
+    cursor: default;
+    user-select: none;
+    min-height: 84px;
+    padding: 10px 10px 12px;
+    justify-content: center;
+    align-items: center;
+}
+
+.melihelp-axis-stat .melihelp-axis-mod-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 6px;
+}
+
+.melihelp-axis-mod::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200%;
+    height: 200%;
+    pointer-events: none;
+    animation: melihelp-axis-rotate 12s linear infinite;
+}
+
+button.melihelp-axis-mod:hover {
+    transform: translateY(-8px) scale(1.02);
+}
+
+.melihelp-axis-mod-icon {
+    position: relative;
+    z-index: 1;
+    font-size: 30px;
+    line-height: 1;
+    margin-bottom: 8px;
+}
+
+.melihelp-axis-mod-content {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+}
+
+.melihelp-axis-mod-title {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 800;
+    line-height: 1.25;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    background: linear-gradient(135deg, #34c759, #007aff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.melihelp-axis-mod-desc {
+    margin: 6px 0 0;
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1.4;
+    color: var(--sh-muted);
+}
+
+/* Painel CRACHÁS — título da secção “ACESSO RÁPIDO” como o H2 “CRACHÁS” */
+.melihelp-cracha-dash-quick .melihelp-unidade-wip-axis-section-title {
+    font-size: clamp(1.35rem, 3.2vw, 1.75rem);
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--sh-text);
+    margin: 0 0 14px;
+}
+
+/* KPIs do painel CRACHÁS — mesmos cartões AXIS (valores + legenda) */
+.melihelp-cracha-kpi-axis-grid {
+    margin-top: 10px;
+}
+
+.melihelp-axis-stat .melihelp-axis-stat-hero-val {
+    margin: 0;
+    font-size: clamp(1.35rem, 3.2vw, 1.9rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    text-align: center;
+    background: linear-gradient(135deg, #34c759, #007aff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.melihelp-axis-stat-caption {
+    margin: 0;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    line-height: 1.35;
+    color: var(--sh-muted);
+    text-align: center;
+}
+
+html[data-melihelp-theme="dark"] .melihelp-axis-stat .melihelp-axis-stat-hero-val {
+    background: linear-gradient(135deg, #5ac8fa, #30d158);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+/* Tons alinhados aos cards MÓDULOS TÉCNICOS da home AXIS */
+.melihelp-axis-mod--indigo {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.88) 0%, rgba(92, 107, 192, 0.12) 50%, rgba(126, 87, 194, 0.08) 100%);
+    border-color: rgba(92, 107, 192, 0.32) !important;
+}
+
+.melihelp-axis-mod--indigo::before {
+    background: radial-gradient(circle, rgba(92, 107, 192, 0.1) 0%, transparent 70%);
+}
+
+.melihelp-axis-mod--indigo:hover {
+    border-color: rgba(92, 107, 192, 0.5) !important;
+    box-shadow: 0 20px 40px rgba(92, 107, 192, 0.22);
+}
+
+.melihelp-axis-mod--indigo .melihelp-axis-mod-icon {
+    filter: drop-shadow(0 2px 4px rgba(92, 107, 192, 0.35));
+}
+
+.melihelp-axis-mod--cyan {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.92) 0%, rgba(0, 188, 212, 0.12) 100%);
+    border-color: rgba(0, 188, 212, 0.32) !important;
+}
+
+.melihelp-axis-mod--cyan::before {
+    background: radial-gradient(circle, rgba(0, 188, 212, 0.12) 0%, transparent 70%);
+}
+
+.melihelp-axis-mod--cyan:hover {
+    border-color: #00bcd4 !important;
+    box-shadow: 0 20px 40px rgba(0, 188, 212, 0.28);
+}
+
+.melihelp-axis-mod--cyan .melihelp-axis-mod-icon {
+    filter: drop-shadow(0 2px 4px rgba(0, 188, 212, 0.35));
+}
+
+.melihelp-axis-mod--green {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.92) 0%, rgba(76, 175, 80, 0.12) 100%);
+    border-color: rgba(76, 175, 80, 0.32) !important;
+}
+
+.melihelp-axis-mod--green::before {
+    background: radial-gradient(circle, rgba(76, 175, 80, 0.12) 0%, transparent 70%);
+}
+
+.melihelp-axis-mod--green:hover {
+    border-color: #4caf50 !important;
+    box-shadow: 0 20px 40px rgba(76, 175, 80, 0.28);
+}
+
+.melihelp-axis-mod--green .melihelp-axis-mod-icon {
+    filter: drop-shadow(0 2px 4px rgba(76, 175, 80, 0.35));
+}
+
+.melihelp-axis-mod--amber {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.88) 0%, rgba(255, 152, 0, 0.1) 50%, rgba(255, 193, 7, 0.08) 100%);
+    border-color: rgba(255, 152, 0, 0.3) !important;
+}
+
+.melihelp-axis-mod--amber::before {
+    background: radial-gradient(circle, rgba(255, 152, 0, 0.1) 0%, transparent 70%);
+}
+
+.melihelp-axis-mod--amber:hover {
+    border-color: rgba(255, 152, 0, 0.48) !important;
+    box-shadow: 0 20px 40px rgba(255, 152, 0, 0.22);
+}
+
+.melihelp-axis-mod--amber .melihelp-axis-mod-icon {
+    filter: drop-shadow(0 2px 4px rgba(255, 152, 0, 0.35));
+}
+
+html[data-melihelp-theme="dark"] .melihelp-axis-mod {
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+html[data-melihelp-theme="dark"] .melihelp-axis-mod--indigo {
+    background: linear-gradient(135deg, rgba(44, 44, 46, 0.92) 0%, rgba(92, 107, 192, 0.18) 100%);
+}
+
+html[data-melihelp-theme="dark"] .melihelp-axis-mod--cyan {
+    background: linear-gradient(135deg, rgba(44, 44, 46, 0.92) 0%, rgba(0, 188, 212, 0.15) 100%);
+}
+
+html[data-melihelp-theme="dark"] .melihelp-axis-mod--green {
+    background: linear-gradient(135deg, rgba(44, 44, 46, 0.92) 0%, rgba(76, 175, 80, 0.15) 100%);
+}
+
+html[data-melihelp-theme="dark"] .melihelp-axis-mod--amber {
+    background: linear-gradient(135deg, rgba(44, 44, 46, 0.92) 0%, rgba(255, 152, 0, 0.14) 100%);
+}
+
+html[data-melihelp-theme="dark"] .melihelp-axis-mod-desc {
+    color: #98989d;
+}
+
+.melihelp-unidade-wip-banner-wrap {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    line-height: 0;
+    background: rgba(0, 0, 0, 0.04);
+}
+
+html[data-melihelp-theme="dark"] .melihelp-unidade-wip-banner-wrap {
+    background: rgba(0, 0, 0, 0.25);
+}
+
+.melihelp-unidade-wip-banner {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: min(42vh, 280px);
+    object-fit: cover;
+    object-position: center;
+}
+
+.melihelp-unidade-wip-banner-wrap--failed {
+    min-height: 120px;
+    padding: 16px;
+    box-sizing: border-box;
+}
+
+.melihelp-unidade-wip-banner-missing {
+    margin: 0;
+    padding: 12px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.45;
+    color: var(--sh-text);
+    text-align: center;
+    border-radius: var(--sh-radius-sm);
+    background: rgba(255, 149, 0, 0.12);
+    border: 1px solid rgba(255, 149, 0, 0.35);
+}
+
+html[data-melihelp-theme="dark"] .melihelp-unidade-wip-banner-missing {
+    background: rgba(255, 159, 10, 0.15);
+    border-color: rgba(255, 180, 60, 0.35);
+}
+
+.melihelp-unidade-wip-inner {
+    padding: 22px;
+}
+
+.melihelp-unidade-wip-panel:not(.melihelp-unidade-wip-panel--has-banner) .melihelp-unidade-wip-inner {
+    padding: 0;
+}
+
+.melihelp-nav-group {
+    width: 100%;
+    box-sizing: border-box;
+    margin-bottom: 6px;
+}
+
+.melihelp-nav-emoji {
+    display: inline-block;
+    margin-right: 8px;
+    font-size: 1.15em;
+    line-height: 1;
+    vertical-align: -0.08em;
+}
+
+.melihelp-nav-summary-inner {
+    display: inline-flex;
+    align-items: center;
+    flex: 1;
+    min-width: 0;
+    text-align: left;
+}
+
+/* Itens do menu: mesmo corpo tipográfico dos títulos ORÇAMENTOS / FERRAMENTAS (caixa alta) */
+.melihelp-nav-item {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    text-align: left;
+    padding: 12px 14px;
+    margin-bottom: 4px;
+    border: none;
+    border-radius: var(--sh-radius-sm);
+    background: transparent;
+    color: var(--sh-text);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s;
+    line-height: 1.35;
+    -webkit-tap-highlight-color: rgba(0, 122, 255, 0.15);
+}
+
+.melihelp-nav-item:hover {
+    background: rgba(0, 122, 255, 0.1);
+}
+
+.melihelp-nav-item.is-active {
+    background: linear-gradient(135deg, rgba(0, 122, 255, 0.18), rgba(52, 199, 89, 0.12));
+    color: var(--sh-blue);
+}
+
+a.melihelp-nav-item {
+    text-decoration: none;
+    box-sizing: border-box;
+}
+
+.melihelp-nav-back-home {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    margin-top: 14px;
+    padding: 12px 14px;
+    border: none;
+    border-radius: var(--sh-radius-sm);
+    background: rgba(0, 122, 255, 0.04);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-align: center;
+    -webkit-tap-highlight-color: rgba(0, 122, 255, 0.15);
+}
+
+html[data-melihelp-theme="dark"] .melihelp-nav-back-home {
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.melihelp-nav-back-home:hover {
+    background: rgba(0, 122, 255, 0.1);
+}
+
+html[data-melihelp-theme="dark"] .melihelp-nav-back-home:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.melihelp-nav-summary {
+    list-style: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px 14px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--sh-muted);
+    cursor: pointer;
+    border-radius: var(--sh-radius-sm);
+    user-select: none;
+    line-height: 1.35;
+    -webkit-tap-highlight-color: rgba(0, 122, 255, 0.12);
+}
+
+.melihelp-nav-summary::-webkit-details-marker { display: none; }
+
+.melihelp-nav-summary::after {
+    content: '\f078';
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    font-size: 10px;
+    opacity: 0.55;
+    transition: transform 0.25s;
+}
+
+details[open] > .melihelp-nav-summary::after {
+    transform: rotate(180deg);
+}
+
+.melihelp-nav-summary:hover {
+    background: rgba(0, 0, 0, 0.04);
+}
+
+html[data-melihelp-theme="dark"] .melihelp-nav-summary:hover {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.melihelp-nav-nested {
+    padding: 4px 0 8px 8px;
+    margin-left: 10px;
+    border: none;
+    border-left: none;
+    box-shadow: none;
+}
+
+.melihelp-nav-hub-root {
+    margin-bottom: 10px;
+}
+
+.melihelp-nav-summary-root {
+    color: var(--sh-text);
+    letter-spacing: 0.06em;
+}
+
+/* Painéis Orçamentos / Atas */
+.melihelp-dash-panel {
+    padding: 14px 20px 26px;
+}
+
+.melihelp-dash-head {
+    margin: 0 0 16px;
+}
+
+.melihelp-dash-title {
+    font-size: clamp(1.35rem, 3.2vw, 1.75rem);
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin: 0;
+}
+
+.melihelp-dash-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 14px;
+    margin-bottom: 26px;
+}
+
+.melihelp-dash-stat {
+    padding: 16px 18px;
+    border-radius: var(--sh-radius-sm);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: flex-start;
+}
+
+.melihelp-dash-stat-val {
+    font-size: 1.65rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: var(--sh-blue);
+}
+
+html[data-melihelp-theme="dark"] .melihelp-dash-stat-val {
+    color: #5ac8fa;
+}
+
+.melihelp-dash-stat-label {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--sh-muted);
+    text-transform: uppercase;
+}
+
+.melihelp-dash-section {
+    margin-bottom: 24px;
+}
+
+.melihelp-dash-h3 {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--sh-muted);
+    margin-bottom: 12px;
+}
+
+.melihelp-dash-month-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.melihelp-dash-month-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border-radius: var(--sh-radius-sm);
+    border: 1px solid var(--sh-border);
+    background: var(--sh-glass);
+    cursor: pointer;
+    font: inherit;
+    color: var(--sh-text);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.melihelp-dash-month-chip:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--sh-shadow);
+}
+
+.melihelp-dash-month-chip-label {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.melihelp-dash-month-chip-badge {
+    font-size: 11px;
+    font-weight: 800;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: rgba(0, 122, 255, 0.15);
+    color: var(--sh-blue);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+html[data-melihelp-theme="dark"] .melihelp-dash-month-chip-badge {
+    background: rgba(10, 132, 255, 0.25);
+    color: #5ac8fa;
+}
+
+/* CRACHÁS — cordinhas (tabela + KPIs) */
+.melihelp-cracha-kpis {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+}
+
+.melihelp-cracha-kpis--three {
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+
+.melihelp-cracha-kpis--four {
+    grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
+}
+
+.melihelp-cracha-cadastro-panel .melihelp-cracha-selb-panel .melihelp-cracha-cadastro-inline-fields {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 16px 24px;
+    padding: 16px 18px 18px;
+}
+
+.melihelp-cracha-cadastro-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 140px;
+}
+
+.melihelp-cracha-cadastro-field > span {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--sh-muted);
+}
+
+.melihelp-cracha-cadastro-select {
+    min-width: 160px;
+    padding: 10px 12px;
+    border-radius: var(--sh-radius-sm);
+    border: 1px solid var(--sh-border);
+    background: var(--sh-glass-strong);
+    color: var(--sh-text);
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.melihelp-cracha-dash-head--minimal {
+    margin-bottom: 8px;
+}
+
+.melihelp-cracha-lead {
+    margin: 8px 0 0;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--sh-muted);
+    font-weight: 500;
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+.melihelp-cracha-lead--tight {
+    margin-top: 4px;
+    margin-bottom: 12px;
+    font-size: 13px;
+}
+
+.melihelp-cracha-lead--allcaps {
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.55;
+}
+
+.melihelp-cracha-dash-head--stacked .melihelp-dash-title {
+    margin-bottom: 0;
+}
+
+.melihelp-cracha-month-subtitle {
+    margin: 2px 0 0;
+    padding-left: 28px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--sh-muted);
+}
+
+.melihelp-cracha-month-subtitle-strong {
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    color: var(--sh-text);
+}
+
+.melihelp-cracha-lead.melihelp-cracha-month-page-desc {
+    margin-top: 12px;
+    padding-left: 28px;
+    max-width: 58rem;
+    line-height: 1.55;
+    color: var(--sh-muted);
+}
+
+.melihelp-cracha-text-allcaps {
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+    font-size: 13px;
+    line-height: 1.55;
+}
+
+.melihelp-cracha-dash-head--stacked .melihelp-cracha-lead--allcaps {
+    margin-top: 14px;
+}
+
+.melihelp-cracha-selb .selbetti-panel-head h2.melihelp-cracha-inner-panel-title {
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-weight: 800;
+    font-size: 1.15rem;
+}
+
+.melihelp-cracha-table-wrap {
+    overflow-x: auto;
+    border-radius: var(--sh-radius-sm);
+    border: 1px solid var(--sh-border);
+}
+
+.melihelp-cracha-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.melihelp-cracha-table th {
+    text-align: left;
+    padding: 12px 14px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--sh-muted);
+    background: rgba(0, 122, 255, 0.06);
+    border-bottom: 1px solid var(--sh-border);
+}
+
+.melihelp-cracha-table td {
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--sh-border);
+    vertical-align: middle;
+}
+
+.melihelp-cracha-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.melihelp-cracha-empty-cell {
+    text-align: center;
+    color: var(--sh-muted);
+    padding: 24px 16px;
+    font-size: 14px;
+}
+
+.melihelp-cracha-actions {
+    width: 1%;
+    white-space: nowrap;
+}
+
+.melihelp-cracha-month-total {
+    font-size: 15px;
+    margin: 0 0 16px;
+    color: var(--sh-text);
+}
+
+.melihelp-cracha-form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 14px;
+    margin-bottom: 18px;
+}
+
+.melihelp-cracha-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: min(100%, 220px);
+}
+
+.melihelp-cracha-field-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--sh-muted);
+}
+
+.melihelp-cracha-field input {
+    padding: 10px 12px;
+    border-radius: var(--sh-radius-sm);
+    border: 1px solid var(--sh-border);
+    background: var(--sh-glass-strong);
+    color: var(--sh-text);
+    font: inherit;
+    font-size: 14px;
+}
+
+.melihelp-cracha-back {
+    margin: 20px 0 0;
+}
+
+.melihelp-cracha-files-section .melihelp-panel-head--inner {
+    margin-bottom: 12px;
+}
+
+.melihelp-cracha-files-empty {
+    list-style: none;
+}
+
+.melihelp-empty--inline {
+    padding: 20px 16px;
+    text-align: left;
+}
+
+html[data-melihelp-theme="dark"] .melihelp-cracha-table th {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.melihelp-cracha-pdf-toolbar {
+    margin-bottom: 14px;
+}
+
+.melihelp-doc-item--inactive {
+    opacity: 0.78;
+}
+
+.melihelp-doc-tag-inactive {
+    display: inline-block;
+    margin-left: 8px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--sh-muted);
+    vertical-align: middle;
+}
+
+.melihelp-cracha-desativados-wrap {
+    margin-top: 16px;
+    padding: 12px 14px;
+    border-radius: var(--sh-radius-sm);
+}
+
+.melihelp-cracha-desativados-summary {
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--sh-muted);
+    list-style: none;
+}
+
+.melihelp-cracha-desativados-summary::-webkit-details-marker {
+    display: none;
+}
+
+.melihelp-cracha-desativados-wrap[open] .melihelp-cracha-desativados-summary {
+    margin-bottom: 12px;
+}
+
+.melihelp-cracha-empty-li {
+    list-style: none;
+    padding: 12px 0;
+    color: var(--sh-muted);
+    font-size: 14px;
+}
+
+/* Estado vazio — cartão no estilo do módulo INVENTÁRIO (home AXIS) */
+.melihelp-dash-inventario-card {
+    position: relative;
+    overflow: hidden;
+    padding: 28px 22px;
+    text-align: center;
+    border-radius: var(--sh-radius);
+    border: 2px solid rgba(0, 188, 212, 0.32);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(0, 188, 212, 0.09) 100%);
+    box-shadow: var(--sh-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+html[data-melihelp-theme="dark"] .melihelp-dash-inventario-card {
+    border-color: rgba(0, 188, 212, 0.42);
+    background: linear-gradient(135deg, rgba(36, 36, 38, 0.92) 0%, rgba(0, 188, 212, 0.14) 100%);
+    box-shadow: var(--sh-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.melihelp-dash-inventario-icon {
+    font-size: 40px;
+    line-height: 1;
+    margin-bottom: 14px;
+    filter: drop-shadow(0 2px 4px rgba(0, 188, 212, 0.35));
+    animation: melihelp-dash-inv-pulse 2.2s ease-in-out infinite;
+}
+
+@keyframes melihelp-dash-inv-pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.06); opacity: 0.92; }
+}
+
+.melihelp-dash-inventario-title {
+    font-size: 1.05rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    margin: 0;
+}
+
+/* Topbar */
+.melihelp-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 700;
+    margin: 12px 16px 0;
+    padding: 12px 16px;
+    border-radius: var(--sh-radius);
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 12px;
+}
+
+.melihelp-topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    justify-self: start;
+}
+
+.melihelp-topbar-center {
+    text-align: center;
+}
+
+.melihelp-topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    justify-self: end;
+}
+
+.melihelp-logo-title {
+    font-size: clamp(1.1rem, 2.5vw, 1.35rem);
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    background: linear-gradient(135deg, #1d1d1f 0%, #007aff 45%, #34c759 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+html[data-melihelp-theme="dark"] .melihelp-logo-title {
+    background: linear-gradient(135deg, #f5f5f7 0%, #5ac8fa 50%, #30d158 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+}
+
+.melihelp-logo-sub {
+    font-size: 11px;
+    color: var(--sh-muted);
+    font-weight: 500;
+    margin-top: 2px;
+}
+
+.melihelp-icon-btn {
+    width: 42px;
+    height: 42px;
+    border: none;
+    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.04);
+    color: var(--sh-text);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+    transition: background 0.2s, transform 0.2s;
+}
+
+html[data-melihelp-theme="dark"] .melihelp-icon-btn {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.melihelp-icon-btn:hover {
+    background: rgba(0, 122, 255, 0.15);
+    transform: scale(1.03);
+}
+
+.melihelp-menu-btn {
+    background: rgba(0, 122, 255, 0.12);
+}
+
+/* Main */
+.melihelp-main {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 24px 18px 80px;
+}
+
+body.melihelp-route-home .melihelp-main {
+    padding-top: 12px;
+}
+
+body.melihelp-route-home .melihelp-hero {
+    padding-top: 26px;
+    padding-bottom: 32px;
+    margin-bottom: 20px;
+}
+
+.melihelp-breadcrumb {
+    font-size: 12px;
+    color: var(--sh-muted);
+    margin-bottom: 18px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+}
+
+.melihelp-breadcrumb span {
+    color: var(--sh-text);
+    font-weight: 600;
+}
+
+.melihelp-hero {
+    text-align: center;
+    padding: 36px 24px;
+    border-radius: calc(var(--sh-radius) + 4px);
+    margin-bottom: 28px;
+    position: relative;
+    overflow: hidden;
+}
+
+.melihelp-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(0, 122, 255, 0.08) 0%, rgba(52, 199, 89, 0.06) 50%, rgba(88, 86, 214, 0.06) 100%);
+    pointer-events: none;
+}
+
+.melihelp-hero h2 {
+    position: relative;
+    font-size: clamp(1.5rem, 4vw, 2rem);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin-bottom: 10px;
+}
+
+.melihelp-hero-lead {
+    position: relative;
+    color: var(--sh-muted);
+    max-width: 520px;
+    margin: 0 auto;
+    font-size: 15px;
+    line-height: 1.5;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 600;
+}
+
+.melihelp-quick-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 14px;
+    margin-top: 24px;
+    position: relative;
+}
+
+/* Home com 3 atalhos: colunas fixas e bloco centrado (mesmo ritmo emoji + rótulo por card) */
+.melihelp-quick-grid--three {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    max-width: 540px;
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+}
+
+@media (max-width: 520px) {
+    .melihelp-quick-grid--three {
+        grid-template-columns: 1fr;
+        max-width: 280px;
+    }
+}
+
+.melihelp-quick-card {
+    padding: 20px 16px;
+    border-radius: var(--sh-radius-sm);
+    border: 1px solid var(--sh-border);
+    background: var(--sh-glass-strong);
+    backdrop-filter: blur(16px);
+    cursor: pointer;
+    text-align: center;
+    transition: transform 0.25s, box-shadow 0.25s;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: var(--sh-text);
+}
+
+.melihelp-quick-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--sh-shadow-lg);
+}
+
+.melihelp-quick-card .emoji {
+    display: block;
+    font-size: 32px;
+    margin-bottom: 10px;
+}
+
+/* Home (#/home): atalhos dentro do mesmo tipo de cartão vidro */
+.melihelp-home-shortcuts.glass-panel {
+    padding: 22px 20px 26px;
+    border-radius: var(--sh-radius);
+    margin-bottom: 24px;
+    text-align: center;
+}
+
+.melihelp-home-section-title {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    color: var(--sh-muted);
+    text-align: center;
+    margin: 0 0 14px;
+}
+
+.melihelp-home-quick-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 12px;
+    max-width: 1200px;
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+@media (max-width: 900px) {
+    .melihelp-home-quick-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 640px) {
+    .melihelp-home-quick-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 480px) {
+    .melihelp-home-quick-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+button.melihelp-home-card.melihelp-quick-card {
+    width: 100%;
+    font-family: inherit;
+    text-align: center;
+}
+
+.melihelp-home-card-title {
+    display: block;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+}
+
+.melihelp-home-card-desc {
+    display: block;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    text-transform: none;
+    color: var(--sh-muted);
+    line-height: 1.4;
+}
+
+/* Document area */
+.melihelp-panel {
+    border-radius: var(--sh-radius);
+    padding: 22px;
+    margin-bottom: 20px;
+}
+
+.melihelp-panel-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 20px;
+}
+
+.melihelp-panel-head h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+
+.melihelp-panel-month-folder .melihelp-panel-head h2 {
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.melihelp-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.melihelp-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 18px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.melihelp-btn-primary {
+    background: linear-gradient(135deg, #007aff, #0051d5);
+    color: #fff;
+    box-shadow: 0 8px 24px rgba(0, 122, 255, 0.35);
+}
+
+.melihelp-btn-primary:hover {
+    transform: translateY(-2px);
+}
+
+.melihelp-btn-ghost {
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--sh-text);
+}
+
+html[data-melihelp-theme="dark"] .melihelp-btn-ghost {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.melihelp-btn-danger {
+    background: rgba(255, 59, 48, 0.15);
+    color: #ff3b30;
+}
+
+.melihelp-btn-text-upper {
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.melihelp-btn-primary.melihelp-btn-text-upper {
+    font-size: 13px;
+    letter-spacing: 0.08em;
+}
+
+a.melihelp-btn-download {
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+}
+
+.melihelp-btn-icon-only {
+    padding: 11px 14px;
+    min-width: 44px;
+    justify-content: center;
+}
+
+.melihelp-doc-toolbar {
+    align-items: center;
+}
+
+/* Lixeira — bloco introdutório (texto extenso) e lista */
+.melihelp-trash-panel {
+    padding: 26px 24px 28px;
+}
+
+.melihelp-trash-hero {
+    margin-bottom: 28px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--sh-border);
+}
+
+.melihelp-trash-title {
+    font-size: 1.35rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    margin: 0 0 18px;
+    color: var(--sh-text);
+}
+
+.melihelp-trash-desc {
+    max-width: 100%;
+    color: var(--sh-muted);
+    font-size: 14px;
+    line-height: 1.65;
+    font-weight: 500;
+}
+
+.melihelp-trash-desc p {
+    margin: 0 0 14px;
+}
+
+.melihelp-trash-desc p:last-child {
+    margin-bottom: 0;
+}
+
+.melihelp-trash-desc strong {
+    color: var(--sh-text);
+    font-weight: 650;
+}
+
+.melihelp-trash-desc--single p {
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: 12px;
+    line-height: 1.7;
+    font-weight: 600;
+}
+
+.melihelp-trash-empty--upper {
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+    font-size: 13px;
+}
+
+.melihelp-trash-list-wrap {
+    margin: 0;
+}
+
+.melihelp-trash-list {
+    margin-top: 0;
+}
+
+.melihelp-trash-item {
+    flex-wrap: wrap;
+    align-items: flex-start;
+}
+
+.melihelp-trash-item-body {
+    flex: 1;
+    min-width: min(100%, 220px);
+}
+
+.melihelp-trash-countdown {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--sh-blue);
+    letter-spacing: 0.02em;
+}
+
+.melihelp-trash-countdown .fa-clock {
+    opacity: 0.9;
+    font-size: 14px;
+}
+
+html[data-melihelp-theme="dark"] .melihelp-trash-countdown {
+    color: #5ac8fa;
+}
+
+.melihelp-trash-actions {
+    flex-shrink: 0;
+    align-self: center;
+}
+
+.melihelp-trash-empty {
+    margin-top: 8px;
+}
+
+@media (max-width: 640px) {
+    .melihelp-trash-actions {
+        width: 100%;
+        justify-content: stretch;
+        margin-top: 12px;
+    }
+
+    .melihelp-trash-actions .melihelp-btn {
+        flex: 1;
+        justify-content: center;
+    }
+}
+
+/* Pré-visualização documento (fundo escuro + vidro, como doc-modal Suporte) */
+.melihelp-doc-preview-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1100;
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.melihelp-doc-preview-backdrop[hidden] {
+    display: none !important;
+}
+
+.melihelp-doc-preview-dialog {
+    width: 100%;
+    max-width: min(920px, 96vw);
+    max-height: min(90vh, 880px);
+    display: flex;
+    flex-direction: column;
+    border-radius: var(--sh-radius);
+    overflow: hidden;
+    box-shadow: var(--sh-shadow-lg);
+}
+
+.melihelp-doc-preview-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--sh-border);
+    flex-shrink: 0;
+}
+
+.melihelp-doc-preview-head h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--sh-text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.melihelp-doc-preview-body {
+    padding: 16px 18px 20px;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.melihelp-doc-preview-frame {
+    width: 100%;
+    min-height: min(72vh, 640px);
+    height: min(72vh, 640px);
+    border: none;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.92);
+}
+
+html[data-melihelp-theme="dark"] .melihelp-doc-preview-frame {
+    background: rgba(28, 28, 30, 0.95);
+}
+
+.melihelp-doc-preview-frame[hidden] {
+    display: none !important;
+}
+
+.melihelp-doc-preview-img {
+    max-width: 100%;
+    max-height: min(72vh, 640px);
+    object-fit: contain;
+    border-radius: 12px;
+}
+
+.melihelp-doc-preview-fallback {
+    margin: 0;
+    text-align: center;
+    color: var(--sh-muted);
+    font-size: 15px;
+    line-height: 1.5;
+    padding: 24px 16px;
+}
+
+/* Modal editar nome (crachás — vidro, alinhado à pré-visualização) */
+.melihelp-rename-doc-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1150;
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.melihelp-rename-doc-backdrop[hidden] {
+    display: none !important;
+}
+
+.melihelp-rename-doc-dialog {
+    width: 100%;
+    max-width: min(440px, 96vw);
+    border-radius: var(--sh-radius);
+    overflow: hidden;
+    box-shadow: var(--sh-shadow-lg);
+}
+
+.melihelp-rename-doc-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 18px 18px 14px;
+    border-bottom: 1px solid var(--sh-border);
+}
+
+.melihelp-rename-doc-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+
+.melihelp-rename-doc-icon {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(0, 122, 255, 0.18), rgba(0, 81, 213, 0.1));
+    color: var(--sh-blue);
+    font-size: 17px;
+}
+
+html[data-melihelp-theme="dark"] .melihelp-rename-doc-icon {
+    background: rgba(10, 132, 255, 0.22);
+    color: #5ac8fa;
+}
+
+.melihelp-rename-doc-title {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--sh-text);
+    line-height: 1.3;
+}
+
+.melihelp-rename-doc-body {
+    padding: 18px 18px 20px;
+}
+
+.melihelp-rename-doc-hint {
+    margin: 0 0 16px;
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--sh-muted);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.melihelp-rename-doc-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--sh-muted);
+    margin-bottom: 8px;
+}
+
+.melihelp-rename-doc-input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 14px 16px;
+    font-size: 15px;
+    font-weight: 600;
+    font-family: inherit;
+    color: var(--sh-text);
+    background: rgba(0, 0, 0, 0.04);
+    border: 1px solid var(--sh-border);
+    border-radius: 12px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+html[data-melihelp-theme="dark"] .melihelp-rename-doc-input {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.melihelp-rename-doc-input:focus {
+    border-color: rgba(0, 122, 255, 0.55);
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2);
+}
+
+.melihelp-rename-doc-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+@media (max-width: 400px) {
+    .melihelp-rename-doc-actions .melihelp-btn {
+        flex: 1;
+        justify-content: center;
+    }
+}
+
+.melihelp-doc-list {
+    list-style: none;
+}
+
+.melihelp-doc-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 16px;
+    border-radius: var(--sh-radius-sm);
+    background: rgba(0, 0, 0, 0.03);
+    margin-bottom: 8px;
+    border: 1px solid var(--sh-border);
+}
+
+html[data-melihelp-theme="dark"] .melihelp-doc-item {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.melihelp-doc-meta {
+    font-size: 12px;
+    color: var(--sh-muted);
+    margin-top: 4px;
+}
+
+/* Cartão avulso — registo por número W (piloto janeiro/2026) */
+.melihelp-avulso-w-panel {
+    overflow: visible;
+}
+
+.melihelp-avulso-w-panel .melihelp-panel-head {
+    margin-bottom: 12px;
+}
+
+.melihelp-avulso-w-sync-alert {
+    margin: 0 0 16px;
+    padding: 14px 16px;
+    border-radius: var(--sh-radius-sm);
+    border: 1px solid rgba(180, 120, 0, 0.45);
+    background: rgba(255, 193, 7, 0.12);
+    max-width: 52rem;
+}
+
+.melihelp-avulso-w-sync-alert-title {
+    margin: 0 0 8px;
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--sh-text, #111);
+}
+
+.melihelp-avulso-w-sync-alert-body {
+    margin: 0 0 12px;
+    font-size: 14px;
+    line-height: 1.45;
+    color: var(--sh-muted);
+}
+
+.melihelp-avulso-w-sync-alert-body code {
+    font-size: 0.95em;
+    padding: 1px 6px;
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.06);
+}
+
+html[data-melihelp-theme="dark"] .melihelp-avulso-w-sync-alert {
+    border-color: rgba(250, 204, 21, 0.35);
+    background: rgba(250, 204, 21, 0.1);
+}
+
+html[data-melihelp-theme="dark"] .melihelp-avulso-w-sync-alert-body code {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.melihelp-avulso-w-lead {
+    margin: 0 0 16px;
+    font-size: 14px;
+    line-height: 1.45;
+    color: var(--sh-muted);
+    max-width: 52rem;
+}
+
+.melihelp-avulso-w-cadastro-card {
+    margin-top: 4px;
+    padding: 18px 20px 16px;
+    border-radius: var(--sh-radius-sm);
+    border: 1px solid var(--sh-border);
+    background: rgba(0, 0, 0, 0.025);
+}
+
+html[data-melihelp-theme="dark"] .melihelp-avulso-w-cadastro-card {
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.melihelp-avulso-w-cadastro-title {
+    margin: 0 0 6px;
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+
+.melihelp-avulso-w-cadastro-sub {
+    margin: 0 0 14px;
+    font-size: 13px;
+    line-height: 1.4;
+    color: var(--sh-muted);
+}
+
+.melihelp-avulso-w-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 14px;
+    margin-bottom: 12px;
+}
+
+.melihelp-avulso-w-search {
+    flex: 1 1 12rem;
+    min-width: 9rem;
+    max-width: 22rem;
+    width: auto;
+    height: 38px;
+    box-sizing: border-box;
+    padding: 8px 11px;
+    font-size: 14px;
+    border-radius: var(--sh-radius-sm);
+    border: 1px solid var(--sh-border);
+    background: var(--sh-surface, #fff);
+    color: var(--sh-text, #111);
+}
+
+@media (max-width: 420px) {
+    .melihelp-avulso-w-toolbar--monthly {
+        flex-wrap: wrap;
+    }
+}
+
+.melihelp-avulso-w-toolbar--monthly {
+    margin-bottom: 22px;
+    padding-bottom: 2px;
+    overflow: visible;
+    position: relative;
+    z-index: 4;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 12px 16px;
+}
+
+/*
+ * Filtrar Cartão avulso — mesmo padrão visual do Inventário de Impressoras (index: .ucs-btn-filter + .ucs-filter-panel).
+ * Prefixo mh-ucs- para não depender de style.css na página MeliHelp.
+ */
+.melihelp-avulso-w-panel .mh-ucs-filter-dropdown {
+    position: relative;
+    display: inline-block;
+    flex-shrink: 0;
+    align-self: center;
+    padding-bottom: 8px;
+    margin-bottom: -2px;
+}
+
+.melihelp-avulso-w-panel .mh-ucs-btn-filter {
+    width: 140px;
+    min-width: 140px;
+    height: 38px;
+    min-height: 38px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: none;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    white-space: nowrap;
+    background: #007aff;
+    color: #fff;
+    transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.melihelp-avulso-w-panel .mh-ucs-btn-filter:hover {
+    background: #0051d5;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+}
+
+.melihelp-avulso-w-panel .mh-ucs-filter-dropdown.is-open .mh-ucs-btn-filter {
+    background: #0051d5;
+}
+
+.melihelp-avulso-w-panel .mh-ucs-btn-filter:focus {
+    outline: none;
+}
+
+.melihelp-avulso-w-panel .mh-ucs-btn-filter:focus-visible {
+    outline: 2px solid rgba(0, 122, 255, 0.55);
+    outline-offset: 2px;
+}
+
+.melihelp-avulso-w-panel .mh-ucs-filter-arrow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 2px;
+}
+
+.melihelp-avulso-w-panel .mh-ucs-filter-arrow svg {
+    opacity: 0.9;
+    stroke: rgba(255, 255, 255, 0.95);
+}
+
+.melihelp-avulso-w-panel .mh-ucs-filter-panel {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    margin-top: 4px;
+    min-width: 280px;
+    background: var(--sh-surface, #fff);
+    border-radius: 12px;
+    border: 1px solid var(--sh-border);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    z-index: 1300;
+    display: none;
+    flex-direction: column;
+    overflow: visible;
+    animation: mh-ucs-filter-slide 0.25s ease;
+}
+
+.melihelp-avulso-w-panel .mh-ucs-filter-dropdown.is-open .mh-ucs-filter-panel {
+    display: flex;
+}
+
+@keyframes mh-ucs-filter-slide {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.melihelp-avulso-w-panel .mh-ucs-filter-panel::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: 24px;
+    width: 0;
+    height: 0;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-bottom: 10px solid var(--sh-surface, #fff);
+    filter: drop-shadow(0 -1px 0 var(--sh-border));
+}
+
+.melihelp-avulso-w-panel .mh-ucs-filter-panel::after {
+    content: '';
+    position: absolute;
+    top: -8px;
+    left: 26px;
+    width: 0;
+    height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-bottom: 8px solid var(--sh-surface, #fff);
+    z-index: 1;
+}
+
+.melihelp-avulso-w-panel .mh-ucs-filter-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--sh-border);
+    background: rgba(0, 122, 255, 0.06);
+    border-radius: 12px 12px 0 0;
+    position: relative;
+    z-index: 2;
+}
+
+.melihelp-avulso-w-panel .mh-ucs-filter-panel-title {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--sh-text, #111);
+}
+
+.melihelp-avulso-w-panel .mh-ucs-filter-panel-close {
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: transparent;
+    color: var(--sh-muted);
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.melihelp-avulso-w-panel .mh-ucs-filter-panel-close:hover {
+    background: rgba(0, 0, 0, 0.06);
+    color: var(--sh-text, #111);
+}
+
+html[data-melihelp-theme="dark"] .melihelp-avulso-w-panel .mh-ucs-filter-panel-close:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.melihelp-avulso-w-panel .mh-ucs-filter-panel-body {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    position: relative;
+    z-index: 2;
+    background: var(--sh-surface, #fff);
+    border-radius: 0 0 12px 12px;
+}
+
+.melihelp-avulso-w-panel .mh-ucs-filter-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--sh-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.melihelp-avulso-w-panel .mh-ucs-filter-select {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--sh-border);
+    font-size: 14px;
+    color: var(--sh-text, #111);
+    background: var(--sh-surface, #fff);
+    font-family: inherit;
+    box-sizing: border-box;
+    cursor: pointer;
+}
+
+.melihelp-avulso-w-panel .mh-ucs-filter-panel-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 8px;
+    align-items: center;
+}
+
+.melihelp-avulso-w-panel .mh-ucs-filter-btn-aplicar {
+    flex: 1;
+    padding: 10px 16px;
+    border-radius: 8px;
+    border: none;
+    background: #007aff;
+    color: #fff;
+    font-weight: 600;
+    font-size: 14px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.melihelp-avulso-w-panel .mh-ucs-filter-btn-aplicar:hover {
+    background: #0051d5;
+    transform: translateY(-1px);
+}
+
+.melihelp-avulso-w-panel .mh-ucs-filter-btn-limpar {
+    padding: 10px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--sh-border);
+    background: transparent;
+    color: var(--sh-muted);
+    font-size: 14px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.melihelp-avulso-w-panel .mh-ucs-filter-btn-limpar:hover {
+    background: rgba(0, 0, 0, 0.04);
+    border-color: #007aff;
+    color: var(--sh-text, #111);
+}
+
+html[data-melihelp-theme="dark"] .melihelp-avulso-w-panel .mh-ucs-filter-panel {
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.5);
+}
+
+html[data-melihelp-theme="dark"] .melihelp-avulso-w-panel .mh-ucs-filter-panel-header {
+    background: rgba(56, 189, 248, 0.1);
+}
+
+.melihelp-avulso-w-toolbar-add {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+}
+
+.melihelp-avulso-w-toolbar--cadastro-only {
+    margin-bottom: 0;
+}
+
+.melihelp-avulso-w-toolbar-add--cadastro {
+    margin-left: 0;
+    width: 100%;
+    max-width: 28rem;
+}
+
+.melihelp-avulso-w-inline-add--wide {
+    flex: 1;
+    min-width: 10rem;
+    width: auto;
+}
+
+.melihelp-avulso-w-cadastro-card--standalone {
+    margin-top: 0;
+}
+
+.melihelp-avulso-w-cadastro-actions {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid var(--sh-border);
+}
+
+.melihelp-avulso-w-inline-add {
+    width: 7.5rem;
+    max-width: 100%;
+    padding: 8px 10px;
+    font-size: 14px;
+    border-radius: var(--sh-radius-sm);
+    border: 1px solid var(--sh-border);
+    background: var(--sh-surface, #fff);
+    color: var(--sh-text, #111);
+}
+
+@media (max-width: 640px) {
+    .melihelp-avulso-w-toolbar-add {
+        margin-left: 0;
+        width: 100%;
+    }
+}
+
+/* Rolagem invisível no cartão (como .melihelp-cracha-doc-list-scroll) */
+.melihelp-avulso-w-table-wrap.melihelp-avulso-w-table-scroll {
+    --melihelp-avulso-scroll-slot: 48px;
+    margin-top: 6px;
+    max-height: min(52vh, calc(11 * var(--melihelp-avulso-scroll-slot)));
+    overflow-y: auto;
+    overflow-x: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    border-radius: var(--sh-radius-sm);
+    border: 1px solid var(--sh-border);
+}
+
+.melihelp-avulso-w-table-scroll::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    background: transparent;
+}
+
+.melihelp-avulso-w-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.melihelp-avulso-w-table-scroll .melihelp-avulso-w-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    /* Fundo opaco: evita ver linhas a rolar por baixo do sticky (efeito “vidro”). */
+    background-color: #ececf0;
+    box-shadow: 0 1px 0 var(--sh-border);
+}
+
+.melihelp-avulso-w-table thead th {
+    text-align: center;
+    padding: 12px 14px;
+    background-color: #ececf0;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--sh-muted);
+    border-bottom: 1px solid var(--sh-border);
+}
+
+html[data-melihelp-theme="dark"] .melihelp-avulso-w-table thead th,
+html[data-melihelp-theme="dark"] .melihelp-avulso-w-table-scroll .melihelp-avulso-w-table thead th {
+    background-color: #3a3a3c;
+    box-shadow: 0 1px 0 var(--sh-border);
+}
+
+.melihelp-avulso-w-table tbody td {
+    text-align: center;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--sh-border);
+    vertical-align: middle;
+}
+
+.melihelp-avulso-w-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.melihelp-avulso-w-col-num {
+    width: 3rem;
+    color: var(--sh-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.melihelp-avulso-w-col-status {
+    font-weight: 600;
+}
+
+.melihelp-avulso-w-status--ok {
+    color: #15803d;
+}
+
+html[data-melihelp-theme="dark"] .melihelp-avulso-w-status--ok {
+    color: #4ade80;
+}
+
+.melihelp-avulso-w-status--dup {
+    color: #b45309;
+}
+
+html[data-melihelp-theme="dark"] .melihelp-avulso-w-status--dup {
+    color: #fb923c;
+}
+
+.melihelp-avulso-w-col-date {
+    font-size: 13px;
+    color: var(--sh-muted);
+    white-space: nowrap;
+}
+
+.melihelp-avulso-w-col-actions {
+    text-align: center;
+    width: 1%;
+}
+
+.melihelp-avulso-w-empty {
+    text-align: center;
+    padding: 8px 0;
+}
+
+.melihelp-avulso-w-empty-row td {
+    padding: 0;
+    border: none;
+}
+
+/*
+ * Crachás — clone visual da página Certificados SELBETTI (js/selbetti-hub.js renderDocs).
+ * Usa as mesmas classes .selbetti-*; escopo .melihelp-cracha-selb para tema MeliHelp (claro/escuro).
+ */
+.melihelp-cracha-selb {
+    margin-top: 22px;
+    --melihelp-cracha-scroll-slot: 88px;
+}
+
+.melihelp-cracha-selb .melihelp-cracha-selb-panel {
+    padding: 22px;
+    margin-bottom: 0;
+}
+
+.melihelp-cracha-selb .selbetti-panel-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 20px;
+}
+
+.melihelp-cracha-selb .selbetti-panel-head.melihelp-cracha-month-panel-head--title-only {
+    justify-content: flex-start;
+    margin-bottom: 16px;
+}
+
+/* Vista mensal CRACHÁS — contagem + pesquisa na mesma linha do título (altura ~ botões BAIXAR etc.) */
+.melihelp-cracha-selb .selbetti-panel-head.melihelp-cracha-month-panel-head--with-toolbar {
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.melihelp-cracha-month-head-tools {
+    justify-content: flex-end;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.melihelp-cracha-month-count-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 40px;
+    padding: 0 16px;
+    border-radius: 12px;
+    box-sizing: border-box;
+}
+
+.melihelp-cracha-month-count-val {
+    font-size: 16px;
+    font-weight: 800;
+    line-height: 1;
+    color: var(--sh-blue);
+    font-variant-numeric: tabular-nums;
+}
+
+.melihelp-cracha-month-count-label-inline {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--sh-muted);
+    white-space: nowrap;
+}
+
+.melihelp-cracha-month-search-glass {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 40px;
+    padding: 0 14px;
+    border-radius: 12px;
+    box-sizing: border-box;
+    flex: 1 1 200px;
+    min-width: 160px;
+    max-width: 320px;
+    backdrop-filter: blur(var(--sh-blur)) saturate(180%);
+    -webkit-backdrop-filter: blur(var(--sh-blur)) saturate(180%);
+    box-shadow: var(--sh-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+html[data-melihelp-theme="dark"] .melihelp-cracha-month-search-glass {
+    box-shadow: var(--sh-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.melihelp-cracha-month-search-glass:focus-within {
+    box-shadow: var(--sh-shadow-lg), 0 0 0 2px rgba(0, 122, 255, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    transform: translateY(-1px);
+}
+
+html[data-melihelp-theme="dark"] .melihelp-cracha-month-search-glass:focus-within {
+    box-shadow: var(--sh-shadow-lg), 0 0 0 2px rgba(10, 132, 255, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.melihelp-cracha-month-search-icon {
+    color: var(--sh-muted);
+    font-size: 14px;
+    flex-shrink: 0;
+    opacity: 0.85;
+}
+
+.melihelp-cracha-month-search-input {
+    flex: 1 1 auto;
+    min-width: 0;
+    border: none;
+    background: transparent;
+    color: var(--sh-text);
+    font-size: 14px;
+    font-weight: 600;
+    outline: none;
+}
+
+.melihelp-cracha-month-search-input::placeholder {
+    color: var(--sh-muted);
+    opacity: 0.85;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 600;
+    font-size: 12px;
+}
+
+.melihelp-cracha-selb .selbetti-panel-head h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin: 0;
+    color: var(--sh-text);
+}
+
+.melihelp-cracha-selb .selbetti-panel-head h2.melihelp-cracha-selb-inner-title {
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-weight: 800;
+}
+
+.melihelp-cracha-selb .selbetti-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.melihelp-cracha-selb-head-toolbar {
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.melihelp-cracha-selb .selbetti-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 18px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.melihelp-cracha-selb .selbetti-btn-primary {
+    background: linear-gradient(135deg, #007aff, #0051d5);
+    color: #fff;
+    box-shadow: 0 8px 24px rgba(0, 122, 255, 0.35);
+}
+
+.melihelp-cracha-selb .selbetti-btn-primary:hover {
+    transform: translateY(-2px);
+}
+
+.melihelp-cracha-selb .selbetti-btn-ghost {
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--sh-text);
+}
+
+html[data-melihelp-theme="dark"] .melihelp-cracha-selb .selbetti-btn-ghost {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.melihelp-cracha-selb .selbetti-btn-danger {
+    background: rgba(255, 59, 48, 0.15);
+    color: #ff3b30;
+}
+
+.melihelp-cracha-selb .selbetti-btn-text-upper {
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.melihelp-cracha-selb .selbetti-btn-primary.selbetti-btn-text-upper {
+    font-size: 13px;
+    letter-spacing: 0.08em;
+}
+
+.melihelp-cracha-selb a.selbetti-btn-download {
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+}
+
+.melihelp-cracha-selb .selbetti-btn-icon-only {
+    padding: 11px 14px;
+    min-width: 44px;
+    justify-content: center;
+}
+
+.melihelp-cracha-selb .selbetti-doc-toolbar {
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+/* Lista de PDFs: cresce com o conteúdo; a partir de ~10 linhas, rolagem vertical (barra invisível) */
+.melihelp-cracha-doc-list-scroll {
+    max-height: calc(10 * var(--melihelp-cracha-scroll-slot));
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.melihelp-cracha-doc-list-scroll::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    background: transparent;
+}
+
+.melihelp-cracha-selb .selbetti-doc-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.melihelp-cracha-selb .selbetti-doc-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 16px;
+    border-radius: var(--sh-radius-sm);
+    background: rgba(0, 0, 0, 0.03);
+    margin-bottom: 8px;
+    border: 1px solid var(--sh-border);
+}
+
+html[data-melihelp-theme="dark"] .melihelp-cracha-selb .selbetti-doc-item {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.melihelp-cracha-selb .selbetti-doc-item.melihelp-doc-item--inactive {
+    opacity: 0.78;
+    flex-wrap: wrap;
+    align-items: flex-start;
+}
+
+.melihelp-cracha-selb .selbetti-doc-meta {
+    font-size: 12px;
+    color: var(--sh-muted);
+    margin-top: 4px;
+}
+
+.melihelp-cracha-selb .selbetti-empty {
+    text-align: center;
+    padding: 48px 20px;
+    color: var(--sh-muted);
+    font-size: 15px;
+}
+
+.melihelp-cracha-selb .selbetti-empty .big {
+    font-size: 48px;
+    display: block;
+    margin-bottom: 12px;
+    opacity: 0.85;
+}
+
+.melihelp-cracha-selb .selbetti-doc-list > li.melihelp-cracha-selb-empty-li {
+    list-style: none;
+    margin: 0 0 8px 0;
+    padding: 0;
+    border: none;
+    background: transparent;
+}
+
+.melihelp-cracha-selb .selbetti-doc-list > li.melihelp-cracha-selb-empty-li .selbetti-empty {
+    margin: 0;
+    border-radius: var(--sh-radius-sm);
+    border: 1px solid var(--sh-border);
+    background: rgba(0, 0, 0, 0.03);
+}
+
+html[data-melihelp-theme="dark"] .melihelp-cracha-selb .selbetti-doc-list > li.melihelp-cracha-selb-empty-li .selbetti-empty {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+@media (max-width: 640px) {
+    .melihelp-cracha-selb .selbetti-doc-item {
+        flex-wrap: wrap;
+        align-items: flex-start;
+    }
+
+    .melihelp-cracha-selb .selbetti-doc-toolbar {
+        width: 100%;
+        justify-content: stretch;
+        margin-top: 8px;
+    }
+
+    .melihelp-cracha-selb .selbetti-doc-toolbar .selbetti-btn {
+        flex: 1;
+        justify-content: center;
+    }
+
+    .melihelp-cracha-selb .selbetti-doc-toolbar .selbetti-btn-icon-only {
+        flex: 0 0 auto;
+    }
+}
+
+.melihelp-empty {
+    text-align: center;
+    padding: 48px 20px;
+    color: var(--sh-muted);
+    font-size: 15px;
+}
+
+.melihelp-empty .big {
+    font-size: 48px;
+    display: block;
+    margin-bottom: 12px;
+    opacity: 0.85;
+}
+
+.txt-axis-gradient-selb {
+    background: linear-gradient(135deg, var(--sh-green), var(--sh-blue));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+/* Modal settings */
+.melihelp-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    background: rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+/* Sem isto, display:flex acima anula o [hidden] nativo e o modal cobre a página sempre */
+.melihelp-modal-backdrop[hidden] {
+    display: none !important;
+}
+
+.melihelp-modal {
+    width: 100%;
+    max-width: 520px;
+    max-height: 88vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    border-radius: var(--sh-radius);
+    padding: 0;
+}
+
+.melihelp-modal-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--sh-border);
+}
+
+.melihelp-modal-head h2 {
+    font-size: 17px;
+    font-weight: 700;
+}
+
+.melihelp-modal-lead {
+    padding: 14px 20px;
+    font-size: 13px;
+    color: var(--sh-muted);
+    line-height: 1.45;
+}
+
+.melihelp-settings-form {
+    padding: 8px 20px 20px;
+    overflow-y: auto;
+    max-height: 50vh;
+}
+
+.melihelp-settings-row {
+    margin-bottom: 14px;
+}
+
+.melihelp-settings-row label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: var(--sh-muted);
+    margin-bottom: 6px;
+}
+
+.melihelp-settings-row input {
+    width: 100%;
+    padding: 11px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--sh-border);
+    background: rgba(255, 255, 255, 0.6);
+    color: var(--sh-text);
+    font-size: 14px;
+}
+
+html[data-melihelp-theme="dark"] .melihelp-settings-row input {
+    background: rgba(0, 0, 0, 0.25);
+}
+
+.melihelp-modal-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: flex-end;
+    padding: 16px 20px;
+    border-top: 1px solid var(--sh-border);
+}
+
+/* Toast — vidro, canto superior direito (abaixo do cabeçalho / tema) */
+.melihelp-toast {
+    position: fixed;
+    top: calc(12px + 56px + 28px + env(safe-area-inset-top, 0px));
+    right: calc(16px + env(safe-area-inset-right, 0px));
+    left: auto;
+    z-index: 900;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    max-width: min(92vw, 340px);
+    padding: 14px 18px 14px 16px;
+    border-radius: 18px;
+    text-align: left;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.45;
+    color: rgba(29, 29, 31, 0.92);
+    pointer-events: none;
+    background: linear-gradient(
+        145deg,
+        rgba(255, 255, 255, 0.62) 0%,
+        rgba(255, 255, 255, 0.38) 100%
+    );
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    box-shadow:
+        0 4px 24px rgba(0, 122, 255, 0.1),
+        0 12px 40px rgba(0, 0, 0, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(22px) saturate(180%);
+    -webkit-backdrop-filter: blur(22px) saturate(180%);
+    transform: translateX(calc(100% + 24px));
+    opacity: 0;
+    transition:
+        transform 0.45s cubic-bezier(0.32, 0.72, 0, 1),
+        opacity 0.35s ease;
+}
+
+.melihelp-toast__icon {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    line-height: 1;
+}
+
+.melihelp-toast__text {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    min-height: 24px;
+}
+
+.melihelp-toast--success .melihelp-toast__icon {
+    color: #34c759;
+}
+
+.melihelp-toast--warning .melihelp-toast__icon {
+    color: #ff9f0a;
+}
+
+.melihelp-toast--error .melihelp-toast__icon {
+    color: #ff3b30;
+}
+
+/* Remoção (ex.: cartão W) — ícone e realce vermelhos */
+.melihelp-toast--remove {
+    border-color: rgba(255, 59, 48, 0.28);
+    box-shadow:
+        0 4px 22px rgba(255, 59, 48, 0.14),
+        0 12px 40px rgba(0, 0, 0, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.85);
+}
+
+.melihelp-toast--remove .melihelp-toast__icon {
+    color: #ff3b30;
+}
+
+.melihelp-toast--info .melihelp-toast__icon {
+    color: #007aff;
+}
+
+.melihelp-toast--neutral .melihelp-toast__icon {
+    color: var(--sh-muted, #86868b);
+}
+
+.melihelp-toast.is-on {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+html[data-melihelp-theme="dark"] .melihelp-toast {
+    color: rgba(245, 245, 247, 0.96);
+    background: linear-gradient(
+        145deg,
+        rgba(44, 44, 46, 0.72) 0%,
+        rgba(28, 28, 30, 0.55) 100%
+    );
+    border-color: rgba(255, 255, 255, 0.14);
+    box-shadow:
+        0 4px 28px rgba(0, 0, 0, 0.35),
+        0 0 0 1px rgba(90, 200, 250, 0.12),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+html[data-melihelp-theme="dark"] .melihelp-toast--success .melihelp-toast__icon {
+    color: #30d158;
+}
+
+html[data-melihelp-theme="dark"] .melihelp-toast--warning .melihelp-toast__icon {
+    color: #ffd60a;
+}
+
+html[data-melihelp-theme="dark"] .melihelp-toast--error .melihelp-toast__icon {
+    color: #ff453a;
+}
+
+html[data-melihelp-theme="dark"] .melihelp-toast--remove {
+    border-color: rgba(255, 69, 58, 0.35);
+    box-shadow:
+        0 4px 26px rgba(255, 69, 58, 0.18),
+        0 4px 28px rgba(0, 0, 0, 0.35),
+        0 0 0 1px rgba(90, 200, 250, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+html[data-melihelp-theme="dark"] .melihelp-toast--remove .melihelp-toast__icon {
+    color: #ff453a;
+}
+
+html[data-melihelp-theme="dark"] .melihelp-toast--info .melihelp-toast__icon {
+    color: #5ac8fa;
+}
+
+html[data-melihelp-theme="dark"] .melihelp-toast--neutral .melihelp-toast__icon {
+    color: #98989d;
+}
+
+@media (max-width: 600px) {
+    .melihelp-toast {
+        top: calc(12px + 50px + 24px + env(safe-area-inset-top, 0px));
+        right: calc(12px + env(safe-area-inset-right, 0px));
+        max-width: min(94vw, 320px);
+        padding: 12px 14px;
+    }
+}
+
+@media (max-width: 600px) {
+    .melihelp-topbar {
+        grid-template-columns: auto 1fr auto;
+    }
+    .melihelp-logo-sub {
+        display: none;
+    }
+}
+
+/* Modal adicionar arquivos — vidro Apple + fundo borrado forte */
+.melihelp-upload-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+    overflow-y: auto;
+    background: rgba(15, 15, 20, 0.42);
+    backdrop-filter: blur(22px) saturate(160%);
+    -webkit-backdrop-filter: blur(22px) saturate(160%);
+}
+
+.melihelp-upload-modal-backdrop[hidden] {
+    display: none !important;
+}
+
+.melihelp-upload-modal-dialog {
+    width: 100%;
+    max-width: min(520px, 96vw);
+    border-radius: 22px;
+    overflow: hidden;
+    box-shadow:
+        var(--sh-shadow-lg),
+        inset 0 1px 0 rgba(255, 255, 255, 0.55);
+    background: linear-gradient(
+        165deg,
+        rgba(255, 255, 255, 0.72) 0%,
+        rgba(255, 255, 255, 0.38) 100%
+    );
+    backdrop-filter: blur(40px) saturate(200%);
+    -webkit-backdrop-filter: blur(40px) saturate(200%);
+    border: 1px solid rgba(255, 255, 255, 0.65);
+}
+
+html[data-melihelp-theme="dark"] .melihelp-upload-modal-dialog {
+    background: linear-gradient(
+        165deg,
+        rgba(44, 44, 48, 0.88) 0%,
+        rgba(28, 28, 32, 0.72) 100%
+    );
+    border-color: rgba(255, 255, 255, 0.14);
+    box-shadow:
+        var(--sh-shadow-lg),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.melihelp-upload-modal-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 18px 18px 14px;
+    border-bottom: 1px solid var(--sh-border);
+}
+
+.melihelp-upload-modal-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+
+.melihelp-upload-modal-icon {
+    flex-shrink: 0;
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+    background: linear-gradient(145deg, rgba(0, 122, 255, 0.22), rgba(88, 86, 214, 0.12));
+    color: var(--sh-blue);
+    font-size: 18px;
+}
+
+html[data-melihelp-theme="dark"] .melihelp-upload-modal-icon {
+    background: rgba(10, 132, 255, 0.25);
+    color: #5ac8fa;
+}
+
+.melihelp-upload-modal-title {
+    margin: 0;
+    font-size: 0.92rem;
+    font-weight: 800;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--sh-text);
+    line-height: 1.3;
+}
+
+.melihelp-upload-modal-body {
+    padding: 16px 18px 20px;
+}
+
+.melihelp-upload-modal-hint {
+    margin: 0 0 18px;
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--sh-muted);
+    font-weight: 500;
+}
+
+.melihelp-upload-modal-hint strong {
+    color: var(--sh-text);
+    font-weight: 700;
+}
+
+.melihelp-upload-dt-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.melihelp-upload-dt-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+}
+
+.melihelp-upload-dt-card {
+    flex: 1 1 88px;
+    min-width: 0;
+    max-width: 160px;
+    padding: 10px 8px 12px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+html[data-melihelp-theme="dark"] .melihelp-upload-dt-card {
+    background: rgba(0, 0, 0, 0.22);
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.melihelp-upload-dt-lbl {
+    display: block;
+    text-align: center;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    color: var(--sh-muted);
+    margin-bottom: 8px;
+}
+
+.melihelp-upload-dt-spin-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+}
+
+.melihelp-upload-dt-btn {
+    flex-shrink: 0;
+    width: 32px;
+    height: 36px;
+    border: none;
+    border-radius: 10px;
+    font-size: 18px;
+    font-weight: 500;
+    line-height: 1;
+    color: var(--sh-blue);
+    background: rgba(0, 122, 255, 0.12);
+    cursor: pointer;
+    transition: background 0.15s, transform 0.12s;
+}
+
+.melihelp-upload-dt-btn:hover {
+    background: rgba(0, 122, 255, 0.2);
+}
+
+.melihelp-upload-dt-btn:active {
+    transform: scale(0.94);
+}
+
+html[data-melihelp-theme="dark"] .melihelp-upload-dt-btn {
+    background: rgba(10, 132, 255, 0.2);
+    color: #5ac8fa;
+}
+
+.melihelp-upload-dt-input {
+    width: 100%;
+    max-width: 56px;
+    min-width: 0;
+    flex: 1;
+    text-align: center;
+    font-size: 17px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    font-family: inherit;
+    color: var(--sh-text);
+    padding: 8px 4px;
+    border-radius: 10px;
+    border: 1px solid var(--sh-border);
+    background: rgba(255, 255, 255, 0.65);
+    outline: none;
+    -moz-appearance: textfield;
+}
+
+.melihelp-upload-dt-input::-webkit-outer-spin-button,
+.melihelp-upload-dt-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+html[data-melihelp-theme="dark"] .melihelp-upload-dt-input {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.melihelp-upload-dt-input:focus {
+    border-color: rgba(0, 122, 255, 0.55);
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.18);
+}
+
+#melihelp-upload-year.melihelp-upload-dt-input {
+    max-width: 72px;
+}
+
+.melihelp-upload-dt-card:focus-within {
+    border-color: rgba(0, 122, 255, 0.35);
+    box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.12);
+}
+
+.melihelp-upload-modal-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 10px;
+}
+
+.melihelp-upload-modal-actions .melihelp-btn-primary {
+    flex: 1 1 auto;
+    min-width: 160px;
+}
+
+@media (max-width: 420px) {
+    .melihelp-upload-dt-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .melihelp-upload-dt-card {
+        max-width: none;
+    }
+
+    .melihelp-upload-modal-actions {
+        flex-direction: column;
+    }
+
+    .melihelp-upload-modal-actions .melihelp-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* ================= Cordão — retiradas (tabela, sem imagens) ================= */
+.melihelp-cordao-panel .melihelp-panel-head {
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.melihelp-cordao-quick {
+    margin-bottom: 20px;
+    padding: 16px 18px;
+    border-radius: var(--sh-radius-sm);
+    border: 1px solid var(--sh-border);
+    background: var(--sh-glass-strong);
+}
+
+.melihelp-cordao-quick-title {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: var(--sh-muted);
+    margin-bottom: 12px;
+}
+
+.melihelp-cordao-quick-grid {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 12px 14px;
+    align-items: end;
+}
+
+@media (max-width: 640px) {
+    .melihelp-cordao-quick-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.melihelp-cordao-field-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--sh-muted);
+    margin-bottom: 6px;
+}
+
+.melihelp-cordao-text-input {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--sh-border);
+    background: var(--sh-glass);
+    color: var(--sh-text);
+    font-size: 15px;
+    font-family: inherit;
+}
+
+.melihelp-cordao-quick-input {
+    border: 2px solid rgba(0, 122, 255, 0.9);
+    box-shadow: 0 6px 20px rgba(0, 122, 255, 0.28);
+    background: var(--sh-glass-strong);
+}
+
+.melihelp-cordao-text-input.melihelp-cordao-quick-input:focus {
+    outline: none;
+    border-color: #0051d5;
+    box-shadow: 0 6px 24px rgba(0, 122, 255, 0.4), 0 0 0 3px rgba(0, 122, 255, 0.2);
+}
+
+.melihelp-cordao-lead {
+    margin: 0 0 18px;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.65;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--sh-muted);
+}
+
+.melihelp-cordao-lead--prosa {
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.65;
+    letter-spacing: 0.02em;
+    text-transform: none;
+    color: var(--sh-text);
+}
+
+.melihelp-cordao-lead--prosa strong {
+    font-weight: 700;
+    color: var(--sh-text);
+}
+
+.melihelp-cordao-lead--prosa.melihelp-cordao-lead--upper {
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.melihelp-cordao-rec-delete-dialog {
+    max-width: min(420px, 94vw);
+}
+
+.melihelp-cordao-rec-delete-msg {
+    text-align: center;
+    margin-bottom: 8px;
+}
+
+.melihelp-cordao-rec-delete-actions {
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.melihelp-cordao-filter-banner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 14px;
+    padding: 12px 14px;
+    border-radius: var(--sh-radius-sm);
+    border: 1px solid rgba(0, 122, 255, 0.35);
+    background: rgba(0, 122, 255, 0.08);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+}
+
+.melihelp-cordao-filter-clear {
+    margin-left: auto;
+}
+
+.melihelp-cordao-text-input:focus {
+    outline: none;
+    border-color: rgba(0, 122, 255, 0.55);
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.15);
+}
+
+.melihelp-cordao-quick-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 14px;
+}
+
+.melihelp-cordao-modal-fields {
+    margin-bottom: 18px;
+}
+
+.melihelp-cordao-modal-fields .melihelp-cordao-field-label {
+    margin-top: 10px;
+}
+
+.melihelp-cordao-modal-fields .melihelp-cordao-field-label:first-child {
+    margin-top: 0;
+}
+
+#melihelp-cordao-year.melihelp-upload-dt-input {
+    max-width: 72px;
+}
+
+.melihelp-cordao-years {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.melihelp-cordao-year details {
+    border-radius: var(--sh-radius-sm);
+    border: 1px solid var(--sh-border);
+    background: var(--sh-glass);
+    overflow: hidden;
+}
+
+.melihelp-cordao-year summary {
+    list-style: none;
+    cursor: pointer;
+    padding: 14px 16px;
+    font-weight: 700;
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    user-select: none;
+}
+
+.melihelp-cordao-year summary::-webkit-details-marker {
+    display: none;
+}
+
+.melihelp-cordao-year summary::after {
+    content: '▼';
+    font-size: 10px;
+    opacity: 0.55;
+    transition: transform 0.2s;
+}
+
+.melihelp-cordao-year details[open] summary::after {
+    transform: rotate(-180deg);
+}
+
+.melihelp-cordao-year-badge {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--sh-muted);
+    background: var(--sh-glass-strong);
+    padding: 4px 10px;
+    border-radius: 999px;
+}
+
+.melihelp-cordao-table-wrap {
+    padding: 0 8px 14px;
+}
+
+/* Até ~10 linhas de dados visíveis; o restante rola com barra nativa do sistema (sem estilo custom na scrollbar). */
+.melihelp-cordao-table-scroll {
+    max-height: calc(2.625rem + 10 * 2.75rem);
+    overflow-x: auto;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; /* Firefox: rolagem ativa, barra invisível */
+    -ms-overflow-style: none; /* IE / Edge legado */
+}
+
+.melihelp-cordao-table-scroll::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none; /* Chrome, Safari, Edge (Chromium) */
+}
+
+/* Mês sem lançamentos: mesma moldura da tabela (2025/2026 ou outro), corpo vazio com altura mínima */
+.melihelp-cordao-table-scroll--empty {
+    min-height: calc(2.625rem + 3 * 2.75rem);
+}
+
+.melihelp-cordao-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.melihelp-cordao-table th,
+.melihelp-cordao-table td {
+    padding: 10px 12px;
+    text-align: center;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--sh-border);
+}
+
+.melihelp-cordao-table th {
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    color: var(--sh-muted);
+    font-weight: 700;
+    white-space: nowrap;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background-color: var(--sh-cordao-thead-bg);
+    background-clip: padding-box;
+}
+
+.melihelp-cordao-table tbody tr:hover {
+    background: rgba(0, 122, 255, 0.06);
+}
+
+.melihelp-cordao-origem {
+    font-size: 12px;
+    color: var(--sh-muted);
+}
+
+.melihelp-cordao-rec-row-actions {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.melihelp-cordao-rec-row-actions .melihelp-cordao-rec-delete,
+.melihelp-cordao-ret-row-actions .melihelp-cordao-ret-delete {
+    font-size: 14px;
+    min-width: 40px;
+    padding: 8px 10px;
+}
+
+.melihelp-cordao-ret-row-actions {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.melihelp-cordao-empty {
+    padding: 28px 16px;
+    text-align: center;
+    color: var(--sh-muted);
+    font-size: 15px;
+}
+
+.melihelp-nav-hub--route-active > .melihelp-nav-summary-root {
+    color: var(--sh-blue);
+}
+
+html[data-melihelp-theme="dark"] .melihelp-nav-hub--route-active > .melihelp-nav-summary-root {
+    color: #5ac8fa;
+}
+
+.melihelp-cordao-dash-hint {
+    margin: 16px 0 0;
+    padding: 14px 16px;
+    border-radius: var(--sh-radius-sm);
+    border: 1px solid var(--sh-border);
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.55;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--sh-muted);
+}
+
+.melihelp-cordao-dash-hint strong {
+    color: var(--sh-text);
+}
+
+.melihelp-cordao-mov-pick {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px 24px;
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid var(--sh-border);
+}
+
+.melihelp-cordao-mov-opt {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    color: var(--sh-text);
+}
+
+.melihelp-cordao-mov-opt input {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--sh-blue);
+}
+
+.melihelp-cordao-filter-banner--month {
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.melihelp-cordao-month-title-row {
+    margin-top: 8px;
+}
+
+.melihelp-cordao-month-h2 {
+    font-size: 1.35rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    margin: 0;
+}
+
+.melihelp-cordao-month-subline {
+    margin: 10px 0 0;
+    padding-inline-start: 18px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--sh-muted);
+}
+
+/* Modal editar cordão: fundo transparente + desfoque leve; caixa em vidro (glass-panel) */
+.melihelp-cordao-edit-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1160;
+    background: transparent;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.melihelp-cordao-edit-backdrop[hidden] {
+    display: none !important;
+}
+
+.melihelp-cordao-edit-dialog .melihelp-rename-doc-input + .melihelp-rename-doc-label {
+    margin-top: 14px;
+}
+
+.melihelp-cordao-rec-edit-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1160;
+    background: transparent;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.melihelp-cordao-rec-edit-backdrop[hidden] {
+    display: none !important;
+}
+
+.melihelp-cordao-quick--recebimento {
+    margin-bottom: 14px;
+    padding: 12px 14px;
+}
+
+.melihelp-cordao-quick--recebimento .melihelp-cordao-quick-title {
+    margin-bottom: 8px;
+}
+
+.melihelp-cordao-rec-quick-heading {
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 800;
+}
+
+.melihelp-cordao-rec-qty-label {
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+/* Recebimento: à esquerda quantidade + botões; card TOTAL à direita (como antes) */
+.melihelp-cordao-rec-form-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 14px 18px;
+    margin-top: 4px;
+}
+
+.melihelp-cordao-rec-entry-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    width: max-content;
+    max-width: 100%;
+    box-sizing: border-box;
+    flex: 0 1 auto;
+}
+
+.melihelp-cordao-rec-qty-block {
+    width: 100%;
+    box-sizing: border-box;
+    flex-shrink: 0;
+}
+
+.melihelp-cordao-rec-qty-input-full {
+    display: block;
+    width: 100%;
+    max-width: min(280px, 100%);
+    box-sizing: border-box;
+    min-height: 0;
+    padding: 7px 11px;
+    font-size: 15px;
+}
+
+.melihelp-cordao-rec-actions-btns {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: flex-start;
+    width: max-content;
+    max-width: 100%;
+    margin-top: 0;
+    gap: 8px;
+    box-sizing: border-box;
+}
+
+.melihelp-cordao-rec-actions-btns .melihelp-btn {
+    flex: 0 0 auto;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 6px 12px;
+    border-radius: 9px;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1.2;
+    box-sizing: border-box;
+    white-space: nowrap;
+}
+
+.melihelp-cordao-rec-actions-btns .melihelp-cordao-rec-btn-now {
+    padding-left: 14px;
+    padding-right: 14px;
+}
+
+.melihelp-cordao-rec-actions-btns .melihelp-btn-text-upper {
+    font-size: 9px;
+    letter-spacing: 0.06em;
+}
+
+.melihelp-cordao-rec-actions-btns .melihelp-btn-primary {
+    box-shadow: 0 3px 10px rgba(0, 122, 255, 0.22);
+}
+
+.melihelp-cordao-rec-actions-btns .melihelp-btn-primary:hover {
+    transform: translateY(-1px);
+}
+
+.melihelp-cordao-rec-stat-card {
+    flex: 0 0 auto;
+    width: auto;
+    min-width: 132px;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 7px 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    text-align: center;
+    border-radius: var(--sh-radius-sm);
+    border: 1px solid var(--sh-border);
+    background: var(--sh-glass-strong);
+    align-self: flex-start;
+}
+
+@media (min-width: 641px) {
+    .melihelp-cordao-rec-form-row {
+        flex-wrap: nowrap;
+    }
+
+    .melihelp-cordao-rec-stat-card {
+        margin-left: auto;
+        align-self: flex-end;
+    }
+}
+
+
+.melihelp-cordao-rec-stat-val {
+    font-size: 1.28rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    line-height: 1.1;
+    color: var(--sh-text);
+    font-variant-numeric: tabular-nums;
+}
+
+.melihelp-cordao-rec-stat-label {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--sh-muted);
+}
+
+@media (max-width: 640px) {
+    .melihelp-cordao-rec-form-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .melihelp-cordao-rec-entry-stack {
+        width: 100%;
+    }
+
+    .melihelp-cordao-rec-stat-card {
+        margin-left: 0;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+    }
+
+    .melihelp-cordao-rec-actions-btns {
+        width: 100%;
+        max-width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .melihelp-cordao-rec-actions-btns .melihelp-btn {
+        width: 100%;
+        white-space: nowrap;
+    }
+}
+
+.melihelp-cordao-lead--tight {
+    margin-top: 12px;
+    margin-bottom: 18px;
+}
+
+.melihelp-cordao-mov-tag {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    padding: 4px 8px;
+    border-radius: 8px;
+}
+
+.melihelp-cordao-mov-tag--out {
+    background: rgba(0, 122, 255, 0.15);
+    color: #007aff;
+}
+
+.melihelp-cordao-mov-tag--in {
+    background: rgba(52, 199, 89, 0.18);
+    color: #248a3d;
+}
+
+html[data-melihelp-theme="dark"] .melihelp-cordao-mov-tag--out {
+    color: #5ac8fa;
+}
+
+html[data-melihelp-theme="dark"] .melihelp-cordao-mov-tag--in {
+    color: #6ee7a0;
+}

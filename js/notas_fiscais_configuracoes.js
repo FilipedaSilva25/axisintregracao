@@ -1,339 +1,273 @@
 // ================= SISTEMA DE CONFIGURAÇÕES =================
 
-// Carregar configurações do localStorage
+var nfConfigGlassOutsideBound = false;
+
+function nfCloseAllConfigGlassDropdowns() {
+    document.querySelectorAll('#configuracoes .setor-selector-dropdown.is-open').forEach(function (d) {
+        d.classList.remove('is-open');
+        d.setAttribute('aria-hidden', 'true');
+        var tid = d.id.replace(/-dropdown$/, '-trigger');
+        var t = document.getElementById(tid);
+        if (t) t.setAttribute('aria-expanded', 'false');
+    });
+}
+
+function nfBindConfigGlassOutsideClick() {
+    if (nfConfigGlassOutsideBound) return;
+    nfConfigGlassOutsideBound = true;
+    document.addEventListener('click', function () {
+        if (!document.getElementById('configuracoes')) return;
+        nfCloseAllConfigGlassDropdowns();
+    });
+}
+
+function nfBuildDropdownFromSelect(select) {
+    var dropdown = document.getElementById(select.id + '-dropdown');
+    if (!dropdown) return;
+    dropdown.innerHTML = '';
+    Array.prototype.forEach.call(select.options, function (opt) {
+        var div = document.createElement('div');
+        div.className = 'setor-selector-option';
+        div.setAttribute('role', 'option');
+        div.setAttribute('data-value', opt.value);
+        div.textContent = opt.textContent;
+        dropdown.appendChild(div);
+    });
+}
+
+function nfSyncGlassFromSelect(selectId) {
+    var select = document.getElementById(selectId);
+    var trigger = document.getElementById(selectId + '-trigger');
+    var dropdown = document.getElementById(selectId + '-dropdown');
+    if (!select || !trigger || !dropdown) return;
+    var opt = select.options[select.selectedIndex];
+    trigger.textContent = opt ? opt.textContent.trim() : '';
+    dropdown.querySelectorAll('.setor-selector-option').forEach(function (o) {
+        o.classList.toggle('selected', (o.getAttribute('data-value') || '') === select.value);
+    });
+}
+
+function nfInitGlassSelect(selectId) {
+    var select = document.getElementById(selectId);
+    var trigger = document.getElementById(selectId + '-trigger');
+    var dropdown = document.getElementById(selectId + '-dropdown');
+    if (!select || !trigger || !dropdown) return;
+    if (select.dataset.nfGlassBound === '1') return;
+    select.dataset.nfGlassBound = '1';
+    nfBuildDropdownFromSelect(select);
+    trigger.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var wasOpen = dropdown.classList.contains('is-open');
+        nfCloseAllConfigGlassDropdowns();
+        if (!wasOpen) {
+            dropdown.classList.add('is-open');
+            trigger.setAttribute('aria-expanded', 'true');
+            dropdown.setAttribute('aria-hidden', 'false');
+            nfSyncGlassFromSelect(selectId);
+        }
+    });
+    dropdown.querySelectorAll('.setor-selector-option').forEach(function (optEl) {
+        optEl.addEventListener('click', function (e) {
+            e.stopPropagation();
+            var v = optEl.getAttribute('data-value') || '';
+            select.value = v;
+            trigger.textContent = optEl.textContent.trim();
+            dropdown.querySelectorAll('.setor-selector-option').forEach(function (o) {
+                o.classList.remove('selected');
+            });
+            optEl.classList.add('selected');
+            dropdown.classList.remove('is-open');
+            trigger.setAttribute('aria-expanded', 'false');
+            dropdown.setAttribute('aria-hidden', 'true');
+            select.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+    });
+    nfBindConfigGlassOutsideClick();
+    nfSyncGlassFromSelect(selectId);
+}
+
+var NF_GLASS_SELECT_IDS = [
+    'settings-items-per-page',
+    'settings-default-view',
+    'settings-currency',
+    'settings-date-format',
+    'notification-sound'
+];
+
+function nfInitAllGlassSelects() {
+    NF_GLASS_SELECT_IDS.forEach(nfInitGlassSelect);
+}
+
+function nfSyncAllConfigGlassSelects() {
+    NF_GLASS_SELECT_IDS.forEach(nfSyncGlassFromSelect);
+}
+
 function carregarConfiguracoes() {
-    const configs = JSON.parse(localStorage.getItem('axis_nf_configuracoes') || '{}');
-    
-    // Aplicar valores padrão
-    const configuracoesPadrao = {
-        // Geral
+    var configs = JSON.parse(localStorage.getItem('axis_nf_configuracoes') || '{}');
+
+    var configuracoesPadrao = {
         itemsPerPage: configs.itemsPerPage || '20',
         defaultView: configs.defaultView || 'grid',
         currency: configs.currency || 'BRL',
         dateFormat: configs.dateFormat || 'pt-BR',
         autoSave: configs.autoSave !== undefined ? configs.autoSave : true,
         animations: configs.animations !== undefined ? configs.animations : true,
-        
-        // Notificações
         notifyExpiring: configs.notifyExpiring !== undefined ? configs.notifyExpiring : true,
         notifyDaysBefore: configs.notifyDaysBefore || '7',
         notifyNew: configs.notifyNew !== undefined ? configs.notifyNew : true,
         notifyBackup: configs.notifyBackup !== undefined ? configs.notifyBackup : true,
         notificationSound: configs.notificationSound || 'none',
         desktopNotifications: configs.desktopNotifications !== undefined ? configs.desktopNotifications : false,
-        
-        // Integração
         googleDriveConnected: configs.googleDriveConnected || false,
         smtpServer: configs.smtpServer || 'smtp.gmail.com',
         smtpPort: configs.smtpPort || '587',
         smtpEmail: configs.smtpEmail || '',
         syncCloud: configs.syncCloud !== undefined ? configs.syncCloud : false,
         syncInterval: configs.syncInterval || '15',
-        
-        // Segurança
         sessionTimeout: configs.sessionTimeout || '15',
         autoLogout: configs.autoLogout !== undefined ? configs.autoLogout : false,
         twoFactorAuth: configs.twoFactorAuth !== undefined ? configs.twoFactorAuth : false,
         twoFactorMethod: configs.twoFactorMethod || 'email'
     };
-    
-    // Aplicar valores nos campos
-    document.getElementById('settings-items-per-page').value = configuracoesPadrao.itemsPerPage;
-    document.getElementById('settings-default-view').value = configuracoesPadrao.defaultView;
-    document.getElementById('settings-currency').value = configuracoesPadrao.currency;
-    document.getElementById('settings-date-format').value = configuracoesPadrao.dateFormat;
-    document.getElementById('settings-auto-save').checked = configuracoesPadrao.autoSave;
-    document.getElementById('settings-animations').checked = configuracoesPadrao.animations;
-    
-    document.getElementById('notify-expiring').checked = configuracoesPadrao.notifyExpiring;
-    document.getElementById('notify-days-before').value = configuracoesPadrao.notifyDaysBefore;
-    document.getElementById('notify-new').checked = configuracoesPadrao.notifyNew;
-    document.getElementById('notify-backup').checked = configuracoesPadrao.notifyBackup;
-    document.getElementById('notification-sound').value = configuracoesPadrao.notificationSound;
-    document.getElementById('desktop-notifications').checked = configuracoesPadrao.desktopNotifications;
-    
-    const googleDriveStatus = document.getElementById('google-drive-status');
-    if (googleDriveStatus) {
-        googleDriveStatus.innerHTML = configuracoesPadrao.googleDriveConnected 
-            ? '<span class="status-badge connected">Conectado</span><button class="btn-secondary" onclick="desconectarGoogleDrive()">Desconectar</button>'
-            : '<span class="status-badge disconnected">Não conectado</span><button class="btn-secondary" onclick="conectarGoogleDrive()">Conectar</button>';
+
+    function setSelect(id, value) {
+        var el = document.getElementById(id);
+        if (el && el.tagName === 'SELECT') el.value = value;
     }
-    document.getElementById('smtp-server').value = configuracoesPadrao.smtpServer;
-    document.getElementById('smtp-port').value = configuracoesPadrao.smtpPort;
-    document.getElementById('smtp-email').value = configuracoesPadrao.smtpEmail;
-    document.getElementById('sync-cloud').checked = configuracoesPadrao.syncCloud;
-    document.getElementById('sync-interval').value = configuracoesPadrao.syncInterval;
-    
-    document.getElementById('session-timeout').value = configuracoesPadrao.sessionTimeout;
-    document.getElementById('auto-logout').checked = configuracoesPadrao.autoLogout;
-    document.getElementById('two-factor-auth').checked = configuracoesPadrao.twoFactorAuth;
-    document.getElementById('two-factor-method').value = configuracoesPadrao.twoFactorMethod;
-    
-    // Mostrar/ocultar opções de 2FA
-    const authMethods = document.getElementById('auth-methods');
-    if (authMethods) {
-        authMethods.style.display = configuracoesPadrao.twoFactorAuth ? 'block' : 'none';
+    function setChecked(id, value) {
+        var el = document.getElementById(id);
+        if (el && el.type === 'checkbox') el.checked = value;
     }
-    
+    function setInput(id, value) {
+        var el = document.getElementById(id);
+        if (el) el.value = value;
+    }
+
+    setSelect('settings-items-per-page', configuracoesPadrao.itemsPerPage);
+    setSelect('settings-default-view', configuracoesPadrao.defaultView);
+    setSelect('settings-currency', configuracoesPadrao.currency);
+    setSelect('settings-date-format', configuracoesPadrao.dateFormat);
+    setChecked('settings-auto-save', configuracoesPadrao.autoSave);
+    setChecked('settings-animations', configuracoesPadrao.animations);
+
+    setChecked('notify-expiring', configuracoesPadrao.notifyExpiring);
+    setInput('notify-days-before', configuracoesPadrao.notifyDaysBefore);
+    setChecked('notify-new', configuracoesPadrao.notifyNew);
+    setChecked('notify-backup', configuracoesPadrao.notifyBackup);
+    setSelect('notification-sound', configuracoesPadrao.notificationSound);
+    setChecked('desktop-notifications', configuracoesPadrao.desktopNotifications);
+
+    nfSyncAllConfigGlassSelects();
     return configuracoesPadrao;
 }
 
-// Salvar configurações
 function saveSettings() {
-    const configuracoes = {
-        // Geral
-        itemsPerPage: document.getElementById('settings-items-per-page').value,
-        defaultView: document.getElementById('settings-default-view').value,
-        currency: document.getElementById('settings-currency').value,
-        dateFormat: document.getElementById('settings-date-format').value,
-        autoSave: document.getElementById('settings-auto-save').checked,
-        animations: document.getElementById('settings-animations').checked,
-        
-        // Notificações
-        notifyExpiring: document.getElementById('notify-expiring').checked,
-        notifyDaysBefore: document.getElementById('notify-days-before').value,
-        notifyNew: document.getElementById('notify-new').checked,
-        notifyBackup: document.getElementById('notify-backup').checked,
-        notificationSound: document.getElementById('notification-sound').value,
-        desktopNotifications: document.getElementById('desktop-notifications').checked,
-        
-        // Integração
-        smtpServer: document.getElementById('smtp-server').value,
-        smtpPort: document.getElementById('smtp-port').value,
-        smtpEmail: document.getElementById('smtp-email').value,
-        syncCloud: document.getElementById('sync-cloud').checked,
-        syncInterval: document.getElementById('sync-interval').value,
-        
-        // Segurança
-        sessionTimeout: document.getElementById('session-timeout').value,
-        autoLogout: document.getElementById('auto-logout').checked,
-        twoFactorAuth: document.getElementById('two-factor-auth').checked,
-        twoFactorMethod: document.getElementById('two-factor-method').value
-    };
-    
-    // Salvar no localStorage
+    var prev = JSON.parse(localStorage.getItem('axis_nf_configuracoes') || '{}');
+
+    function val(id, fallback) {
+        var el = document.getElementById(id);
+        return el ? el.value : fallback;
+    }
+    function chk(id, fallback) {
+        var el = document.getElementById(id);
+        return el ? el.checked : fallback;
+    }
+
+    var configuracoes = Object.assign({}, prev, {
+        itemsPerPage: val('settings-items-per-page', prev.itemsPerPage || '20'),
+        defaultView: val('settings-default-view', prev.defaultView || 'grid'),
+        currency: val('settings-currency', prev.currency || 'BRL'),
+        dateFormat: val('settings-date-format', prev.dateFormat || 'pt-BR'),
+        autoSave: chk('settings-auto-save', prev.autoSave !== false),
+        animations: chk('settings-animations', prev.animations !== false),
+        notifyExpiring: chk('notify-expiring', prev.notifyExpiring !== false),
+        notifyDaysBefore: val('notify-days-before', prev.notifyDaysBefore || '7'),
+        notifyNew: chk('notify-new', prev.notifyNew !== false),
+        notifyBackup: chk('notify-backup', prev.notifyBackup !== false),
+        notificationSound: val('notification-sound', prev.notificationSound || 'none'),
+        desktopNotifications: chk('desktop-notifications', !!prev.desktopNotifications)
+    });
+
     localStorage.setItem('axis_nf_configuracoes', JSON.stringify(configuracoes));
-    
-    // Aplicar algumas configurações imediatamente
+
     if (typeof state !== 'undefined' && state.viewMode) {
         state.viewMode = configuracoes.defaultView;
     }
-    
-    // Mostrar toast de sucesso
+
     if (typeof mostrarToast !== 'undefined') {
-        mostrarToast('Configurações salvas com sucesso!', 'success');
+        mostrarToast('As configurações foram salvas com sucesso.', 'success');
     } else {
-        alert('Configurações salvas com sucesso!');
+        alert('As configurações foram salvas com sucesso.');
     }
 }
 
-// Restaurar padrões
 function resetSettings() {
     if (!confirm('Deseja restaurar todas as configurações para os valores padrão?')) {
         return;
     }
-    
-    // Remover configurações do localStorage
+
     localStorage.removeItem('axis_nf_configuracoes');
-    
-    // Recarregar configurações (que aplicará os padrões)
     carregarConfiguracoes();
-    
+
     if (typeof mostrarToast !== 'undefined') {
-        mostrarToast('Configurações restauradas para os valores padrão', 'success');
+        mostrarToast('Os valores padrão foram restaurados.', 'success');
     } else {
-        alert('Configurações restauradas para os valores padrão');
+        alert('Os valores padrão foram restaurados.');
     }
 }
 
-// Resetar todos os dados
 function resetAllData() {
     if (!confirm('ATENÇÃO: Esta ação irá apagar TODOS os dados do sistema (notas fiscais, configurações, etc.). Esta ação NÃO pode ser desfeita.\n\nDeseja realmente continuar?')) {
         return;
     }
-    
+
     if (!confirm('Tem CERTEZA? Todos os dados serão perdidos permanentemente!')) {
         return;
     }
-    
-    // Limpar localStorage
-    const keysToKeep = []; // Lista de chaves para manter (se houver)
-    const keys = Object.keys(localStorage);
-    keys.forEach(function(key) {
+
+    var keysToKeep = [];
+    Object.keys(localStorage).forEach(function (key) {
         if (keysToKeep.indexOf(key) === -1) {
             localStorage.removeItem(key);
         }
     });
-    
+
     if (typeof mostrarToast !== 'undefined') {
         mostrarToast('Todos os dados foram resetados. A página será recarregada.', 'success');
     } else {
         alert('Todos os dados foram resetados. A página será recarregada.');
     }
-    
-    // Recarregar página após 2 segundos
-    setTimeout(function() {
+
+    setTimeout(function () {
         window.location.reload();
     }, 2000);
 }
 
-// Abrir aba de configurações
 function openSettingsTab(tabId) {
-    // Remover active de todos os botões e conteúdos
-    document.querySelectorAll('.tab-btn').forEach(function(btn) {
+    var root = document.querySelector('#configuracoes .settings-tabs');
+    if (!root) return;
+    root.querySelectorAll('.tab-btn').forEach(function (btn) {
         btn.classList.remove('active');
     });
-    
-    document.querySelectorAll('.tab-content').forEach(function(content) {
+    root.querySelectorAll('.tab-content').forEach(function (content) {
         content.classList.remove('active');
     });
-    
-    // Ativar botão e conteúdo selecionados
-    const btn = document.querySelector(`.tab-btn[onclick*="'${tabId}'"]`);
-    const content = document.getElementById(`tab-${tabId}`);
-    
+    var btn = root.querySelector('.tab-btn[data-settings-tab="' + tabId + '"]');
+    var content = document.getElementById('tab-' + tabId);
     if (btn) btn.classList.add('active');
     if (content) content.classList.add('active');
 }
 
-// Conectar Google Drive
-function conectarGoogleDrive() {
-    if (typeof mostrarToast !== 'undefined') {
-        mostrarToast('Funcionalidade de Google Drive em desenvolvimento', 'info');
-    } else {
-        alert('Funcionalidade de Google Drive em desenvolvimento');
-    }
-    
-    // Simular conexão (apenas para demonstração)
-    const configs = JSON.parse(localStorage.getItem('axis_nf_configuracoes') || '{}');
-    configs.googleDriveConnected = true;
-    localStorage.setItem('axis_nf_configuracoes', JSON.stringify(configs));
-    
-    const googleDriveStatus = document.getElementById('google-drive-status');
-    if (googleDriveStatus) {
-        googleDriveStatus.innerHTML = '<span class="status-badge connected">Conectado</span><button class="btn-secondary" onclick="desconectarGoogleDrive()">Desconectar</button>';
-    }
-}
-
-// Desconectar Google Drive
-function desconectarGoogleDrive() {
-    const configs = JSON.parse(localStorage.getItem('axis_nf_configuracoes') || '{}');
-    configs.googleDriveConnected = false;
-    localStorage.setItem('axis_nf_configuracoes', JSON.stringify(configs));
-    
-    const googleDriveStatus = document.getElementById('google-drive-status');
-    if (googleDriveStatus) {
-        googleDriveStatus.innerHTML = '<span class="status-badge disconnected">Não conectado</span><button class="btn-secondary" onclick="conectarGoogleDrive()">Conectar</button>';
-    }
-}
-
-// Testar conexão de e-mail
-function testarEmail() {
-    const server = document.getElementById('smtp-server').value;
-    const port = document.getElementById('smtp-port').value;
-    const email = document.getElementById('smtp-email').value;
-    
-    if (!server || !port || !email) {
-        if (typeof mostrarToast !== 'undefined') {
-            mostrarToast('Preencha todos os campos de e-mail', 'error');
-        } else {
-            alert('Preencha todos os campos de e-mail');
-        }
-        return;
-    }
-    
-    if (typeof mostrarToast !== 'undefined') {
-        mostrarToast('Testando conexão...', 'info');
-    }
-    
-    // Simular teste (apenas para demonstração)
-    setTimeout(function() {
-        if (typeof mostrarToast !== 'undefined') {
-            mostrarToast('Conexão de e-mail testada com sucesso!', 'success');
-        } else {
-            alert('Conexão de e-mail testada com sucesso!');
-        }
-    }, 1500);
-}
-
-// Alterar senha
-function changePassword() {
-    const current = document.getElementById('current-password').value;
-    const newPass = document.getElementById('new-password').value;
-    const confirm = document.getElementById('confirm-password').value;
-    
-    if (!current || !newPass || !confirm) {
-        if (typeof mostrarToast !== 'undefined') {
-            mostrarToast('Preencha todos os campos de senha', 'error');
-        } else {
-            alert('Preencha todos os campos de senha');
-        }
-        return;
-    }
-    
-    if (newPass !== confirm) {
-        if (typeof mostrarToast !== 'undefined') {
-            mostrarToast('As senhas não coincidem', 'error');
-        } else {
-            alert('As senhas não coincidem');
-        }
-        return;
-    }
-    
-    if (newPass.length < 6) {
-        if (typeof mostrarToast !== 'undefined') {
-            mostrarToast('A senha deve ter pelo menos 6 caracteres', 'error');
-        } else {
-            alert('A senha deve ter pelo menos 6 caracteres');
-        }
-        return;
-    }
-    
-    // Aqui seria feita a validação da senha atual e alteração real
-    // Por enquanto, apenas simular
-    
-    if (typeof mostrarToast !== 'undefined') {
-        mostrarToast('Senha alterada com sucesso!', 'success');
-    } else {
-        alert('Senha alterada com sucesso!');
-    }
-    
-    // Limpar campos
-    document.getElementById('current-password').value = '';
-    document.getElementById('new-password').value = '';
-    document.getElementById('confirm-password').value = '';
-}
-
-// Toggle 2FA
-function toggle2FA() {
-    const twoFactorCheckbox = document.getElementById('two-factor-auth');
-    const authMethods = document.getElementById('auth-methods');
-    
-    if (twoFactorCheckbox && authMethods) {
-        authMethods.style.display = twoFactorCheckbox.checked ? 'block' : 'none';
-    }
-}
-
-// Inicializar ao carregar a página
-document.addEventListener('DOMContentLoaded', function() {
-    // Carregar configurações ao carregar a página
-    setTimeout(function() {
+document.addEventListener('DOMContentLoaded', function () {
+    setTimeout(function () {
+        nfInitAllGlassSelects();
         carregarConfiguracoes();
-        // Garantir que 2FA está no estado correto
-        toggle2FA();
-    }, 500);
+    }, 100);
 });
 
-// Exportar funções globalmente
 window.saveSettings = saveSettings;
 window.resetSettings = resetSettings;
 window.resetAllData = resetAllData;
 window.openSettingsTab = openSettingsTab;
-window.conectarGoogleDrive = conectarGoogleDrive;
-window.desconectarGoogleDrive = desconectarGoogleDrive;
-window.testarEmail = testarEmail;
-window.changePassword = changePassword;
 window.carregarConfiguracoes = carregarConfiguracoes;
-window.toggle2FA = toggle2FA;
 
-console.log('✅ Sistema de configurações carregado!');

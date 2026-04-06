@@ -114,7 +114,7 @@ async function startConnector() {
                     reconnectTimeoutId = null;
                 }
                 console.log('\n✅ Bot WhatsApp conectado! Número:', botNumber || '(configure perfil: foto AXIS, nome AXIS INTEGRAÇÃO)');
-                console.log('   Envie "oi" ou "menu" para ver opções: Troca de Cabeça, Manutenção Preventiva, Status de Bancada.\n');
+                console.log('   Envie "oi" ou "menu" para ver opções (incl. chamado Selbetti — opção 8).\n');
             }
         });
 
@@ -166,7 +166,7 @@ async function startConnector() {
                 console.log('[Bot] Mensagem de', fromJid, ':', String(text).trim().substring(0, 50));
 
                 try {
-                    const baseUrl = process.env.BASE_URL || (process.env.PORT ? `http://localhost:${PORT}` : '');
+                    const baseUrl = process.env.BASE_URL || `http://localhost:${PORT}`;
                     const getBancadasStatus = async () => {
                         try {
                             return readJsonSync(BANCADAS_STATUS_FILE, { bancadas: {}, updatedAt: null });
@@ -303,6 +303,16 @@ async function startConnector() {
                         await writeJson(REGISTRO_CHAMADOS_FILE, chamados);
                     };
 
+                    const sendFollowUp = async (txt) => {
+                        if (!sock || !jid || txt == null || String(txt) === '') return;
+                        try {
+                            await sock.sendMessage(jid, { text: String(txt).substring(0, 4096) });
+                            console.log('[Bot] Follow-up Selbetti/envio tardio para', fromJid);
+                        } catch (e) {
+                            console.error('[Bot] sendFollowUp:', e.message);
+                        }
+                    };
+
                     const reply = await handleIncoming(
                         { from: fromJid, body: text },
                         (phone, r) => r,
@@ -323,7 +333,17 @@ async function startConnector() {
                             });
                             await writeJson(PACKING_TROCAS_FILE, trocas);
                         },
-                        { getBancadasStatus, baseUrl, updateBancadaStatus, getPecasEstoque, registerPecasEntrada, registerPecasSaida, registerChamado, registerPreventiva: registerPreventivaFromWhatsApp }
+                        {
+                            getBancadasStatus,
+                            baseUrl,
+                            updateBancadaStatus,
+                            getPecasEstoque,
+                            registerPecasEntrada,
+                            registerPecasSaida,
+                            registerChamado,
+                            registerPreventiva: registerPreventivaFromWhatsApp,
+                            sendFollowUp
+                        }
                     );
 
                     if (reply && sock) {

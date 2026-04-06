@@ -369,7 +369,12 @@ function atualizarUltimasNotasDashboard(notas) {
     });
     var limite = Math.min(12, copia.length);
     var html = '';
-    var fmtData = typeof formatarData === 'function' ? formatarData : null;
+    var fmtData =
+        typeof formatarDataNotaCard === 'function'
+            ? formatarDataNotaCard
+            : typeof formatarData === 'function'
+              ? formatarData
+              : null;
     var fmtMoeda = typeof formatarMoeda === 'function' ? formatarMoeda : null;
 
     for (var i = 0; i < limite; i++) {
@@ -453,7 +458,7 @@ function buscarNotasFiscais(termo) {
     renderizarNotasFiscais(resultados);
 }
 
-// Filtrar por status
+// Filtrar por status (UI dos segmentos é atualizada em notas_fiscais_botoes.js, que carrega depois)
 function filtrarPorStatus(status) {
     const notas = window.notasFiscais || (typeof state !== 'undefined' ? state.notasFiscais : []);
     let filtradas = notas;
@@ -477,11 +482,15 @@ function filtrarPorStatus(status) {
     
     renderizarNotasFiscais(filtradas);
     
-    // Atualizar tabs
-    document.querySelectorAll('.filter-tab').forEach(function(tab) {
+    document.querySelectorAll('.filter-tab--segment').forEach(function(tab) {
         tab.classList.remove('active');
+        tab.setAttribute('aria-selected', 'false');
     });
-    event.target.classList.add('active');
+    var seg = document.querySelector('.filter-tab--segment[data-nf-status-filter="' + status + '"]');
+    if (seg) {
+        seg.classList.add('active');
+        seg.setAttribute('aria-selected', 'true');
+    }
 }
 
 // Alterar visualização
@@ -529,41 +538,55 @@ function renderizarGridNotas(notas) {
         const statusClass = nota.status === 'pago' || nota.status === 'paga' ? 'success' : 
                            nota.status === 'vencido' || nota.status === 'vencida' ? 'danger' : 
                            nota.status === 'pendente' ? 'warning' : 'info';
-        
         const notaIdUnico = nota.id || nota.numero || ('nota_' + index);
         html += `
             <div class="nf-card axis-card nf-card-selectable" data-nf-id="${notaIdUnico}" onclick="abrirDetalhesNF('${notaIdUnico}')">
                 <div class="nf-card-glow" aria-hidden="true"></div>
-                <div class="nf-card-check-wrap">
-                    <input type="checkbox" class="nf-checkbox" data-nf-id="${notaIdUnico}" onclick="event.stopPropagation(); toggleSelecaoNF('${notaIdUnico}');" title="Selecionar para exclusão em massa">
-                </div>
                 <div class="nf-card-top">
-                    <span class="nf-card-pdf-badge" aria-hidden="true"><i class="fas fa-file-pdf"></i></span>
-                    <div class="nf-card-header">
-                        <span class="nf-number">NF-${nota.numero || 'N/A'}</span>
+                    <span class="nf-card-kind-badge nf-card-kind-badge--${statusClass}" aria-hidden="true" title="Nota fiscal"><i class="fas fa-file-invoice"></i></span>
+                    <div class="nf-card-header nf-card-header--status-only">
                         <span class="status-badge ${statusClass}">${nota.status || 'pendente'}</span>
                     </div>
                 </div>
                 <div class="nf-card-body">
                     <h4 class="nf-card-cliente">${nota.cliente || nota.fornecedor || 'Fornecedor não informado'}</h4>
-                    <div class="nf-card-meta">
-                        <span class="nf-card-meta-item"><i class="fas fa-calendar-alt"></i> ${formatarData(nota.data)}</span>
-                        <span class="nf-card-meta-item nf-card-valor">${formatarMoeda(nota.valor)}</span>
+                    <div class="nf-card-meta nf-card-meta-datas">
+                        <div class="nf-card-data-line nf-card-data-line--emissao">
+                            <span class="nf-card-dt-label">Emissão</span>
+                            <span class="nf-card-dt-value">${formatarDataNotaCard(nota.data)}</span>
+                            <i class="fas fa-calendar-check nf-card-dt-cal" aria-hidden="true"></i>
+                        </div>
+                        <div class="nf-card-nota-chip-row">
+                            <div class="nf-card-nota-chip" title="Número da nota">
+                                <i class="fas fa-file-invoice" aria-hidden="true"></i>
+                                <span class="nf-card-nota-chip-num">NF-${nota.numero || 'N/A'}</span>
+                            </div>
+                        </div>
+                        <div class="nf-card-meta-row-valor">
+                            <span class="nf-card-valor">${formatarMoeda(nota.valor)}</span>
+                        </div>
                     </div>
                 </div>
                 <div class="nf-card-actions">
-                    <button type="button" class="nf-btn nf-btn-view" onclick="event.stopPropagation(); if(typeof abrirModalVisualizarNF==='function')abrirModalVisualizarNF('${notaIdUnico}'); else if(typeof mostrarPreviewRapidoNF==='function')mostrarPreviewRapidoNF('${notaIdUnico}');" title="Ver documento">
-                        <i class="fas fa-eye"></i>
-                    </button>
-                    <button type="button" class="nf-btn nf-btn-icon" onclick="event.stopPropagation(); editarNF('${notaIdUnico}')" title="Editar">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button type="button" class="nf-btn nf-btn-icon" onclick="event.stopPropagation(); if(typeof confirmarDownloadPDF==='function')confirmarDownloadPDF('${notaIdUnico}'); else if(typeof baixarPDF==='function')baixarPDF('${notaIdUnico}');" title="Baixar">
-                        <i class="fas fa-download"></i>
-                    </button>
-                    <button type="button" class="nf-btn nf-btn-icon nf-btn-trash" onclick="event.stopPropagation(); moverParaLixeiraNF('${notaIdUnico}');" title="Lixeira">
-                        <i class="fas fa-trash-alt"></i>
-                    </button>
+                    <div class="nf-card-actions-main">
+                        <button type="button" class="nf-btn nf-btn-view" onclick="event.stopPropagation(); if(typeof abrirModalVisualizarNF==='function')abrirModalVisualizarNF('${notaIdUnico}'); else if(typeof mostrarPreviewRapidoNF==='function')mostrarPreviewRapidoNF('${notaIdUnico}');" title="Ver documento">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button type="button" class="nf-btn nf-btn-icon" onclick="event.stopPropagation(); editarNF('${notaIdUnico}')" title="Editar">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button type="button" class="nf-btn nf-btn-icon nf-btn-pdf" onclick="event.stopPropagation(); if(typeof confirmarDownloadPDF==='function')confirmarDownloadPDF('${notaIdUnico}'); else if(typeof baixarPDF==='function')baixarPDF('${notaIdUnico}');" title="Baixar PDF">
+                            <i class="fas fa-file-pdf"></i>
+                        </button>
+                    </div>
+                    <div class="nf-card-actions-end" onclick="event.stopPropagation();">
+                        <button type="button" class="nf-btn nf-btn-icon nf-btn-trash" onclick="event.stopPropagation(); moverParaLixeiraNF('${notaIdUnico}');" title="Lixeira">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                        <label class="nf-card-select-hit" title="Selecionar para exclusão em massa" onclick="event.stopPropagation();">
+                            <input type="checkbox" class="nf-checkbox" data-nf-id="${notaIdUnico}" onclick="event.stopPropagation(); toggleSelecaoNF('${notaIdUnico}');" title="Selecionar para exclusão em massa">
+                        </label>
+                    </div>
                 </div>
             </div>
         `;
@@ -577,7 +600,7 @@ function renderizarListaNotas(notas) {
     if (!tbody) return;
     
     if (notas.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 40px; color: var(--text-secondary);">Nenhuma nota fiscal encontrada</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 40px; color: var(--text-secondary);">Nenhuma nota fiscal encontrada</td></tr>';
         return;
     }
     
@@ -595,8 +618,7 @@ function renderizarListaNotas(notas) {
                 </td>
                 <td>NF-${nota.numero || 'N/A'}</td>
                 <td>${nota.cliente || nota.fornecedor || '-'}</td>
-                <td>${formatarData(nota.data)}</td>
-                <td>${nota.dataVencimento ? formatarData(nota.dataVencimento) : '-'}</td>
+                <td>${formatarDataNotaCard(nota.data)}</td>
                 <td>${formatarMoeda(nota.valor)}</td>
                 <td><span class="status-badge ${statusClass}">${nota.status || 'pendente'}</span></td>
                 <td class="col-acoes">
@@ -621,11 +643,47 @@ function renderizarListaNotas(notas) {
 }
 
 // Funções auxiliares
+function axisParseDataNotaParaDate(data) {
+    if (data == null || data === '') return null;
+    if (typeof data === 'string') {
+        var t = data.trim();
+        if (/^\d{4}-\d{2}-\d{2}$/.test(t)) {
+            var p = t.split('-');
+            return new Date(parseInt(p[0], 10), parseInt(p[1], 10) - 1, parseInt(p[2], 10));
+        }
+    }
+    var d = new Date(data);
+    return isNaN(d.getTime()) ? null : d;
+}
+
 function formatarData(data) {
-    if (!data) return '-';
-    const d = new Date(data);
-    if (isNaN(d.getTime())) return data;
+    if (!data && data !== 0) return '-';
+    var d = axisParseDataNotaParaDate(data);
+    if (!d) return typeof data === 'string' ? data : '-';
     return d.toLocaleDateString('pt-BR');
+}
+
+/**
+ * Antigas: só data (valor guardado como YYYY-MM-DD, sem hora).
+ * Novas: ISO / datetime-local / qualquer string com hora → dd/mm/aaaa, hh:mm:ss.
+ */
+function formatarDataNotaCard(data) {
+    if (!data && data !== 0) return '-';
+    var s = String(data).trim();
+    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+        var dS = axisParseDataNotaParaDate(s);
+        return dS ? dS.toLocaleDateString('pt-BR') : s;
+    }
+    var d = axisParseDataNotaParaDate(data);
+    if (!d) return s;
+    return d.toLocaleString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+    });
 }
 
 function formatarMoeda(valor) {
@@ -635,17 +693,170 @@ function formatarMoeda(valor) {
 
 // Exportar funções auxiliares
 window.formatarData = formatarData;
+window.formatarDataNotaCard = formatarDataNotaCard;
 window.formatarMoeda = formatarMoeda;
 
 // Seleção de notas
 let notasSelecionadas = [];
 
+function axisNfFaviconLinkEl() {
+    return document.querySelector('link[rel~="icon"]');
+}
+
+function axisInicializarHrefFaviconPadrao() {
+    var link = axisNfFaviconLinkEl();
+    if (link && !link.getAttribute('data-axis-default-href')) {
+        try {
+            link.setAttribute('data-axis-default-href', link.href);
+        } catch (e1) {
+            link.setAttribute('data-axis-default-href', link.getAttribute('href') || '');
+        }
+    }
+}
+
+function axisResetNFFavicon() {
+    var link = axisNfFaviconLinkEl();
+    if (!link) return;
+    var def = link.getAttribute('data-axis-default-href');
+    if (def) {
+        link.href = def;
+    }
+}
+
+function axisNotaPorIdLista(nfId) {
+    if (typeof state === 'undefined' || !state.notasFiscais) return null;
+    var idStr = String(nfId);
+    var arr = state.notasFiscais;
+    for (var i = 0; i < arr.length; i++) {
+        var n = arr[i];
+        if (n && (String(n.id) === idStr || String(n.numero) === idStr)) return n;
+    }
+    if (idStr.indexOf('nota_') === 0) {
+        var ix = parseInt(idStr.replace('nota_', ''), 10);
+        if (!isNaN(ix) && arr[ix]) return arr[ix];
+    }
+    return null;
+}
+
+/** Texto no centro do favicon: 1 NF → número; várias → contagem */
+function axisLabelFaviconSelecao() {
+    var n = notasSelecionadas.length;
+    if (n === 0) return '';
+    if (n > 1) {
+        return n > 99 ? '99+' : String(n);
+    }
+    var nota = axisNotaPorIdLista(notasSelecionadas[0]);
+    var raw = nota ? String(nota.numero != null ? nota.numero : (nota.id != null ? nota.id : '')) : '';
+    raw = raw.replace(/^NF-?/i, '').trim();
+    if (!raw && nota && nota.numero != null) raw = String(nota.numero);
+    raw = raw.replace(/\s/g, '');
+    if (raw.length > 7) raw = raw.slice(-7);
+    return raw || '•';
+}
+
+function axisDesenharFaviconComNumeroCentral(label, imgSrcAbsoluto) {
+    var link = axisNfFaviconLinkEl();
+    if (!link || !label) return;
+    axisInicializarHrefFaviconPadrao();
+    var size = 64;
+    var canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    var ctx = canvas.getContext('2d');
+    function finalizarComMascaraCentro() {
+        var r = size * 0.36;
+        ctx.fillStyle = 'rgba(0,0,0,0.45)';
+        ctx.beginPath();
+        ctx.arc(size / 2, size / 2, r, 0, Math.PI * 2);
+        ctx.fill();
+        var fs =
+            label.length > 3 ? Math.floor(size * 0.19) : label.length > 1 ? Math.floor(size * 0.24) : Math.floor(size * 0.3);
+        ctx.font = 'bold ' + fs + 'px system-ui, "Segoe UI", Arial, sans-serif';
+        ctx.fillStyle = '#ffffff';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(label, size / 2, size / 2 + 1);
+        try {
+            link.href = canvas.toDataURL('image/png');
+        } catch (e2) {}
+    }
+    if (imgSrcAbsoluto) {
+        var im = new Image();
+        im.onload = function() {
+            try {
+                ctx.drawImage(im, 0, 0, size, size);
+            } catch (e3) {
+                ctx.fillStyle = '#2ecc71';
+                ctx.fillRect(0, 0, size, size);
+            }
+            finalizarComMascaraCentro();
+        };
+        im.onerror = function() {
+            ctx.fillStyle = '#2ecc71';
+            ctx.fillRect(0, 0, size, size);
+            finalizarComMascaraCentro();
+        };
+        im.src = imgSrcAbsoluto;
+    } else {
+        ctx.fillStyle = '#2ecc71';
+        ctx.fillRect(0, 0, size, size);
+        finalizarComMascaraCentro();
+    }
+}
+
+function axisAtualizarFaviconNFsSelecionadas() {
+    var link = axisNfFaviconLinkEl();
+    if (!link) return;
+    if (notasSelecionadas.length === 0) {
+        axisResetNFFavicon();
+        return;
+    }
+    axisInicializarHrefFaviconPadrao();
+    var label = axisLabelFaviconSelecao();
+    if (!label) label = String(notasSelecionadas.length);
+    var def = link.getAttribute('data-axis-default-href') || link.href;
+    var abs;
+    try {
+        abs = new URL(def, window.location.href).href;
+    } catch (e4) {
+        abs = '';
+    }
+    axisDesenharFaviconComNumeroCentral(label, abs);
+}
+
+function nfsListBibliotecaEstaVisivel() {
+    var list = document.getElementById('nfs-list');
+    if (!list) return false;
+    return window.getComputedStyle(list).display !== 'none';
+}
+
+function obterCheckboxesNFBibliotecaVisiveis() {
+    var list = document.getElementById('nfs-list');
+    var grid = document.getElementById('nfs-grid');
+    if (list && nfsListBibliotecaEstaVisivel()) {
+        return list.querySelectorAll('.nf-checkbox');
+    }
+    if (grid) return grid.querySelectorAll('.nf-checkbox');
+    return document.querySelectorAll('#nfs-grid .nf-checkbox');
+}
+
+function sincronizarCheckboxNFPorId(nfId, marcado) {
+    if (!nfId) return;
+    document.querySelectorAll('#notas .nf-checkbox[data-nf-id="' + nfId + '"]').forEach(function (el) {
+        el.checked = marcado;
+    });
+}
+
 function toggleSelecaoNF(id) {
+    id = String(id == null ? '' : id);
+    if (!id) return;
     const index = notasSelecionadas.indexOf(id);
     if (index >= 0) {
         notasSelecionadas.splice(index, 1);
+        sincronizarCheckboxNFPorId(id, false);
     } else {
         notasSelecionadas.push(id);
+        sincronizarCheckboxNFPorId(id, true);
     }
     
     atualizarBarraAcoesMassa();
@@ -653,18 +864,22 @@ function toggleSelecaoNF(id) {
 
 function selecionarTodasNotas() {
     const checkbox = document.getElementById('select-all-nfs');
-    const checkboxes = document.querySelectorAll('.nf-checkbox');
+    const checkboxes = document.querySelectorAll('#nfs-list .nf-checkbox');
     
     if (checkbox && checkbox.checked) {
         notasSelecionadas = [];
         checkboxes.forEach(function(cb) {
-            cb.checked = true;
-            notasSelecionadas.push(cb.dataset.nfId);
+            var nid = cb.dataset.nfId;
+            if (nid) {
+                notasSelecionadas.push(nid);
+                sincronizarCheckboxNFPorId(nid, true);
+            }
         });
     } else {
         notasSelecionadas = [];
         checkboxes.forEach(function(cb) {
-            cb.checked = false;
+            var nid = cb.dataset.nfId;
+            if (nid) sincronizarCheckboxNFPorId(nid, false);
         });
     }
     
@@ -692,11 +907,63 @@ function selecionarTodasNotasToolbar() {
     atualizarBarraAcoesMassa();
 }
 
+/** Seleciona todas as notas visíveis na biblioteca ou limpa a seleção (botão ao lado dos filtros). */
+function alternarSelecaoNotasVisiveisBiblioteca() {
+    var checkboxes = obterCheckboxesNFBibliotecaVisiveis();
+    if (!checkboxes.length) {
+        if (typeof mostrarToast === 'function') {
+            mostrarToast('Nenhuma nota para selecionar', 'info');
+        }
+        return;
+    }
+    var idsVisiveis = [];
+    for (var i = 0; i < checkboxes.length; i++) {
+        if (checkboxes[i].dataset.nfId) idsVisiveis.push(checkboxes[i].dataset.nfId);
+    }
+    var allSelected =
+        idsVisiveis.length > 0 &&
+        notasSelecionadas.length === idsVisiveis.length &&
+        idsVisiveis.every(function (id) {
+            return notasSelecionadas.indexOf(id) >= 0;
+        });
+    notasSelecionadas = [];
+    if (!allSelected) {
+        notasSelecionadas = idsVisiveis.slice();
+        idsVisiveis.forEach(function (id) {
+            sincronizarCheckboxNFPorId(id, true);
+        });
+    } else {
+        document.querySelectorAll('#notas .nf-checkbox').forEach(function (cb) {
+            cb.checked = false;
+        });
+    }
+    var selectAllList = document.getElementById('select-all-nfs');
+    if (selectAllList) {
+        selectAllList.checked = !allSelected && notasSelecionadas.length === idsVisiveis.length;
+    }
+    atualizarBarraAcoesMassa();
+}
+
 function sincronizarToolbarSelecao() {
     var toolbarCb = document.getElementById('select-all-nfs-toolbar');
-    var checkboxes = document.querySelectorAll('.nf-checkbox');
+    var vis = obterCheckboxesNFBibliotecaVisiveis();
+    var idsVis = [];
+    for (var i = 0; i < vis.length; i++) {
+        if (vis[i].dataset.nfId) idsVis.push(vis[i].dataset.nfId);
+    }
+    var allOn =
+        idsVis.length > 0 &&
+        notasSelecionadas.length === idsVis.length &&
+        idsVis.every(function (id) {
+            return notasSelecionadas.indexOf(id) >= 0;
+        });
     if (toolbarCb) {
-        toolbarCb.checked = checkboxes.length > 0 && notasSelecionadas.length === checkboxes.length;
+        toolbarCb.checked = allOn;
+    }
+    var btnSel = document.getElementById('btn-selecionar-notas-biblioteca');
+    if (btnSel) {
+        btnSel.classList.toggle('active', allOn);
+        btnSel.setAttribute('aria-pressed', allOn ? 'true' : 'false');
     }
     var countEl = document.getElementById('mass-count-text');
     if (countEl) countEl.textContent = notasSelecionadas.length + ' selecionadas';
@@ -705,32 +972,35 @@ function sincronizarToolbarSelecao() {
 function atualizarBarraAcoesMassa() {
     var bar = document.getElementById('batch-actions-bar');
     var count = document.getElementById('batch-count');
+    if (bar) {
+        bar.style.removeProperty('display');
+    }
     if (bar && count) {
         if (notasSelecionadas.length > 0) {
-            bar.style.display = 'block';
+            bar.classList.add('batch-actions-bar--visible');
+            bar.setAttribute('aria-hidden', 'false');
             count.textContent = notasSelecionadas.length + ' selecionadas';
         } else {
-            bar.style.display = 'none';
+            bar.classList.remove('batch-actions-bar--visible');
+            bar.setAttribute('aria-hidden', 'true');
         }
     }
     var countText = document.getElementById('mass-count-text');
     if (countText) countText.textContent = notasSelecionadas.length + ' selecionadas';
     sincronizarToolbarSelecao();
+    axisAtualizarFaviconNFsSelecionadas();
 }
 
 function fecharBarraAcoesMassa() {
-    var bar = document.getElementById('batch-actions-bar');
-    if (bar) bar.style.display = 'none';
     notasSelecionadas = [];
-    document.querySelectorAll('.nf-checkbox').forEach(function(cb) {
+    document.querySelectorAll('#notas .nf-checkbox').forEach(function(cb) {
         cb.checked = false;
     });
     var selectAll = document.getElementById('select-all-nfs');
     if (selectAll) selectAll.checked = false;
     var toolbarCb = document.getElementById('select-all-nfs-toolbar');
     if (toolbarCb) toolbarCb.checked = false;
-    var countText = document.getElementById('mass-count-text');
-    if (countText) countText.textContent = '0 selecionadas';
+    atualizarBarraAcoesMassa();
 }
 
 // Ações em massa
@@ -816,12 +1086,49 @@ function buscarNotaNoStateAxis(notaId) {
 
 function nfDataParaInputDate(data) {
     if (!data) return '';
-    var d = new Date(data);
-    if (!isNaN(d.getTime())) {
-        return d.toISOString().split('T')[0];
+    var d = axisParseDataNotaParaDate(data);
+    if (d) {
+        var pad = function (n) {
+            return (n < 10 ? '0' : '') + n;
+        };
+        return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
     }
     var m = String(data).match(/(\d{4})-(\d{2})-(\d{2})/);
     return m ? m[0] : '';
+}
+
+function nfDataParaInputDateTime(data) {
+    if (!data) return '';
+    var d = axisParseDataNotaParaDate(data);
+    if (!d) {
+        var m = String(data).match(/^(\d{4}-\d{2}-\d{2})/);
+        return m ? m[1] + 'T00:00:00' : '';
+    }
+    var pad = function (n) {
+        return (n < 10 ? '0' : '') + n;
+    };
+    return (
+        d.getFullYear() +
+        '-' +
+        pad(d.getMonth() + 1) +
+        '-' +
+        pad(d.getDate()) +
+        'T' +
+        pad(d.getHours()) +
+        ':' +
+        pad(d.getMinutes()) +
+        ':' +
+        pad(d.getSeconds())
+    );
+}
+
+function nfValorDateTimeLocalParaISO(val) {
+    if (!val || !String(val).trim()) return null;
+    var v = String(val).trim();
+    if (v.length === 16) v += ':00';
+    var dt = new Date(v);
+    if (isNaN(dt.getTime())) return v;
+    return dt.toISOString();
 }
 
 function nfValorParaInput(valor) {
@@ -852,8 +1159,8 @@ function abrirModalEditarNotaFiscal(notaId) {
     document.getElementById('nf-edit-nota-id').value = nota.id != null ? String(nota.id) : String(nota.numero);
     document.getElementById('nf-edit-numero').value = nota.numero != null ? String(nota.numero) : '';
     document.getElementById('nf-edit-cliente').value = nota.cliente || nota.fornecedor || '';
-    document.getElementById('nf-edit-data').value = nfDataParaInputDate(nota.data);
-    document.getElementById('nf-edit-venc').value = nfDataParaInputDate(nota.dataVencimento);
+    document.getElementById('nf-edit-data').value = nfDataParaInputDateTime(nota.data);
+    document.getElementById('nf-edit-venc').value = nota.dataVencimento ? nfDataParaInputDateTime(nota.dataVencimento) : '';
     document.getElementById('nf-edit-valor').value = nfValorParaInput(nota.valor);
 
     var st = (nota.status || 'pendente').toLowerCase();
@@ -899,10 +1206,11 @@ function salvarEdicaoNotaFiscal() {
         nota.fornecedor = nota.cliente;
     }
     if (dataEl && dataEl.value) {
-        nota.data = dataEl.value;
+        var isoEm = nfValorDateTimeLocalParaISO(dataEl.value);
+        nota.data = isoEm || dataEl.value;
     }
     if (vencEl) {
-        nota.dataVencimento = vencEl.value || null;
+        nota.dataVencimento = vencEl.value ? nfValorDateTimeLocalParaISO(vencEl.value) || vencEl.value : null;
     }
     if (valorEl && valorEl.value) {
         var raw = valorEl.value.replace(/\./g, '').replace(',', '.');
@@ -965,6 +1273,7 @@ window.renderizarNotasFiscais = renderizarNotasFiscais;
 window.toggleSelecaoNF = toggleSelecaoNF;
 window.selecionarTodasNotas = selecionarTodasNotas;
 window.selecionarTodasNotasToolbar = selecionarTodasNotasToolbar;
+window.alternarSelecaoNotasVisiveisBiblioteca = alternarSelecaoNotasVisiveisBiblioteca;
 window.fecharBarraAcoesMassa = fecharBarraAcoesMassa;
 window.alterarStatusEmMassa = alterarStatusEmMassa;
 window.exportarEmMassa = exportarEmMassa;
@@ -976,6 +1285,40 @@ window.abrirModalEditarNotaFiscal = abrirModalEditarNotaFiscal;
 window.salvarEdicaoNotaFiscal = salvarEdicaoNotaFiscal;
 window.baixarPDF = baixarPDF;
 window.abrirDetalhesNF = abrirDetalhesNF;
+
+// Secções com persistência (F5 / URL com hash)
+var AXIS_NF_SECTION_IDS = {
+    dashboard: true,
+    notas: true,
+    fornecedores: true,
+    relatorios: true,
+    backup: true,
+    configuracoes: true,
+    lixeira: true
+};
+
+/** Hash amigável → id real da secção */
+function axisNfHashParaSecao(raw) {
+    var h = (raw || '').replace(/^#/, '').trim().toLowerCase();
+    if (h === 'biblioteca' || h === 'nf' || h === 'nfs') return 'notas';
+    if (AXIS_NF_SECTION_IDS[h]) return h;
+    return null;
+}
+
+function axisPersistNFSection(sectionId) {
+    if (!sectionId || !AXIS_NF_SECTION_IDS[sectionId]) return;
+    try {
+        sessionStorage.setItem('axis_nf_section', sectionId);
+    } catch (eStore) {}
+    try {
+        var pathOnly = window.location.pathname + window.location.search;
+        if (sectionId === 'dashboard') {
+            if (window.location.hash) history.replaceState(null, '', pathOnly);
+        } else {
+            history.replaceState(null, '', pathOnly + '#' + sectionId);
+        }
+    } catch (eHash) {}
+}
 
 // Funções de navegação e UI
 function showSection(sectionId) {
@@ -1067,6 +1410,11 @@ function showSection(sectionId) {
             if (typeof renderizarTabelaFornecedores === 'function') renderizarTabelaFornecedores();
         }, 50);
     }
+
+    axisPersistNFSection(sectionId);
+    if (sectionId !== 'notas') {
+        axisResetNFFavicon();
+    }
 }
 
 function toggleSidebar() {
@@ -1112,16 +1460,74 @@ function atualizarListaNotificacoes() {
 function toggleNotifications() {
     var panel = document.getElementById('notifications-panel');
     if (panel) {
+        var abrir = !panel.classList.contains('active');
+        if (abrir) fecharPainelFiltros(false);
         panel.classList.toggle('active');
         if (panel.classList.contains('active')) atualizarListaNotificacoes();
+        panel.setAttribute('aria-hidden', panel.classList.contains('active') ? 'false' : 'true');
+    }
+}
+
+function fecharPainelFiltros(atualizarToggle) {
+    if (typeof window.axisCloseFilterDropdowns === 'function') {
+        window.axisCloseFilterDropdowns();
+    }
+    if (atualizarToggle === undefined) atualizarToggle = true;
+    var panel = document.getElementById('filters-panel');
+    var btn = document.getElementById('axis-filters-toggle');
+    if (panel) {
+        panel.classList.remove('active');
+        panel.setAttribute('aria-hidden', 'true');
+    }
+    if (atualizarToggle && btn) {
+        btn.setAttribute('aria-expanded', 'false');
+        btn.classList.remove('axis-header-filter-btn--open');
     }
 }
 
 function toggleAdvancedSearch() {
-    const search = document.getElementById('advanced-search');
-    if (search) {
-        search.classList.toggle('active');
+    var panel = document.getElementById('filters-panel');
+    var btn = document.getElementById('axis-filters-toggle');
+    if (!panel) return;
+    var notif = document.getElementById('notifications-panel');
+    var seraAtivo = !panel.classList.contains('active');
+    if (seraAtivo && notif) {
+        notif.classList.remove('active');
+        notif.setAttribute('aria-hidden', 'true');
     }
+    panel.classList.toggle('active', seraAtivo);
+    panel.setAttribute('aria-hidden', seraAtivo ? 'false' : 'true');
+    if (!seraAtivo && typeof window.axisCloseFilterDropdowns === 'function') {
+        window.axisCloseFilterDropdowns();
+    }
+    if (btn) {
+        btn.setAttribute('aria-expanded', seraAtivo ? 'true' : 'false');
+        btn.classList.toggle('axis-header-filter-btn--open', seraAtivo);
+    }
+}
+
+/**
+ * Fecha o painel de filtros ao clicar fora (além do X e do botão filtros).
+ * Exclui calendário Flatpickr e painéis Tipo/Status/mês (append no body).
+ */
+function axisFiltersPanelOutsidePointerDown(ev) {
+    var panel = document.getElementById('filters-panel');
+    if (!panel || !panel.classList.contains('active')) return;
+    var t = ev.target;
+    if (!t || !t.nodeType) return;
+    if (panel.contains(t)) return;
+    var btn = document.getElementById('axis-filters-toggle');
+    if (btn && (btn === t || (typeof btn.contains === 'function' && btn.contains(t)))) return;
+    if (typeof t.closest === 'function') {
+        if (t.closest('.flatpickr-calendar')) return;
+        if (t.closest('.axis-filter-dd-panel')) return;
+        if (t.closest('.axis-fp-month-panel')) return;
+    }
+    fecharPainelFiltros();
+}
+
+function axisInstallFiltersPanelOutsideClose() {
+    document.addEventListener('pointerdown', axisFiltersPanelOutsidePointerDown, true);
 }
 
 function aplicarFiltros() {
@@ -1139,15 +1545,29 @@ function aplicarFiltros() {
     }
     
     adicionarNotificacao('Filtros aplicados com sucesso', 'success');
+    fecharPainelFiltros();
 }
 
 function limparFiltros() {
-    document.getElementById('date-from').value = '';
-    document.getElementById('date-to').value = '';
-    document.getElementById('value-min').value = '';
-    document.getElementById('value-max').value = '';
-    document.getElementById('filter-tipo').value = 'all';
-    document.getElementById('filter-status').value = 'all';
+    if (typeof window.axisClearFilterDatePickers === 'function') {
+        window.axisClearFilterDatePickers();
+    }
+    var df = document.getElementById('date-from');
+    var dt = document.getElementById('date-to');
+    var vmin = document.getElementById('value-min');
+    var vmax = document.getElementById('value-max');
+    var ft = document.getElementById('filter-tipo');
+    var fs = document.getElementById('filter-status');
+    if (df && !df._flatpickr) df.value = '';
+    if (dt && !dt._flatpickr) dt.value = '';
+    if (vmin) vmin.value = '';
+    if (vmax) vmax.value = '';
+    if (ft) ft.value = 'all';
+    if (fs) fs.value = 'all';
+    
+    if (typeof window.axisSyncFilterSelectDisplays === 'function') {
+        window.axisSyncFilterSelectDisplays();
+    }
     
     if (typeof state !== 'undefined' && state.notasFiscais) {
         renderizarNotasFiscais(state.notasFiscais);
@@ -1157,14 +1577,70 @@ function limparFiltros() {
 }
 
 function mostrarToast(mensagem, tipo) {
-    adicionarNotificacao(mensagem, tipo || 'info');
+    tipo = tipo || 'info';
+    adicionarNotificacao(mensagem, tipo);
+    axisExibirToastFlutuante(mensagem, tipo);
+}
+
+function axisExibirToastFlutuante(mensagem, tipo) {
+    var container = document.getElementById('toast-container');
+    if (!container) return;
+    var icons = {
+        success: 'check-circle',
+        error: 'exclamation-circle',
+        warning: 'exclamation-triangle',
+        info: 'info-circle'
+    };
+    var titles = {
+        success: 'Sucesso',
+        error: 'Erro',
+        warning: 'Atenção',
+        info: 'Informação'
+    };
+    var toast = document.createElement('div');
+    toast.className = 'toast ' + tipo;
+    var iconName = icons[tipo] || icons.info;
+    var safe = String(mensagem || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    toast.innerHTML =
+        '<div class="toast-icon"><i class="fas fa-' +
+        iconName +
+        '"></i></div>' +
+        '<div class="toast-content">' +
+        '<div class="toast-title">' +
+        (titles[tipo] || titles.info) +
+        '</div>' +
+        '<div class="toast-message">' +
+        safe +
+        '</div></div>';
+    container.appendChild(toast);
+    var ms = tipo === 'error' ? 5200 : 4000;
+    setTimeout(function () {
+        toast.style.animation = 'slideOutRight 0.35s ease forwards';
+        toast.style.opacity = '0';
+        setTimeout(function () {
+            try {
+                toast.remove();
+            } catch (eR) {}
+        }, 350);
+    }, ms);
 }
 
 // Exportar funções globalmente
 window.showSection = showSection;
+window.axisPersistNFSection = axisPersistNFSection;
 window.toggleSidebar = toggleSidebar;
 window.toggleNotifications = toggleNotifications;
 window.toggleAdvancedSearch = toggleAdvancedSearch;
+window.fecharPainelFiltros = fecharPainelFiltros;
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', axisInstallFiltersPanelOutsideClose);
+} else {
+    axisInstallFiltersPanelOutsideClose();
+}
 window.aplicarFiltros = aplicarFiltros;
 window.limparFiltros = limparFiltros;
 window.mostrarToast = mostrarToast;
@@ -1206,12 +1682,54 @@ function initNotificacoesSino() {
     atualizarListaNotificacoes();
     atualizarBadgeNotificacoes();
 }
+
+/** Mantém a mesma secção após F5: hash (#notas, #relatorios, …) ou sessionStorage */
+function restaurarSecaoNotasFiscaisNoLoad() {
+    if (typeof showSection !== 'function') return;
+    var fromHash = axisNfHashParaSecao(window.location.hash || '');
+    var sectionId = fromHash;
+    if (!sectionId) {
+        try {
+            var stored = sessionStorage.getItem('axis_nf_section');
+            if (stored && AXIS_NF_SECTION_IDS[stored]) sectionId = stored;
+        } catch (e) {
+            sectionId = null;
+        }
+    }
+    if (!sectionId || sectionId === 'dashboard') return;
+
+    if (sectionId === 'lixeira') {
+        if (typeof mostrarLixeira === 'function') {
+            mostrarLixeira();
+        }
+        return;
+    }
+
+    showSection(sectionId);
+    setTimeout(function() {
+        if (sectionId === 'notas' && typeof state !== 'undefined' && state.notasFiscais && typeof renderizarNotasFiscais === 'function') {
+            renderizarNotasFiscais(state.notasFiscais);
+        }
+        if (typeof atualizarBarraAcoesMassa === 'function') atualizarBarraAcoesMassa();
+    }, 0);
+}
+
+function agendarRestaurarSecaoAposTodosInits() {
+    setTimeout(function() {
+        restaurarSecaoNotasFiscaisNoLoad();
+    }, 0);
+}
+
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', function() {
+        axisInicializarHrefFaviconPadrao();
+        agendarRestaurarSecaoAposTodosInits();
         inicializarDashboardAutomatico();
         initNotificacoesSino();
     });
 } else {
+    axisInicializarHrefFaviconPadrao();
+    agendarRestaurarSecaoAposTodosInits();
     inicializarDashboardAutomatico();
     initNotificacoesSino();
 }

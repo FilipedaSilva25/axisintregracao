@@ -132,8 +132,6 @@ function axisModalVidroInjectStyles() {
 }
 
 function moverParaLixeiraNFConfirmado(notaId) {
-    console.log('🗑️ moverParaLixeiraNFConfirmado chamado com ID:', notaId);
-    
     let nota = null;
     let notaIndex = -1;
     
@@ -159,10 +157,7 @@ function moverParaLixeiraNFConfirmado(notaId) {
     }
     
     if (!stateObj || !stateObj.notasFiscais) {
-        console.error('❌ State não encontrado ou notasFiscais não existe');
-        console.log('State disponível:', typeof state !== 'undefined' ? 'sim' : 'não');
-        console.log('window.state disponível:', typeof window.state !== 'undefined' ? 'sim' : 'não');
-        
+        console.error('State não encontrado ou notasFiscais não existe');
         if (typeof mostrarToast !== 'undefined') {
             mostrarToast('Erro: Estado não inicializado. Recarregue a página.', 'error');
         } else {
@@ -171,19 +166,14 @@ function moverParaLixeiraNFConfirmado(notaId) {
         return;
     }
     
-    console.log('✅ State encontrado. Total de notas:', stateObj.notasFiscais.length);
-    
     // Tentar encontrar a nota por ID ou número (mais robusto)
     const buscaStr = notaId.toString().trim();
-    console.log('🔍 Buscando nota com ID:', buscaStr);
-    console.log('📊 Total de notas no state:', stateObj.notasFiscais.length);
-    
+
     // ESTRATÉGIA 1: Se o ID contém "nota_", usar índice diretamente (mais confiável)
     if (buscaStr.startsWith('nota_')) {
         const idx = parseInt(buscaStr.replace('nota_', ''));
         if (!isNaN(idx) && idx >= 0 && idx < stateObj.notasFiscais.length) {
             notaIndex = idx;
-            console.log('✅ Nota encontrada por índice (nota_):', notaIndex);
         }
     }
     
@@ -196,9 +186,6 @@ function moverParaLixeiraNFConfirmado(notaId) {
             if (n.numero && n.numero.toString().trim() === buscaStr) return true;
             return false;
         });
-        if (notaIndex >= 0) {
-            console.log('✅ Nota encontrada por ID/numero:', notaIndex);
-        }
     }
     
     // ESTRATÉGIA 3: Se ainda não encontrou, tentar por número numérico direto como índice
@@ -209,7 +196,6 @@ function moverParaLixeiraNFConfirmado(notaId) {
             const notaNoIndice = stateObj.notasFiscais[idx];
             if (notaNoIndice && (notaNoIndice.numero && notaNoIndice.numero.toString() === buscaStr)) {
                 notaIndex = idx;
-                console.log('✅ Nota encontrada por índice numérico correspondente:', notaIndex);
             }
         }
     }
@@ -223,30 +209,18 @@ function moverParaLixeiraNFConfirmado(notaId) {
             if (n.id && n.id.toString().includes(buscaStr)) return true;
             return false;
         });
-        if (notaIndex >= 0) {
-            console.log('✅ Nota encontrada por busca parcial:', notaIndex);
-        }
     }
     
     if (notaIndex >= 0) {
         nota = JSON.parse(JSON.stringify(stateObj.notasFiscais[notaIndex])); // Clone
         nota.movidoParaLixeiraEm = new Date().toISOString();
         
-        console.log('📋 Nota encontrada:', {
-            id: nota.id,
-            numero: nota.numero,
-            cliente: nota.cliente,
-            index: notaIndex
-        });
-        
         // Adicionar à lixeira
         lixeira.push(nota);
         salvarLixeira();
-        console.log('🗑️ Nota adicionada à lixeira. Total na lixeira:', lixeira.length);
-        
+
         // Remover do array principal
         stateObj.notasFiscais.splice(notaIndex, 1);
-        console.log('✅ Nota removida do array principal. Total restante:', stateObj.notasFiscais.length);
         
         // Garantir que o state global seja atualizado também
         if (typeof state !== 'undefined' && state !== stateObj) {
@@ -264,7 +238,6 @@ function moverParaLixeiraNFConfirmado(notaId) {
             try {
                 salvarDados();
                 dadosSalvos = true;
-                console.log('✅ Dados salvos via salvarDados()');
             } catch (e) {
                 console.error('Erro ao chamar salvarDados():', e);
             }
@@ -272,7 +245,6 @@ function moverParaLixeiraNFConfirmado(notaId) {
             try {
                 window.salvarDados();
                 dadosSalvos = true;
-                console.log('✅ Dados salvos via window.salvarDados()');
             } catch (e) {
                 console.error('Erro ao chamar window.salvarDados():', e);
             }
@@ -286,9 +258,8 @@ function moverParaLixeiraNFConfirmado(notaId) {
                 subpastas: stateObj.subpastas || {}
             };
             localStorage.setItem('axis_notas_fiscais', JSON.stringify(dataToSave));
-            console.log('✅ Dados salvos no localStorage (garantido)');
         } catch (e) {
-            console.error('❌ Erro ao salvar no localStorage:', e);
+            console.error('Erro ao salvar no localStorage:', e);
         }
         
         // Garantir que window.notasFiscais também seja atualizado (se existir)
@@ -324,18 +295,8 @@ function moverParaLixeiraNFConfirmado(notaId) {
         } else {
             alert('✅ Nota fiscal movida para a lixeira com sucesso!');
         }
-        
-        console.log('✅ Processo completo: Nota movida para lixeira');
     } else {
-        // Debug: mostrar informações sobre a busca falha
-        console.error('❌ Nota não encontrada!');
-        console.log('ID buscado:', notaId);
-        console.log('String de busca:', buscaStr);
-        console.log('Total de notas no state:', stateObj.notasFiscais.length);
-        console.log('Primeiras 3 notas:', stateObj.notasFiscais.slice(0, 3).map(function(n, i) {
-            return { index: i, id: n.id, numero: n.numero, cliente: n.cliente };
-        }));
-        
+        console.error('Nota não encontrada:', notaId);
         if (typeof mostrarToast === 'function') {
             mostrarToast('Nota fiscal não encontrada. ID: ' + notaId, 'error');
         } else if (typeof window.mostrarToast === 'function') {
@@ -617,7 +578,10 @@ function mostrarLixeira() {
             overlay.style.display = 'none';
         }
     }
-    
+
+    if (typeof window.axisPersistNFSection === 'function') {
+        window.axisPersistNFSection('lixeira');
+    }
 }
 
 function renderizarConteudoLixeira() {
@@ -1066,4 +1030,3 @@ if (document.readyState === 'loading') {
     }, 2000);
 }
 
-console.log('✅ Sistema de lixeira e estrutura de pastas carregado!');

@@ -5,13 +5,34 @@
  * 3. Status de Bancada
  * 4. Inventário de peças
  * 5. Registro de Chamados
- * 6. Ajuda / Suporte
+ * 6. MeliHelp (linhas, links; cartão avulso W também grava em config/data no servidor)
+ * 7. Ajuda / Suporte
+ * 8. Chamado Selbetti (Portal do Cliente — webhook / Playwright / fila local)
  */
 
 const SUPORTE_EMAIL = 'axis.support@icloud.com';
 const SUPORTE_WHATSAPP_TEXTO = '+55 (48) 99157-8172';
 
 const { formatListaWhatsapp, resolveSelecaoMatricula } = require('./axis-colaboradores-matriculas');
+const { PORT: AXIS_SERVER_PORT } = require('./config');
+const { submitSelbettiChamado } = require('./selbetti-chamado-submit');
+const { normalizeSelbettiCodigoTypo } = require('./selbetti-codigo-normalize');
+const mhFlow = require('./whatsapp-melihelp-flow');
+
+function formatarTelefoneBr(phoneDigits) {
+    const d = String(phoneDigits || '').replace(/\D/g, '');
+    if (d.length === 13 && d.startsWith('55')) {
+        return '(' + d.slice(2, 4) + ') ' + d.slice(4, 9) + '-' + d.slice(9);
+    }
+    if (d.length === 12 && d.startsWith('55')) {
+        return '(' + d.slice(2, 4) + ') ' + d.slice(4, 8) + '-' + d.slice(8);
+    }
+    return d || '—';
+}
+
+function emailValido(s) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(s || '').trim());
+}
 
 const PM_OPCOES = ['PM 1', 'PM 2', 'PM 3', 'PM 4', 'PM 5', 'PM 6'];
 
@@ -24,9 +45,11 @@ const SETORES = [
     { num: 2, id: 'PACKING MACHINE', label: 'PACKING MACHINE' },
     { num: 3, id: 'PACKING MONO', label: 'PACKING MONO' },
     { num: 4, id: 'PACKING PTW', label: 'PACKING PTW' },
-    { num: 5, id: 'REJEITOS', label: 'REJEITOS' }
+    { num: 5, id: 'REJEITOS', label: 'REJEITOS' },
+    { num: 6, id: 'RETURNS', label: 'RETURNS' }
 ];
 const BANCADAS_RETIROS = ['R01', 'R02', 'R03', 'R04', 'R05', 'R06'];
+const BANCADAS_RETURNS = ['RS01', 'RS02', 'RS03', 'RS04', 'RS05', 'RS06', 'RS07', 'RS08'];
 const BANCADAS_PM = ['PM01', 'PM02', 'PM03', 'PM04', 'PM05', 'PM06'];
 const BANCADAS_REJEITOS = ['100', '101', '102', '103', '104'];
 const BANCADAS_MONO = Array.from({ length: 87 }, (_, i) => String(13 + i));
@@ -54,14 +77,51 @@ const SETOR_TO_BANCADAS = {
     'PACKING MACHINE': BANCADAS_PM,
     'PACKING MONO': BANCADAS_MONO,
     'PACKING PTW': BANCADAS_PTW,
-    'REJEITOS': BANCADAS_REJEITOS
+    'REJEITOS': BANCADAS_REJEITOS,
+    'RETURNS': BANCADAS_RETURNS
 };
 
 // Estado: { step: 'menu'|1|2|3|'status_setor'|'status_bancada'|'status_equipamento', atividade?, setor?, bancada?, ... }
 const estados = new Map();
 
+/** Evita dois Playwright em paralelo para o mesmo número (SIM duplo). */
+const selbettiSubmitLocks = new Map();
+
+function formatSelbettiWhatsAppResult(r) {
+    if (!r) return MSG.erroGeral;
+    if (r.ok && r.ticketNumber) return MSG.selbettiOkOs(r.ticketNumber);
+    if (r.filaBackup && r.ref) return MSG.selbettiWebhookFalhou(r.ref, r.error);
+    if (r.ok && r.ref) {
+        let extra = (r.partial && r.message) || r.message || '';
+        if (r.playwrightError) {
+            extra +=
+                (extra ? '\n' : '') +
+                '⚠️ Detalhe automação: ' +
+                String(r.playwrightError).substring(0, 280);
+        }
+        extra +=
+            (extra ? '\n' : '') +
+            '📋 Log: config/data/selbetti-playwright.log · Captura: selbetti-playwright-failure.png';
+        return MSG.selbettiOkFila(r.ref, extra);
+    }
+    return MSG.erroGeral;
+}
+
 function normalizarTelefone(phone) {
     return String(phone || '').replace(/\D/g, '').substring(0, 20) || 'unknown';
+}
+
+/**
+ * Chave estável no Map de estados: Cloud API e Baileys podem mandar com ou sem 55;
+ * sem isso o fluxo 6→5→ano perde o passo e “abril” cai no menu errado.
+ */
+function canonicalWhatsappPhoneForState(raw) {
+    let d = String(raw || '').replace(/\D/g, '');
+    if (!d) return 'unknown';
+    if (d.length > 20) d = d.slice(0, 20);
+    if (d.startsWith('55') && d.length >= 12 && d.length <= 13) return d;
+    if (/^[1-9][1-9]\d{8,9}$/.test(d)) return ('55' + d).slice(0, 20);
+    return d.slice(0, 20);
 }
 
 function parsePm(texto) {
@@ -135,6 +195,12 @@ function parseBancadaBySetor(setorId, texto) {
         if (n >= 1 && n <= 44) return 'PTW_' + String(n).padStart(2, '0');
         return null;
     }
+    if (setorId === 'RETURNS') {
+        const n = parseInt(t.replace(/\D/g, ''), 10);
+        if (n >= 1 && n <= 8) return BANCADAS_RETURNS[n - 1];
+        if (/^rs\s*0?([1-8])$/i.test(t)) return BANCADAS_RETURNS[parseInt(t.match(/([1-8])/)[1], 10) - 1];
+        return null;
+    }
     if (setorId === 'REJEITOS') {
         const n = parseInt(t.replace(/\D/g, ''), 10);
         if (n >= 1 && n <= 5) return BANCADAS_REJEITOS[n - 1];
@@ -142,6 +208,17 @@ function parseBancadaBySetor(setorId, texto) {
         return null;
     }
     return null;
+}
+
+/** Igual ao conector WhatsApp (Baileys): opts.baseUrl, senão BASE_URL no env, senão localhost:PORT do config. */
+function resolveAxisSiteBaseUrl(opts) {
+    if (opts && opts.baseUrl) {
+        const o = String(opts.baseUrl).trim().replace(/\/+$/, '');
+        if (o) return o;
+    }
+    const envB = String(process.env.BASE_URL || '').trim().replace(/\/+$/, '');
+    if (envB) return envB;
+    return `http://localhost:${AXIS_SERVER_PORT}`;
 }
 
 const MSG = {
@@ -154,9 +231,16 @@ O que você gostaria de fazer?
 *3* – Status de Bancada
 *4* – Inventário de peças (entrada/saída rápida)
 *5* – Registro de Chamados (Mercado Livre)
-*6* – Ajuda e suporte
+*6* – *MeliHelp* (site AXIS — cordão, crachás, cartão W)
+*7* – Ajuda e suporte
+*8* – *Selbetti* (Portal do Cliente — *outro* fluxo; *não* é MeliHelp)
 
-_Digite de *1* a *6*_`,
+_Digite de *1* a *8* · atalhos: *melihelp*, *mh*, *MH1*–*MH5*_
+
+📇 *Cartão W* no servidor: *6* → *5* ou *MH5* / *cartao avulso*, ou linha:
+*cartaoavulso;2026;04;069.56178*
+
+ℹ️ Opção *8*: abre chamado no *Portal do Cliente* (não na WAP). Confirme OS em canal_cliente_novo/open-tickets. A *WAP* (FILIPE.DSILVA) é regra Selbetti — o AXIS não a força. Playwright: *npx playwright install chromium*. API: *GET /api/selbetti-chamado/diagnostico*.`,
 
     ajudaSuporte: `ℹ️ *Ajuda e suporte AXIS*
 
@@ -165,7 +249,9 @@ Precisa de ajuda com o bot, preventivas, troca de cabeça ou outro módulo?
 📧 *E-mail:* ${SUPORTE_EMAIL}
 📱 *WhatsApp:* ${SUPORTE_WHATSAPP_TEXTO}
 
-Você também pode enviar *oi* ou *menu* para ver as opções novamente (são *6* no total).`,
+Você também pode enviar *oi* ou *menu* para ver as opções novamente (são *8* no total).`,
+
+    menu: `Digite *oi*, *menu*, *melihelp*, *mh*, *troca* ou *preventiva* para um novo registro.`,
 
     selecaoTroca: `📋 *Troca de Cabeça de Impressão*
 
@@ -261,14 +347,106 @@ _Digite seu nome completo_`,
 
 O registro já está disponível na página Packing Machine.`,
 
-    erroAtividade: `⚠️ Por favor, digite de *1* a *6* para escolher a atividade.
+    erroAtividade: `⚠️ Por favor, digite de *1* a *8* para escolher a atividade.
+
+📇 *MeliHelp / cartão W*: *6* ou *melihelp* / *mh* · atalhos *MH1*–*MH5* (ex.: *MH5* = cartão W) · linha *cartaoavulso;2026;04;069.56178*
+*8* = *Selbetti* (portal — *não* é MeliHelp)
 
 *1* – Troca de Cabeça de Impressão
 *2* – Manutenção Preventiva
 *3* – Status de Bancada
 *4* – Inventário de peças
 *5* – Registro de Chamados
-*6* – Ajuda e suporte`,
+*6* – MeliHelp
+*7* – Ajuda e suporte
+*8* – Chamado Selbetti (Portal do Cliente)`,
+
+    selbettiTipo: `🏭 *Abertura de chamado — Selbetti (Portal do Cliente)*
+
+Escolha o *tipo* (como no site):
+
+*1* – Material de consumo
+*2* – Assistência de equipamento
+*3* – Assistência de software
+
+_Digite 1, 2 ou 3_`,
+
+    selbettiSelb: `🔖 *SELB*
+
+Digite o código *SELB* do equipamento (ex.: 6Q75) ou *0* se for informar só o número de série.`,
+
+    selbettiSerie: `🔢 *Número de série*
+
+Digite o *nº de série* ou *0* se já informou só o SELB.`,
+
+    selbettiNome: `👤 *Nome completo*
+
+Digite o nome de quem solicita o chamado.`,
+
+    selbettiEmail: `📧 *E-mail*
+
+Digite o e-mail para contato.`,
+
+    selbettiTelefone: `📱 *Telefone*
+
+Digite o telefone com DDD ou a palavra *mesmo* para usar o número deste WhatsApp.`,
+
+    selbettiPrioridade: `⚡ *Prioridade*
+
+*1* – Normal
+*2* – Alta
+*3* – Crítica
+
+_Digite 1, 2 ou 3_`,
+
+    selbettiProblema: `📝 *Descrição do problema*
+
+Descreva o problema ou a dificuldade (até cerca de 3500 caracteres).`,
+
+    selbettiConfirm: (resumo) => `✅ *Confirme o pedido*
+
+${resumo}
+
+Responda *SIM* para enviar ou *NÃO* para cancelar.`,
+
+    selbettiOkOs: (os) => `✅ *Chamado registado*
+
+Número da OS (*Portal do Cliente*): *${os}*
+
+Confirme aqui: https://www.selbetti.com.br/canal_cliente_novo/open-tickets
+
+⚠️ A *WAP* (Ordens de Serviço do *técnico*, wap2) é *outro* ecrã. A OS pode *não aparecer* aí de imediato ou depender de *regras da Selbetti* (filial, contrato, fila). O AXIS *não controla* a WAP — só abre chamado no *portal cliente* (conta mercadolivre).`,
+
+    selbettiProcessando: `⏳ *A abrir o chamado no portal Selbetti…*
+
+Primeiro há uma *espera programada* (por omissão ~5 min) para o portal estar acessível; depois o login automático (modal *Testar depois*, etc.) e o formulário.
+
+Pode levar *cerca de 6–10 minutos* no total até receber a *segunda mensagem* com o resultado. Para mudar o tempo: *SELBETTI_PLAYWRIGHT_START_DELAY_MS* no .env (*0* = sem espera).
+
+_Isto cria o pedido no *Portal do Cliente*, não garante linha na *WAP do técnico*._
+
+_Não feche o servidor nem desligue o PC durante o processo._`,
+
+    selbettiJaProcessando: `⏳ *Já estamos a processar* o seu pedido Selbetti. Aguarde a mensagem com o resultado.`,
+
+    selbettiOkFila: (ref, extra) =>
+        `✅ *Pedido guardado*
+
+Referência AXIS: *${ref}*
+${extra ? extra + '\n' : ''}_Portal cliente (ver chamados):_ https://www.selbetti.com.br/canal_cliente_novo/open-tickets
+_A *WAP* (técnico) pode não mostrar a mesma OS — é normal; pergunta à Selbetti se a OS deve cair na tua fila._
+_O número longo nos logs é o *ID do WhatsApp*. O Playwright corre no *servidor/PC*._
+_Se configurou webhook ou Playwright, verifique também o portal Selbetti._`,
+
+    selbettiWebhookFalhou: (ref, err) =>
+        `⚠️ O *webhook* falhou (${err || 'erro'}). Os dados foram guardados na *fila local* com ref *${ref}*.`,
+
+    selbettiErroTipo: `⚠️ Digite *1*, *2* ou *3* para o tipo de chamado.`,
+    selbettiErroEmail: `⚠️ E-mail inválido. Ex.: nome@empresa.com`,
+    selbettiErroTel: `⚠️ Telefone inválido. Use DDD+número ou *mesmo*.`,
+    selbettiErroPrior: `⚠️ Digite *1* (Normal), *2* (Alta) ou *3* (Crítica).`,
+    selbettiErroProblema: `⚠️ Descreva o problema (mínimo 4 caracteres).`,
+    selbettiCancelado: `Pedido *cancelado*. Digite *8* no menu ou *menu* para recomeçar.`,
 
     pecasSubmenu: `📦 *Inventário de peças, acessórios e limpeza*
 
@@ -328,8 +506,6 @@ _Exemplo: 70303_`,
 
 Digite *oi* ou *menu* para recomeçar.`,
 
-    menu: `Digite *oi*, *menu*, *troca* ou *preventiva* para um novo registro.`,
-
     rcNumero: `📋 *Registro de Chamados (Mercado Livre)*
 
 Digite o *número do chamado* (ex: IS-910791).`,
@@ -369,8 +545,9 @@ Escolha o *setor* (digite o número):
 *3* – PACKING MONO
 *4* – PACKING PTW
 *5* – REJEITOS
+*6* – RETURNS
 
-_Digite 1 a 5_`,
+_Digite 1 a 6_`,
 
     statusBancadaPrompt: (setorLabel) => {
         const d = {
@@ -378,7 +555,8 @@ _Digite 1 a 5_`,
             'PACKING MACHINE': 'Digite *1* a *6* (PM01 a PM06)',
             'PACKING MONO': 'Digite o número da bancada (*13* a *99*)',
             'PACKING PTW': 'Bancadas: *A01*, *D01*, *A02*, *D02* … *A22*, *D22* (igual ao site).\nDigite o código (ex: A01 ou D01) ou o número de *1* a *44*.',
-            'REJEITOS': 'Digite *1* a *5* (100 a 104)'
+            'REJEITOS': 'Digite *1* a *5* (100 a 104)',
+            'RETURNS': 'Digite *1* a *8* (bancadas numeradas no painel; no servidor: RS01 a RS08)'
         };
         return `✅ Setor *${setorLabel}* selecionado.\n\nQual *bancada*?\n\n_${d[setorLabel] || 'Escolha a bancada.'}_`;
     },
@@ -397,11 +575,13 @@ _Digite 1 a 5_`,
 
     statusConfirmacaoSucesso: (bancada, equipamento) => {
         const eq = equipamento === 'IMPRESSORA' ? 'Defeito impressora' : equipamento === 'NOTEBOOK' ? 'Defeito notebook' : equipamento === 'SEM_IMPRESSORA_IMP' ? 'Bancada sem impressora' : equipamento === 'SEM_IMPRESSORA_NB' ? 'Sem impressora (nb)' : 'Livre';
-        const bancadaExibir = (bancada && bancada.indexOf('PTW_') === 0 && PTW_DISPLAY_LABELS[bancada]) ? PTW_DISPLAY_LABELS[bancada] : bancada;
+        let bancadaExibir = bancada;
+        if (bancada && bancada.indexOf('PTW_') === 0 && PTW_DISPLAY_LABELS[bancada]) bancadaExibir = PTW_DISPLAY_LABELS[bancada];
+        else if (bancada && /^RS0[1-8]$/.test(bancada)) bancadaExibir = String(parseInt(bancada.slice(3), 10));
         return `✅ *Status atualizado com sucesso!*\n\n• Bancada: *${bancadaExibir}*\n• Equipamento: *${eq}*\n\nO status já está salvo no AXIS.`;
     },
 
-    erroStatusSetor: `⚠️ Digite um número de *1* a *5* para escolher o setor.`,
+    erroStatusSetor: `⚠️ Digite um número de *1* a *6* para escolher o setor.`,
     erroStatusBancada: (setorLabel) => `⚠️ Bancada inválida para *${setorLabel}*. Verifique e digite novamente.`,
     erroStatusEquipamento: `⚠️ Digite *1* a *5* para o equipamento (Livre, Defeito impressora, Defeito notebook, Sem impressora, Sem notebook).`
 };
@@ -429,15 +609,68 @@ function resumoStatusBancadas(bancadas) {
 }
 
 async function handleIncoming(msg, sendReply, registerTroca, opts) {
-    const from = normalizarTelefone(msg.from);
+    const from = canonicalWhatsappPhoneForState(msg.from);
+    const sendFollowUp =
+        opts && typeof opts.sendFollowUp === 'function' ? opts.sendFollowUp : null;
+    const baseUrl = resolveAxisSiteBaseUrl(opts);
+    const pageUrl = mhFlow.melihelpPageUrl(baseUrl);
+
+    const directReply = await mhFlow.tryDirectCartaoAvulsoLine(msg.body, from, pageUrl, sendReply, estados);
+    if (directReply !== undefined) return directReply;
+
     const body = (msg.body || '').trim().toLowerCase();
     const getBancadasStatus = opts && typeof opts.getBancadasStatus === 'function' ? opts.getBancadasStatus : null;
-    const baseUrl = (opts && opts.baseUrl) ? String(opts.baseUrl) : '';
 
     const bn = normalizeCmd(msg.body);
     if (bn === 'preventiva' || bn === 'preventivas' || bn === 'manutencao preventiva' || bn === 'manutenção preventiva') {
         estados.set(from, { step: 'prev_nome', atividade: 'preventiva' });
         return sendReply(from, MSG.prevNomeCompleto);
+    }
+    const mhBanner = mhFlow.MSG.banner + '\n\n';
+    if (bn === 'melihelp' || bn === 'meli help' || bn === 'meli-help' || bn === 'mh' || bn === 'mh0') {
+        estados.set(from, { step: mhFlow.MH.HUB, atividade: 'melihelp' });
+        return sendReply(from, mhBanner + mhFlow.MSG.hub);
+    }
+    if (bn === 'mh1') {
+        estados.set(from, { step: mhFlow.MH.RET_RE, atividade: 'melihelp' });
+        return sendReply(from, mhBanner + mhFlow.MSG.retRe);
+    }
+    if (bn === 'mh2') {
+        estados.set(from, { step: mhFlow.MH.REC_QTD, atividade: 'melihelp' });
+        return sendReply(from, mhBanner + mhFlow.MSG.recQtd);
+    }
+    if (bn === 'mh3') {
+        estados.delete(from);
+        return sendReply(from, mhBanner + mhFlow.MSG.links(pageUrl));
+    }
+    if (bn === 'mh4') {
+        estados.set(from, { step: mhFlow.MH.LINHA, atividade: 'melihelp' });
+        return sendReply(from, mhBanner + mhFlow.MSG.linhaPrompt);
+    }
+    if (bn === 'mh5') {
+        estados.set(from, { step: mhFlow.MH.W_ANO, atividade: 'melihelp' });
+        return sendReply(from, mhBanner + mhFlow.MSG.wAno);
+    }
+    if (
+        bn === 'cartao avulso' ||
+        bn === 'carta avulsa' ||
+        bn === 'numero w' ||
+        bn === 'cadastrar w' ||
+        bn === 'cadastrar cartao' ||
+        bn === 'w avulso' ||
+        bn === 'cartaoavulso'
+    ) {
+        estados.set(from, { step: mhFlow.MH.W_ANO, atividade: 'melihelp' });
+        return sendReply(from, mhBanner + mhFlow.MSG.wAno);
+    }
+    if (
+        bn === 'selbetti' ||
+        bn === 'portal selbetti' ||
+        bn.indexOf('chamado selbetti') >= 0 ||
+        bn.indexOf('abrir chamado selbetti') >= 0
+    ) {
+        estados.set(from, { step: 'selbetti_tipo', atividade: 'selbetti' });
+        return sendReply(from, MSG.selbettiTipo);
     }
 
     const comandoInicio = ['troca', 'registrar', 'registro', 'oi', 'ola', 'olá', 'menu', 'iniciar'];
@@ -490,11 +723,28 @@ async function handleIncoming(msg, sendReply, registerTroca, opts) {
             return sendReply(from, MSG.rcNumero);
         }
         if (t === '6' || t === '6.') {
+            estado.step = mhFlow.MH.HUB;
+            estado.atividade = 'melihelp';
+            estados.set(from, estado);
+            return sendReply(from, mhFlow.MSG.banner + '\n\n' + mhFlow.MSG.hub);
+        }
+        if (t === '7' || t === '7.') {
             estados.set(from, { step: 'menu' });
             return sendReply(from, MSG.ajudaSuporte);
         }
+        if (t === '8' || t === '8.') {
+            estado.step = 'selbetti_tipo';
+            estado.atividade = 'selbetti';
+            estados.set(from, estado);
+            return sendReply(from, MSG.selbettiTipo);
+        }
         return sendReply(from, MSG.erroAtividade);
     }
+
+    mhFlow.migrateLegacyMelihelpStep(from, estados);
+    estado = estados.get(from);
+    const mhTurn = await mhFlow.processMelihelpTurn({ from, msg, pageUrl, estados });
+    if (mhTurn) return sendReply(from, mhTurn.reply);
 
     const getPecasEstoque = opts && typeof opts.getPecasEstoque === 'function' ? opts.getPecasEstoque : null;
     const registerPecasEntrada = opts && typeof opts.registerPecasEntrada === 'function' ? opts.registerPecasEntrada : null;
@@ -703,6 +953,190 @@ async function handleIncoming(msg, sendReply, registerTroca, opts) {
         }
         estados.delete(from);
         return sendReply(from, MSG.rcOk(chave || '(sem número)', status));
+    }
+
+    if (estado.step === 'selbetti_tipo') {
+        const t = String(msg.body || '').trim();
+        let tipo = '';
+        if (t === '1' || t === '1.') tipo = 'consumo';
+        else if (t === '2' || t === '2.') tipo = 'equipamento';
+        else if (t === '3' || t === '3.') tipo = 'software';
+        if (!tipo) return sendReply(from, MSG.selbettiErroTipo);
+        estado.selb_tipo = tipo;
+        estado.step = 'selbetti_selb';
+        estados.set(from, estado);
+        return sendReply(from, MSG.selbettiSelb);
+    }
+
+    if (estado.step === 'selbetti_selb') {
+        const s = String(msg.body || '').trim();
+        if (!s) return sendReply(from, MSG.selbettiSelb);
+        estado.selb_selb = s === '0' ? '' : s.substring(0, 32);
+        estado.step = 'selbetti_serie';
+        estados.set(from, estado);
+        return sendReply(from, MSG.selbettiSerie);
+    }
+
+    if (estado.step === 'selbetti_serie') {
+        const s = String(msg.body || '').trim();
+        if (!s) return sendReply(from, MSG.selbettiSerie);
+        const fixed = normalizeSelbettiCodigoTypo(s);
+        estado.selb_serie = fixed === '0' ? '' : fixed.substring(0, 64);
+        estado.step = 'selbetti_nome';
+        estados.set(from, estado);
+        return sendReply(from, MSG.selbettiNome);
+    }
+
+    if (estado.step === 'selbetti_nome') {
+        const s = String(msg.body || '').trim();
+        if (s.length < 3) return sendReply(from, MSG.selbettiNome);
+        estado.selb_nome = s.substring(0, 120);
+        estado.step = 'selbetti_email';
+        estados.set(from, estado);
+        return sendReply(from, MSG.selbettiEmail);
+    }
+
+    if (estado.step === 'selbetti_email') {
+        const s = String(msg.body || '').trim();
+        if (!emailValido(s)) return sendReply(from, MSG.selbettiErroEmail);
+        estado.selb_email = s;
+        estado.step = 'selbetti_telefone';
+        estados.set(from, estado);
+        return sendReply(from, MSG.selbettiTelefone);
+    }
+
+    if (estado.step === 'selbetti_telefone') {
+        const raw = String(msg.body || '').trim();
+        const low = raw.toLowerCase();
+        let tel = '';
+        if (low === 'mesmo' || low === 'whatsapp' || low === 'este' || low === 'este numero' || low === 'este número') {
+            tel = formatarTelefoneBr(from);
+        } else {
+            const d = raw.replace(/\D/g, '');
+            if (d.length < 10) return sendReply(from, MSG.selbettiErroTel);
+            tel = raw.substring(0, 30);
+        }
+        estado.selb_telefone = tel;
+        estado.step = 'selbetti_prioridade';
+        estados.set(from, estado);
+        return sendReply(from, MSG.selbettiPrioridade);
+    }
+
+    if (estado.step === 'selbetti_prioridade') {
+        const t = String(msg.body || '').trim();
+        let p = 'NORMAL';
+        if (t === '2' || t === '2.') p = 'ALTA';
+        else if (t === '3' || t === '3.') p = 'CRITICA';
+        else if (t !== '1' && t !== '1.') return sendReply(from, MSG.selbettiErroPrior);
+        estado.selb_prioridade = p;
+        estado.step = 'selbetti_problema';
+        estados.set(from, estado);
+        return sendReply(from, MSG.selbettiProblema);
+    }
+
+    if (estado.step === 'selbetti_problema') {
+        const s = String(msg.body || '').trim();
+        if (s.length < 4) return sendReply(from, MSG.selbettiErroProblema);
+        estado.selb_problema = s.substring(0, 4000);
+        estado.step = 'selbetti_confirm';
+        estados.set(from, estado);
+        const tipoTxt =
+            {
+                consumo: 'Material de consumo',
+                equipamento: 'Assistência de equipamento',
+                software: 'Assistência de software'
+            }[estado.selb_tipo] || estado.selb_tipo;
+        const prob = estado.selb_problema || '';
+        const resumo =
+            `• Tipo: *${tipoTxt}*\n` +
+            `• SELB: *${estado.selb_selb || '—'}*\n` +
+            `• Série: *${estado.selb_serie || '—'}*\n` +
+            `• Nome: *${estado.selb_nome}*\n` +
+            `• E-mail: *${estado.selb_email}*\n` +
+            `• Tel: *${estado.selb_telefone}*\n` +
+            `• Prioridade: *${estado.selb_prioridade}*\n` +
+            `• Problema: _${prob.substring(0, 200)}${prob.length > 200 ? '…' : ''}_`;
+        return sendReply(from, MSG.selbettiConfirm(resumo));
+    }
+
+    if (estado.step === 'selbetti_confirm') {
+        const rawIncoming = String(msg.body || '').trim();
+        const cleaned = rawIncoming.replace(/\*+/g, '').trim();
+        const s = normalizeCmd(cleaned);
+        if (s === 'nao' || s === 'não' || s === 'n' || s === '0') {
+            estados.delete(from);
+            return sendReply(from, MSG.selbettiCancelado);
+        }
+        const isSim =
+            s === 'sim' ||
+            s === 's' ||
+            s === 'ok' ||
+            s === 'confirmo' ||
+            rawIncoming === '1' ||
+            /^sim[\s.!?…]*$/i.test(String(cleaned).replace(/\s+/g, ' ').trim());
+        if (!isSim) {
+            return sendReply(from, 'Responda *SIM* ou *NÃO*.');
+        }
+        const lockTs = selbettiSubmitLocks.get(from);
+        if (lockTs && Date.now() - lockTs > 15 * 60 * 1000) {
+            selbettiSubmitLocks.delete(from);
+        }
+        if (selbettiSubmitLocks.has(from)) {
+            return sendReply(from, MSG.selbettiJaProcessando);
+        }
+        const payload = {
+            tipo: estado.selb_tipo,
+            selb: estado.selb_selb || '',
+            serie: estado.selb_serie || '',
+            nome: estado.selb_nome,
+            email: estado.selb_email,
+            telefone: estado.selb_telefone,
+            prioridade: estado.selb_prioridade,
+            problema: estado.selb_problema,
+            whatsappPhone: from,
+            source: 'axis_whatsapp_bot',
+            createdAt: new Date().toISOString()
+        };
+        estados.delete(from);
+        selbettiSubmitLocks.set(from, Date.now());
+
+        /**
+         * Playwright bloqueia o event loop do Node durante vários minutos.
+         * Com sendFollowUp (Baileys / Cloud API) respondemos já e enviamos o resultado depois.
+         */
+        if (sendFollowUp) {
+            setImmediate(() => {
+                (async () => {
+                    try {
+                        const r = await submitSelbettiChamado(payload);
+                        const text = formatSelbettiWhatsAppResult(r);
+                        await sendFollowUp(text);
+                    } catch (e) {
+                        console.error('[Selbetti WhatsApp] submit:', e);
+                        try {
+                            await sendFollowUp(
+                                '❌ Erro ao contactar o Selbetti. Tente a opção *8* de novo.\n_' +
+                                    String(e.message || e).substring(0, 220) +
+                                    '_'
+                            );
+                        } catch (_) {}
+                    } finally {
+                        selbettiSubmitLocks.delete(from);
+                    }
+                })();
+            });
+            return sendReply(from, MSG.selbettiProcessando);
+        }
+
+        let r;
+        try {
+            r = await submitSelbettiChamado(payload);
+        } catch (e) {
+            selbettiSubmitLocks.delete(from);
+            return sendReply(from, MSG.erroGeral);
+        }
+        selbettiSubmitLocks.delete(from);
+        return sendReply(from, formatSelbettiWhatsAppResult(r));
     }
 
     if (estado.step === 'status_setor') {

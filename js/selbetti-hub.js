@@ -66,8 +66,16 @@
     };
 
     var pendingUploadTarget = null;
+    /** Anexo escolhido no formulário de orçamento manual (antes de guardar). */
+    var pendingManualOrcAttachment = null;
     var toastTimer = null;
     var trashCountdownTimer = null;
+
+    /** Cache em memória + IndexedDB para PDFs/imagens grandes (localStorage ~5 MB estoura com base64). */
+    var DOCS_IDB_STORE = 'byKey';
+    var selbettiDocsIdb = null;
+    var selbettiDocsIdbOpenPromise = null;
+    var docsCache = {};
 
     function $(id) { return document.getElementById(id); }
 
@@ -119,13 +127,219 @@
         return NS + '_docs_' + category + '_' + year + '_' + month;
     }
 
-    function loadDocs(key) {
-        var list = loadJson(key, []);
-        return Array.isArray(list) ? list : [];
+    function manualOrcamentosStorageKey(year, month) {
+        return NS + '_manual_orcamentos_' + year + '_' + month;
     }
 
-    function saveDocs(key, list) {
-        return saveJson(key, list);
+    function loadManualOrcamentos(manualKey) {
+        var list = loadJson(manualKey, []);
+        return Array.isArray(list) ? list.slice() : [];
+    }
+
+    function saveManualOrcamentos(manualKey, list) {
+        return saveJson(manualKey, Array.isArray(list) ? list : []);
+    }
+
+    /** Ano/mês do calendário atual, limitado a 2025–2026 (pastas do hub). */
+    function orcamentosDestinoCalendario() {
+        var now = new Date();
+        var y = String(now.getFullYear());
+        if (y !== '2025' && y !== '2026') y = '2026';
+        return { year: y, month: pad2(now.getMonth() + 1) };
+    }
+
+    function manualOrcEntryInstant(m) {
+        if (!m) return 0;
+        var t = new Date(m.at || m.addedAt || 0).getTime();
+        return isNaN(t) ? 0 : t;
+    }
+
+    /** data YYYY-MM-DD + hora/minuto/segundo locais → ISO. */
+    function parseManualOrcDateTime(dateStr, h, mi, s) {
+        if (!dateStr || typeof dateStr !== 'string') return null;
+        var dparts = dateStr.split('-');
+        var y = parseInt(dparts[0], 10);
+        var mo = parseInt(dparts[1], 10) - 1;
+        var d = parseInt(dparts[2], 10);
+        var hh = Math.max(0, Math.min(23, parseInt(h, 10) || 0));
+        var mm = Math.max(0, Math.min(59, parseInt(mi, 10) || 0));
+        var ss = Math.max(0, Math.min(59, parseInt(s, 10) || 0));
+        if (isNaN(y) || isNaN(mo) || isNaN(d)) return null;
+        var dt = new Date(y, mo, d, hh, mm, ss);
+        if (isNaN(dt.getTime())) return null;
+        return dt.toISOString();
+    }
+
+    function defaultManualOrcDateParts() {
+        var now = new Date();
+        return {
+            dateStr: now.getFullYear() + '-' + pad2(now.getMonth() + 1) + '-' + pad2(now.getDate()),
+            h: String(now.getHours()),
+            mi: String(now.getMinutes()),
+            s: String(now.getSeconds())
+        };
+    }
+
+    function openSelbettiDocsIdb() {
+        if (selbettiDocsIdbOpenPromise) return selbettiDocsIdbOpenPromise;
+        selbettiDocsIdbOpenPromise = new Promise(function (resolve) {
+            try {
+                var req = indexedDB.open(NS + '_docs_idb', 1);
+                req.onupgradeneeded = function (ev) {
+                    var db = ev.target.result;
+                    if (!db.objectStoreNames.contains(DOCS_IDB_STORE)) {
+                        db.createObjectStore(DOCS_IDB_STORE, { keyPath: 'storageKey' });
+                    }
+                };
+                req.onerror = function () {
+                    selbettiDocsIdb = null;
+                    resolve();
+                };
+                req.onsuccess = function () {
+                    selbettiDocsIdb = req.result;
+                    resolve();
+                };
+            } catch (e) {
+                selbettiDocsIdb = null;
+                resolve();
+            }
+        });
+        return selbettiDocsIdbOpenPromise;
+    }
+
+    function idbPutDocsFolder(key, items) {
+        return new Promise(function (resolve) {
+            if (!selbettiDocsIdb) {
+                resolve(false);
+                return;
+            }
+            try {
+                var tx = selbettiDocsIdb.transaction(DOCS_IDB_STORE, 'readwrite');
+                tx.objectStore(DOCS_IDB_STORE).put({ storageKey: key, items: items });
+                tx.oncomplete = function () {
+                    resolve(true);
+                };
+                tx.onerror = function () {
+                    resolve(false);
+                };
+                tx.onabort = function () {
+                    resolve(false);
+                };
+            } catch (e) {
+                resolve(false);
+            }
+        });
+    }
+
+    function idbGetAllDocsIntoCache() {
+        return new Promise(function (resolve) {
+            if (!selbettiDocsIdb) {
+                resolve();
+                return;
+            }
+            try {
+                var tx = selbettiDocsIdb.transaction(DOCS_IDB_STORE, 'readonly');
+                var r = tx.objectStore(DOCS_IDB_STORE).getAll();
+                r.onsuccess = function () {
+                    var rows = r.result || [];
+                    rows.forEach(function (row) {
+                        if (row && row.storageKey && Array.isArray(row.items)) {
+                            docsCache[row.storageKey] = row.items;
+                        }
+                    });
+                    resolve();
+                };
+                r.onerror = function () {
+                    resolve();
+                };
+            } catch (e) {
+                resolve();
+            }
+        });
+    }
+
+    function migrateLsDocsFoldersToIdb() {
+        var keys = [];
+        try {
+            var ki;
+            for (ki = 0; ki < localStorage.length; ki++) {
+                var k = localStorage.key(ki);
+                if (k && k.indexOf(NS + '_docs_') === 0 && k !== TRASH_KEY) {
+                    keys.push(k);
+                }
+            }
+        } catch (e0) {}
+        return keys.reduce(function (chain, key) {
+            return chain.then(function () {
+                if (docsCache[key] && docsCache[key].length) {
+                    try {
+                        localStorage.removeItem(key);
+                    } catch (e1) {}
+                    return;
+                }
+                var raw = null;
+                try {
+                    raw = localStorage.getItem(key);
+                } catch (e2) {}
+                if (!raw) return;
+                var arr;
+                try {
+                    arr = JSON.parse(raw);
+                } catch (e3) {
+                    return;
+                }
+                if (!Array.isArray(arr) || !arr.length) return;
+                docsCache[key] = arr;
+                if (!selbettiDocsIdb) return;
+                return idbPutDocsFolder(key, arr).then(function (ok) {
+                    if (ok) {
+                        try {
+                            localStorage.removeItem(key);
+                        } catch (e4) {}
+                    }
+                });
+            });
+        }, Promise.resolve());
+    }
+
+    function bootstrapSelbettiDocsStorage() {
+        return openSelbettiDocsIdb()
+            .then(function () {
+                return idbGetAllDocsIntoCache();
+            })
+            .then(function () {
+                return migrateLsDocsFoldersToIdb();
+            });
+    }
+
+    function loadDocs(key) {
+        if (Object.prototype.hasOwnProperty.call(docsCache, key)) {
+            return (docsCache[key] || []).slice();
+        }
+        var list = loadJson(key, []);
+        return Array.isArray(list) ? list.slice() : [];
+    }
+
+    /** Grava pasta de documentos (IndexedDB se disponível; senão localStorage). Só atualiza cache em memória se gravar com sucesso. */
+    function saveDocsAsync(key, list) {
+        var arr = Array.isArray(list) ? list.slice() : [];
+        if (!selbettiDocsIdb) {
+            var okLs = saveJson(key, arr);
+            if (okLs) docsCache[key] = arr;
+            return Promise.resolve(okLs);
+        }
+        return idbPutDocsFolder(key, arr).then(function (ok) {
+            if (ok) {
+                docsCache[key] = arr;
+                try {
+                    localStorage.removeItem(key);
+                } catch (e) {}
+                return true;
+            }
+            var ok2 = saveJson(key, arr);
+            if (ok2) docsCache[key] = arr;
+            return ok2;
+        });
     }
 
     function loadTrash() {
@@ -248,6 +462,7 @@
         if (a === 'certificados') return { type: 'docs', category: 'certificados' };
         if (a === 'digital') return { type: 'digital' };
         if (a === 'orcamentos') {
+            if (p[1] === 'cadastrar') return { type: 'orcamentos_cadastrar' };
             if (p[1] && p[2]) return { type: 'docs', category: 'orcamentos', year: p[1], month: p[2] };
             return { type: 'dash_orcamentos' };
         }
@@ -274,6 +489,7 @@
         if (route.type === 'home') return 'Início';
         if (route.type === 'digital') return 'FERRAMENTAS DIGITAIS SELBETTI';
         if (route.type === 'dash_orcamentos') return 'ORÇAMENTOS';
+        if (route.type === 'orcamentos_cadastrar') return 'CADASTRAR ORÇAMENTO';
         if (route.type === 'dash_atas') return 'ATAS E REUNIÕES';
         if (route.type === 'docs') {
             if (route.category === 'certificados') return 'Certificados';
@@ -350,7 +566,7 @@
                     year: y,
                     monthId: m.id,
                     monthLabel: m.label,
-                    count: list.length,
+                    count: countAll,
                     bytes: bytes,
                     route: category + '/' + y + '/' + m.id
                 });
@@ -462,6 +678,7 @@
 
         h += '<details class="selbetti-nav-group selbetti-nav-hub-root" open><summary class="selbetti-nav-summary selbetti-nav-summary-root">💰 ORÇAMENTOS</summary><div class="selbetti-nav-nested">';
         h += '<button type="button" class="selbetti-nav-item" data-route="orcamentos">🖥️ PAINEL</button>';
+        h += '<button type="button" class="selbetti-nav-item" data-route="orcamentos/cadastrar">✨ CADASTRAR ORÇAMENTO</button>';
         h += '<details class="selbetti-nav-group selbetti-nav-months-wrap" open><summary class="selbetti-nav-summary">MESES POR ANO</summary><div class="selbetti-nav-nested">';
         ['2025', '2026'].forEach(function (y) {
             h += '<details class="selbetti-nav-group"><summary class="selbetti-nav-summary">' + esc(y) + '</summary><div class="selbetti-nav-nested">';
@@ -517,6 +734,7 @@
             if (route.type === 'docs' && route.category === 'certificados' && r === 'certificados') active = true;
             if (route.type === 'docs' && route.category === 'ferramentas_estoque' && r === 'ferramentas/estoque') active = true;
             if (route.type === 'dash_orcamentos' && r === 'orcamentos') active = true;
+            if (route.type === 'orcamentos_cadastrar' && r === 'orcamentos/cadastrar') active = true;
             if (route.type === 'dash_atas' && r === 'atas') active = true;
             if (route.type === 'docs' && route.category === 'orcamentos' && r === 'orcamentos/' + route.year + '/' + route.month) active = true;
             if (route.type === 'docs' && route.category === 'atas' && r === 'atas/' + route.year + '/' + route.month) active = true;
@@ -651,62 +869,23 @@
         if (backdrop) backdrop.hidden = true;
     }
 
-    function renderDocs(route) {
-        var key = getDocsKeyForRoute(route);
-        var list = loadDocs(key);
-        var main = $('selbetti-main');
-        var title = breadcrumb(route);
-        var panelMonthClass = (route.category === 'orcamentos' || route.category === 'atas' || route.category === 'ferramentas_estoque')
-            ? ' selbetti-panel-month-folder'
-            : '';
-
-        var itemsHtml = list.length
-            ? list.map(function (item) {
-                var canPreview = !!(item.dataUrl && (isPdfMime(item.mime, item.name) || isImageMime(item.mime)));
-                return '<li class="selbetti-doc-item">' +
-                    '<div><strong>' + esc(item.name) + '</strong>' +
-                    '<div class="selbetti-doc-meta">' + esc(formatDate(item.addedAt)) + ' · ' + esc(formatBytes(item.size || 0)) +
-                    (item.mime ? ' · ' + esc(item.mime) : '') + '</div></div>' +
-                    '<div class="selbetti-toolbar selbetti-doc-toolbar">' +
-                    (item.dataUrl
-                        ? (canPreview
-                            ? '<button type="button" class="selbetti-btn selbetti-btn-ghost selbetti-btn-icon-only selbetti-preview-doc" data-id="' + esc(item.id) + '" title="Visualizar" aria-label="Visualizar"><i class="fas fa-eye"></i></button>'
-                            : '') +
-                          '<a class="selbetti-btn selbetti-btn-ghost selbetti-btn-download selbetti-btn-text-upper" href="' + esc(item.dataUrl) + '" download="' + escAttr(item.name) + '">BAIXAR</a>' +
-                          '<button type="button" class="selbetti-btn selbetti-btn-ghost selbetti-btn-text-upper selbetti-open-data" data-id="' + esc(item.id) + '">ABRIR</button>'
-                        : '') +
-                    '<button type="button" class="selbetti-btn selbetti-btn-danger selbetti-btn-text-upper selbetti-remove-doc" data-id="' + esc(item.id) + '">REMOVER</button>' +
-                    '</div></li>';
-            }).join('')
-            : '<div class="selbetti-empty"><span class="big">📂</span>Nenhum arquivo nesta pasta.<br>Use <strong>ADICIONAR ARQUIVOS</strong> para guardar PDFs, imagens (HD/4K), vídeos ou outros ficheiros — até ~' +
-                Math.round(MAX_FILE_BYTES / (1024 * 1024)) +
-                ' MB por arquivo. O limite real é o espaço que <strong>este navegador</strong> permite (armazenamento local, não o servidor).</div>';
-
-        main.innerHTML =
-            '<section class="selbetti-panel glass-panel' + panelMonthClass + '">' +
-            '<div class="selbetti-panel-head">' +
-            '<h2>' + esc(title) + '</h2>' +
-            '<div class="selbetti-toolbar">' +
-            '<button type="button" class="selbetti-btn selbetti-btn-primary selbetti-btn-text-upper" id="selbetti-add-files">ADICIONAR ARQUIVOS</button>' +
-            '</div></div>' +
-            '<ul class="selbetti-doc-list" id="selbetti-doc-list">' + itemsHtml + '</ul></section>';
-
-        pendingUploadTarget = { key: key };
-
-        $('selbetti-add-files').addEventListener('click', function () {
-            $('selbetti-file-input').click();
-        });
-
+    function bindDocListActions(main, key) {
         main.querySelectorAll('.selbetti-remove-doc').forEach(function (btn) {
             btn.addEventListener('click', function () {
                 var id = btn.getAttribute('data-id');
                 var cur = loadDocs(key);
                 var found = cur.find(function (x) { return String(x.id) === String(id); });
-                if (found) pushToTrash(found, key);
+                if (!found) return;
                 var next = cur.filter(function (x) { return String(x.id) !== String(id); });
-                saveDocs(key, next);
-                showToast('Arquivo movido para a lixeira.');
-                render();
+                saveDocsAsync(key, next).then(function (ok) {
+                    if (ok) {
+                        pushToTrash(found, key);
+                        showToast('Arquivo movido para a lixeira.');
+                    } else {
+                        showToast('Não foi possível atualizar a pasta (armazenamento). Tente ficheiros mais pequenos ou outro navegador.');
+                    }
+                    render();
+                });
             });
         });
 
@@ -725,6 +904,449 @@
                 if (item && item.dataUrl) openDocPreview(item.dataUrl, item.name, item.mime);
             });
         });
+    }
+
+    function wireOrcamentosDocSearch(ul) {
+        var inp = $('selbetti-doc-search');
+        if (!inp || !ul) return;
+        function apply() {
+            var q = (inp.value || '').trim().toLowerCase();
+            ul.querySelectorAll('.selbetti-doc-item').forEach(function (li) {
+                var t = (li.getAttribute('data-search') || '').toLowerCase();
+                li.hidden = q.length > 0 && t.indexOf(q) === -1;
+            });
+        }
+        inp.addEventListener('input', apply);
+        inp.addEventListener('search', apply);
+    }
+
+    function renderOrcamentosCadastrar() {
+        pendingManualOrcAttachment = null;
+        var dest = orcamentosDestinoCalendario();
+        var docsKey = docsStorageKey('orcamentos', dest.year, dest.month);
+        var monthName = monthLabel(dest.month);
+        var main = $('selbetti-main');
+        var defDt = defaultManualOrcDateParts();
+
+        pendingUploadTarget = { key: docsKey };
+
+        var yearOpts = ['2025', '2026'].map(function (y) {
+            return '<option value="' + escAttr(y) + '"' + (y === dest.year ? ' selected' : '') + '>' + esc(y) + '</option>';
+        }).join('');
+        var monthOpts = MESES.map(function (m) {
+            return '<option value="' + escAttr(m.id) + '"' + (m.id === dest.month ? ' selected' : '') + '>' + esc(m.label) + '</option>';
+        }).join('');
+
+        main.innerHTML =
+            '<section class="selbetti-panel glass-panel selbetti-cadastro-orc-panel">' +
+            '<header class="selbetti-panel-head selbetti-cadastro-orc-head">' +
+            '<h2>CADASTRAR ORÇAMENTO</h2>' +
+            '</header>' +
+            '<div class="selbetti-cadastro-orc-grid">' +
+            '<div class="selbetti-cadastro-card selbetti-cadastro-card-upload glass-panel">' +
+            '<div class="selbetti-cadastro-card-upload-inner">' +
+            '<div class="selbetti-cadastro-upload-glow" aria-hidden="true"></div>' +
+            '<span class="selbetti-cadastro-auto-badge">Automático</span>' +
+            '<div class="selbetti-cadastro-upload-icon" aria-hidden="true"><i class="fas fa-cloud-arrow-up"></i></div>' +
+            '<p class="selbetti-cadastro-auto-title">Envio para o <strong>mês atual</strong> do calendário</p>' +
+            '<p class="selbetti-cadastro-destino-label">' + esc(monthName) + ' · ' + esc(dest.year) + '</p>' +
+            '<button type="button" class="selbetti-btn selbetti-btn-primary selbetti-btn-text-upper" id="selbetti-cadastro-add-files">ADICIONAR ARQUIVOS</button>' +
+            '</div></div>' +
+            '<div class="selbetti-cadastro-card selbetti-cadastro-card-manual glass-panel">' +
+            '<div class="selbetti-cadastro-manual-inner">' +
+            '<header class="selbetti-cadastro-manual-head">' +
+            '<h3 class="selbetti-cadastro-manual-h3">Orçamento manual</h3>' +
+            '<p class="selbetti-cadastro-manual-sub">O cartão à esquerda envia sempre para o <strong>mês atual</strong>. Aqui você escolhe o mês da pasta.</p>' +
+            '</header>' +
+            '<div class="selbetti-cadastro-sec selbetti-cadastro-sec-dest">' +
+            '<span class="selbetti-cadastro-sec-kicker">Pasta de destino</span>' +
+            '<div class="selbetti-manual-select-grid">' +
+            '<div class="selbetti-cadastro-field">' +
+            '<label class="selbetti-cadastro-field-label" for="selbetti-manual-orc-month">Mês</label>' +
+            '<select id="selbetti-manual-orc-month" class="selbetti-input selbetti-select selbetti-input-strong" autocomplete="off">' + monthOpts + '</select>' +
+            '</div>' +
+            '<div class="selbetti-cadastro-field">' +
+            '<label class="selbetti-cadastro-field-label" for="selbetti-manual-orc-year">Ano</label>' +
+            '<select id="selbetti-manual-orc-year" class="selbetti-input selbetti-select selbetti-input-strong" autocomplete="off">' + yearOpts + '</select>' +
+            '</div></div></div>' +
+            '<div class="selbetti-cadastro-sec">' +
+            '<span class="selbetti-cadastro-sec-kicker">Dados</span>' +
+            '<div class="selbetti-cadastro-manual-form">' +
+            '<div class="selbetti-cadastro-field">' +
+            '<label class="selbetti-cadastro-field-label" for="selbetti-manual-orc-title">Descrição</label>' +
+            '<input type="text" id="selbetti-manual-orc-title" class="selbetti-input selbetti-input-strong" placeholder="Ex.: revisão de equipamento" maxlength="500" />' +
+            '</div>' +
+            '<div class="selbetti-cadastro-field">' +
+            '<label class="selbetti-cadastro-field-label" for="selbetti-manual-orc-val">Valor <span class="selbetti-cadastro-optional">(opcional)</span></label>' +
+            '<input type="text" id="selbetti-manual-orc-val" class="selbetti-input selbetti-input-strong" placeholder="Ex.: R$ 0,00" maxlength="80" />' +
+            '</div></div></div>' +
+            '<div class="selbetti-cadastro-sec">' +
+            '<span class="selbetti-cadastro-sec-kicker">Data e hora do registo</span>' +
+            '<div class="selbetti-cadastro-dt-block">' +
+            '<div class="selbetti-cadastro-field">' +
+            '<label class="selbetti-cadastro-field-label" for="selbetti-manual-orc-date">Data</label>' +
+            '<input type="date" id="selbetti-manual-orc-date" class="selbetti-input selbetti-input-strong" value="' + escAttr(defDt.dateStr) + '" />' +
+            '</div>' +
+            '<div class="selbetti-cadastro-hms-row">' +
+            '<div class="selbetti-cadastro-hms-field">' +
+            '<label class="selbetti-cadastro-field-label" for="selbetti-manual-orc-h">Hora</label>' +
+            '<input type="number" id="selbetti-manual-orc-h" class="selbetti-input selbetti-input-hms selbetti-input-strong" min="0" max="23" step="1" value="' + escAttr(defDt.h) + '" />' +
+            '</div>' +
+            '<div class="selbetti-cadastro-hms-field">' +
+            '<label class="selbetti-cadastro-field-label" for="selbetti-manual-orc-m">Minutos</label>' +
+            '<input type="number" id="selbetti-manual-orc-m" class="selbetti-input selbetti-input-hms selbetti-input-strong" min="0" max="59" step="1" value="' + escAttr(defDt.mi) + '" />' +
+            '</div>' +
+            '<div class="selbetti-cadastro-hms-field">' +
+            '<label class="selbetti-cadastro-field-label" for="selbetti-manual-orc-s">Segundos</label>' +
+            '<input type="number" id="selbetti-manual-orc-s" class="selbetti-input selbetti-input-hms selbetti-input-strong" min="0" max="59" step="1" value="' + escAttr(defDt.s) + '" />' +
+            '</div></div></div></div>' +
+            '<div class="selbetti-cadastro-sec selbetti-cadastro-sec-file">' +
+            '<span class="selbetti-cadastro-sec-kicker">Arquivo anexo</span>' +
+            '<div class="selbetti-cadastro-file-row">' +
+            '<input type="file" id="selbetti-manual-orc-file-input" hidden />' +
+            '<button type="button" class="selbetti-btn selbetti-btn-ghost selbetti-btn-text-upper" id="selbetti-manual-orc-pick-file">Escolher arquivo</button>' +
+            '<span class="selbetti-cadastro-file-label" id="selbetti-manual-orc-file-label">Nenhum arquivo</span>' +
+            '<button type="button" class="selbetti-btn selbetti-btn-ghost selbetti-cadastro-file-clear" id="selbetti-manual-orc-clear-file" hidden>Limpar</button>' +
+            '</div></div>' +
+            '<button type="button" class="selbetti-btn selbetti-btn-primary selbetti-btn-text-upper selbetti-cadastro-manual-save" id="selbetti-manual-orc-add">Guardar</button>' +
+            '<div class="selbetti-cadastro-manual-preview-section">' +
+            '<span class="selbetti-cadastro-sec-kicker selbetti-cadastro-preview-kicker">Registos no mês selecionado</span>' +
+            '<div id="selbetti-manual-orc-preview-wrap" class="selbetti-manual-orc-preview-wrap"></div>' +
+            '</div></div></div></div></section>';
+
+        function readManualTargetFromForm() {
+            var yEl = $('selbetti-manual-orc-year');
+            var mEl = $('selbetti-manual-orc-month');
+            var y = yEl && yEl.value ? String(yEl.value) : '2026';
+            var mo = mEl && mEl.value ? String(mEl.value) : '01';
+            return { year: y, month: mo, manualKey: manualOrcamentosStorageKey(y, mo) };
+        }
+
+        function refreshManualPreview() {
+            var wrap = $('selbetti-manual-orc-preview-wrap');
+            if (!wrap) return;
+            var r = readManualTargetFromForm();
+            var list = loadManualOrcamentos(r.manualKey);
+            if (!list.length) {
+                wrap.innerHTML = '<p class="selbetti-cadastro-preview-empty">Nenhum registo para <strong>' + esc(monthLabel(r.month)) + ' ' + esc(r.year) + '</strong>.</p>';
+                return;
+            }
+            wrap.innerHTML =
+                '<ul class="selbetti-cadastro-manual-preview">' +
+                list.slice().reverse().map(function (row) {
+                    var when = row.at || row.addedAt;
+                    return '<li><span class="selbetti-cadastro-manual-preview-title">' + esc(row.title) + '</span>' +
+                        '<span class="selbetti-cadastro-manual-preview-meta">' + esc(formatDate(when)) +
+                        (row.attachment && row.attachment.name ? ' · 📎 ' + esc(row.attachment.name) : '') +
+                        '</span>' +
+                        (row.amount ? '<span class="selbetti-cadastro-manual-preview-amt">' + esc(row.amount) + '</span>' : '') +
+                        '</li>';
+                }).join('') +
+                '</ul>';
+        }
+
+        function syncManualFileUi() {
+            var lab = $('selbetti-manual-orc-file-label');
+            var clr = $('selbetti-manual-orc-clear-file');
+            if (!lab) return;
+            if (pendingManualOrcAttachment && pendingManualOrcAttachment.name) {
+                lab.textContent = pendingManualOrcAttachment.name;
+                if (clr) clr.hidden = false;
+            } else {
+                lab.textContent = 'Nenhum arquivo';
+                if (clr) clr.hidden = true;
+            }
+        }
+
+        var addBtn = $('selbetti-cadastro-add-files');
+        if (addBtn) {
+            addBtn.addEventListener('click', function () {
+                $('selbetti-file-input').click();
+            });
+        }
+
+        var pickFile = $('selbetti-manual-orc-pick-file');
+        var manualFileInp = $('selbetti-manual-orc-file-input');
+        if (pickFile && manualFileInp) {
+            pickFile.addEventListener('click', function () {
+                manualFileInp.click();
+            });
+            manualFileInp.addEventListener('change', function (e) {
+                var f = e.target.files && e.target.files[0];
+                e.target.value = '';
+                if (!f) return;
+                if (f.size > MAX_FILE_BYTES) {
+                    showToast('Ficheiro acima do limite (~' + Math.round(MAX_FILE_BYTES / (1024 * 1024)) + ' MB): ' + f.name);
+                    return;
+                }
+                var reader = new FileReader();
+                reader.onload = function () {
+                    pendingManualOrcAttachment = {
+                        name: f.name,
+                        mime: f.type || 'application/octet-stream',
+                        size: f.size,
+                        dataUrl: reader.result
+                    };
+                    syncManualFileUi();
+                };
+                reader.onerror = function () {
+                    showToast('Erro ao ler o ficheiro.');
+                };
+                reader.readAsDataURL(f);
+            });
+        }
+
+        var clrFile = $('selbetti-manual-orc-clear-file');
+        if (clrFile) {
+            clrFile.addEventListener('click', function () {
+                pendingManualOrcAttachment = null;
+                syncManualFileUi();
+            });
+        }
+
+        syncManualFileUi();
+
+        var ySel = $('selbetti-manual-orc-year');
+        var moSel = $('selbetti-manual-orc-month');
+        if (ySel) ySel.addEventListener('change', refreshManualPreview);
+        if (moSel) moSel.addEventListener('change', refreshManualPreview);
+        refreshManualPreview();
+
+        $('selbetti-manual-orc-add').addEventListener('click', function () {
+            var target = readManualTargetFromForm();
+            var titleIn = $('selbetti-manual-orc-title');
+            var valIn = $('selbetti-manual-orc-val');
+            var dateIn = $('selbetti-manual-orc-date');
+            var hIn = $('selbetti-manual-orc-h');
+            var mIn = $('selbetti-manual-orc-m');
+            var sIn = $('selbetti-manual-orc-s');
+            var t = titleIn && (titleIn.value || '').trim();
+            if (!t) {
+                showToast('Indique uma descrição.');
+                return;
+            }
+            var ds = dateIn && (dateIn.value || '').trim();
+            if (!ds) {
+                showToast('Indique a data.');
+                return;
+            }
+            var atIso = parseManualOrcDateTime(ds, hIn && hIn.value, mIn && mIn.value, sIn && sIn.value);
+            if (!atIso) {
+                showToast('Data ou hora inválida.');
+                return;
+            }
+            var amt = valIn ? (valIn.value || '').trim() : '';
+            var cur = loadManualOrcamentos(target.manualKey);
+            var row = {
+                id: String(Date.now()) + '_' + Math.random().toString(36).slice(2, 8),
+                title: t,
+                amount: amt,
+                at: atIso,
+                addedAt: new Date().toISOString()
+            };
+            if (pendingManualOrcAttachment) {
+                row.attachment = {
+                    name: pendingManualOrcAttachment.name,
+                    mime: pendingManualOrcAttachment.mime,
+                    size: pendingManualOrcAttachment.size,
+                    dataUrl: pendingManualOrcAttachment.dataUrl
+                };
+            }
+            cur.push(row);
+            if (saveManualOrcamentos(target.manualKey, cur)) {
+                pendingManualOrcAttachment = null;
+                if (titleIn) titleIn.value = '';
+                if (valIn) valIn.value = '';
+                var d2 = defaultManualOrcDateParts();
+                if (dateIn) dateIn.value = d2.dateStr;
+                if (hIn) hIn.value = d2.h;
+                if (mIn) mIn.value = d2.mi;
+                if (sIn) sIn.value = d2.s;
+                showToast('Guardado em ' + monthLabel(target.month) + ' ' + target.year + '.');
+                syncManualFileUi();
+                refreshManualPreview();
+            }
+        });
+    }
+
+    function renderDocs(route) {
+        var key = getDocsKeyForRoute(route);
+        var list = loadDocs(key);
+        var main = $('selbetti-main');
+        var title = breadcrumb(route);
+        var panelMonthClass = (route.category === 'orcamentos' || route.category === 'atas' || route.category === 'ferramentas_estoque')
+            ? ' selbetti-panel-month-folder'
+            : '';
+
+        var isOrcamentosMes = route.category === 'orcamentos' && route.year && route.month;
+        var manualKey = isOrcamentosMes ? manualOrcamentosStorageKey(route.year, route.month) : null;
+        var manualList = manualKey ? loadManualOrcamentos(manualKey) : [];
+
+        var merged = [];
+        list.forEach(function (item) {
+            merged.push({ kind: 'file', item: item });
+        });
+        manualList.forEach(function (item) {
+            merged.push({ kind: 'manual', item: item });
+        });
+        merged.sort(function (a, b) {
+            var ta = a.kind === 'manual' ? manualOrcEntryInstant(a.item) : new Date((a.item && a.item.addedAt) || 0).getTime();
+            var tb = b.kind === 'manual' ? manualOrcEntryInstant(b.item) : new Date((b.item && b.item.addedAt) || 0).getTime();
+            return tb - ta;
+        });
+
+        var itemsHtml;
+        var emptyHtml;
+        if (isOrcamentosMes) {
+            itemsHtml = merged.map(function (row) {
+                if (row.kind === 'manual') {
+                    var m = row.item;
+                    var att = m.attachment;
+                    var when = m.at || m.addedAt;
+                    var searchBlob = (m.title || '') + ' ' + (m.amount || '') + ' manual ' + (att && att.name ? att.name : '');
+                    var attPart = '';
+                    if (att && att.dataUrl) {
+                        var canPrev = !!(isPdfMime(att.mime, att.name) || isImageMime(att.mime));
+                        attPart =
+                            (canPrev
+                                ? '<button type="button" class="selbetti-btn selbetti-btn-ghost selbetti-btn-icon-only selbetti-manual-att-preview" data-mid="' + escAttr(String(m.id)) + '" title="Visualizar" aria-label="Visualizar"><i class="fas fa-eye"></i></button>'
+                                : '') +
+                            '<a class="selbetti-btn selbetti-btn-ghost selbetti-btn-download selbetti-btn-text-upper" href="' + esc(att.dataUrl) + '" download="' + escAttr(att.name) + '">BAIXAR</a>' +
+                            '<button type="button" class="selbetti-btn selbetti-btn-ghost selbetti-btn-text-upper selbetti-manual-att-open" data-mid="' + escAttr(String(m.id)) + '">ABRIR</button>';
+                    }
+                    return '<li class="selbetti-doc-item selbetti-doc-item-manual" data-search="' + escAttr(searchBlob) + '">' +
+                        '<div><strong>Manual · ' + esc(m.title) + '</strong>' +
+                        '<div class="selbetti-doc-meta">' + esc(formatDate(when)) +
+                        (m.amount ? ' · ' + esc(m.amount) : '') +
+                        (att && att.name ? ' · 📎 ' + esc(att.name) : '') + '</div></div>' +
+                        '<div class="selbetti-toolbar selbetti-doc-toolbar">' +
+                        attPart +
+                        '<button type="button" class="selbetti-btn selbetti-btn-danger selbetti-btn-text-upper selbetti-remove-manual" data-id="' + escAttr(String(m.id)) + '">REMOVER</button>' +
+                        '</div></li>';
+                }
+                var item = row.item;
+                var canPreview = !!(item.dataUrl && (isPdfMime(item.mime, item.name) || isImageMime(item.mime)));
+                var searchBlob = (item.name || '') + ' ' + (item.mime || '');
+                return '<li class="selbetti-doc-item" data-search="' + escAttr(searchBlob) + '">' +
+                    '<div><strong>' + esc(item.name) + '</strong>' +
+                    '<div class="selbetti-doc-meta">' + esc(formatDate(item.addedAt)) + ' · ' + esc(formatBytes(item.size || 0)) +
+                    (item.mime ? ' · ' + esc(item.mime) : '') + '</div></div>' +
+                    '<div class="selbetti-toolbar selbetti-doc-toolbar">' +
+                    (item.dataUrl
+                        ? (canPreview
+                            ? '<button type="button" class="selbetti-btn selbetti-btn-ghost selbetti-btn-icon-only selbetti-preview-doc" data-id="' + esc(item.id) + '" title="Visualizar" aria-label="Visualizar"><i class="fas fa-eye"></i></button>'
+                            : '') +
+                          '<a class="selbetti-btn selbetti-btn-ghost selbetti-btn-download selbetti-btn-text-upper" href="' + esc(item.dataUrl) + '" download="' + escAttr(item.name) + '">BAIXAR</a>' +
+                          '<button type="button" class="selbetti-btn selbetti-btn-ghost selbetti-btn-text-upper selbetti-open-data" data-id="' + esc(item.id) + '">ABRIR</button>'
+                        : '') +
+                    '<button type="button" class="selbetti-btn selbetti-btn-danger selbetti-btn-text-upper selbetti-remove-doc" data-id="' + esc(item.id) + '">REMOVER</button>' +
+                    '</div></li>';
+            }).join('');
+            emptyHtml =
+                '<div class="selbetti-empty"><span class="big">📂</span>Nenhum arquivo ou registo manual nesta pasta.<br>Use <strong>CADASTRAR ORÇAMENTO</strong> no menu para enviar ficheiros ou registar valores. PDFs e imagens até ~' +
+                Math.round(MAX_FILE_BYTES / (1024 * 1024)) +
+                ' MB por arquivo (armazenamento local do navegador).</div>';
+        } else {
+            itemsHtml = list.map(function (item) {
+                var canPreview = !!(item.dataUrl && (isPdfMime(item.mime, item.name) || isImageMime(item.mime)));
+                return '<li class="selbetti-doc-item">' +
+                    '<div><strong>' + esc(item.name) + '</strong>' +
+                    '<div class="selbetti-doc-meta">' + esc(formatDate(item.addedAt)) + ' · ' + esc(formatBytes(item.size || 0)) +
+                    (item.mime ? ' · ' + esc(item.mime) : '') + '</div></div>' +
+                    '<div class="selbetti-toolbar selbetti-doc-toolbar">' +
+                    (item.dataUrl
+                        ? (canPreview
+                            ? '<button type="button" class="selbetti-btn selbetti-btn-ghost selbetti-btn-icon-only selbetti-preview-doc" data-id="' + esc(item.id) + '" title="Visualizar" aria-label="Visualizar"><i class="fas fa-eye"></i></button>'
+                            : '') +
+                          '<a class="selbetti-btn selbetti-btn-ghost selbetti-btn-download selbetti-btn-text-upper" href="' + esc(item.dataUrl) + '" download="' + escAttr(item.name) + '">BAIXAR</a>' +
+                          '<button type="button" class="selbetti-btn selbetti-btn-ghost selbetti-btn-text-upper selbetti-open-data" data-id="' + esc(item.id) + '">ABRIR</button>'
+                        : '') +
+                    '<button type="button" class="selbetti-btn selbetti-btn-danger selbetti-btn-text-upper selbetti-remove-doc" data-id="' + esc(item.id) + '">REMOVER</button>' +
+                    '</div></li>';
+            }).join('');
+            emptyHtml =
+                '<div class="selbetti-empty"><span class="big">📂</span>Nenhum arquivo nesta pasta.<br>Use <strong>ADICIONAR ARQUIVOS</strong> para guardar PDFs, imagens (HD/4K), vídeos ou outros ficheiros — até ~' +
+                Math.round(MAX_FILE_BYTES / (1024 * 1024)) +
+                ' MB por arquivo. O limite real é o espaço que <strong>este navegador</strong> permite (armazenamento local, não o servidor).</div>';
+        }
+
+        var listSection;
+        if (isOrcamentosMes) {
+            listSection = merged.length
+                ? '<ul class="selbetti-doc-list" id="selbetti-doc-list">' + itemsHtml + '</ul>'
+                : '<div id="selbetti-doc-list-wrap">' + emptyHtml + '</div>';
+        } else {
+            listSection = list.length
+                ? '<ul class="selbetti-doc-list" id="selbetti-doc-list">' + itemsHtml + '</ul>'
+                : '<div id="selbetti-doc-list-wrap">' + emptyHtml + '</div>';
+        }
+
+        var headRow =
+            '<div class="selbetti-panel-head">' +
+            '<h2>' + esc(title) + '</h2>' +
+            (isOrcamentosMes
+                ? '<div class="selbetti-panel-head-orc-tools">' +
+                  '<label class="selbetti-sr-only" for="selbetti-doc-search">Pesquisar nesta pasta</label>' +
+                  '<input type="search" id="selbetti-doc-search" class="selbetti-doc-search" placeholder="Pesquisar por nome ou descrição" autocomplete="off" />' +
+                  '</div>'
+                : '<div class="selbetti-toolbar">' +
+                  '<button type="button" class="selbetti-btn selbetti-btn-primary selbetti-btn-text-upper" id="selbetti-add-files">ADICIONAR ARQUIVOS</button>' +
+                  '</div>') +
+            '</div>';
+
+        main.innerHTML =
+            '<section class="selbetti-panel glass-panel' + panelMonthClass + '">' +
+            headRow +
+            listSection +
+            '</section>';
+
+        if (isOrcamentosMes) {
+            pendingUploadTarget = null;
+            var ul = $('selbetti-doc-list');
+            if (ul && merged.length) wireOrcamentosDocSearch(ul);
+            if (manualKey) {
+                function findManualRow(mid) {
+                    return loadManualOrcamentos(manualKey).find(function (x) { return String(x.id) === String(mid); });
+                }
+                main.querySelectorAll('.selbetti-remove-manual').forEach(function (btn) {
+                    btn.addEventListener('click', function () {
+                        var id = btn.getAttribute('data-id');
+                        var cur = loadManualOrcamentos(manualKey);
+                        var next = cur.filter(function (x) { return String(x.id) !== String(id); });
+                        if (saveManualOrcamentos(manualKey, next)) {
+                            showToast('Registo manual removido.');
+                            render();
+                        }
+                    });
+                });
+                main.querySelectorAll('.selbetti-manual-att-preview').forEach(function (btn) {
+                    btn.addEventListener('click', function () {
+                        var mid = btn.getAttribute('data-mid');
+                        var m = findManualRow(mid);
+                        var att = m && m.attachment;
+                        if (att && att.dataUrl) openDocPreview(att.dataUrl, att.name, att.mime);
+                    });
+                });
+                main.querySelectorAll('.selbetti-manual-att-open').forEach(function (btn) {
+                    btn.addEventListener('click', function () {
+                        var mid = btn.getAttribute('data-mid');
+                        var m = findManualRow(mid);
+                        var att = m && m.attachment;
+                        if (att && att.dataUrl) window.open(att.dataUrl, '_blank', 'noopener,noreferrer');
+                    });
+                });
+            }
+        } else {
+            pendingUploadTarget = { key: key };
+            var af = $('selbetti-add-files');
+            if (af) {
+                af.addEventListener('click', function () {
+                    $('selbetti-file-input').click();
+                });
+            }
+        }
+
+        bindDocListActions(main, key);
     }
 
     function renderTrash() {
@@ -776,10 +1398,16 @@
                 var key = entry.sourceKey;
                 var list = loadDocs(key);
                 list.push(entry.doc);
-                saveDocs(key, list);
-                saveTrash(t.filter(function (x) { return String(x.trashId) !== String(tid); }));
-                showToast('Arquivo restaurado.');
-                render();
+                var nextTrash = t.filter(function (x) { return String(x.trashId) !== String(tid); });
+                saveDocsAsync(key, list).then(function (ok) {
+                    if (ok) {
+                        saveTrash(nextTrash);
+                        showToast('Arquivo restaurado.');
+                    } else {
+                        showToast('Não foi possível restaurar (armazenamento cheio ou indisponível).');
+                    }
+                    render();
+                });
             });
         });
 
@@ -846,6 +1474,8 @@
         else if (route.type === 'digital') renderDigital();
         else if (route.type === 'dash_orcamentos') {
             renderDocsCategoryDashboard('orcamentos', ['2025', '2026'], 'ORÇAMENTOS');
+        } else if (route.type === 'orcamentos_cadastrar') {
+            renderOrcamentosCadastrar();
         } else if (route.type === 'dash_atas') {
             renderDocsCategoryDashboard('atas', ['2026'], 'ATAS E REUNIÕES');
         } else if (route.type === 'docs_trash') renderTrash();
@@ -867,11 +1497,22 @@
 
         function next() {
             if (i >= remaining.length) {
-                if (addedCount) saveDocs(key, list);
                 e.target.value = '';
-                render();
-                if (addedCount) showToast(addedCount + ' arquivo(s) adicionado(s).');
-                else if (remaining.length) showToast('Nenhum arquivo foi guardado (tamanho ou erro).');
+                if (addedCount) {
+                    saveDocsAsync(key, list).then(function (ok) {
+                        render();
+                        if (!ok) {
+                            showToast(
+                                'Não foi possível guardar no navegador (quota ou erro). Com PDFs grandes o hub usa IndexedDB — atualize a página e tente de novo; se persistir, reduza o tamanho do ficheiro.'
+                            );
+                        } else {
+                            showToast(addedCount + ' arquivo(s) adicionado(s).');
+                        }
+                    });
+                } else {
+                    render();
+                    if (remaining.length) showToast('Nenhum arquivo foi guardado (tamanho ou erro).');
+                }
                 return;
             }
             var file = remaining[i];
@@ -1004,8 +1645,10 @@
         var prevClose = $('selbetti-doc-preview-close');
         if (prevClose) prevClose.addEventListener('click', closeDocPreview);
 
-        if (!location.hash || location.hash === '#') location.hash = '#/home';
-        render();
+        bootstrapSelbettiDocsStorage().then(function () {
+            if (!location.hash || location.hash === '#') location.hash = '#/home';
+            render();
+        });
     }
 
     if (document.readyState === 'loading') {

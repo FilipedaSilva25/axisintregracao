@@ -28,6 +28,10 @@ yarn-error.log*
 
 # Variáveis de ambiente
 .env
+.env.2
+(2).env
+ (2).env
+config/selbetti.env
 .env.local
 .env.*.local
 
@@ -39,6 +43,17 @@ mylife-os/
 
 # Bot WhatsApp – sessão local (não versionar)
 config/data/whatsapp-auth/
+config/data/selbetti-portal-password.txt
 
 # Contas AXIS espelhadas no servidor (senhas em texto — não versionar)
 config/data/axis-browser-users.json
+
+# Segredos TOTP (não versionar)
+config/data/totp-secrets.json
+
+# Selbetti Playwright / fila local (não versionar)
+config/data/selbetti-playwright-failure.png
+config/data/selbetti-chamados-fila.json
+
+# Notas de sessão local (não versionar)
+BLINDAGEM_SESSAO_*.txt

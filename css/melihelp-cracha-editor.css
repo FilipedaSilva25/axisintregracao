@@ -1,0 +1,983 @@
+/**
+ * MeliHelp — Emissão de crachá (frente/verso estilo unidade ML).
+ * Cores de referência: amarelo #FFE600, azul #2D3277.
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&display=swap');
+
+.melihelp-cracha-editor-panel {
+    position: relative;
+}
+
+.melihelp-cracha-editor {
+    --ml-yellow: #ffe600;
+    --ml-blue: #2d3277;
+    --ml-orange: #ff9500;
+    --ml-red: #e53935;
+    --ml-magenta: #e91e63;
+    --ml-purple: #6a1b9a;
+    --ml-lime: #c5e063;
+    --ml-dark: #1a1a1a;
+    --ml-card-w: 204px;
+    --ml-card-h: 324px;
+    font-family: 'Montserrat', 'Inter', system-ui, sans-serif;
+}
+
+.melihelp-cracha-editor-panel .melihelp-dash-head {
+    margin-bottom: 1rem;
+}
+
+.melihelp-cracha-editor-lead {
+    margin: 0 0 1.25rem;
+    font-size: 0.9rem;
+    opacity: 0.88;
+    line-height: 1.45;
+    max-width: 52rem;
+}
+
+.melihelp-cracha-editor-grid {
+    display: grid;
+    grid-template-columns: minmax(280px, 380px) 1fr;
+    gap: 1.5rem;
+    align-items: start;
+}
+
+@media (max-width: 960px) {
+    .melihelp-cracha-editor-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.melihelp-cracha-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.melihelp-cracha-fieldset {
+    border: 1px solid rgba(45, 50, 119, 0.2);
+    border-radius: 12px;
+    padding: 1rem 1.1rem;
+    margin: 0;
+    background: rgba(255, 255, 255, 0.04);
+}
+
+html[data-melihelp-theme='light'] .melihelp-cracha-fieldset {
+    background: rgba(255, 255, 255, 0.65);
+    border-color: rgba(45, 50, 119, 0.15);
+}
+
+.melihelp-cracha-fieldset legend {
+    font-weight: 800;
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    padding: 0 0.35rem;
+    color: var(--ml-blue);
+}
+
+.melihelp-cracha-label {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--ml-blue);
+    margin: 0.65rem 0 0.35rem;
+}
+
+.melihelp-cracha-label:first-of-type {
+    margin-top: 0;
+}
+
+.melihelp-cracha-input,
+.melihelp-cracha-textarea {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0.55rem 0.65rem;
+    border-radius: 8px;
+    border: 1px solid rgba(45, 50, 119, 0.25);
+    font-family: inherit;
+    font-size: 0.88rem;
+    background: rgba(255, 255, 255, 0.9);
+    color: #111;
+}
+
+html[data-melihelp-theme='dark'] .melihelp-cracha-input,
+html[data-melihelp-theme='dark'] .melihelp-cracha-textarea {
+    background: rgba(30, 32, 48, 0.9);
+    color: #f0f0f0;
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+.melihelp-cracha-textarea {
+    min-height: 4.5rem;
+    resize: vertical;
+}
+
+.melihelp-cracha-photo-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    align-items: center;
+    margin-top: 0.5rem;
+}
+
+.melihelp-cracha-file-btn {
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.45rem 0.85rem;
+    border-radius: 8px;
+    border: 1px solid rgba(45, 50, 119, 0.35);
+    background: var(--ml-yellow);
+    color: var(--ml-blue);
+    font-weight: 700;
+    font-size: 0.75rem;
+    letter-spacing: 0.04em;
+}
+
+.melihelp-cracha-file-btn:hover {
+    filter: brightness(1.05);
+}
+
+.melihelp-cracha-photo-hint {
+    font-size: 0.72rem;
+    opacity: 0.75;
+    margin: 0;
+}
+
+.melihelp-cracha-dual-wrap {
+    position: sticky;
+    top: 0.5rem;
+}
+
+.melihelp-cracha-dual-labels {
+    display: flex;
+    justify-content: center;
+    gap: 2.5rem;
+    margin-bottom: 0.5rem;
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    color: var(--ml-blue);
+}
+
+.melihelp-cracha-dual {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1.25rem;
+    padding: 1rem;
+    border-radius: 16px;
+    background: rgba(45, 50, 119, 0.06);
+    border: 1px dashed rgba(45, 50, 119, 0.2);
+}
+
+html[data-melihelp-theme='dark'] .melihelp-cracha-dual {
+    background: rgba(0, 0, 0, 0.2);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* ——— Cartão base (proporção ISO ID-1 retrato ~53.98×85.6 mm) ——— */
+.ml-cracha {
+    width: var(--ml-card-w);
+    height: var(--ml-card-h);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.18);
+    position: relative;
+    flex-shrink: 0;
+    box-sizing: border-box;
+}
+
+/* Frente — faixa inferior e zona do nome em amarelo #FFE600; mosaico só na parte superior (como no crachá) */
+.ml-cracha--front {
+    background: #ffe600;
+}
+
+.ml-cracha-pdf-layer {
+    display: none;
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    border-radius: inherit;
+    pointer-events: none;
+}
+
+.ml-cracha-pdf-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: fill;
+}
+
+.ml-cracha.has-pdf-bg .ml-cracha-pdf-layer {
+    display: block;
+}
+
+.ml-cracha.has-pdf-bg .ml-cracha-mosaic-bg,
+.ml-cracha.has-pdf-bg .ml-cracha-back-header {
+    display: none !important;
+}
+
+/* Evita duplicar faixa/logo do PDF; mantém texto e foto por cima */
+.ml-cracha--front.has-pdf-bg .ml-cracha-name-band {
+    background: rgba(255, 230, 0, 0.88);
+}
+
+.ml-cracha--front.has-pdf-bg .ml-cracha-footer-yellow {
+    background: transparent;
+}
+
+.ml-cracha--back.has-pdf-bg .ml-cracha-back-footer {
+    display: none;
+}
+
+/* Verso com PDF: arte define mosaico, faixa amarela com rótulos e quadrado do QR — sobrepor só valores + QR no sítio certo */
+.ml-cracha--back.has-pdf-bg {
+    background: transparent;
+}
+
+/*
+ * Verso + PDF: cada linha num “slot” absoluto = valores só dentro do retângulo branco
+ * (1 RE, 2 Área, 3 Empresa — ordem fixa no HTML).
+ */
+.ml-cracha--back.has-pdf-bg .ml-cracha-back-fields {
+    position: absolute;
+    inset: 0;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 100%;
+    max-height: none;
+    padding: 0;
+    margin: 0;
+    flex: none;
+    z-index: 2;
+    box-sizing: border-box;
+    overflow: visible;
+    pointer-events: none;
+}
+
+.ml-cracha--back.has-pdf-bg .ml-cracha-row {
+    position: absolute;
+    left: 7px;
+    right: 10px;
+    margin: 0;
+    width: auto;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    min-height: 0;
+    overflow: hidden;
+}
+
+/*
+ * Três slots sobre as caixas brancas (logo abaixo do mosaico).
+ * Valores mais altos empurravam texto para a zona de paisagem — mantidos ~34–41%.
+ */
+.ml-cracha--back.has-pdf-bg .ml-cracha-row:nth-child(1) {
+    top: 33.8%;
+    height: 3.35%;
+}
+
+.ml-cracha--back.has-pdf-bg .ml-cracha-row:nth-child(2) {
+    top: 37.15%;
+    height: 3.35%;
+}
+
+.ml-cracha--back.has-pdf-bg .ml-cracha-row:nth-child(3) {
+    top: 40.5%;
+    height: 3.35%;
+}
+
+.ml-cracha--back.has-pdf-bg .ml-cracha-row-label {
+    display: none;
+}
+
+.ml-cracha--back.has-pdf-bg .ml-cracha-row-box {
+    border: none;
+    background: transparent;
+    box-shadow: none;
+    border-radius: 0;
+    min-height: 0;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+}
+
+.ml-cracha--back.has-pdf-bg .ml-cracha-row-box .accent {
+    display: none;
+    width: 0;
+}
+
+/* Coluna do valor (à direita dos rótulos RE: / Área: / Empresa: desenhados no PDF) */
+.ml-cracha--back.has-pdf-bg .ml-cracha-row-val {
+    flex: 1;
+    padding: 0 5px 0 14%;
+    margin: 0;
+    font-size: 7px;
+    font-weight: 700;
+    line-height: 1;
+    min-height: 0;
+    height: 100%;
+    text-transform: none;
+    color: #1a1a1a;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    box-sizing: border-box;
+    /* Apaga visualmente o texto antigo sem criar quadrado */
+    text-shadow: 0 0 1px #fff, 0 0 2px #fff, 0 0 3px #fff;
+}
+
+/*
+ * QR no tamanho do quadrado de paisagem do PDF (~38% horizontal neste template).
+ */
+.ml-cracha--back.has-pdf-bg .ml-cracha-qr-block {
+    position: absolute;
+    /* POSICAO BLOQUEADA (ajuste final aprovado) */
+    left: 34.9% !important;
+    top: 66.1% !important;
+    width: 118px !important;
+    height: 118px !important;
+    margin: 0;
+    padding: 1px;
+    right: auto;
+    bottom: auto;
+    flex: none;
+    z-index: 5;
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    justify-content: stretch;
+    box-sizing: border-box;
+    transform: translate(-50%, -50%);
+    overflow: hidden;
+}
+
+.ml-cracha--back.has-pdf-bg .ml-cracha-qr-host {
+    background: transparent;
+    font-size: 0;
+    color: transparent;
+    padding: 0;
+    border-radius: 0;
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 0;
+    width: 100%;
+    height: 100%;
+    line-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+}
+
+.ml-cracha--back.has-pdf-bg .ml-cracha-qr-host table,
+.ml-cracha--back.has-pdf-bg .ml-cracha-qr-host img,
+.ml-cracha--back.has-pdf-bg .ml-cracha-qr-host canvas {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    object-fit: contain;
+    box-sizing: border-box;
+}
+
+/* Texto legal já vem no PDF (faixa amarela); overlay causava duplicado na margem branca */
+.ml-cracha--back.has-pdf-bg .ml-cracha-legal {
+    display: none !important;
+}
+
+.ml-cracha.has-pdf-bg .ml-cracha-back-strip {
+    visibility: hidden;
+    height: 0;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+.ml-cracha.has-pdf-bg .ml-cracha-logo-img {
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+    position: absolute;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+}
+
+.ml-cracha-mosaic-bg {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 64%;
+    object-fit: cover;
+    object-position: center top;
+    z-index: 0;
+    pointer-events: none;
+    border-radius: 0;
+}
+
+.ml-cracha-photo-wrap {
+    position: absolute;
+    left: 50%;
+    top: 28%;
+    transform: translate(-50%, -50%);
+    z-index: 2;
+    width: 78px;
+    height: 78px;
+}
+
+/* Sem imagem escolhida: não mostrar círculo cinzento por cima do PDF */
+.ml-cracha-photo-wrap.is-empty {
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.ml-cracha-photo-wrap.is-empty .ml-cracha-photo {
+    display: none;
+}
+
+.ml-cracha-photo {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    display: block;
+    background: #e8e8e8;
+}
+
+.ml-cracha-name-band {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 56px;
+    z-index: 2;
+    background: var(--ml-yellow);
+    padding: 10px 8px 8px;
+    text-align: center;
+    min-height: 62px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    box-sizing: border-box;
+}
+
+.ml-cracha-name1 {
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    color: var(--ml-blue);
+    line-height: 1.1;
+    text-transform: uppercase;
+    word-break: break-word;
+}
+
+.ml-cracha-name2 {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: var(--ml-blue);
+    margin-top: 4px;
+    text-transform: uppercase;
+    word-break: break-word;
+}
+
+/* Faixa amarela do rodapé — proporção próxima do crachá físico (logo centrada, largura quase total) */
+.ml-cracha-footer-yellow {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 56px;
+    background: var(--ml-yellow);
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5px 7px 6px;
+    box-sizing: border-box;
+}
+
+.ml-cracha-logo-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+}
+
+/* Logo PNG (ícone + “mercado livre”) — mesma leitura do crachá: horizontal, centrada, ~90% da largura da carta */
+.ml-cracha-logo-img {
+    display: block;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    object-position: center center;
+    flex-shrink: 1;
+    image-rendering: auto;
+}
+
+.ml-cracha-logo-img--front {
+    width: 92%;
+    max-width: 190px;
+    max-height: 46px;
+}
+
+/* Verso: mesma identidade visual, ligeiramente menor, entre conteúdo e faixa inferior */
+.ml-cracha-back-logo-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    flex: 0 0 auto;
+    min-height: 26px;
+}
+
+.ml-cracha-back-footer .ml-cracha-logo-img--back {
+    width: 86%;
+    max-width: 178px;
+    max-height: 38px;
+}
+
+/* Verso */
+.ml-cracha--back {
+    background: var(--ml-yellow);
+    display: flex;
+    flex-direction: column;
+    z-index: 1;
+}
+
+.ml-cracha-back-header {
+    padding: 5px 5px 3px;
+    flex-shrink: 0;
+    line-height: 0;
+}
+
+.ml-cracha-back-header-img {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: 14px;
+    object-fit: fill;
+    border-radius: 2px 2px 0 0;
+}
+
+.ml-cracha-back-fields {
+    padding: 6px 10px 4px;
+    flex: 0 0 auto;
+    position: relative;
+    z-index: 1;
+}
+
+.ml-cracha-row {
+    margin-bottom: 6px;
+}
+
+.ml-cracha-row-label {
+    font-size: 8px;
+    font-weight: 800;
+    color: var(--ml-blue);
+    margin-bottom: 2px;
+    letter-spacing: 0.02em;
+}
+
+.ml-cracha-row-box {
+    display: flex;
+    align-items: stretch;
+    min-height: 22px;
+    border: 1px solid var(--ml-dark);
+    background: #fff;
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.ml-cracha-row-box .accent {
+    width: 4px;
+    flex-shrink: 0;
+}
+.ml-cracha-row-box .accent--g {
+    background: #43a047;
+}
+.ml-cracha-row-box .accent--p {
+    background: #8e24aa;
+}
+.ml-cracha-row-box .accent--lg {
+    background: var(--ml-lime);
+}
+
+.ml-cracha-row-val {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    padding: 3px 7px;
+    font-size: 8.5px;
+    font-weight: 700;
+    color: #111;
+    text-transform: uppercase;
+    word-break: break-word;
+    line-height: 1.15;
+    letter-spacing: 0.02em;
+}
+
+.ml-cracha-qr-block {
+    flex: 1;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 4px 4px 6px 8px;
+    gap: 8px;
+    min-height: 0;
+    width: 100%;
+    position: relative;
+    z-index: 1;
+}
+
+.ml-cracha-qr-host {
+    background: #fff;
+    padding: 3px;
+    border-radius: 3px;
+    flex-shrink: 0;
+}
+
+.ml-cracha-qr-host table {
+    border-collapse: collapse !important;
+}
+
+.ml-cracha-legal {
+    font-size: 5.25px;
+    font-weight: 600;
+    color: var(--ml-blue);
+    line-height: 1.28;
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    text-align: left;
+    max-height: 120px;
+    margin: 0 0 0 auto;
+    padding-left: 8px;
+    flex-shrink: 0;
+    letter-spacing: 0.02em;
+    align-self: center;
+}
+
+.ml-cracha-back-footer {
+    margin-top: auto;
+    flex-shrink: 0;
+    background: var(--ml-yellow);
+    padding: 6px 5px 5px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+}
+
+.ml-cracha-back-strip {
+    display: flex;
+    width: 100%;
+    height: 4px;
+    border-radius: 1px;
+    overflow: hidden;
+}
+.ml-cracha-back-strip span {
+    flex: 1;
+}
+.ml-cracha-back-strip .s1 {
+    background: var(--ml-orange);
+}
+.ml-cracha-back-strip .s2 {
+    background: var(--ml-yellow);
+}
+.ml-cracha-back-strip .s3 {
+    background: var(--ml-lime);
+}
+.ml-cracha-back-strip .s4 {
+    background: var(--ml-blue);
+}
+
+.melihelp-cracha-print-actions {
+    margin-top: 1.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.melihelp-cracha-print-hint {
+    font-size: 0.75rem;
+    opacity: 0.8;
+    margin: 0;
+    flex: 1 1 200px;
+}
+
+/* Duplicata só para impressão: fora do fluxo visível no ecrã */
+.melihelp-cracha-print-root {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+    pointer-events: none;
+}
+
+/* ——— Impressão: só frente + verso, lado a lado ——— */
+@media print {
+    body.melihelp-hub-body * {
+        visibility: hidden;
+    }
+
+    body.melihelp-hub-body .melihelp-cracha-print-root,
+    body.melihelp-hub-body .melihelp-cracha-print-root * {
+        visibility: visible;
+    }
+
+    body.melihelp-hub-body .melihelp-cracha-print-root {
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: auto;
+        clip: auto !important;
+        overflow: visible !important;
+        display: flex !important;
+        flex-direction: row;
+        justify-content: center;
+        align-items: flex-start;
+        gap: 12mm;
+        padding: 12mm 10mm;
+        background: #fff !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        pointer-events: auto;
+    }
+
+    .melihelp-cracha-print-root .ml-cracha {
+        width: 53.98mm;
+        height: 85.6mm;
+        border-radius: 3.18mm;
+        box-shadow: none;
+        page-break-inside: avoid;
+    }
+
+    .melihelp-cracha-print-root .ml-cracha-photo-wrap {
+        width: 24mm;
+        height: 24mm;
+        top: 28%;
+    }
+
+    .melihelp-cracha-print-root .ml-cracha-name1 {
+        font-size: 3.4mm;
+    }
+
+    .melihelp-cracha-print-root .ml-cracha-name2 {
+        font-size: 2.5mm;
+    }
+
+    .melihelp-cracha-print-root .ml-cracha-name-band {
+        bottom: 14.2mm;
+        min-height: 15mm;
+        padding: 2.5mm 2mm;
+    }
+
+    .melihelp-cracha-print-root .ml-cracha-footer-yellow {
+        height: 14.2mm;
+        padding: 1mm 1.8mm 1.2mm;
+    }
+
+    .melihelp-cracha-print-root .ml-cracha-logo-img--front {
+        width: 92%;
+        max-width: 49mm;
+        max-height: 11mm;
+    }
+
+    .melihelp-cracha-print-root .ml-cracha-back-footer .ml-cracha-logo-img--back {
+        width: 86%;
+        max-width: 46mm;
+        max-height: 9mm;
+    }
+
+    .melihelp-cracha-print-root .ml-cracha-mosaic-bg {
+        height: 64%;
+    }
+
+    .melihelp-cracha-print-root .ml-cracha-back-header {
+        padding: 1mm 1.2mm 0.6mm;
+    }
+
+    .melihelp-cracha-print-root .ml-cracha-back-header-img {
+        max-height: 3.2mm;
+    }
+
+    .melihelp-cracha-print-root .ml-cracha-row-label {
+        font-size: 2mm;
+    }
+
+    .melihelp-cracha-print-root .ml-cracha-row-val {
+        font-size: 2.3mm;
+    }
+
+    .melihelp-cracha-print-root .ml-cracha-row-box {
+        min-height: 5.5mm;
+    }
+
+    .melihelp-cracha-print-root .ml-cracha--back.has-pdf-bg .ml-cracha-back-footer {
+        display: none;
+    }
+
+    .melihelp-cracha-print-root .ml-cracha--back.has-pdf-bg .ml-cracha-row-label {
+        display: none;
+    }
+
+    .melihelp-cracha-print-root .ml-cracha--back.has-pdf-bg .ml-cracha-back-fields {
+        position: absolute;
+        inset: 0;
+        max-height: none;
+        padding: 0;
+        width: 100%;
+        overflow: visible;
+        pointer-events: none;
+    }
+
+    .melihelp-cracha-print-root .ml-cracha--back.has-pdf-bg .ml-cracha-row {
+        position: absolute;
+        left: 1.8mm;
+        right: 2.2mm;
+        margin: 0;
+        width: auto;
+        display: flex;
+        align-items: center;
+        box-sizing: border-box;
+        overflow: hidden;
+    }
+
+    .melihelp-cracha-print-root .ml-cracha--back.has-pdf-bg .ml-cracha-row:nth-child(1) {
+        top: 33.8%;
+        height: 3.35%;
+    }
+
+    .melihelp-cracha-print-root .ml-cracha--back.has-pdf-bg .ml-cracha-row:nth-child(2) {
+        top: 37.15%;
+        height: 3.35%;
+    }
+
+    .melihelp-cracha-print-root .ml-cracha--back.has-pdf-bg .ml-cracha-row:nth-child(3) {
+        top: 40.5%;
+        height: 3.35%;
+    }
+
+    .melihelp-cracha-print-root .ml-cracha--back.has-pdf-bg .ml-cracha-row-box {
+        min-height: 0;
+        height: 100%;
+        width: 100%;
+        border: none;
+        background: transparent;
+        box-shadow: none;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+    }
+
+    .melihelp-cracha-print-root .ml-cracha--back.has-pdf-bg .ml-cracha-row-box .accent {
+        display: none;
+        width: 0;
+    }
+
+    .melihelp-cracha-print-root .ml-cracha--back.has-pdf-bg .ml-cracha-row-val {
+        flex: 1;
+        padding: 0 0.6mm 0 14%;
+        margin: 0;
+        font-size: 2.1mm;
+        line-height: 1;
+        height: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        box-sizing: border-box;
+        text-shadow: 0 0 0.15mm #fff, 0 0 0.3mm #fff, 0 0 0.45mm #fff;
+    }
+
+    .melihelp-cracha-print-root .ml-cracha--back.has-pdf-bg .ml-cracha-qr-block {
+        position: absolute;
+        left: 34.9% !important;
+        top: 66.1% !important;
+        width: 30.5mm !important;
+        height: 30.5mm !important;
+        margin: 0;
+        padding: 0.25mm;
+        right: auto;
+        transform: translate(-50%, -50%);
+        display: flex;
+        align-items: stretch;
+        justify-content: stretch;
+        box-sizing: border-box;
+        flex: none;
+        overflow: hidden;
+    }
+
+    .melihelp-cracha-print-root .ml-cracha--back.has-pdf-bg .ml-cracha-qr-host {
+        background: transparent;
+        padding: 0;
+        flex: 1 1 auto;
+        min-width: 0;
+        min-height: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-sizing: border-box;
+    }
+
+    .melihelp-cracha-print-root .ml-cracha--back.has-pdf-bg .ml-cracha-qr-host table,
+    .melihelp-cracha-print-root .ml-cracha--back.has-pdf-bg .ml-cracha-qr-host img,
+    .melihelp-cracha-print-root .ml-cracha--back.has-pdf-bg .ml-cracha-qr-host canvas {
+        width: 100% !important;
+        height: 100% !important;
+        max-width: 100% !important;
+        max-height: 100% !important;
+        object-fit: contain;
+        box-sizing: border-box;
+    }
+
+    .melihelp-cracha-print-root .ml-cracha--back.has-pdf-bg .ml-cracha-legal {
+        display: none !important;
+    }
+
+    .melihelp-cracha-print-root .ml-cracha-legal {
+        font-size: 1.45mm;
+        max-height: 32mm;
+        margin-left: auto;
+        padding-left: 1.8mm;
+    }
+
+    .melihelp-cracha-print-root .ml-cracha-qr-host table {
+        width: auto !important;
+        height: auto !important;
+    }
+
+    .melihelp-cracha-print-root .ml-cracha-qr-host img,
+    .melihelp-cracha-print-root .ml-cracha-qr-host canvas {
+        width: 28mm !important;
+        height: 28mm !important;
+    }
+}
+
+@page {
+    size: A4 landscape;
+    margin: 0;
+}

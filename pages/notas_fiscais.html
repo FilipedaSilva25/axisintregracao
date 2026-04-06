@@ -39,6 +39,7 @@
     <!-- CSS Principal -->
     <link rel="stylesheet" href="../css/notas_fiscais.css">
     <link rel="stylesheet" href="../css/notas_fiscais_configuracoes.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
     
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -48,12 +49,42 @@
     
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- PDF.js (extração de valor total ao enviar PDF na Nova NF) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     
-    <!-- Favicon Axis -->
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
-    <meta name="theme-color" content="#4361ee">
+    <!-- Favicon (igual ao index / site oficial AXIS) -->
+    <link rel="icon" type="image/png" href="../assets/IMAGENS/Novo_Fivecon_1.2.png">
+    <link rel="apple-touch-icon" href="../assets/IMAGENS/Novo_Fivecon_1.2.png">
+    <meta name="theme-color" content="#2ecc71">
 </head>
 <body>
+    <!-- Barra flutuante (seleção em massa): primeiro filho do body → fixed no viewport, sem clip de overflow interno -->
+    <div class="batch-actions-bar" id="batch-actions-bar" role="region" aria-label="Ações em massa nas notas selecionadas" aria-hidden="true">
+        <div class="batch-actions-content">
+            <span class="batch-count" id="batch-count">0 selecionadas</span>
+            <div class="batch-actions-buttons">
+                <button type="button" class="batch-btn" onclick="alterarStatusEmMassa()" title="Alterar Status">
+                    <i class="fas fa-edit"></i> <span class="batch-btn-text">Alterar Status</span>
+                </button>
+                <button type="button" class="batch-btn" onclick="exportarEmMassa()" title="Exportar">
+                    <i class="fas fa-file-export"></i> <span class="batch-btn-text">Exportar</span>
+                </button>
+                <button type="button" class="batch-btn" onclick="enviarEmailEmMassa()" title="Enviar Email">
+                    <i class="fas fa-envelope"></i> <span class="batch-btn-text">Enviar Email</span>
+                </button>
+                <button type="button" class="batch-btn" onclick="aplicarTagEmMassa()" title="Aplicar Tag">
+                    <i class="fas fa-tag"></i> <span class="batch-btn-text">Aplicar Tag</span>
+                </button>
+                <button type="button" class="batch-btn batch-btn-danger" onclick="excluirEmMassa()" title="Excluir">
+                    <i class="fas fa-trash"></i> <span class="batch-btn-text">Excluir</span>
+                </button>
+            </div>
+            <button type="button" class="batch-close" onclick="fecharBarraAcoesMassa()" title="Limpar seleção" aria-label="Fechar e limpar seleção">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+
     <!-- ================= ESTRUTURA PRINCIPAL ================= -->
     <div class="app-container">
         <!-- Sidebar - Menu redesenhado -->
@@ -88,7 +119,7 @@
                 </a>
                 <a href="javascript:void(0)" class="sidebar-link" onclick="showSection('relatorios'); return false;">
                     <span class="sidebar-link-icon"><i class="fas fa-chart-bar"></i></span>
-                    <span class="sidebar-link-text">Relatórios</span>
+                    <span class="sidebar-link-text">RELATÓRIOS AVANÇADOS</span>
                 </a>
                 <a href="javascript:void(0)" class="sidebar-link sidebar-quick-trash" onclick="mostrarLixeira(); return false;" title="Lixeira">
                     <span class="sidebar-link-icon"><i class="fas fa-trash-alt"></i></span>
@@ -140,16 +171,16 @@
                                id="global-search"
                                placeholder="Buscar…"
                                onkeyup="handleSearch()">
-                        <button type="button" class="search-filter" onclick="toggleAdvancedSearch()" title="Filtros">
-                            <i class="fas fa-filter"></i>
-                        </button>
                     </div>
-                    <button class="header-btn" onclick="toggleTheme()" title="Alternar tema">
-                        <i class="fas fa-moon" id="theme-icon"></i>
+                    <button type="button" class="header-btn axis-header-icon-btn axis-header-filter-btn" id="axis-filters-toggle" onclick="toggleAdvancedSearch()" title="Filtros avançados" aria-label="Abrir filtros avançados" aria-expanded="false" aria-controls="filters-panel">
+                        <i class="fas fa-sliders-h" aria-hidden="true"></i>
+                    </button>
+                    <button type="button" class="header-btn axis-header-icon-btn" onclick="toggleTheme()" title="Alternar tema" aria-label="Alternar tema claro ou escuro">
+                        <span class="axis-header-emoji" id="theme-icon" role="img">🌙</span>
                     </button>
                     
-                    <div class="notifications" onclick="toggleNotifications()">
-                        <i class="fas fa-bell"></i>
+                    <div class="notifications" onclick="toggleNotifications()" role="button" tabindex="0" title="Notificações" aria-label="Abrir notificações">
+                        <span class="axis-header-emoji" aria-hidden="true">🔔</span>
                         <span class="notification-badge" id="notification-badge">0</span>
                     </div>
                     
@@ -160,64 +191,97 @@
                 </div>
             </header>
             
-            <!-- Painel de Busca Avançada -->
-            <div class="advanced-search" id="advanced-search">
-                <div class="search-filters">
-                    <div class="filter-group">
-                        <label>Período</label>
-                        <div class="date-range">
-                            <input type="date" id="date-from">
-                            <span>até</span>
-                            <input type="date" id="date-to">
-                        </div>
-                    </div>
-                    
-                    <div class="filter-group">
-                        <label>Valor</label>
-                        <div class="value-range">
-                            <input type="number" id="value-min" placeholder="Mínimo">
-                            <span>até</span>
-                            <input type="number" id="value-max" placeholder="Máximo">
-                        </div>
-                    </div>
-                    
-                    <div class="filter-group">
-                        <label>Tipo</label>
-                        <select id="filter-tipo">
-                            <option value="all">Todos</option>
-                            <option value="entrada">Entrada</option>
-                            <option value="saida">Saída</option>
-                            <option value="servico">Serviço</option>
-                        </select>
-                    </div>
-                    
-                    <div class="filter-group">
-                        <label>Status</label>
-                        <select id="filter-status">
-                            <option value="all">Todos</option>
-                            <option value="pendente">Pendente</option>
-                            <option value="pago">Pago</option>
-                            <option value="vencido">Vencido</option>
-                        </select>
-                    </div>
-                    
-                    <div class="filter-actions">
-                        <button class="btn-secondary" onclick="limparFiltros()">Limpar</button>
-                        <button class="btn-primary" onclick="aplicarFiltros()">Aplicar</button>
-                    </div>
-                </div>
-            </div>
-            
             <!-- Notifications Panel -->
-            <div class="notifications-panel" id="notifications-panel">
+            <div class="notifications-panel" id="notifications-panel" role="dialog" aria-labelledby="notifications-panel-title" aria-hidden="true">
                 <div class="notifications-header">
-                    <h3><i class="fas fa-bell"></i> Notificações</h3>
+                    <h3 id="notifications-panel-title"><span class="axis-header-emoji axis-header-emoji--panel" aria-hidden="true">🔔</span> Notificações</h3>
                     <button class="close-btn" onclick="toggleNotifications()">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
                 <div class="notifications-list" id="notifications-list">
                     <!-- Notificações serão carregadas aqui -->
+                </div>
+            </div>
+            
+            <!-- Filtros avançados (popover fixo, mesmo padrão das notificações) -->
+            <div class="notifications-panel axis-filters-panel" id="filters-panel" role="dialog" aria-labelledby="axis-filters-panel-title" aria-hidden="true">
+                <div class="notifications-header">
+                    <h3 id="axis-filters-panel-title"><span class="axis-header-emoji axis-header-emoji--panel" aria-hidden="true">🔍</span> Filtros</h3>
+                    <button type="button" class="close-btn" onclick="fecharPainelFiltros()" title="Fechar" aria-label="Fechar painel de filtros">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="axis-filters-panel-body" id="advanced-search">
+                    <div class="search-filters axis-filters-search-grid">
+                        <div class="axis-filter-card filter-group">
+                            <label class="axis-filter-card__label"><i class="fas fa-calendar-alt" aria-hidden="true"></i> Período</label>
+                            <div class="date-range axis-filter-range axis-filter-range--dates">
+                                <input type="text" id="date-from" class="axis-fp-input" readonly autocomplete="off" aria-label="Data inicial" placeholder="Início" inputmode="none">
+                                <span class="axis-filter-range__sep">até</span>
+                                <input type="text" id="date-to" class="axis-fp-input" readonly autocomplete="off" aria-label="Data final" placeholder="Fim" inputmode="none">
+                            </div>
+                        </div>
+                        
+                        <div class="axis-filter-card filter-group">
+                            <label class="axis-filter-card__label"><i class="fas fa-coins" aria-hidden="true"></i> Valor (R$)</label>
+                            <div class="value-range axis-filter-range axis-filter-range--values">
+                                <input type="number" id="value-min" placeholder="Mín." step="0.01" min="0" aria-label="Valor mínimo">
+                                <span class="axis-filter-range__sep">até</span>
+                                <input type="number" id="value-max" placeholder="Máx." step="0.01" min="0" aria-label="Valor máximo">
+                            </div>
+                        </div>
+                        
+                        <div class="axis-filter-card filter-group">
+                            <label class="axis-filter-card__label" for="filter-tipo-trigger" id="filter-tipo-label"><i class="fas fa-tags" aria-hidden="true"></i> Tipo</label>
+                            <div class="axis-filter-select-wrap">
+                                <select id="filter-tipo" class="axis-filter-select-native" aria-hidden="true" tabindex="-1">
+                                    <option value="all">Todos</option>
+                                    <option value="entrada">Entrada</option>
+                                    <option value="saida">Saída</option>
+                                    <option value="servico">Serviço</option>
+                                </select>
+                                <button type="button" class="axis-filter-dd-trigger" id="filter-tipo-trigger" aria-expanded="false" aria-haspopup="listbox" aria-controls="filter-tipo-panel">
+                                    <span class="axis-filter-dd-trigger__text" id="filter-tipo-display">Todos</span>
+                                    <span class="axis-filter-dd-trigger__chev" aria-hidden="true"><i class="fas fa-chevron-down"></i></span>
+                                </button>
+                                <div class="axis-filter-dd-panel" id="filter-tipo-panel" hidden role="listbox" aria-labelledby="filter-tipo-label">
+                                    <button type="button" role="option" class="axis-filter-dd-opt" data-value="all"><span class="axis-filter-dd-opt__dot"></span>Todos</button>
+                                    <button type="button" role="option" class="axis-filter-dd-opt" data-value="entrada"><span class="axis-filter-dd-opt__dot"></span>Entrada</button>
+                                    <button type="button" role="option" class="axis-filter-dd-opt" data-value="saida"><span class="axis-filter-dd-opt__dot"></span>Saída</button>
+                                    <button type="button" role="option" class="axis-filter-dd-opt" data-value="servico"><span class="axis-filter-dd-opt__dot"></span>Serviço</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="axis-filter-card filter-group">
+                            <label class="axis-filter-card__label" for="filter-status-trigger" id="filter-status-label"><i class="fas fa-flag" aria-hidden="true"></i> Status</label>
+                            <div class="axis-filter-select-wrap">
+                                <select id="filter-status" class="axis-filter-select-native" aria-hidden="true" tabindex="-1">
+                                    <option value="all">Todos</option>
+                                    <option value="pendente">Pendente</option>
+                                    <option value="pago">Pago</option>
+                                    <option value="vencido">Vencido</option>
+                                </select>
+                                <button type="button" class="axis-filter-dd-trigger" id="filter-status-trigger" aria-expanded="false" aria-haspopup="listbox" aria-controls="filter-status-panel">
+                                    <span class="axis-filter-dd-trigger__text" id="filter-status-display">Todos</span>
+                                    <span class="axis-filter-dd-trigger__chev" aria-hidden="true"><i class="fas fa-chevron-down"></i></span>
+                                </button>
+                                <div class="axis-filter-dd-panel" id="filter-status-panel" hidden role="listbox" aria-labelledby="filter-status-label">
+                                    <button type="button" role="option" class="axis-filter-dd-opt" data-value="all"><span class="axis-filter-dd-opt__dot"></span>Todos</button>
+                                    <button type="button" role="option" class="axis-filter-dd-opt axis-filter-dd-opt--pendente" data-value="pendente"><span class="axis-filter-dd-opt__dot"></span>Pendente</button>
+                                    <button type="button" role="option" class="axis-filter-dd-opt axis-filter-dd-opt--pago" data-value="pago"><span class="axis-filter-dd-opt__dot"></span>Pago</button>
+                                    <button type="button" role="option" class="axis-filter-dd-opt axis-filter-dd-opt--vencido" data-value="vencido"><span class="axis-filter-dd-opt__dot"></span>Vencido</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="axis-filters-panel-footer">
+                    <div class="filter-actions axis-filters-footer-actions">
+                        <button type="button" class="btn-secondary axis-filters-btn" onclick="limparFiltros()"><i class="fas fa-undo" aria-hidden="true"></i> Limpar</button>
+                        <button type="button" class="btn-primary axis-filters-btn" onclick="aplicarFiltros()"><i class="fas fa-check" aria-hidden="true"></i> Aplicar</button>
+                    </div>
                 </div>
             </div>
             
@@ -427,22 +491,33 @@
                         
                         <!-- Filtros e vista -->
                         <div class="quick-filters biblioteca-filters">
-                            <div class="filter-tabs">
-                                <button type="button" class="filter-tab active" onclick="filtrarPorStatus('all')">
-                                    <i class="fas fa-layer-group"></i> Todas
-                                </button>
-                                <button type="button" class="filter-tab" onclick="filtrarPorStatus('pendente')">
-                                    <i class="fas fa-clock"></i> Pendentes
-                                </button>
-                                <button type="button" class="filter-tab" onclick="filtrarPorStatus('pago')">
-                                    <i class="fas fa-check-circle"></i> Pagas
-                                </button>
-                                <button type="button" class="filter-tab" onclick="filtrarPorStatus('vencido')">
-                                    <i class="fas fa-exclamation-triangle"></i> Vencidas
-                                </button>
-                                <button type="button" class="filter-tab" onclick="filtrarPorStatus('a-vencer')">
-                                    <i class="fas fa-hourglass-half"></i> A Vencer
-                                </button>
+                            <div class="filter-tabs biblioteca-filter-tabs-layout">
+                                <div class="biblioteca-status-segment" role="tablist" aria-label="Filtrar por status da nota">
+                                    <button type="button" role="tab" aria-selected="true" class="filter-tab filter-tab--segment active" data-nf-status-filter="all" onclick="filtrarPorStatus('all')">
+                                        <i class="fas fa-layer-group" aria-hidden="true"></i><span>Todas</span>
+                                    </button>
+                                    <button type="button" role="tab" aria-selected="false" class="filter-tab filter-tab--segment" data-nf-status-filter="pendente" onclick="filtrarPorStatus('pendente')">
+                                        <i class="fas fa-clock" aria-hidden="true"></i><span>Pendentes</span>
+                                    </button>
+                                    <button type="button" role="tab" aria-selected="false" class="filter-tab filter-tab--segment" data-nf-status-filter="pago" onclick="filtrarPorStatus('pago')">
+                                        <i class="fas fa-check-circle" aria-hidden="true"></i><span>Pagas</span>
+                                    </button>
+                                    <button type="button" role="tab" aria-selected="false" class="filter-tab filter-tab--segment" data-nf-status-filter="vencido" onclick="filtrarPorStatus('vencido')">
+                                        <i class="fas fa-exclamation-triangle" aria-hidden="true"></i><span>Vencidas</span>
+                                    </button>
+                                    <button type="button" role="tab" aria-selected="false" class="filter-tab filter-tab--segment" data-nf-status-filter="a-vencer" onclick="filtrarPorStatus('a-vencer')">
+                                        <i class="fas fa-hourglass-half" aria-hidden="true"></i><span>A vencer</span>
+                                    </button>
+                                </div>
+                                <div class="biblioteca-mass-actions">
+                                    <button type="button" class="filter-tab filter-tab-mass" id="btn-selecionar-notas-biblioteca" onclick="alternarSelecaoNotasVisiveisBiblioteca()" title="Selecionar ou limpar todas as notas visíveis">
+                                        <i class="fas fa-check-square"></i> Selecionar notas
+                                    </button>
+                                    <button type="button" class="filter-tab filter-tab-mass filter-tab-mass-danger" onclick="excluirEmMassa()" title="Mover selecionadas para a lixeira">
+                                        <i class="fas fa-trash-alt"></i> Excluir em massa
+                                    </button>
+                                    <span class="mass-count mass-count--inline" id="mass-count-text">0 selecionadas</span>
+                                </div>
                             </div>
                             <div class="view-controls">
                                 <button type="button" class="view-btn active" id="view-grid-btn" onclick="changeView('grid')" title="Visualização em Grid">
@@ -453,46 +528,6 @@
                                 </button>
                             </div>
                         </div>
-                        
-                        <!-- Barra fixa: Excluir em massa (sempre visível) -->
-                        <div class="mass-delete-toolbar" id="mass-delete-toolbar">
-                            <label class="mass-select-label">
-                                <input type="checkbox" id="select-all-nfs-toolbar" onchange="selecionarTodasNotasToolbar()">
-                                <span>Selecionar todas</span>
-                            </label>
-                            <button type="button" class="btn-mass-delete" onclick="excluirEmMassa()" title="Mover selecionadas para a lixeira">
-                                <i class="fas fa-trash-alt"></i>
-                                <span>Excluir em massa</span>
-                            </button>
-                            <span class="mass-count" id="mass-count-text">0 selecionadas</span>
-                        </div>
-                    
-                    <!-- Barra de Ações em Massa (quando há seleção) -->
-                    <div class="batch-actions-bar" id="batch-actions-bar" style="display: none;">
-                        <div class="batch-actions-content">
-                            <span class="batch-count" id="batch-count">0 selecionadas</span>
-                            <div class="batch-actions-buttons">
-                                <button class="batch-btn" onclick="alterarStatusEmMassa()" title="Alterar Status">
-                                    <i class="fas fa-edit"></i> Alterar Status
-                                </button>
-                                <button class="batch-btn" onclick="exportarEmMassa()" title="Exportar">
-                                    <i class="fas fa-file-export"></i> Exportar
-                                </button>
-                                <button class="batch-btn" onclick="enviarEmailEmMassa()" title="Enviar Email">
-                                    <i class="fas fa-envelope"></i> Enviar Email
-                                </button>
-                                <button class="batch-btn" onclick="aplicarTagEmMassa()" title="Aplicar Tag">
-                                    <i class="fas fa-tag"></i> Aplicar Tag
-                                </button>
-                                <button class="batch-btn batch-btn-danger" onclick="excluirEmMassa()" title="Excluir">
-                                    <i class="fas fa-trash"></i> Excluir
-                                </button>
-                            </div>
-                            <button class="batch-close" onclick="fecharBarraAcoesMassa()">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                    </div>
                     
                     <!-- Grid de Notas -->
                     <div class="nfs-grid" id="nfs-grid">
@@ -511,10 +546,9 @@
                                         <th onclick="sortTable('numero')">Número NF</th>
                                         <th onclick="sortTable('fornecedor')">Fornecedor</th>
                                         <th onclick="sortTable('data')">Data Emissão</th>
-                                        <th onclick="sortTable('vencimento')">Data Vencimento</th>
                                         <th onclick="sortTable('valor')">Valor</th>
                                         <th onclick="sortTable('status')">Status</th>
-                                        <th>Ações</th>
+                                        <th class="col-acoes">Ações</th>
                                     </tr>
                                 </thead>
                                 <tbody id="nfs-table-body">
@@ -531,10 +565,10 @@
                     </div>
                 </section>
                 
-                <!-- Seção de Relatórios Avançados -->
+                <!-- Seção Relatórios -->
                 <section id="relatorios" class="content-section">
                     <div class="section-header">
-                        <h2><i class="fas fa-chart-line"></i> Relatórios Avançados</h2>
+                        <h2>RELATÓRIOS AVANÇADOS</h2>
                         <p>Análises detalhadas e relatórios personalizados</p>
                     </div>
                     
@@ -762,58 +796,72 @@
                 <!-- Seção de Configurações Avançadas -->
                 <section id="configuracoes" class="content-section">
                     <div class="section-header">
-                        <h2><i class="fas fa-sliders-h"></i> Configurações Avançadas</h2>
+                        <h2>CONFIGURAÇÕES AVANÇADAS</h2>
                         <p>Configure o sistema conforme suas necessidades</p>
                     </div>
                     
                     <div class="settings-tabs axis-card">
                         <div class="tab-buttons">
-                            <button class="tab-btn active" onclick="openSettingsTab('geral')">Geral</button>
-                            <button class="tab-btn" onclick="openSettingsTab('notificacoes')">Notificações</button>
-                            <button class="tab-btn" onclick="openSettingsTab('integracao')">Integração</button>
-                            <button class="tab-btn" onclick="openSettingsTab('seguranca')">Segurança</button>
+                            <button type="button" class="tab-btn active" data-settings-tab="geral" onclick="openSettingsTab('geral')">Geral</button>
+                            <button type="button" class="tab-btn" data-settings-tab="notificacoes" onclick="openSettingsTab('notificacoes')">Notificações</button>
                         </div>
                         
                         <!-- Aba Geral -->
                         <div class="tab-content active" id="tab-geral">
                             <div class="settings-group">
-                                <h3><i class="fas fa-cog"></i> Configurações Gerais</h3>
+                                <h3 class="nf-settings-group-title">CONFIGURAÇÕES GERAIS</h3>
                                 
                                 <div class="setting-item">
-                                    <label for="settings-items-per-page">Itens por página</label>
-                                    <select id="settings-items-per-page">
-                                        <option value="10">10</option>
-                                        <option value="15">15</option>
-                                        <option value="20">20</option>
-                                        <option value="30">30</option>
-                                        <option value="50">50</option>
-                                    </select>
+                                    <label for="settings-items-per-page-trigger">Itens por página</label>
+                                    <div class="setor-selector nf-config-select" id="nf-wrap-settings-items-per-page">
+                                        <select id="settings-items-per-page" class="setor-selector-native-hidden" aria-hidden="true" tabindex="-1">
+                                            <option value="10">10</option>
+                                            <option value="15">15</option>
+                                            <option value="20">20</option>
+                                            <option value="30">30</option>
+                                            <option value="50">50</option>
+                                        </select>
+                                        <button type="button" class="setor-selector-trigger" id="settings-items-per-page-trigger" aria-haspopup="listbox" aria-expanded="false"></button>
+                                        <div class="setor-selector-dropdown" id="settings-items-per-page-dropdown" role="listbox" aria-hidden="true"></div>
+                                    </div>
                                 </div>
                                 
                                 <div class="setting-item">
-                                    <label for="settings-default-view">Visualização padrão</label>
-                                    <select id="settings-default-view">
-                                        <option value="grid">Grade</option>
-                                        <option value="list">Lista</option>
-                                    </select>
+                                    <label for="settings-default-view-trigger">Visualização padrão</label>
+                                    <div class="setor-selector nf-config-select" id="nf-wrap-settings-default-view">
+                                        <select id="settings-default-view" class="setor-selector-native-hidden" aria-hidden="true" tabindex="-1">
+                                            <option value="grid">Grade</option>
+                                            <option value="list">Lista</option>
+                                        </select>
+                                        <button type="button" class="setor-selector-trigger" id="settings-default-view-trigger" aria-haspopup="listbox" aria-expanded="false"></button>
+                                        <div class="setor-selector-dropdown" id="settings-default-view-dropdown" role="listbox" aria-hidden="true"></div>
+                                    </div>
                                 </div>
                                 
                                 <div class="setting-item">
-                                    <label for="settings-currency">Moeda padrão</label>
-                                    <select id="settings-currency">
-                                        <option value="BRL">Real (R$)</option>
-                                        <option value="USD">Dólar (US$)</option>
-                                        <option value="EUR">Euro (€)</option>
-                                    </select>
+                                    <label for="settings-currency-trigger">Moeda padrão</label>
+                                    <div class="setor-selector nf-config-select" id="nf-wrap-settings-currency">
+                                        <select id="settings-currency" class="setor-selector-native-hidden" aria-hidden="true" tabindex="-1">
+                                            <option value="BRL">Real (R$)</option>
+                                            <option value="USD">Dólar (US$)</option>
+                                            <option value="EUR">Euro (€)</option>
+                                        </select>
+                                        <button type="button" class="setor-selector-trigger" id="settings-currency-trigger" aria-haspopup="listbox" aria-expanded="false"></button>
+                                        <div class="setor-selector-dropdown" id="settings-currency-dropdown" role="listbox" aria-hidden="true"></div>
+                                    </div>
                                 </div>
                                 
                                 <div class="setting-item">
-                                    <label for="settings-date-format">Formato de data</label>
-                                    <select id="settings-date-format">
-                                        <option value="pt-BR">DD/MM/AAAA</option>
-                                        <option value="en-US">MM/DD/AAAA</option>
-                                        <option value="en-GB">DD/MM/AAAA</option>
-                                    </select>
+                                    <label for="settings-date-format-trigger">Formato de data</label>
+                                    <div class="setor-selector nf-config-select" id="nf-wrap-settings-date-format">
+                                        <select id="settings-date-format" class="setor-selector-native-hidden" aria-hidden="true" tabindex="-1">
+                                            <option value="pt-BR">DD/MM/AAAA</option>
+                                            <option value="en-US">MM/DD/AAAA</option>
+                                            <option value="en-GB">DD/MM/AAAA</option>
+                                        </select>
+                                        <button type="button" class="setor-selector-trigger" id="settings-date-format-trigger" aria-haspopup="listbox" aria-expanded="false"></button>
+                                        <div class="setor-selector-dropdown" id="settings-date-format-dropdown" role="listbox" aria-hidden="true"></div>
+                                    </div>
                                 </div>
                                 
                                 <div class="setting-item">
@@ -835,7 +883,7 @@
                         <!-- Aba Notificações -->
                         <div class="tab-content" id="tab-notificacoes">
                             <div class="settings-group">
-                                <h3><i class="fas fa-bell"></i> Configurações de Notificação</h3>
+                                <h3 class="nf-settings-group-title">CONFIGURAÇÕES DE NOTIFICAÇÃO</h3>
                                 
                                 <div class="setting-item">
                                     <label>
@@ -864,13 +912,17 @@
                                 </div>
                                 
                                 <div class="setting-item">
-                                    <label>Som de notificação</label>
-                                    <select id="notification-sound">
-                                        <option value="none">Nenhum</option>
-                                        <option value="default">Padrão</option>
-                                        <option value="chime">Sino</option>
-                                        <option value="bell">Campainha</option>
-                                    </select>
+                                    <label for="notification-sound-trigger">Som de notificação</label>
+                                    <div class="setor-selector nf-config-select" id="nf-wrap-notification-sound">
+                                        <select id="notification-sound" class="setor-selector-native-hidden" aria-hidden="true" tabindex="-1">
+                                            <option value="none">Nenhum</option>
+                                            <option value="default">Padrão</option>
+                                            <option value="chime">Sino</option>
+                                            <option value="bell">Campainha</option>
+                                        </select>
+                                        <button type="button" class="setor-selector-trigger" id="notification-sound-trigger" aria-haspopup="listbox" aria-expanded="false"></button>
+                                        <div class="setor-selector-dropdown" id="notification-sound-dropdown" role="listbox" aria-hidden="true"></div>
+                                    </div>
                                 </div>
                                 
                                 <div class="setting-item">
@@ -881,136 +933,12 @@
                                 </div>
                             </div>
                         </div>
-                        
-                        <!-- Aba Integração -->
-                        <div class="tab-content" id="tab-integracao">
-                            <div class="settings-group">
-                                <h3><i class="fas fa-plug"></i> Integrações</h3>
-                                
-                                <div class="setting-item">
-                                    <h4><i class="fab fa-google-drive"></i> Google Drive</h4>
-                                    <div class="integration-status" id="google-drive-status">
-                                        <span class="status-badge disconnected">Não conectado</span>
-                                        <button class="btn-secondary" onclick="conectarGoogleDrive()">
-                                            <i class="fas fa-plug"></i> Conectar
-                                        </button>
-                                    </div>
-                                    <p class="setting-description">
-                                        Conecte com o Google Drive para backup automático de suas notas fiscais
-                                    </p>
-                                </div>
-                                
-                                <div class="setting-item">
-                                    <h4><i class="fas fa-envelope"></i> E-mail</h4>
-                                    <div class="email-settings">
-                                        <label>Servidor SMTP</label>
-                                        <input type="text" id="smtp-server" placeholder="smtp.gmail.com" value="smtp.gmail.com">
-                                        
-                                        <label>Porta</label>
-                                        <input type="number" id="smtp-port" value="587" min="1" max="65535">
-                                        
-                                        <label>E-mail</label>
-                                        <input type="email" id="smtp-email" placeholder="seu@email.com">
-                                        
-                                        <button class="btn-secondary" onclick="testarEmail()" style="margin-top: 8px;">
-                                            <i class="fas fa-check-circle"></i> Testar Conexão
-                                        </button>
-                                    </div>
-                                </div>
-                                
-                                <div class="setting-item">
-                                    <h4><i class="fas fa-sync"></i> Sincronização</h4>
-                                    <label>
-                                        <input type="checkbox" id="sync-cloud">
-                                        Sincronizar automaticamente com nuvem
-                                    </label>
-                                    <div class="sync-options" style="margin-top: 10px;">
-                                        <label>Intervalo de sincronização</label>
-                                        <select id="sync-interval">
-                                            <option value="15">15 minutos</option>
-                                            <option value="30">30 minutos</option>
-                                            <option value="60">1 hora</option>
-                                            <option value="1440">1 dia</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Aba Segurança -->
-                        <div class="tab-content" id="tab-seguranca">
-                            <div class="settings-group">
-                                <h3><i class="fas fa-shield-alt"></i> Segurança</h3>
-                                
-                                <div class="setting-item">
-                                    <h4>Senha de Acesso</h4>
-                                    <div class="password-change">
-                                        <label>Senha atual</label>
-                                        <input type="password" id="current-password">
-                                        
-                                        <label>Nova senha</label>
-                                        <input type="password" id="new-password">
-                                        
-                                        <label>Confirmar nova senha</label>
-                                        <input type="password" id="confirm-password">
-                                        
-                                        <button class="btn-primary" onclick="changePassword()">
-                                            Alterar Senha
-                                        </button>
-                                    </div>
-                                </div>
-                                
-                                <div class="setting-item">
-                                    <h4>Autenticação</h4>
-                                    <div class="auth-settings">
-                                        <label>
-                                            <input type="checkbox" id="two-factor-auth" onchange="if(typeof toggle2FA === 'function') toggle2FA();">
-                                            Autenticação em dois fatores (2FA)
-                                        </label>
-                                        
-                                        <div class="auth-methods" id="auth-methods" style="margin-top: 16px; display: none;">
-                                            <label>Método de autenticação</label>
-                                            <select id="two-factor-method">
-                                                <option value="email">E-mail</option>
-                                                <option value="authenticator">Google Authenticator</option>
-                                                <option value="sms">SMS</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="setting-item">
-                                    <h4>Sessão</h4>
-                                    <div class="session-settings">
-                                        <label>Tempo de sessão</label>
-                                        <select id="session-timeout">
-                                            <option value="15">15 minutos</option>
-                                            <option value="30">30 minutos</option>
-                                            <option value="60">1 hora</option>
-                                            <option value="480">8 horas</option>
-                                            <option value="1440">1 dia</option>
-                                        </select>
-                                        
-                                        <label style="margin-top: 10px; display: block;">
-                                            <input type="checkbox" id="auto-logout">
-                                            Logout automático
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                     
                     <div class="settings-actions">
-                        <button class="btn-primary" onclick="saveSettings()">
-                            <i class="fas fa-save"></i> Salvar Configurações
-                        </button>
-                        <button class="btn-secondary" onclick="resetSettings()">
-                            <i class="fas fa-undo"></i> Restaurar Padrões
-                        </button>
-                        <button class="btn-danger" onclick="resetAllData()">
-                            <i class="fas fa-trash"></i> Resetar Todos os Dados
-                        </button>
+                        <button type="button" class="btn-primary" onclick="saveSettings()">SALVAR CONFIGURAÇÕES</button>
+                        <button type="button" class="btn-secondary" onclick="resetSettings()">RESTAURAR PADRÕES</button>
+                        <button type="button" class="btn-danger" onclick="resetAllData()">RESETAR TODOS OS DADOS</button>
                     </div>
                 </section>
                 
@@ -1121,6 +1049,51 @@
                 </div>
                 <div id="upload-list" class="upload-list" aria-live="polite"></div>
                 
+                <section class="nf-upload-datas-card" aria-labelledby="nf-upload-datas-heading">
+                    <div class="nf-upload-datas-card__head">
+                        <div class="nf-upload-datas-card__icon-wrap" aria-hidden="true">
+                            <i class="fas fa-calendar-day"></i>
+                        </div>
+                        <div class="nf-upload-datas-card__head-copy">
+                            <div class="nf-upload-datas-card__title-row">
+                                <h4 class="nf-upload-datas-card__title" id="nf-upload-datas-heading">Datas da nota fiscal</h4>
+                                <span class="nf-upload-datas-card__badge">Opcional</span>
+                            </div>
+                            <p class="nf-upload-datas-card__lead">Use para <strong>notas antigas</strong> ou quando quiser corrigir o registo. Se preencher, estes valores substituem a data da pasta ou do nome do ficheiro.</p>
+                        </div>
+                    </div>
+                    <div class="nf-upload-datas-card__emissao-wrap">
+                        <p class="nf-upload-datas-card__emissao-title">Emissão</p>
+                        <div class="nf-upload-datas-card__grid nf-upload-datas-card__grid--emissao">
+                            <div class="nf-upload-datas-card__field">
+                                <label class="nf-upload-datas-card__label" for="nf-upload-override-data">
+                                    <span class="nf-upload-datas-card__label-icon"><i class="fas fa-calendar-day" aria-hidden="true"></i></span>
+                                    <span class="nf-upload-datas-card__label-text">Data</span>
+                                </label>
+                                <input type="text" id="nf-upload-override-data" class="nf-upload-datetime--styled axis-fp-input axis-fp-input--upload" readonly autocomplete="off" placeholder="dd/mm/aaaa" inputmode="none" aria-label="Data de emissão">
+                            </div>
+                            <div class="nf-upload-datas-card__field">
+                                <label class="nf-upload-datas-card__label" id="axis-upload-time-label">
+                                    <span class="nf-upload-datas-card__label-icon"><i class="fas fa-clock" aria-hidden="true"></i></span>
+                                    <span class="nf-upload-datas-card__label-text">Hora</span>
+                                </label>
+                                <div class="axis-time-field" id="axis-upload-time-field">
+                                    <input type="time" id="nf-upload-override-hora" class="axis-time-field__native" step="1" autocomplete="off" tabindex="-1" aria-hidden="true">
+                                    <button type="button" class="nf-upload-datetime--styled axis-time-field__trigger" id="axis-upload-time-trigger" aria-expanded="false" aria-haspopup="dialog" aria-labelledby="axis-upload-time-label">
+                                        <span class="axis-time-field__value" id="axis-upload-time-display">-- : -- : --</span>
+                                        <span class="axis-time-field__icon" aria-hidden="true"><i class="fas fa-clock"></i></span>
+                                    </button>
+                                </div>
+                                <span class="nf-upload-datas-card__micro">Toque para escolher hora, minuto e segundo (como na NF-e).</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="nf-upload-datas-card__footer">
+                        <button type="button" class="nf-upload-datas-card__clear" id="nf-upload-datas-clear-btn">
+                            <i class="fas fa-eraser" aria-hidden="true"></i> Limpar datas manuais
+                        </button>
+                    </div>
+                </section>
                 <div class="upload-options">
                     <h4 class="upload-options-heading">Opções de upload</h4>
                     <div class="upload-options-row" role="group" aria-label="Opções de upload">
@@ -1276,12 +1249,12 @@
                         <input type="text" id="nf-edit-cliente" class="form-control" placeholder="Nome">
                     </div>
                     <div class="form-group">
-                        <label for="nf-edit-data">Data de emissão</label>
-                        <input type="date" id="nf-edit-data" class="form-control">
+                        <label for="nf-edit-data">Data e hora de emissão</label>
+                        <input type="datetime-local" id="nf-edit-data" class="form-control" step="1">
                     </div>
                     <div class="form-group">
-                        <label for="nf-edit-venc">Data de vencimento</label>
-                        <input type="date" id="nf-edit-venc" class="form-control">
+                        <label for="nf-edit-venc">Data e hora de vencimento</label>
+                        <input type="datetime-local" id="nf-edit-venc" class="form-control" step="1">
                     </div>
                     <div class="form-group">
                         <label for="nf-edit-valor">Valor (R$)</label>
@@ -1289,13 +1262,13 @@
                     </div>
                     <div class="form-group">
                         <label for="nf-edit-status">Status</label>
-                        <select id="nf-edit-status" class="form-control">
-                            <option value="pendente">Pendente</option>
-                            <option value="pago">Pago</option>
-                            <option value="paga">Paga</option>
-                            <option value="vencido">Vencido</option>
-                            <option value="vencida">Vencida</option>
-                            <option value="a-vencer">A vencer</option>
+                        <select id="nf-edit-status" class="form-control" title="Status da nota">
+                            <option value="pendente">⏳ Pendente</option>
+                            <option value="pago">✓ Pago</option>
+                            <option value="paga">✓ Paga</option>
+                            <option value="vencido">⚠ Vencido</option>
+                            <option value="vencida">⚠ Vencida</option>
+                            <option value="a-vencer">📅 A vencer</option>
                         </select>
                     </div>
                 </div>
@@ -1475,8 +1448,12 @@
                 </div>
                 <button type="button" class="nf-viewer-close" onclick="fecharModalVisualizarNF()" aria-label="Fechar">×</button>
             </div>
-            <div class="nf-viewer-body">
+            <div class="nf-viewer-body" id="nf-viewer-body">
                 <div id="nf-viewer-fallback" class="nf-viewer-fallback" style="display: none;" role="status"></div>
+                <div id="nf-viewer-pdf-scroll" class="nf-viewer-pdf-scroll" style="display: none;" aria-live="polite">
+                    <div id="nf-viewer-pdf-loading" class="nf-viewer-pdf-loading">A carregar PDF…</div>
+                    <div id="nf-viewer-pdf-pages" class="nf-viewer-pdf-pages"></div>
+                </div>
                 <iframe id="nf-viewer-iframe" class="nf-viewer-iframe" title="Pré-visualização do documento" style="display: none;"></iframe>
                 <img id="nf-viewer-img" class="nf-viewer-img" alt="" style="display: none;" />
             </div>
@@ -1488,6 +1465,9 @@
     </div>
 
     <!-- ================= SCRIPTS ================= -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/l10n/pt.js"></script>
+    <script src="../js/notas_fiscais_axis_pickers.js"></script>
     <script src="../js/notas_fiscais.js"></script>
     <script src="../js/notas_fiscais_features.js"></script>
     <script src="../js/notas_fiscais_integracao.js"></script>
@@ -1511,10 +1491,15 @@
             if (typeof window.toggleTheme !== 'function') {
                 window.toggleTheme = function() {
                     var html = document.documentElement;
-                    var isDark = html.getAttribute('data-theme') === 'dark';
-                    html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+                    var wasDark = html.getAttribute('data-theme') === 'dark';
+                    html.setAttribute('data-theme', wasDark ? 'light' : 'dark');
+                    try {
+                        localStorage.setItem('axis-theme', html.getAttribute('data-theme'));
+                    } catch (e) {}
                     var icon = document.getElementById('theme-icon');
-                    if (icon) { icon.className = isDark ? 'fas fa-moon' : 'fas fa-sun'; }
+                    if (icon) {
+                        icon.textContent = html.getAttribute('data-theme') === 'dark' ? '☀️' : '🌙';
+                    }
                 };
             }
             if (typeof window.closeModal !== 'function') {
@@ -1535,7 +1520,7 @@
                 if (typeof closeAllModals !== 'undefined') closeAllModals();
                 const aiAssistant = document.getElementById('ai-assistant');
                 if (aiAssistant) {
-                    aiAssistant.style.display = 'none !important';
+                    aiAssistant.style.setProperty('display', 'none', 'important');
                 }
             }
         });

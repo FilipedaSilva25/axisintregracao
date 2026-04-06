@@ -1,6 +1,5 @@
 /* ============================================
-   AXIS ROBOT ASSISTANT - Holograma
-   Robô flutuante, design de tirar o fôlego
+   AXIS Bot — assistente flutuante (avatar humano + chat)
    ============================================ */
 
 .axis-robot-wrap {
@@ -131,13 +130,18 @@
     100% { transform: translateY(100%); opacity: 0.6; }
 }
 
-/* Ícone do robô com brilho holográfico */
+/* Avatar (miniatura humana) no FAB */
 .axis-robot-icon {
     width: 40px;
     height: 40px;
     position: relative;
     z-index: 1;
-    filter: drop-shadow(0 0 10px rgba(46, 204, 113, 0.5)) drop-shadow(0 0 6px rgba(0, 122, 255, 0.4));
+}
+.axis-human-avatar-svg {
+    filter: drop-shadow(0 2px 10px rgba(0, 122, 255, 0.35)) drop-shadow(0 0 8px rgba(52, 200, 89, 0.25));
+}
+.axis-robot-panel-avatar .axis-human-header-svg {
+    display: block;
 }
 
 /* —— Painel de chat (vidro + holograma sutil) —— */
@@ -222,9 +226,9 @@
     box-shadow: 0 0 16px rgba(46, 204, 113, 0.2), 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 .axis-robot-panel-header .axis-robot-panel-avatar svg {
-    width: 26px;
-    height: 26px;
-    opacity: 0.95;
+    width: 30px;
+    height: 30px;
+    opacity: 0.98;
 }
 .axis-robot-panel-title-wrap {
     flex: 1;
@@ -554,4 +558,9 @@
         left: 8px;
         width: auto;
     }
+}
+
+/* MeliHelp: um pouco mais de altura para o chat (menu numérico no histórico) */
+.melihelp-hub-body .axis-robot-panel {
+    max-height: min(88vh, 620px);
 }

@@ -1,0 +1,43 @@
+{
+  "listUpdatedAt": "2026-04-05",
+  "featuredVersion": "2.9.0",
+  "entries": [
+    {
+      "date": "2026-04-03",
+      "version": "2.9.0",
+      "title": "Hub SELBETTI — orçamentos",
+      "summaryIntro": "Quem trabalha com o hub SELBETTI passa a ter um sítio claro para organizar orçamentos por mês, com menos cliques e mais controlo.",
+      "bullets": [
+        "Novo atalho «Cadastrar orçamento»: envia ficheiros diretamente para o mês em que estamos — ideal para não misturar documentos.",
+        "Pode registar orçamentos à mão: escolhe o mês e o ano, indica data e hora (até aos segundos), descreve o assunto, opcionalmente o valor e pode anexar um ficheiro.",
+        "Em cada mês, a lista de orçamentos junta tudo num só sítio e há pesquisa para encontrar rapidamente o que precisa.",
+        "Menu lateral mais simples de ler, sem linhas a dividir submenus — a navegação fica mais direta."
+      ],
+      "summary": "Melhorias no hub SELBETTI para cadastro de orçamentos, pastas por mês e pesquisa."
+    },
+    {
+      "date": "2026-03-28",
+      "version": "2.8.1",
+      "title": "Reconhecimento facial no início de sessão",
+      "summaryIntro": "O login com o rosto ficou mais fiável e previsível, quer no computador quer no telemóvel ou tablet.",
+      "bullets": [
+        "Funciona nos navegadores mais usados, em portátil, computador de secretária, tablet ou telemóvel — desde que tenha câmara.",
+        "O AXIS não guarda fotografias suas como arquivo de imagem; a leitura é feita de forma segura no próprio equipamento.",
+        "Se usar a sua conta noutro aparelho, pode voltar a ativar o reconhecimento facial quando lhe for conveniente."
+      ],
+      "summary": "Ajustes ao acesso por rosto: mais compatibilidade e privacidade clara para o utilizador."
+    },
+    {
+      "date": "2026-03-20",
+      "version": "2.8.0",
+      "title": "Experiência geral e segurança da conta",
+      "summaryIntro": "Esta atualização prepara o terreno para um dia a dia mais estável no AXIS e reforça as opções de proteção da sua conta.",
+      "bullets": [
+        "Abertura do sistema e da página inicial mais suaves, com menos situações que distraiam durante o trabalho.",
+        "Quando a sua organização utiliza o AXIS em modo partilhado, o acesso pode acompanhá-lo entre equipamentos de forma coerente.",
+        "Verificação em duas etapas (2FA) disponível para quem quiser uma camada extra de segurança, inclusive quem também usa reconhecimento facial."
+      ],
+      "summary": "Melhorias de utilização no arranque do sistema e reforço das opções de segurança da conta."
+    }
+  ]
+}

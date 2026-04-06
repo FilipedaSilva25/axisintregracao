@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-melihelp-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AXIS | MeliHelp — Hub do técnico</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/melihelp.css?v=hub111">
+    <link rel="stylesheet" href="../css/melihelp-cracha-editor.css?v=25">
+    <link rel="stylesheet" href="../css/axis-robot-assistant.css?v=hub70">
+</head>
+<body class="melihelp-hub-body">
+    <!-- BLINDAGEM MELIHELP HUB: página concluída (100%). Não remover estrutura do drawer, overlay, modais, IDs críticos nem o script melihelp-hub.js sem autorização explícita. Ver .cursor/rules/BLINDAGEM_MELIHELP_HUB.mdc e BLINDAGEM.md -->
+    <!-- Overlay vidro (menu aberto) -->
+    <div class="melihelp-overlay" id="melihelp-overlay" aria-hidden="true" hidden></div>
+
+    <!-- Menu lateral (fundo transparente + vidro) -->
+    <aside class="melihelp-drawer" id="melihelp-drawer" aria-label="Menu principal MeliHelp" hidden>
+        <div class="melihelp-drawer-inner glass-panel">
+            <div class="melihelp-drawer-head">
+                <span class="melihelp-drawer-brand">MeliHelp</span>
+                <button type="button" class="melihelp-icon-btn" id="melihelp-drawer-close" aria-label="Fechar menu"><i class="fas fa-times"></i></button>
+            </div>
+            <nav class="melihelp-nav" id="melihelp-nav-root"></nav>
+        </div>
+    </aside>
+
+    <input type="file" id="melihelp-file-input" hidden multiple accept=".pdf,.png,.jpg,.jpeg,.webp,.heic,.heif,.doc,.docx,.xls,.xlsx,.txt,.csv,.mp4,.webm,.mov,.mkv,video/*,image/*">
+
+    <header class="melihelp-topbar glass-panel">
+        <div class="melihelp-topbar-left">
+            <button type="button" class="melihelp-icon-btn melihelp-menu-btn" id="melihelp-menu-open" aria-label="Abrir menu" aria-expanded="false">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+        <div class="melihelp-topbar-center">
+            <h1 class="melihelp-logo-title">MeliHelp</h1>
+        </div>
+        <div class="melihelp-topbar-right">
+            <button type="button" class="melihelp-icon-btn" id="melihelp-theme-toggle" aria-label="Tema claro ou escuro"><i class="fas fa-moon" id="melihelp-theme-icon"></i></button>
+        </div>
+    </header>
+
+    <main class="melihelp-main" id="melihelp-main">
+        <!-- Preenchido por melihelp-hub.js -->
+    </main>
+
+    <div class="melihelp-toast melihelp-toast--info" id="melihelp-toast" role="status" aria-live="polite" hidden>
+        <span class="melihelp-toast__icon" aria-hidden="true"><i class="fas fa-info-circle"></i></span>
+        <span class="melihelp-toast__text"></span>
+    </div>
+
+    <!-- Pré-visualização PDF / imagem -->
+    <div class="melihelp-doc-preview-backdrop" id="melihelp-doc-preview" hidden>
+        <div class="melihelp-doc-preview-dialog glass-panel" id="melihelp-doc-preview-dialog" role="dialog" aria-modal="true" aria-labelledby="melihelp-doc-preview-title">
+            <div class="melihelp-doc-preview-head">
+                <h3 id="melihelp-doc-preview-title"></h3>
+                <button type="button" class="melihelp-icon-btn" id="melihelp-doc-preview-close" aria-label="Fechar"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="melihelp-doc-preview-body">
+                <iframe id="melihelp-doc-preview-iframe" class="melihelp-doc-preview-frame" title="Pré-visualização do documento"></iframe>
+                <img id="melihelp-doc-preview-img" class="melihelp-doc-preview-img" alt="" hidden>
+                <p id="melihelp-doc-preview-fallback" class="melihelp-doc-preview-fallback" hidden></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Editar nome do arquivo (crachás — substitui prompt nativo) -->
+    <div class="melihelp-rename-doc-backdrop" id="melihelp-rename-doc-backdrop" hidden>
+        <div class="melihelp-rename-doc-dialog glass-panel" id="melihelp-rename-doc-dialog" role="dialog" aria-modal="true" aria-labelledby="melihelp-rename-doc-title">
+            <div class="melihelp-rename-doc-head">
+                <div class="melihelp-rename-doc-title-wrap">
+                    <span class="melihelp-rename-doc-icon" aria-hidden="true"><i class="fas fa-pen-to-square"></i></span>
+                    <h2 id="melihelp-rename-doc-title" class="melihelp-rename-doc-title">EDITAR NOME DO ARQUIVO</h2>
+                </div>
+                <button type="button" class="melihelp-icon-btn" id="melihelp-rename-doc-close" aria-label="Fechar"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="melihelp-rename-doc-body">
+                <p class="melihelp-rename-doc-hint" id="melihelp-rename-doc-hint">O TEXTO DESTE PARÁGRAFO AJUSTA-SE À PÁGINA ATUAL (ATIVOS OU DESATIVADOS DO MÊS).</p>
+                <label class="melihelp-rename-doc-label" for="melihelp-rename-doc-input">NOME DO ARQUIVO</label>
+                <input type="text" id="melihelp-rename-doc-input" class="melihelp-rename-doc-input" autocomplete="off" maxlength="500">
+                <div class="melihelp-rename-doc-actions">
+                    <button type="button" class="melihelp-btn melihelp-btn-ghost melihelp-btn-text-upper" id="melihelp-rename-doc-cancel">CANCELAR</button>
+                    <button type="button" class="melihelp-btn melihelp-btn-primary melihelp-btn-text-upper" id="melihelp-rename-doc-save">GUARDAR</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Adicionar arquivos: data/hora do documento (vidro + cards) -->
+    <div class="melihelp-upload-modal-backdrop" id="melihelp-upload-modal-backdrop" hidden>
+        <div class="melihelp-upload-modal-dialog glass-panel" id="melihelp-upload-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="melihelp-upload-modal-title">
+            <div class="melihelp-upload-modal-head">
+                <div class="melihelp-upload-modal-title-wrap">
+                    <span class="melihelp-upload-modal-icon" aria-hidden="true"><i class="fas fa-calendar-plus"></i></span>
+                    <h2 id="melihelp-upload-modal-title" class="melihelp-upload-modal-title">ADICIONAR ARQUIVOS</h2>
+                </div>
+                <button type="button" class="melihelp-icon-btn" id="melihelp-upload-modal-close" aria-label="Fechar"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="melihelp-upload-modal-body">
+                <p class="melihelp-upload-modal-hint">Defina a <strong>data e hora em que o documento foi criado</strong> (útil para arquivos antigos). Se não alterar nada e continuar, usa o <strong>momento atual</strong>. Depois escolha um ou vários ficheiros.</p>
+                <div class="melihelp-upload-dt-rows" aria-label="Data e hora do documento">
+                    <div class="melihelp-upload-dt-row">
+                        <div class="melihelp-upload-dt-card">
+                            <span class="melihelp-upload-dt-lbl">HORA</span>
+                            <div class="melihelp-upload-dt-spin-row">
+                                <button type="button" class="melihelp-upload-dt-btn" data-melihelp-spin="melihelp-upload-hour" data-melihelp-spin-delta="-1" aria-label="Hora menos">−</button>
+                                <input type="number" id="melihelp-upload-hour" class="melihelp-upload-dt-input" inputmode="numeric" min="0" max="23" maxlength="2" aria-label="Hora">
+                                <button type="button" class="melihelp-upload-dt-btn" data-melihelp-spin="melihelp-upload-hour" data-melihelp-spin-delta="1" aria-label="Hora mais">+</button>
+                            </div>
+                        </div>
+                        <div class="melihelp-upload-dt-card">
+                            <span class="melihelp-upload-dt-lbl">MINUTOS</span>
+                            <div class="melihelp-upload-dt-spin-row">
+                                <button type="button" class="melihelp-upload-dt-btn" data-melihelp-spin="melihelp-upload-min" data-melihelp-spin-delta="-1" aria-label="Minutos menos">−</button>
+                                <input type="number" id="melihelp-upload-min" class="melihelp-upload-dt-input" inputmode="numeric" min="0" max="59" maxlength="2" aria-label="Minutos">
+                                <button type="button" class="melihelp-upload-dt-btn" data-melihelp-spin="melihelp-upload-min" data-melihelp-spin-delta="1" aria-label="Minutos mais">+</button>
+                            </div>
+                        </div>
+                        <div class="melihelp-upload-dt-card">
+                            <span class="melihelp-upload-dt-lbl">SEGUNDOS</span>
+                            <div class="melihelp-upload-dt-spin-row">
+                                <button type="button" class="melihelp-upload-dt-btn" data-melihelp-spin="melihelp-upload-sec" data-melihelp-spin-delta="-1" aria-label="Segundos menos">−</button>
+                                <input type="number" id="melihelp-upload-sec" class="melihelp-upload-dt-input" inputmode="numeric" min="0" max="59" maxlength="2" aria-label="Segundos">
+                                <button type="button" class="melihelp-upload-dt-btn" data-melihelp-spin="melihelp-upload-sec" data-melihelp-spin-delta="1" aria-label="Segundos mais">+</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="melihelp-upload-dt-row">
+                        <div class="melihelp-upload-dt-card">
+                            <span class="melihelp-upload-dt-lbl">DIA</span>
+                            <div class="melihelp-upload-dt-spin-row">
+                                <button type="button" class="melihelp-upload-dt-btn" data-melihelp-spin="melihelp-upload-day" data-melihelp-spin-delta="-1" aria-label="Dia menos">−</button>
+                                <input type="number" id="melihelp-upload-day" class="melihelp-upload-dt-input" inputmode="numeric" min="1" max="31" maxlength="2" aria-label="Dia">
+                                <button type="button" class="melihelp-upload-dt-btn" data-melihelp-spin="melihelp-upload-day" data-melihelp-spin-delta="1" aria-label="Dia mais">+</button>
+                            </div>
+                        </div>
+                        <div class="melihelp-upload-dt-card">
+                            <span class="melihelp-upload-dt-lbl">MÊS</span>
+                            <div class="melihelp-upload-dt-spin-row">
+                                <button type="button" class="melihelp-upload-dt-btn" data-melihelp-spin="melihelp-upload-month" data-melihelp-spin-delta="-1" aria-label="Mês menos">−</button>
+                                <input type="number" id="melihelp-upload-month" class="melihelp-upload-dt-input" inputmode="numeric" min="1" max="12" maxlength="2" aria-label="Mês">
+                                <button type="button" class="melihelp-upload-dt-btn" data-melihelp-spin="melihelp-upload-month" data-melihelp-spin-delta="1" aria-label="Mês mais">+</button>
+                            </div>
+                        </div>
+                        <div class="melihelp-upload-dt-card">
+                            <span class="melihelp-upload-dt-lbl">ANO</span>
+                            <div class="melihelp-upload-dt-spin-row">
+                                <button type="button" class="melihelp-upload-dt-btn" data-melihelp-spin="melihelp-upload-year" data-melihelp-spin-delta="-1" aria-label="Ano menos">−</button>
+                                <input type="number" id="melihelp-upload-year" class="melihelp-upload-dt-input" inputmode="numeric" min="1900" max="2100" maxlength="4" aria-label="Ano">
+                                <button type="button" class="melihelp-upload-dt-btn" data-melihelp-spin="melihelp-upload-year" data-melihelp-spin-delta="1" aria-label="Ano mais">+</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="melihelp-upload-modal-actions">
+                    <button type="button" class="melihelp-btn melihelp-btn-ghost melihelp-btn-text-upper" id="melihelp-upload-modal-now">AGORA</button>
+                    <button type="button" class="melihelp-btn melihelp-btn-ghost melihelp-btn-text-upper" id="melihelp-upload-modal-cancel">CANCELAR</button>
+                    <button type="button" class="melihelp-btn melihelp-btn-primary melihelp-btn-text-upper" id="melihelp-upload-modal-pick">SELECIONAR ARQUIVOS</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cordão: retirada manual com data/hora (mesmos cards que crachá / upload) -->
+    <div class="melihelp-upload-modal-backdrop" id="melihelp-cordao-modal-backdrop" hidden>
+        <div class="melihelp-upload-modal-dialog glass-panel" id="melihelp-cordao-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="melihelp-cordao-modal-title">
+            <div class="melihelp-upload-modal-head">
+                <div class="melihelp-upload-modal-title-wrap">
+                    <span class="melihelp-upload-modal-icon" aria-hidden="true"><i class="fas fa-id-card"></i></span>
+                    <h2 id="melihelp-cordao-modal-title" class="melihelp-upload-modal-title">RETIRADA DE CORDÃO</h2>
+                </div>
+                <button type="button" class="melihelp-icon-btn" id="melihelp-cordao-modal-close" aria-label="Fechar"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="melihelp-upload-modal-body">
+                <p class="melihelp-upload-modal-hint">Preencha o <strong>RE ou CPF</strong> e o <strong>nome do colaborador(a)</strong>. Ajuste <strong>data e hora</strong> nos campos abaixo (hora, minutos e segundos); use <strong>AGORA</strong> para o instante atual ou <strong>REGISTRAR</strong> para gravar a retirada.</p>
+                <div class="melihelp-cordao-modal-fields">
+                    <label class="melihelp-cordao-field-label" for="melihelp-cordao-re">RE | CPF</label>
+                    <input type="text" id="melihelp-cordao-re" class="melihelp-cordao-text-input" autocomplete="off" maxlength="80" placeholder="Ex.: 12345">
+                    <label class="melihelp-cordao-field-label" for="melihelp-cordao-nome">NOME DO COLABORADOR(A)</label>
+                    <input type="text" id="melihelp-cordao-nome" class="melihelp-cordao-text-input" autocomplete="off" maxlength="200" placeholder="Nome completo">
+                </div>
+                <div class="melihelp-upload-dt-rows" aria-label="Data e hora da retirada">
+                    <div class="melihelp-upload-dt-row">
+                        <div class="melihelp-upload-dt-card">
+                            <span class="melihelp-upload-dt-lbl">HORA</span>
+                            <div class="melihelp-upload-dt-spin-row">
+                                <button type="button" class="melihelp-upload-dt-btn" data-melihelp-cordao-spin="melihelp-cordao-hour" data-melihelp-cordao-spin-delta="-1" aria-label="Hora menos">−</button>
+                                <input type="number" id="melihelp-cordao-hour" class="melihelp-upload-dt-input" inputmode="numeric" min="0" max="23" maxlength="2" aria-label="Hora">
+                                <button type="button" class="melihelp-upload-dt-btn" data-melihelp-cordao-spin="melihelp-cordao-hour" data-melihelp-cordao-spin-delta="1" aria-label="Hora mais">+</button>
+                            </div>
+                        </div>
+                        <div class="melihelp-upload-dt-card">
+                            <span class="melihelp-upload-dt-lbl">MINUTOS</span>
+                            <div class="melihelp-upload-dt-spin-row">
+                                <button type="button" class="melihelp-upload-dt-btn" data-melihelp-cordao-spin="melihelp-cordao-min" data-melihelp-cordao-spin-delta="-1" aria-label="Minutos menos">−</button>
+                                <input type="number" id="melihelp-cordao-min" class="melihelp-upload-dt-input" inputmode="numeric" min="0" max="59" maxlength="2" aria-label="Minutos">
+                                <button type="button" class="melihelp-upload-dt-btn" data-melihelp-cordao-spin="melihelp-cordao-min" data-melihelp-cordao-spin-delta="1" aria-label="Minutos mais">+</button>
+                            </div>
+                        </div>
+                        <div class="melihelp-upload-dt-card">
+                            <span class="melihelp-upload-dt-lbl">SEGUNDOS</span>
+                            <div class="melihelp-upload-dt-spin-row">
+                                <button type="button" class="melihelp-upload-dt-btn" data-melihelp-cordao-spin="melihelp-cordao-sec" data-melihelp-cordao-spin-delta="-1" aria-label="Segundos menos">−</button>
+                                <input type="number" id="melihelp-cordao-sec" class="melihelp-upload-dt-input" inputmode="numeric" min="0" max="59" maxlength="2" aria-label="Segundos">
+                                <button type="button" class="melihelp-upload-dt-btn" data-melihelp-cordao-spin="melihelp-cordao-sec" data-melihelp-cordao-spin-delta="1" aria-label="Segundos mais">+</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="melihelp-upload-dt-row">
+                        <div class="melihelp-upload-dt-card">
+                            <span class="melihelp-upload-dt-lbl">DIA</span>
+                            <div class="melihelp-upload-dt-spin-row">
+                                <button type="button" class="melihelp-upload-dt-btn" data-melihelp-cordao-spin="melihelp-cordao-day" data-melihelp-cordao-spin-delta="-1" aria-label="Dia menos">−</button>
+                                <input type="number" id="melihelp-cordao-day" class="melihelp-upload-dt-input" inputmode="numeric" min="1" max="31" maxlength="2" aria-label="Dia">
+                                <button type="button" class="melihelp-upload-dt-btn" data-melihelp-cordao-spin="melihelp-cordao-day" data-melihelp-cordao-spin-delta="1" aria-label="Dia mais">+</button>
+                            </div>
+                        </div>
+                        <div class="melihelp-upload-dt-card">
+                            <span class="melihelp-upload-dt-lbl">MÊS</span>
+                            <div class="melihelp-upload-dt-spin-row">
+                                <button type="button" class="melihelp-upload-dt-btn" data-melihelp-cordao-spin="melihelp-cordao-month" data-melihelp-cordao-spin-delta="-1" aria-label="Mês menos">−</button>
+                                <input type="number" id="melihelp-cordao-month" class="melihelp-upload-dt-input" inputmode="numeric" min="1" max="12" maxlength="2" aria-label="Mês">
+                                <button type="button" class="melihelp-upload-dt-btn" data-melihelp-cordao-spin="melihelp-cordao-month" data-melihelp-cordao-spin-delta="1" aria-label="Mês mais">+</button>
+                            </div>
+                        </div>
+                        <div class="melihelp-upload-dt-card">
+                            <span class="melihelp-upload-dt-lbl">ANO</span>
+                            <div class="melihelp-upload-dt-spin-row">
+                                <button type="button" class="melihelp-upload-dt-btn" data-melihelp-cordao-spin="melihelp-cordao-year" data-melihelp-cordao-spin-delta="-1" aria-label="Ano menos">−</button>
+                                <input type="number" id="melihelp-cordao-year" class="melihelp-upload-dt-input" inputmode="numeric" min="1900" max="2100" maxlength="4" aria-label="Ano">
+                                <button type="button" class="melihelp-upload-dt-btn" data-melihelp-cordao-spin="melihelp-cordao-year" data-melihelp-cordao-spin-delta="1" aria-label="Ano mais">+</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="melihelp-upload-modal-actions">
+                    <button type="button" class="melihelp-btn melihelp-btn-ghost melihelp-btn-text-upper" id="melihelp-cordao-modal-now">AGORA</button>
+                    <button type="button" class="melihelp-btn melihelp-btn-ghost melihelp-btn-text-upper" id="melihelp-cordao-modal-cancel">CANCELAR</button>
+                    <button type="button" class="melihelp-btn melihelp-btn-primary melihelp-btn-text-upper" id="melihelp-cordao-modal-save">REGISTRAR</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cordão: recebimento (quantidade + data/hora manual) -->
+    <div class="melihelp-upload-modal-backdrop" id="melihelp-cordao-rec-modal-backdrop" hidden>
+        <div class="melihelp-upload-modal-dialog glass-panel" id="melihelp-cordao-rec-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="melihelp-cordao-rec-modal-title">
+            <div class="melihelp-upload-modal-head">
+                <div class="melihelp-upload-modal-title-wrap">
+                    <span class="melihelp-upload-modal-icon" aria-hidden="true"><i class="fas fa-box"></i></span>
+                    <h2 id="melihelp-cordao-rec-modal-title" class="melihelp-upload-modal-title">RECEBIMENTO DE CORDÕES</h2>
+                </div>
+                <button type="button" class="melihelp-icon-btn" id="melihelp-cordao-rec-modal-close" aria-label="Fechar"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="melihelp-upload-modal-body">
+                <p class="melihelp-upload-modal-hint">Informe a <strong>quantidade recebida</strong> e ajuste <strong>data e hora</strong> do lançamento (como na planilha de 2025 ou 2026). Use <strong>AGORA</strong> para preencher com o relógio atual dentro do mês da página.</p>
+                <div class="melihelp-cordao-modal-fields">
+                    <label class="melihelp-cordao-field-label" for="melihelp-cordao-rec-qty">QUANTIDADE RECEBIDA</label>
+                    <input type="number" id="melihelp-cordao-rec-qty" class="melihelp-cordao-text-input" inputmode="numeric" min="1" max="999999" step="1" placeholder="Ex.: 120">
+                </div>
+                <div class="melihelp-upload-dt-rows" aria-label="Data e hora do recebimento">
+                    <div class="melihelp-upload-dt-row">
+                        <div class="melihelp-upload-dt-card">
+                            <span class="melihelp-upload-dt-lbl">HORA</span>
+                            <div class="melihelp-upload-dt-spin-row">
+                                <button type="button" class="melihelp-upload-dt-btn" data-melihelp-cordao-rec-spin="melihelp-cordao-rec-hour" data-melihelp-cordao-rec-spin-delta="-1" aria-label="Hora menos">−</button>
+                                <input type="number" id="melihelp-cordao-rec-hour" class="melihelp-upload-dt-input" inputmode="numeric" min="0" max="23" maxlength="2" aria-label="Hora">
+                                <button type="button" class="melihelp-upload-dt-btn" data-melihelp-cordao-rec-spin="melihelp-cordao-rec-hour" data-melihelp-cordao-rec-spin-delta="1" aria-label="Hora mais">+</button>
+                            </div>
+                        </div>
+                        <div class="melihelp-upload-dt-card">
+                            <span class="melihelp-upload-dt-lbl">MINUTOS</span>
+                            <div class="melihelp-upload-dt-spin-row">
+                                <button type="button" class="melihelp-upload-dt-btn" data-melihelp-cordao-rec-spin="melihelp-cordao-rec-min" data-melihelp-cordao-rec-spin-delta="-1" aria-label="Minutos menos">−</button>
+                                <input type="number" id="melihelp-cordao-rec-min" class="melihelp-upload-dt-input" inputmode="numeric" min="0" max="59" maxlength="2" aria-label="Minutos">
+                                <button type="button" class="melihelp-upload-dt-btn" data-melihelp-cordao-rec-spin="melihelp-cordao-rec-min" data-melihelp-cordao-rec-spin-delta="1" aria-label="Minutos mais">+</button>
+                            </div>
+                        </div>
+                        <div class="melihelp-upload-dt-card">
+                            <span class="melihelp-upload-dt-lbl">SEGUNDOS</span>
+                            <div class="melihelp-upload-dt-spin-row">
+                                <button type="button" class="melihelp-upload-dt-btn" data-melihelp-cordao-rec-spin="melihelp-cordao-rec-sec" data-melihelp-cordao-rec-spin-delta="-1" aria-label="Segundos menos">−</button>
+                                <input type="number" id="melihelp-cordao-rec-sec" class="melihelp-upload-dt-input" inputmode="numeric" min="0" max="59" maxlength="2" aria-label="Segundos">
+                                <button type="button" class="melihelp-upload-dt-btn" data-melihelp-cordao-rec-spin="melihelp-cordao-rec-sec" data-melihelp-cordao-rec-spin-delta="1" aria-label="Segundos mais">+</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="melihelp-upload-dt-row">
+                        <div class="melihelp-upload-dt-card">
+                            <span class="melihelp-upload-dt-lbl">DIA</span>
+                            <div class="melihelp-upload-dt-spin-row">
+                                <button type="button" class="melihelp-upload-dt-btn" data-melihelp-cordao-rec-spin="melihelp-cordao-rec-day" data-melihelp-cordao-rec-spin-delta="-1" aria-label="Dia menos">−</button>
+                                <input type="number" id="melihelp-cordao-rec-day" class="melihelp-upload-dt-input" inputmode="numeric" min="1" max="31" maxlength="2" aria-label="Dia">
+                                <button type="button" class="melihelp-upload-dt-btn" data-melihelp-cordao-rec-spin="melihelp-cordao-rec-day" data-melihelp-cordao-rec-spin-delta="1" aria-label="Dia mais">+</button>
+                            </div>
+                        </div>
+                        <div class="melihelp-upload-dt-card">
+                            <span class="melihelp-upload-dt-lbl">MÊS</span>
+                            <div class="melihelp-upload-dt-spin-row">
+                                <button type="button" class="melihelp-upload-dt-btn" data-melihelp-cordao-rec-spin="melihelp-cordao-rec-month" data-melihelp-cordao-rec-spin-delta="-1" aria-label="Mês menos">−</button>
+                                <input type="number" id="melihelp-cordao-rec-month" class="melihelp-upload-dt-input" inputmode="numeric" min="1" max="12" maxlength="2" aria-label="Mês">
+                                <button type="button" class="melihelp-upload-dt-btn" data-melihelp-cordao-rec-spin="melihelp-cordao-rec-month" data-melihelp-cordao-rec-spin-delta="1" aria-label="Mês mais">+</button>
+                            </div>
+                        </div>
+                        <div class="melihelp-upload-dt-card">
+                            <span class="melihelp-upload-dt-lbl">ANO</span>
+                            <div class="melihelp-upload-dt-spin-row">
+                                <button type="button" class="melihelp-upload-dt-btn" data-melihelp-cordao-rec-spin="melihelp-cordao-rec-year" data-melihelp-cordao-rec-spin-delta="-1" aria-label="Ano menos">−</button>
+                                <input type="number" id="melihelp-cordao-rec-year" class="melihelp-upload-dt-input" inputmode="numeric" min="1900" max="2100" maxlength="4" aria-label="Ano">
+                                <button type="button" class="melihelp-upload-dt-btn" data-melihelp-cordao-rec-spin="melihelp-cordao-rec-year" data-melihelp-cordao-rec-spin-delta="1" aria-label="Ano mais">+</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="melihelp-upload-modal-actions">
+                    <button type="button" class="melihelp-btn melihelp-btn-ghost melihelp-btn-text-upper" id="melihelp-cordao-rec-modal-now">AGORA</button>
+                    <button type="button" class="melihelp-btn melihelp-btn-ghost melihelp-btn-text-upper" id="melihelp-cordao-rec-modal-cancel">CANCELAR</button>
+                    <button type="button" class="melihelp-btn melihelp-btn-primary melihelp-btn-text-upper" id="melihelp-cordao-rec-modal-save">REGISTRAR</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cordão: editar RE/CPF e nome (overlay transparente + painel vidro) -->
+    <div class="melihelp-cordao-edit-backdrop" id="melihelp-cordao-edit-backdrop" hidden>
+        <div class="melihelp-cordao-edit-dialog glass-panel melihelp-rename-doc-dialog" id="melihelp-cordao-edit-dialog" role="dialog" aria-modal="true" aria-labelledby="melihelp-cordao-edit-title">
+            <div class="melihelp-rename-doc-head">
+                <div class="melihelp-rename-doc-title-wrap">
+                    <span class="melihelp-rename-doc-icon" aria-hidden="true"><i class="fas fa-pen-to-square"></i></span>
+                    <h2 id="melihelp-cordao-edit-title" class="melihelp-rename-doc-title">EDITAR REGISTRO</h2>
+                </div>
+                <button type="button" class="melihelp-icon-btn" id="melihelp-cordao-edit-close" aria-label="Fechar"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="melihelp-rename-doc-body">
+                <p class="melihelp-rename-doc-hint">CORRIJA O RE OU CPF E O NOME SE TIVER SIDO DIGITADO ERRADO. A DATA E A HORA DA RETIRADA NÃO SÃO ALTERADAS AQUI.</p>
+                <label class="melihelp-rename-doc-label" for="melihelp-cordao-edit-re">RE | CPF</label>
+                <input type="text" id="melihelp-cordao-edit-re" class="melihelp-rename-doc-input melihelp-cordao-text-input" autocomplete="off" maxlength="80">
+                <label class="melihelp-rename-doc-label" for="melihelp-cordao-edit-nome">NOME DO COLABORADOR(A)</label>
+                <input type="text" id="melihelp-cordao-edit-nome" class="melihelp-rename-doc-input melihelp-cordao-text-input" autocomplete="off" maxlength="200">
+                <div class="melihelp-rename-doc-actions">
+                    <button type="button" class="melihelp-btn melihelp-btn-ghost melihelp-btn-text-upper" id="melihelp-cordao-edit-cancel">CANCELAR</button>
+                    <button type="button" class="melihelp-btn melihelp-btn-primary melihelp-btn-text-upper" id="melihelp-cordao-edit-save">GUARDAR</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cordão: editar recebimento (quantidade + data/hora) -->
+    <div class="melihelp-cordao-rec-edit-backdrop" id="melihelp-cordao-rec-edit-backdrop" hidden>
+        <div class="melihelp-upload-modal-dialog glass-panel" id="melihelp-cordao-rec-edit-dialog" role="dialog" aria-modal="true" aria-labelledby="melihelp-cordao-rec-edit-title">
+            <div class="melihelp-upload-modal-head">
+                <div class="melihelp-upload-modal-title-wrap">
+                    <span class="melihelp-upload-modal-icon" aria-hidden="true"><i class="fas fa-pen-to-square"></i></span>
+                    <h2 id="melihelp-cordao-rec-edit-title" class="melihelp-upload-modal-title">EDITAR RECEBIMENTO</h2>
+                </div>
+                <button type="button" class="melihelp-icon-btn" id="melihelp-cordao-rec-edit-close" aria-label="Fechar"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="melihelp-upload-modal-body">
+                <p class="melihelp-upload-modal-hint">Ajuste a <strong>quantidade</strong> ou a <strong>data e hora</strong> se o lançamento estiver incorreto.</p>
+                <div class="melihelp-cordao-modal-fields">
+                    <label class="melihelp-cordao-field-label" for="melihelp-cordao-rec-edit-qty">QUANTIDADE RECEBIDA</label>
+                    <input type="number" id="melihelp-cordao-rec-edit-qty" class="melihelp-cordao-text-input" inputmode="numeric" min="1" max="999999" step="1">
+                </div>
+                <div class="melihelp-upload-dt-rows" aria-label="Data e hora do recebimento">
+                    <div class="melihelp-upload-dt-row">
+                        <div class="melihelp-upload-dt-card">
+                            <span class="melihelp-upload-dt-lbl">HORA</span>
+                            <div class="melihelp-upload-dt-spin-row">
+                                <button type="button" class="melihelp-upload-dt-btn" data-melihelp-cordao-rec-edit-spin="melihelp-cordao-rec-edit-hour" data-melihelp-cordao-rec-edit-spin-delta="-1" aria-label="Hora menos">−</button>
+                                <input type="number" id="melihelp-cordao-rec-edit-hour" class="melihelp-upload-dt-input" inputmode="numeric" min="0" max="23" maxlength="2" aria-label="Hora">
+                                <button type="button" class="melihelp-upload-dt-btn" data-melihelp-cordao-rec-edit-spin="melihelp-cordao-rec-edit-hour" data-melihelp-cordao-rec-edit-spin-delta="1" aria-label="Hora mais">+</button>
+                            </div>
+                        </div>
+                        <div class="melihelp-upload-dt-card">
+                            <span class="melihelp-upload-dt-lbl">MINUTOS</span>
+                            <div class="melihelp-upload-dt-spin-row">
+                                <button type="button" class="melihelp-upload-dt-btn" data-melihelp-cordao-rec-edit-spin="melihelp-cordao-rec-edit-min" data-melihelp-cordao-rec-edit-spin-delta="-1" aria-label="Minutos menos">−</button>
+                                <input type="number" id="melihelp-cordao-rec-edit-min" class="melihelp-upload-dt-input" inputmode="numeric" min="0" max="59" maxlength="2" aria-label="Minutos">
+                                <button type="button" class="melihelp-upload-dt-btn" data-melihelp-cordao-rec-edit-spin="melihelp-cordao-rec-edit-min" data-melihelp-cordao-rec-edit-spin-delta="1" aria-label="Minutos mais">+</button>
+                            </div>
+                        </div>
+                        <div class="melihelp-upload-dt-card">
+                            <span class="melihelp-upload-dt-lbl">SEGUNDOS</span>
+                            <div class="melihelp-upload-dt-spin-row">
+                                <button type="button" class="melihelp-upload-dt-btn" data-melihelp-cordao-rec-edit-spin="melihelp-cordao-rec-edit-sec" data-melihelp-cordao-rec-edit-spin-delta="-1" aria-label="Segundos menos">−</button>
+                                <input type="number" id="melihelp-cordao-rec-edit-sec" class="melihelp-upload-dt-input" inputmode="numeric" min="0" max="59" maxlength="2" aria-label="Segundos">
+                                <button type="button" class="melihelp-upload-dt-btn" data-melihelp-cordao-rec-edit-spin="melihelp-cordao-rec-edit-sec" data-melihelp-cordao-rec-edit-spin-delta="1" aria-label="Segundos mais">+</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="melihelp-upload-dt-row">
+                        <div class="melihelp-upload-dt-card">
+                            <span class="melihelp-upload-dt-lbl">DIA</span>
+                            <div class="melihelp-upload-dt-spin-row">
+                                <button type="button" class="melihelp-upload-dt-btn" data-melihelp-cordao-rec-edit-spin="melihelp-cordao-rec-edit-day" data-melihelp-cordao-rec-edit-spin-delta="-1" aria-label="Dia menos">−</button>
+                                <input type="number" id="melihelp-cordao-rec-edit-day" class="melihelp-upload-dt-input" inputmode="numeric" min="1" max="31" maxlength="2" aria-label="Dia">
+                                <button type="button" class="melihelp-upload-dt-btn" data-melihelp-cordao-rec-edit-spin="melihelp-cordao-rec-edit-day" data-melihelp-cordao-rec-edit-spin-delta="1" aria-label="Dia mais">+</button>
+                            </div>
+                        </div>
+                        <div class="melihelp-upload-dt-card">
+                            <span class="melihelp-upload-dt-lbl">MÊS</span>
+                            <div class="melihelp-upload-dt-spin-row">
+                                <button type="button" class="melihelp-upload-dt-btn" data-melihelp-cordao-rec-edit-spin="melihelp-cordao-rec-edit-month" data-melihelp-cordao-rec-edit-spin-delta="-1" aria-label="Mês menos">−</button>
+                                <input type="number" id="melihelp-cordao-rec-edit-month" class="melihelp-upload-dt-input" inputmode="numeric" min="1" max="12" maxlength="2" aria-label="Mês">
+                                <button type="button" class="melihelp-upload-dt-btn" data-melihelp-cordao-rec-edit-spin="melihelp-cordao-rec-edit-month" data-melihelp-cordao-rec-edit-spin-delta="1" aria-label="Mês mais">+</button>
+                            </div>
+                        </div>
+                        <div class="melihelp-upload-dt-card">
+                            <span class="melihelp-upload-dt-lbl">ANO</span>
+                            <div class="melihelp-upload-dt-spin-row">
+                                <button type="button" class="melihelp-upload-dt-btn" data-melihelp-cordao-rec-edit-spin="melihelp-cordao-rec-edit-year" data-melihelp-cordao-rec-edit-spin-delta="-1" aria-label="Ano menos">−</button>
+                                <input type="number" id="melihelp-cordao-rec-edit-year" class="melihelp-upload-dt-input" inputmode="numeric" min="1900" max="2100" maxlength="4" aria-label="Ano">
+                                <button type="button" class="melihelp-upload-dt-btn" data-melihelp-cordao-rec-edit-spin="melihelp-cordao-rec-edit-year" data-melihelp-cordao-rec-edit-spin-delta="1" aria-label="Ano mais">+</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="melihelp-upload-modal-actions">
+                    <button type="button" class="melihelp-btn melihelp-btn-ghost melihelp-btn-text-upper" id="melihelp-cordao-rec-edit-cancel">CANCELAR</button>
+                    <button type="button" class="melihelp-btn melihelp-btn-primary melihelp-btn-text-upper" id="melihelp-cordao-rec-edit-save">GUARDAR</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ficheiros: confirmar mover para a lixeira (vidro) -->
+    <div class="melihelp-upload-modal-backdrop" id="melihelp-doc-delete-backdrop" hidden>
+        <div class="melihelp-upload-modal-dialog glass-panel melihelp-cordao-rec-delete-dialog" role="dialog" aria-modal="true" aria-labelledby="melihelp-doc-delete-title" aria-describedby="melihelp-doc-delete-msg">
+            <div class="melihelp-upload-modal-head">
+                <div class="melihelp-upload-modal-title-wrap">
+                    <span class="melihelp-upload-modal-icon" aria-hidden="true"><i class="fas fa-archive"></i></span>
+                    <h2 id="melihelp-doc-delete-title" class="melihelp-upload-modal-title">MOVER PARA A LIXEIRA?</h2>
+                </div>
+                <button type="button" class="melihelp-icon-btn" id="melihelp-doc-delete-close" aria-label="Fechar"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="melihelp-upload-modal-body">
+                <p id="melihelp-doc-delete-msg" class="melihelp-upload-modal-hint melihelp-cordao-rec-delete-msg">O ficheiro deixa de aparecer na pasta e fica na lixeira deste navegador por 30 dias. Pode restaurar ou apagar definitivamente antes do prazo.</p>
+                <div class="melihelp-upload-modal-actions melihelp-cordao-rec-delete-actions">
+                    <button type="button" class="melihelp-btn melihelp-btn-ghost melihelp-btn-text-upper" id="melihelp-doc-delete-cancel">CANCELAR</button>
+                    <button type="button" class="melihelp-btn melihelp-btn-danger melihelp-btn-text-upper" id="melihelp-doc-delete-confirm">MOVER</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cordão: confirmar exclusão de recebimento (vidro) -->
+    <div class="melihelp-upload-modal-backdrop" id="melihelp-cordao-rec-delete-backdrop" hidden>
+        <div class="melihelp-upload-modal-dialog glass-panel melihelp-cordao-rec-delete-dialog" role="dialog" aria-modal="true" aria-labelledby="melihelp-cordao-rec-delete-title" aria-describedby="melihelp-cordao-rec-delete-msg">
+            <div class="melihelp-upload-modal-head">
+                <div class="melihelp-upload-modal-title-wrap">
+                    <span class="melihelp-upload-modal-icon" aria-hidden="true"><i class="fas fa-trash-alt"></i></span>
+                    <h2 id="melihelp-cordao-rec-delete-title" class="melihelp-upload-modal-title">MOVER PARA A LIXEIRA?</h2>
+                </div>
+                <button type="button" class="melihelp-icon-btn" id="melihelp-cordao-rec-delete-close" aria-label="Fechar"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="melihelp-upload-modal-body">
+                <p id="melihelp-cordao-rec-delete-msg" class="melihelp-upload-modal-hint melihelp-cordao-rec-delete-msg">Este registo de recebimento vai para a lixeira (30 dias neste navegador). Pode restaurar na área de recebimento ou apagar definitivamente na lixeira.</p>
+                <div class="melihelp-upload-modal-actions melihelp-cordao-rec-delete-actions">
+                    <button type="button" class="melihelp-btn melihelp-btn-ghost melihelp-btn-text-upper" id="melihelp-cordao-rec-delete-cancel">CANCELAR</button>
+                    <button type="button" class="melihelp-btn melihelp-btn-danger melihelp-btn-text-upper" id="melihelp-cordao-rec-delete-confirm">MOVER</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cordão: confirmar exclusão de retirada (vidro) -->
+    <div class="melihelp-upload-modal-backdrop" id="melihelp-cordao-ret-delete-backdrop" hidden>
+        <div class="melihelp-upload-modal-dialog glass-panel melihelp-cordao-rec-delete-dialog" role="dialog" aria-modal="true" aria-labelledby="melihelp-cordao-ret-delete-title" aria-describedby="melihelp-cordao-ret-delete-msg">
+            <div class="melihelp-upload-modal-head">
+                <div class="melihelp-upload-modal-title-wrap">
+                    <span class="melihelp-upload-modal-icon" aria-hidden="true"><i class="fas fa-trash-alt"></i></span>
+                    <h2 id="melihelp-cordao-ret-delete-title" class="melihelp-upload-modal-title">MOVER PARA A LIXEIRA?</h2>
+                </div>
+                <button type="button" class="melihelp-icon-btn" id="melihelp-cordao-ret-delete-close" aria-label="Fechar"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="melihelp-upload-modal-body">
+                <p id="melihelp-cordao-ret-delete-msg" class="melihelp-upload-modal-hint melihelp-cordao-rec-delete-msg">Este registo de retirada (ou entrada) de cordão vai para a lixeira (30 dias neste navegador). Pode restaurar na lista do mês ou apagar definitivamente na lixeira.</p>
+                <div class="melihelp-upload-modal-actions melihelp-cordao-rec-delete-actions">
+                    <button type="button" class="melihelp-btn melihelp-btn-ghost melihelp-btn-text-upper" id="melihelp-cordao-ret-delete-cancel">CANCELAR</button>
+                    <button type="button" class="melihelp-btn melihelp-btn-danger melihelp-btn-text-upper" id="melihelp-cordao-ret-delete-confirm">MOVER</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lixeira: confirmar apagar definitivamente (vidro) -->
+    <div class="melihelp-upload-modal-backdrop" id="melihelp-trash-purge-backdrop" hidden>
+        <div class="melihelp-upload-modal-dialog glass-panel melihelp-cordao-rec-delete-dialog" role="dialog" aria-modal="true" aria-labelledby="melihelp-trash-purge-title" aria-describedby="melihelp-trash-purge-msg">
+            <div class="melihelp-upload-modal-head">
+                <div class="melihelp-upload-modal-title-wrap">
+                    <span class="melihelp-upload-modal-icon" aria-hidden="true"><i class="fas fa-trash-alt"></i></span>
+                    <h2 id="melihelp-trash-purge-title" class="melihelp-upload-modal-title">APAGAR DEFINITIVAMENTE?</h2>
+                </div>
+                <button type="button" class="melihelp-icon-btn" id="melihelp-trash-purge-close" aria-label="Fechar"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="melihelp-upload-modal-body">
+                <p id="melihelp-trash-purge-msg" class="melihelp-upload-modal-hint melihelp-cordao-rec-delete-msg">Este item será removido para sempre deste navegador (ficheiro ou registo). Esta ação não pode ser desfeita.</p>
+                <div class="melihelp-upload-modal-actions melihelp-cordao-rec-delete-actions">
+                    <button type="button" class="melihelp-btn melihelp-btn-ghost melihelp-btn-text-upper" id="melihelp-trash-purge-cancel">CANCELAR</button>
+                    <button type="button" class="melihelp-btn melihelp-btn-danger melihelp-btn-text-upper" id="melihelp-trash-purge-confirm">APAGAR</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/selbetti-chrome-runtime-shim.js?v=1"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="../js/melihelp-cracha-editor.js?v=15"></script>
+    <script>
+        /* Base da API (MeliHelp não carrega script.js): garante sync cartão avulso na porta 3006. */
+        window.getAxisApiBase = function () {
+            try {
+                var o = window.location;
+                if (!o || !o.protocol || o.protocol === 'file:') return 'http://localhost:3006';
+                var host = o.hostname || '';
+                var port = o.port ? parseInt(o.port, 10) : (o.protocol === 'https:' ? 443 : 80);
+                if (host === 'localhost' || host === '127.0.0.1') {
+                    if (port !== 3006 && port !== 3007) return o.protocol + '//' + host + ':3006';
+                }
+                return o.origin || 'http://localhost:3006';
+            } catch (e) {
+                return 'http://localhost:3006';
+            }
+        };
+    </script>
+    <script src="../js/melihelp-hub.js?v=hub113"></script>
+    <script src="../js/axis-robot-assistant.js?v=hub70"></script>
+    <script src="../js/melihelp-axis-numbered-chat.js?v=hub73"></script>
+</body>
+</html>

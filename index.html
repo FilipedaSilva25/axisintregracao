@@ -19,10 +19,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
     <!-- CSS PRINCIPAL (v=axis2025 evita cache e garante atualizações visíveis) -->
-    <link rel="stylesheet" href="css/style.css?v=axis2026k">
-    <link rel="stylesheet" href="css/suporte-tecnico.css">
+    <link rel="stylesheet" href="css/style.css?v=axis2026newsapple2">
+    <link rel="stylesheet" href="css/suporte-tecnico.css?v=axis2026docvoltar1">
     <!-- Robô assistente em holograma -->
-    <link rel="stylesheet" href="css/axis-robot-assistant.css?v=axis2026robot1">
+    <link rel="stylesheet" href="css/axis-robot-assistant.css?v=axis2026robot4">
     
     <!-- WhatsApp Alerts CSS -->
     <!-- WhatsApp descontinuado - CSS removido -->
@@ -75,17 +75,26 @@
             filter: drop-shadow(0 2px 4px rgba(253, 126, 20, 0.3));
         }
 
-        /* Título numa só linha, no mesmo estilo dos outros cards longos (ex.: REGISTRO DE CHAMADOS) */
+        /* Centraliza o bloco do título no card (gradient + nowrap precisam de flex no pai) */
         .mod-card.preventiva-master .mod-content {
-            text-align: center;
+            display: flex;
+            flex-direction: column;
             align-items: center;
+            justify-content: center;
+            text-align: center;
+            width: 100%;
         }
         .mod-card.preventiva-master .mod-content h3 {
-            white-space: nowrap;
+            margin-left: auto;
+            margin-right: auto;
+            min-width: 0;
+            max-width: 100%;
+            white-space: normal;
             font-size: clamp(0.72rem, 0.42rem + 1.65vw, 1.2rem);
             letter-spacing: 0.02em;
             text-align: center;
-            width: 100%;
+            line-height: 1.25;
+            box-sizing: border-box;
         }
 
         @keyframes pulse {
@@ -564,6 +573,35 @@
             filter: drop-shadow(0 2px 4px rgba(0, 150, 136, 0.3));
         }
 
+        /* Card MeliHelp — hub duplicado do SELBETTI (índigo) */
+        .mod-card.melihelp-master {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.85) 0%, rgba(92, 107, 192, 0.1) 50%, rgba(126, 87, 194, 0.07) 100%) !important;
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 2px solid rgba(92, 107, 192, 0.28) !important;
+        }
+        .mod-card.melihelp-master::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(92, 107, 192, 0.08) 0%, transparent 70%);
+            animation: rotate 10s linear infinite;
+            pointer-events: none;
+        }
+        .mod-card.melihelp-master:hover {
+            border-color: rgba(92, 107, 192, 0.45) !important;
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(92, 107, 192, 0.22);
+        }
+        .mod-card.melihelp-master .mod-icon {
+            font-size: 38px;
+            margin-bottom: 12px;
+            filter: drop-shadow(0 2px 4px rgba(92, 107, 192, 0.35));
+        }
+
         /* Card Peças - Vidro estilo Apple, destaque laranja */
         .mod-card.pecas-master {
             background: linear-gradient(135deg, rgba(255, 255, 255, 0.85) 0%, rgba(253, 126, 20, 0.08) 50%, rgba(0, 188, 212, 0.06) 100%) !important;
@@ -734,6 +772,13 @@
         }
         [data-theme="dark"] .mod-card.selbetti-master:hover {
             background: linear-gradient(135deg, rgba(40, 40, 40, 0.95) 0%, rgba(0, 150, 136, 0.25) 100%) !important;
+        }
+        [data-theme="dark"] .mod-card.melihelp-master {
+            background: linear-gradient(135deg, rgba(30, 30, 30, 0.9) 0%, rgba(92, 107, 192, 0.18) 100%) !important;
+            border-color: rgba(126, 87, 194, 0.45) !important;
+        }
+        [data-theme="dark"] .mod-card.melihelp-master:hover {
+            background: linear-gradient(135deg, rgba(40, 40, 40, 0.95) 0%, rgba(126, 87, 194, 0.28) 100%) !important;
         }
         [data-theme="dark"] .mod-card.sauron-master {
             background: linear-gradient(135deg, rgba(30, 30, 30, 0.9) 0%, rgba(103, 58, 183, 0.15) 100%) !important;
@@ -1390,6 +1435,113 @@
                 transition-duration: 0.01ms !important;
             }
         }
+
+        /* Tema escuro: estilos deste bloco fixavam cores claras e anulavam o style.css */
+        [data-theme="dark"] .toast {
+            background: var(--card-bg);
+            color: var(--text-main);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--shadow-heavy);
+        }
+        [data-theme="dark"] .toast-close:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        [data-theme="dark"] .modal-content {
+            background: var(--card-bg);
+            color: var(--text-main);
+            border: 1px solid var(--glass-border);
+        }
+        [data-theme="dark"] .modal-header {
+            border-bottom-color: var(--glass-border);
+            background: rgba(255, 255, 255, 0.04);
+        }
+        [data-theme="dark"] .modal-header h3 {
+            color: var(--text-main);
+        }
+        [data-theme="dark"] .close-modal {
+            color: var(--text-secondary);
+            background: rgba(255, 255, 255, 0.06);
+        }
+        [data-theme="dark"] .close-modal:hover {
+            color: #fff;
+            background: var(--accent-blue, #007aff);
+        }
+        [data-theme="dark"] .axis-input-search {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(255, 255, 255, 0.12);
+            color: var(--text-main);
+        }
+        [data-theme="dark"] .axis-input-search::placeholder {
+            color: var(--text-secondary);
+        }
+        [data-theme="dark"] .stat-card {
+            background: var(--card-bg);
+            border-color: var(--glass-border);
+        }
+        [data-theme="dark"] .stat-number {
+            color: var(--text-main);
+        }
+        [data-theme="dark"] .stat-label {
+            color: var(--text-secondary);
+        }
+        [data-theme="dark"] .pagination-controls {
+            border-top-color: var(--glass-border);
+        }
+        [data-theme="dark"] .pagination-btn {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(255, 255, 255, 0.15);
+            color: var(--text-main);
+        }
+        [data-theme="dark"] .pagination-btn:hover:not(:disabled) {
+            background: var(--accent-blue, #007aff);
+            color: #fff;
+            border-color: var(--accent-blue, #007aff);
+        }
+        [data-theme="dark"] .pagination-btn.active {
+            background: var(--accent-blue, #007aff);
+            color: #fff;
+        }
+        [data-theme="dark"] .model-tab {
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text-main);
+        }
+        [data-theme="dark"] .model-tab:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        [data-theme="dark"] .model-tab.active {
+            background: var(--accent-blue, #007aff);
+            color: #fff;
+        }
+        [data-theme="dark"] .theme-toggle {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text-main);
+        }
+        [data-theme="dark"] .fab-item {
+            background: var(--card-bg);
+            color: var(--text-main);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--shadow-medium);
+        }
+        [data-theme="dark"] .skeleton {
+            background: linear-gradient(90deg, #2c2c2e 25%, #3a3a3c 50%, #2c2c2e 75%);
+            background-size: 200% 100%;
+        }
+        [data-theme="dark"] .progress-bar {
+            background: rgba(255, 255, 255, 0.08);
+        }
+        [data-theme="dark"] .confirmation-list {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: var(--glass-border);
+        }
+        [data-theme="dark"] .confirmation-item {
+            border-bottom-color: rgba(255, 255, 255, 0.08);
+        }
+        [data-theme="dark"] .confirmation-label {
+            color: var(--text-secondary);
+        }
+        [data-theme="dark"] .confirmation-value {
+            color: var(--text-main);
+        }
     </style>
 </head>
 
@@ -1596,9 +1748,19 @@
             <p class="modal-senha-temp-note">Os dados de acesso são privativos do AXIS. Evite reutilizar senhas de outros serviços.</p>
             <form id="axis-senha-temp-form" class="modal-senha-temp-form">
                 <label class="modal-senha-temp-label" for="axis-senha-temp-nova">Nova senha</label>
-                <input type="password" id="axis-senha-temp-nova" class="modal-senha-temp-input" autocomplete="new-password" minlength="6" required placeholder="Mínimo 6 caracteres">
+                <div class="input-group password-container modal-senha-temp-password-row">
+                    <input type="password" id="axis-senha-temp-nova" class="modal-senha-temp-input" autocomplete="new-password" minlength="6" required placeholder="Mínimo 6 caracteres">
+                    <button type="button" class="eye-toggle" onclick="if(typeof axisToggleSettingsPassword==='function')axisToggleSettingsPassword('axis-senha-temp-nova','axis-senha-temp-eye-nova');return false;" aria-label="Mostrar ou ocultar nova senha" data-protected="true">
+                        <span id="axis-senha-temp-eye-nova">👁️</span>
+                    </button>
+                </div>
                 <label class="modal-senha-temp-label" for="axis-senha-temp-confirma">Confirmar nova senha</label>
-                <input type="password" id="axis-senha-temp-confirma" class="modal-senha-temp-input" autocomplete="new-password" minlength="6" required placeholder="Repita a senha">
+                <div class="input-group password-container modal-senha-temp-password-row">
+                    <input type="password" id="axis-senha-temp-confirma" class="modal-senha-temp-input" autocomplete="new-password" minlength="6" required placeholder="Repita a senha">
+                    <button type="button" class="eye-toggle" onclick="if(typeof axisToggleSettingsPassword==='function')axisToggleSettingsPassword('axis-senha-temp-confirma','axis-senha-temp-eye-confirma');return false;" aria-label="Mostrar ou ocultar confirmação da senha" data-protected="true">
+                        <span id="axis-senha-temp-eye-confirma">👁️</span>
+                    </button>
+                </div>
                 <p id="axis-senha-temp-erro" class="modal-senha-temp-erro" role="alert"></p>
                 <button type="submit" id="axis-senha-temp-submit" class="modal-senha-temp-submit">Guardar e continuar</button>
             </form>
@@ -1620,12 +1782,11 @@
         <div class="modal-glass-overlay" id="modal-totp-overlay"></div>
         <div class="modal-glass-box">
             <p class="modal-glass-title">Verificação em duas etapas</p>
-            <p class="modal-glass-message">Introduza o código de 6 dígitos do Google Authenticator (ou outra app compatível). Se redefiniu o 2FA, use o código atual do app.</p>
+            <p class="modal-glass-message">Introduza o código de 6 dígitos do Google Authenticator (ou outra app compatível). A verificação é <strong>obrigatória</strong> e volta a ser pedida a cada <strong>1 hora</strong> enquanto estiver em sessão. Se redefiniu o 2FA, use o código atual do app.</p>
             <input type="text" id="totp-code-input" maxlength="6" pattern="[0-9]*" inputmode="numeric" placeholder="000000" autocomplete="one-time-code" class="modal-totp-input" style="margin: 16px 0; font-size: 24px; letter-spacing: 8px; text-align: center; width: 180px;">
             <p id="totp-login-err" class="modal-glass-message" style="color: #ff3b30; display: none; margin-top: 8px;"></p>
             <div style="display: flex; gap: 12px; justify-content: center; margin-top: 16px;">
                 <button type="button" class="modal-glass-btn" id="totp-login-submit">Verificar</button>
-                <button type="button" class="modal-glass-btn" style="background: transparent;" id="totp-login-cancel">Cancelar</button>
             </div>
         </div>
     </div>
@@ -1661,6 +1822,23 @@
          CONTEÚDO PRINCIPAL DO SISTEMA
          ============================================ -->
     <div id="main-content" style="display: none;">
+
+        <!-- Novidades / notas de versão (abre pelo botão 📰 no cabeçalho) -->
+        <div id="modal-axis-news" class="axis-news-modal axis-news-modal--apple" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="axis-news-modal-title">
+            <div class="axis-news-modal-overlay axis-news-modal-overlay--apple" onclick="if(typeof toggleAxisNewsModal==='function')toggleAxisNewsModal(false);"></div>
+            <div class="axis-news-modal-panel axis-news-modal-panel--apple">
+                <div class="axis-news-modal-header axis-news-modal-header--apple">
+                    <button type="button" class="axis-news-modal-close axis-news-modal-close--apple" onclick="if(typeof toggleAxisNewsModal==='function')toggleAxisNewsModal(false);" aria-label="Fechar">×</button>
+                    <h2 id="axis-news-modal-title" class="axis-news-modal-apple-title">Sobre esta atualização</h2>
+                    <p class="axis-news-modal-apple-kicker">AXIS</p>
+                    <div class="axis-news-modal-hero-version" id="axis-news-hero-version"></div>
+                    <p class="axis-news-modal-meta axis-news-modal-meta--apple" id="axis-news-modal-meta">A carregar novidades…</p>
+                </div>
+                <div class="axis-news-modal-body axis-news-modal-body--apple">
+                    <div id="axis-news-apple-root" class="axis-news-apple-feed" role="feed"></div>
+                </div>
+            </div>
+        </div>
         
         <!-- Header Principal -->
         <header class="apple-nav" role="banner">
@@ -1703,9 +1881,9 @@
                                 <p class="wa-profile-about" id="axis-profile-dropdown-setor">Internal Systems</p>
                             </div>
                             <div class="wa-profile-body">
-                                <div class="wa-profile-row">
+                                <div class="wa-profile-row axis-profile-row-nome-completo">
                                     <span class="wa-profile-label">Nome completo</span>
-                                    <input type="text" id="axis-profile-mini-nome" class="wa-profile-input" placeholder="Seu nome">
+                                    <input type="text" id="axis-profile-mini-nome" class="wa-profile-input" placeholder="Seu nome" autocomplete="name">
                                 </div>
                                 <div class="wa-profile-row wa-profile-row-readonly">
                                     <span class="wa-profile-label">Usuário</span>
@@ -1745,6 +1923,9 @@
                             <button type="button" class="axis-profile-photo-modal-close" onclick="if(window.fecharModalFotoPerfil) window.fecharModalFotoPerfil();" aria-label="Fechar">×</button>
                         </div>
                     </div>
+                    <button type="button" class="nav-tool-btn" id="nav-axis-news-btn" aria-label="Sobre esta atualização" title="Sobre esta atualização (novidades AXIS)" onclick="if(typeof toggleAxisNewsModal === 'function') { toggleAxisNewsModal(); } return false;">
+                        <span class="nav-tool-icon" aria-hidden="true">📰</span>
+                    </button>
                     <div class="nav-notifications-wrap" id="nav-notifications-wrap" style="position: relative; display: flex;">
                         <button type="button" class="nav-tool-btn notifications-bell" id="nav-notifications-btn" aria-label="Notificações" title="Notificações" onclick="if(typeof toggleNavNotifications === 'function') { toggleNavNotifications(); } return false;">
                             <span class="nav-tool-icon">🔔</span>
@@ -1767,13 +1948,19 @@
             </div>
         </header>
 
-        <!-- Menu Lateral -->
+        <!-- Menu Lateral (visual alinhado ao drawer MeliHelp: vidro flutuante + scroll invisível) -->
         <aside id="side-menu" class="glass-sidebar" role="navigation" aria-label="Menu principal" style="display: flex; visibility: visible;">
-            <div class="sidebar-header">
-                <h3 class="sr-only">Navegação Principal</h3>
-            </div>
-
-            <nav class="side-nav-links">
+            <div class="glass-sidebar-shell">
+                <header class="glass-sidebar-head">
+                    <div class="glass-sidebar-brand-wrap">
+                        <span class="glass-sidebar-brand" aria-hidden="true">AXIS</span>
+                        <span class="glass-sidebar-brand-sub">INTEGRAÇÃO</span>
+                    </div>
+                    <button type="button" class="glass-sidebar-close" onclick="if(typeof toggleSidebar === 'function') { toggleSidebar(); } return false;" aria-label="Fechar menu">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                </header>
+                <nav class="side-nav-links" aria-label="Navegação principal">
                 <button data-nav-page="page-home" onclick="if(typeof navigate === 'function') { navigate('page-home'); } return false;" class="side-item active">📊 Início</button>
                 <button data-nav-page="page-inventario" onclick="if(typeof navigate === 'function') { navigate('page-inventario'); } return false;" class="side-item">📦 Inventário</button>
                 <button data-nav-page="page-rondas" onclick="if(typeof navigate === 'function') { navigate('page-rondas'); } return false;" class="side-item">🛡️ Rondas</button>
@@ -1786,6 +1973,7 @@
                 <button data-nav-page="status-bancada" onclick="window.location.href='pages/status_bancada.html'" class="side-item">📊 Status de Bancada</button>
                 <button data-nav-page="sauron" onclick="window.location.href='pages/sauron.html'" class="side-item">🔮 Sauron</button>
                 <button data-nav-page="selbetti" onclick="window.location.href='pages/selbetti.html'" class="side-item">🏭 Selbetti</button>
+                <button data-nav-page="melihelp" onclick="window.location.href='pages/melihelp.html'" class="side-item">🛟 MeliHelp</button>
                 <button data-nav-page="jovem-aprendiz" onclick="window.location.href='pages/jovem-aprendiz.html'" class="side-item">🎓 Jovem Aprendiz</button>
                 <button data-nav-page="notas" onclick="window.location.href='pages/notas_fiscais.html'" class="side-item">📄 Notas Fiscais</button>
                 <button data-nav-page="page-configuracoes" onclick="if(typeof navigate === 'function') { navigate('page-configuracoes'); } return false;" class="side-item">⚙️ Configurações</button>
@@ -1794,7 +1982,8 @@
                 <button onclick="if(typeof logout === 'function') { logout(); } else { console.error('logout não encontrada'); } return false;" class="side-item logout">
                     🚪 Sair do AXIS
                 </button>
-            </nav>
+                </nav>
+            </div>
         </aside>
 
         <!-- Overlay do Menu (fechar ao clicar - só addEventListener, sem onclick duplicado) -->
@@ -1834,124 +2023,8 @@
                     </div>
                 </div>
 
-                <!-- Grid de Módulos -->
-                <div class="dashboard-grid">
-                    <!-- Card Inventário -->
-                    <div class="mod-card inventario-master" onclick="if(typeof navigate === 'function') { navigate('page-inventario'); } else { console.error('navigate não encontrada'); alert('Erro: Função de navegação não encontrada. Recarregue a página.'); } return false;" tabindex="0" role="button" style="cursor: pointer;">
-                        <div class="mod-icon">📦</div>
-                        <div class="mod-content">
-                            <h3 class="txt-axis-gradient">INVENTÁRIO</h3>
-                        </div>
-                    </div>
-
-                    <!-- Card Rondas -->
-                    <div class="mod-card rondas-master" onclick="if(typeof navigate === 'function') { navigate('page-rondas'); } else { console.error('navigate não encontrada'); alert('Erro: Função de navegação não encontrada. Recarregue a página.'); } return false;" tabindex="0" role="button" style="cursor: pointer;">
-                        <div class="mod-icon">🛡️</div>
-                        <div class="mod-content">
-                            <h3 class="txt-axis-gradient">RONDAS</h3>
-                        </div>
-                    </div>
-
-                    <!-- Card Manutenção Preventiva (DESTAQUE) -->
-                    <div class="mod-card preventiva-master" 
-                         onclick="window.location.href='pages/manutencao_preventiva.html'"
-                         tabindex="0" 
-                         role="button">
-                        <div class="mod-icon">🖨️</div>
-                        <div class="mod-content">
-                            <h3 class="txt-axis-gradient">MANUTENÇÃO PREVENTIVA</h3>
-                        </div>
-                    </div>
-
-                    <!-- Card Suporte -->
-                    <div class="mod-card suporte-master" onclick="if(typeof navigate === 'function') { navigate('page-suporte'); } else { console.error('navigate não encontrada'); alert('Erro: Função de navegação não encontrada. Recarregue a página.'); } return false;" tabindex="0" role="button" style="cursor: pointer;">
-                        <div class="mod-icon">💬</div>
-                        <div class="mod-content">
-                            <h3 class="txt-axis-gradient">SUPORTE TÉCNICO</h3>
-                        </div>
-                    </div>
-
-                    <!-- Card Notas Fiscais -->
-                    <div class="mod-card notas-master" onclick="window.location.href='pages/notas_fiscais.html'" tabindex="0" role="button">
-                        <div class="mod-icon">📄</div>
-                        <div class="mod-content">
-                            <h3 class="txt-axis-gradient">NOTAS FISCAIS</h3>
-                        </div>
-                    </div>
-
-                    <!-- Card Bloco de Notas -->
-                    <div class="mod-card bloco-master" onclick="window.location.href='pages/bloco_de_notas_apple.html'" tabindex="0" role="button">
-                        <div class="mod-icon">📝</div>
-                        <div class="mod-content">
-                            <h3 class="txt-axis-gradient">BLOCO DE NOTAS</h3>
-                        </div>
-                    </div>
-
-                    <!-- Card Mapeamento de Chamados BRSC02 -->
-                    <div class="mod-card chamados-master" onclick="window.location.href='pages/registro_chamados.html'" tabindex="0" role="button">
-                        <div class="mod-icon">📋</div>
-                        <div class="mod-content">
-                            <h3 class="txt-axis-gradient">MAPEAMENTO DE CHAMADOS DE IMPRESSORAS</h3>
-                            <p class="mod-card-unit-sub">UNIDADE DE BRSC02</p>
-                        </div>
-                    </div>
-
-                    <!-- Card Peças -->
-                    <div class="mod-card pecas-master" onclick="window.location.href='pages/pecas.html'" tabindex="0" role="button">
-                        <div class="mod-icon">🔧</div>
-                        <div class="mod-content">
-                            <h3 class="txt-axis-gradient">PEÇAS</h3>
-                        </div>
-                    </div>
-
-                    <!-- Card Packing Machine -->
-                    <div class="mod-card packing-master" onclick="window.location.href='pages/packing_machine.html'" tabindex="0" role="button">
-                        <div class="mod-icon">🏭</div>
-                        <div class="mod-content">
-                            <h3 class="txt-axis-gradient">PACKING MACHINE</h3>
-                        </div>
-                    </div>
-
-                    <!-- Card Status de Bancada -->
-                    <div class="mod-card status-bancada-master" onclick="window.location.href='pages/status_bancada.html'" tabindex="0" role="button">
-                        <div class="mod-icon">📊</div>
-                        <div class="mod-content">
-                            <h3 class="txt-axis-gradient">STATUS DE BANCADA</h3>
-                        </div>
-                    </div>
-
-                    <!-- Card SAURON -->
-                    <div class="mod-card sauron-master" onclick="window.location.href='pages/sauron.html'" tabindex="0" role="button">
-                        <div class="mod-icon">👁</div>
-                        <div class="mod-content">
-                            <h3 class="txt-axis-gradient">Sauron</h3>
-                        </div>
-                    </div>
-
-                    <!-- Card Jovem Aprendiz -->
-                    <div class="mod-card jovem-aprendiz-master" onclick="window.location.href='pages/jovem-aprendiz.html'" tabindex="0" role="button">
-                        <div class="mod-icon">🎓</div>
-                        <div class="mod-content">
-                            <h3 class="txt-axis-gradient">JOVEM APRENDIZ</h3>
-                        </div>
-                    </div>
-
-                    <!-- Card Selbetti — Hub do técnico (pages/selbetti.html) -->
-                    <div class="mod-card selbetti-master" onclick="window.location.href='pages/selbetti.html'" tabindex="0" role="button" style="cursor: pointer;">
-                        <div class="mod-icon"><img src="assets/IMAGENS/Robo_Selbetti_Card.png" alt="SELBETTI" onerror="this.style.display='none';this.nextElementSibling.style.display='block';" /><span style="display:none;font-size:38px;">🏭</span></div>
-                        <div class="mod-content">
-                            <h3 class="txt-axis-gradient">Selbetti</h3>
-                        </div>
-                    </div>
-
-                    <!-- Card Configurações -->
-                    <div class="mod-card config-master" onclick="if(typeof navigate === 'function') { navigate('page-configuracoes'); } else { console.error('navigate não encontrada'); alert('Erro: Função de navegação não encontrada. Recarregue a página.'); } return false;" tabindex="0" role="button" style="cursor: pointer;">
-                        <div class="mod-icon">⚙️</div>
-                        <div class="mod-content">
-                            <h3 class="txt-axis-gradient">CONFIGURAÇÕES</h3>
-                        </div>
-                    </div>
-                </div>
+                <!-- Grid de Módulos: preenchido por renderAxisMainDashboardCards() a partir de AXIS_HOME_MODULES (script.js). Administração nunca entra aqui. -->
+                <div class="dashboard-grid" id="axis-main-dashboard-grid"></div>
             </section>
 
             <!-- ============================================
@@ -2055,76 +2128,94 @@
                                 <div class="setor-selector setor-selector-filter" id="setor-selector-filter-wrap">
                                     <select id="ucs-filtro-panel-setor" class="setor-selector-native-hidden" aria-hidden="true">
                                         <option value="">Todos</option>
-                                        <option value="internal-systems">INTERNAL SYSTEMS</option>
-                                        <option value="lideranca">LIDERANÇA</option>
-                                        <option value="mhw">MHW</option>
-                                        <option value="p2m">P2M</option>
+                                        <option value="1p">1P</option>
+                                        <option value="administracao">ADMINISTRAÇÃO</option>
+                                        <option value="ambulatorio-externo">AMBULATÓRIO EXTERNO</option>
+                                        <option value="ambulatorio-interno">AMBULATÓRIO INTERNO</option>
+                                        <option value="aquario-outbound">AQUÁRIO OUTBOUND</option>
+                                        <option value="area-de-maquinas">ÁREA DE MÁQUINAS</option>
                                         <option value="check-in">CHECK-IN</option>
-                                        <option value="reciving">RECIVING</option>
+                                        <option value="cx">CX</option>
+                                        <option value="er">ER</option>
+                                        <option value="gate">GATE</option>
+                                        <option value="icqa">ICQA</option>
+                                        <option value="insumos">INSUMOS</option>
+                                        <option value="internal-systems">INTERNAL SYSTEMS</option>
+                                        <option value="inventario">INVENTÁRIO</option>
+                                        <option value="lideranca">LIDERANÇA</option>
+                                        <option value="linha-de-peixe-1">LINHA DE PEIXE 1</option>
+                                        <option value="linha-de-peixe-2">LINHA DE PEIXE 2</option>
+                                        <option value="loss-prevention">LOSS PREVENTION</option>
+                                        <option value="meli-help">MELI HELP</option>
+                                        <option value="mhw">MHW</option>
+                                        <option value="mz0">MZ0</option>
                                         <option value="mz1">MZ1</option>
                                         <option value="mz2">MZ2</option>
                                         <option value="mz3">MZ3</option>
-                                        <option value="inventario">INVENTÁRIO</option>
-                                        <option value="cx">CX</option>
-                                        <option value="returns">RETURNS</option>
-                                        <option value="packing-mono">Packing mono</option>
-                                        <option value="packing-ptw">Packing ptw</option>
-                                        <option value="sauron">Sauron</option>
-                                        <option value="insumos">INSUMOS</option>
-                                        <option value="docas-de-expedicao">DOCAS DE EXPEDIÇÃO</option>
-                                        <option value="linha-de-peixe-1">LINHA DE PEIXE 1</option>
-                                        <option value="sorter">SORTER</option>
-                                        <option value="linha-de-peixe-2">LINHA DE PEIXE 2</option>
-                                        <option value="rk">RK</option>
                                         <option value="nt-rk">NT RK</option>
+                                        <option value="p2m">P2M</option>
+                                        <option value="packing-machine">PACKING MACHINE</option>
+                                        <option value="packing-mono">PACKING MONO</option>
+                                        <option value="packing-ptw">PACKING PTW</option>
                                         <option value="qualidade">QUALIDADE</option>
-                                        <option value="aquario-outbound">AQUÁRIO OUTBOUND</option>
-                                        <option value="adm">ADM</option>
-                                        <option value="gate">GATE</option>
-                                        <option value="ambulatorio-interno">AMBULATÓRIO INTERNO</option>
-                                        <option value="ambulatorio-externo">AMBULATÓRIO EXTERNO</option>
-                                        <option value="sala-de-epi">SALA DE EPI</option>
-                                        <option value="er">ER</option>
+                                        <option value="reciving">RECIVING</option>
+                                        <option value="rejeitos">REJEITOS</option>
+                                        <option value="retiros">RETIROS</option>
+                                        <option value="returns">RETURNS</option>
+                                        <option value="rk">RK</option>
+                                        <option value="roboticas">ROBÓTICAS</option>
                                         <option value="rr">RR</option>
-                                        <option value="deposito-de-treinamento">DEPÓSITO DE TREINAMENTO</option>
-                                        <option value="hv">HV</option>
+                                        <option value="sala-de-epi">SALA DE EPI</option>
+                                        <option value="sauron">SAURON</option>
+                                        <option value="shipping">SHIPPING</option>
+                                        <option value="sorter">SORTER</option>
+                                        <option value="treinamento">TREINAMENTO</option>
                                     </select>
                                     <button type="button" class="setor-selector-trigger" id="ucs-filtro-panel-setor-trigger" aria-haspopup="listbox" aria-expanded="false">Todos</button>
                                     <div class="setor-selector-dropdown" id="ucs-filtro-panel-setor-dropdown" role="listbox" aria-hidden="true">
                                         <div class="setor-selector-option" data-value="" role="option">Todos</div>
-                                        <div class="setor-selector-option" data-value="internal-systems" role="option">INTERNAL SYSTEMS</div>
-                                        <div class="setor-selector-option" data-value="lideranca" role="option">LIDERANÇA</div>
-                                        <div class="setor-selector-option" data-value="mhw" role="option">MHW</div>
-                                        <div class="setor-selector-option" data-value="p2m" role="option">P2M</div>
+                                        <div class="setor-selector-option" data-value="1p" role="option">1P</div>
+                                        <div class="setor-selector-option" data-value="administracao" role="option">ADMINISTRAÇÃO</div>
+                                        <div class="setor-selector-option" data-value="ambulatorio-externo" role="option">AMBULATÓRIO EXTERNO</div>
+                                        <div class="setor-selector-option" data-value="ambulatorio-interno" role="option">AMBULATÓRIO INTERNO</div>
+                                        <div class="setor-selector-option" data-value="aquario-outbound" role="option">AQUÁRIO OUTBOUND</div>
+                                        <div class="setor-selector-option" data-value="area-de-maquinas" role="option">ÁREA DE MÁQUINAS</div>
                                         <div class="setor-selector-option" data-value="check-in" role="option">CHECK-IN</div>
-                                        <div class="setor-selector-option" data-value="reciving" role="option">RECIVING</div>
+                                        <div class="setor-selector-option" data-value="cx" role="option">CX</div>
+                                        <div class="setor-selector-option" data-value="er" role="option">ER</div>
+                                        <div class="setor-selector-option" data-value="gate" role="option">GATE</div>
+                                        <div class="setor-selector-option" data-value="icqa" role="option">ICQA</div>
+                                        <div class="setor-selector-option" data-value="insumos" role="option">INSUMOS</div>
+                                        <div class="setor-selector-option" data-value="internal-systems" role="option">INTERNAL SYSTEMS</div>
+                                        <div class="setor-selector-option" data-value="inventario" role="option">INVENTÁRIO</div>
+                                        <div class="setor-selector-option" data-value="lideranca" role="option">LIDERANÇA</div>
+                                        <div class="setor-selector-option" data-value="linha-de-peixe-1" role="option">LINHA DE PEIXE 1</div>
+                                        <div class="setor-selector-option" data-value="linha-de-peixe-2" role="option">LINHA DE PEIXE 2</div>
+                                        <div class="setor-selector-option" data-value="loss-prevention" role="option">LOSS PREVENTION</div>
+                                        <div class="setor-selector-option" data-value="meli-help" role="option">MELI HELP</div>
+                                        <div class="setor-selector-option" data-value="mhw" role="option">MHW</div>
+                                        <div class="setor-selector-option" data-value="mz0" role="option">MZ0</div>
                                         <div class="setor-selector-option" data-value="mz1" role="option">MZ1</div>
                                         <div class="setor-selector-option" data-value="mz2" role="option">MZ2</div>
                                         <div class="setor-selector-option" data-value="mz3" role="option">MZ3</div>
-                                        <div class="setor-selector-option" data-value="inventario" role="option">INVENTÁRIO</div>
-                                        <div class="setor-selector-option" data-value="cx" role="option">CX</div>
-                                        <div class="setor-selector-option" data-value="returns" role="option">RETURNS</div>
-                                        <div class="setor-selector-option" data-value="packing-mono" role="option">Packing mono</div>
-                                        <div class="setor-selector-option" data-value="packing-ptw" role="option">Packing ptw</div>
-                                        <div class="setor-selector-option" data-value="sauron" role="option">Sauron</div>
-                                        <div class="setor-selector-option" data-value="insumos" role="option">INSUMOS</div>
-                                        <div class="setor-selector-option" data-value="docas-de-expedicao" role="option">DOCAS DE EXPEDIÇÃO</div>
-                                        <div class="setor-selector-option" data-value="linha-de-peixe-1" role="option">LINHA DE PEIXE 1</div>
-                                        <div class="setor-selector-option" data-value="sorter" role="option">SORTER</div>
-                                        <div class="setor-selector-option" data-value="linha-de-peixe-2" role="option">LINHA DE PEIXE 2</div>
-                                        <div class="setor-selector-option" data-value="rk" role="option">RK</div>
                                         <div class="setor-selector-option" data-value="nt-rk" role="option">NT RK</div>
+                                        <div class="setor-selector-option" data-value="p2m" role="option">P2M</div>
+                                        <div class="setor-selector-option" data-value="packing-machine" role="option">PACKING MACHINE</div>
+                                        <div class="setor-selector-option" data-value="packing-mono" role="option">PACKING MONO</div>
+                                        <div class="setor-selector-option" data-value="packing-ptw" role="option">PACKING PTW</div>
                                         <div class="setor-selector-option" data-value="qualidade" role="option">QUALIDADE</div>
-                                        <div class="setor-selector-option" data-value="aquario-outbound" role="option">AQUÁRIO OUTBOUND</div>
-                                        <div class="setor-selector-option" data-value="adm" role="option">ADM</div>
-                                        <div class="setor-selector-option" data-value="gate" role="option">GATE</div>
-                                        <div class="setor-selector-option" data-value="ambulatorio-interno" role="option">AMBULATÓRIO INTERNO</div>
-                                        <div class="setor-selector-option" data-value="ambulatorio-externo" role="option">AMBULATÓRIO EXTERNO</div>
-                                        <div class="setor-selector-option" data-value="sala-de-epi" role="option">SALA DE EPI</div>
-                                        <div class="setor-selector-option" data-value="er" role="option">ER</div>
+                                        <div class="setor-selector-option" data-value="reciving" role="option">RECIVING</div>
+                                        <div class="setor-selector-option" data-value="rejeitos" role="option">REJEITOS</div>
+                                        <div class="setor-selector-option" data-value="retiros" role="option">RETIROS</div>
+                                        <div class="setor-selector-option" data-value="returns" role="option">RETURNS</div>
+                                        <div class="setor-selector-option" data-value="rk" role="option">RK</div>
+                                        <div class="setor-selector-option" data-value="roboticas" role="option">ROBÓTICAS</div>
                                         <div class="setor-selector-option" data-value="rr" role="option">RR</div>
-                                        <div class="setor-selector-option" data-value="deposito-de-treinamento" role="option">DEPÓSITO DE TREINAMENTO</div>
-                                        <div class="setor-selector-option" data-value="hv" role="option">HV</div>
+                                        <div class="setor-selector-option" data-value="sala-de-epi" role="option">SALA DE EPI</div>
+                                        <div class="setor-selector-option" data-value="sauron" role="option">SAURON</div>
+                                        <div class="setor-selector-option" data-value="shipping" role="option">SHIPPING</div>
+                                        <div class="setor-selector-option" data-value="sorter" role="option">SORTER</div>
+                                        <div class="setor-selector-option" data-value="treinamento" role="option">TREINAMENTO</div>
                                     </div>
                                 </div>
                                 <div class="ucs-filter-panel-actions">
@@ -2350,18 +2441,15 @@
                     <p class="section-subtitle">Manuais, firmware de impressoras, passo a passo e guias técnicos</p>
                 </div>
 
-                <!-- Filtros por categoria; VOLTAR alinhado por baixo do separador Todos -->
+                <!-- Filtros por categoria; Voltar ao lado de Etiquetas (mesmo estilo .doc-tab) -->
                 <div class="doc-tabs">
-                    <div class="doc-tab-stack">
-                        <button class="doc-tab active" data-categoria="todos">Todos</button>
-                        <button type="button" class="btn-back-doc btn-back-doc--tabs" onclick="navigate('page-suporte')" title="Voltar ao Suporte Técnico">VOLTAR</button>
-                    </div>
+                    <button class="doc-tab active" data-categoria="todos">Todos</button>
                     <button class="doc-tab" data-categoria="manuais">📖 Manuais</button>
                     <button class="doc-tab" data-categoria="firmware">⚙️ Firmware</button>
                     <button class="doc-tab" data-categoria="passo-a-passo">📋 Passo a passo</button>
-                    <button class="doc-tab" data-categoria="orcamentos">💰 Orçamentos</button>
                     <button class="doc-tab" data-categoria="documentos">📄 Documentos</button>
                     <button class="doc-tab" data-categoria="etiquetas">🏷️ Etiquetas</button>
+                    <button type="button" class="doc-tab doc-tab-voltar" onclick="navigate('page-suporte')" title="Voltar ao Suporte Técnico">🔙 Voltar</button>
                 </div>
 
                 <!-- Botão adicionar + busca -->
@@ -2407,7 +2495,6 @@
                                         <option value="manuais">📖 Manuais</option>
                                         <option value="firmware">⚙️ Firmware</option>
                                         <option value="passo-a-passo">📋 Passo a passo</option>
-                                        <option value="orcamentos">💰 Orçamentos</option>
                                         <option value="documentos">📄 Documentos</option>
                                         <option value="etiquetas">🏷️ Etiquetas</option>
                                     </select>
@@ -2566,8 +2653,8 @@
 
                     <div id="face-enroll-phase-intro" class="face-enroll-fid-phase face-enroll-fid-phase--intro">
                         <h2 id="face-enroll-fid-hero-title" class="face-enroll-fid-hero-title">Como configurar o reconhecimento facial</h2>
-                        <p class="face-enroll-fid-hero-lead">Posicione o rosto na moldura da câmara. Mova a cabeça em círculo para mostrar todos os ângulos do rosto.</p>
-                        <p class="face-enroll-fid-privacy">Os dados ficam só neste aparelho como mapa numérico, não como fotografia.</p>
+                        <p class="face-enroll-fid-hero-lead">Enquadre o rosto na elipse, com luz de frente (evite contraluz). Segure o telemóvel à altura dos olhos ou alinhe a webcam ao centro do rosto. Siga as mensagens em cada passo; no fim, mova a cabeça devagar conforme o assistente para completar o mapa.</p>
+                        <p class="face-enroll-fid-privacy">Guardamos só um <strong>mapa numérico</strong> (vetor), não a imagem. Com servidor AXIS ativo, esse mapa pode sincronizar com a sua conta entre dispositivos.</p>
                         <button type="button" class="face-enroll-fid-btn-primary" id="face-enroll-fid-start">Começar</button>
                     </div>
 
@@ -2622,6 +2709,24 @@
                                 </div>
                             </div>
                             <button type="button" class="admin-card-btn" onclick="event.stopPropagation(); abrirGerenciarUsuarios();">Usuários Cadastrados</button>
+                        </div>
+                    </div>
+
+                    <!-- Card: Utilizadores desativados (modal próprio — ao lado do card de lista ativa) -->
+                    <div class="admin-dashboard-card admin-card-usuarios-desativados" onclick="if(typeof abrirUsuariosDesativados==='function')abrirUsuariosDesativados();">
+                        <div class="admin-card-icon-wrapper">
+                            <div class="admin-card-icon" style="font-size: 48px;" aria-hidden="true">🚫</div>
+                        </div>
+                        <div class="admin-card-content">
+                            <h3>Usuários desativados</h3>
+                            <p>Contas sem acesso ao AXIS. Reative ou remova definitivamente (sincronizado com o servidor).</p>
+                            <div class="admin-stats">
+                                <div class="admin-stat-item">
+                                    <span class="admin-stat-number" id="admin-count-usuarios-desativados">0</span>
+                                    <span class="admin-stat-label">DESATIVADOS</span>
+                                </div>
+                            </div>
+                            <button type="button" class="admin-card-btn" onclick="event.stopPropagation(); if(typeof abrirUsuariosDesativados==='function')abrirUsuariosDesativados();">Abrir lista</button>
                         </div>
                     </div>
 
@@ -2754,18 +2859,18 @@
                     </div>
                 </div>
 
-                <!-- Modal Gerenciar - APENAS Usuários Cadastrados -->
+                <!-- Modal: só utilizadores ativos (cadastrados) -->
                 <div id="modal-gerenciar-usuarios" class="admin-modal" style="display: none;">
                     <div class="admin-modal-content admin-modal-content-wide">
                         <div class="admin-modal-header">
                             <h3>👥 Usuários Cadastrados</h3>
-                            <button class="admin-modal-close" onclick="fecharModalUsuarios()">×</button>
+                            <button type="button" class="admin-modal-close" onclick="fecharModalUsuarios()" aria-label="Fechar">×</button>
                         </div>
                         <div class="admin-modal-body">
                             <div class="admin-search" style="margin-bottom: 16px;">
                                 <input type="text" id="buscar-usuario" placeholder="🔍 Buscar usuário..." onkeyup="filtrarUsuarios()">
                             </div>
-                            <div class="usuarios-table-container">
+                            <div class="usuarios-table-container usuarios-table-modal-scroll">
                                 <table class="usuarios-table" id="tabela-usuarios">
                                     <thead>
                                         <tr>
@@ -2779,6 +2884,38 @@
                                         </tr>
                                     </thead>
                                     <tbody id="usuarios-tbody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal: só utilizadores desativados (abre a partir do card no painel Administração) -->
+                <div id="modal-usuarios-desativados" class="admin-modal" style="display: none;">
+                    <div class="admin-modal-content admin-modal-content-wide">
+                        <div class="admin-modal-header">
+                            <h3>🚫 Usuários desativados</h3>
+                            <button type="button" class="admin-modal-close" onclick="fecharModalUsuariosDesativados()" aria-label="Fechar">×</button>
+                        </div>
+                        <div class="admin-modal-body">
+                            <p class="modal-usuarios-desativados-lead">Contas que não podem iniciar sessão. Reative ou remova definitivamente da base (sincronizado com o servidor).</p>
+                            <div class="admin-search" style="margin-bottom: 16px;">
+                                <input type="text" id="buscar-usuario-desativado" placeholder="🔍 Buscar usuário desativado..." onkeyup="filtrarUsuariosDesativados()">
+                            </div>
+                            <div class="usuarios-table-container usuarios-table-modal-scroll">
+                                <table class="usuarios-table" id="tabela-usuarios-desativados">
+                                    <thead>
+                                        <tr>
+                                            <th>Nome</th>
+                                            <th>Login</th>
+                                            <th>Matrícula</th>
+                                            <th>Perfil</th>
+                                            <th>Data Cadastro</th>
+                                            <th>Desativado em</th>
+                                            <th>Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="usuarios-desativados-tbody"></tbody>
                                 </table>
                             </div>
                         </div>
@@ -2940,13 +3077,19 @@
                                     <h4>🔐 Alterar Senha</h4>
                                     <p class="editar-senha-hint">Deixe em branco para manter a senha atual. Ao alterar, será definida expiração aleatória (30, 60, 80 ou 120 dias).</p>
                                     <div class="form-row">
-                                        <div class="input-group">
+                                        <div class="input-group password-container">
                                             <label for="editar-usuario-nova-senha">Nova Senha</label>
                                             <input type="password" id="editar-usuario-nova-senha" placeholder="Mínimo 6 caracteres" minlength="6" autocomplete="new-password">
+                                            <button type="button" class="eye-toggle" onclick="if(typeof axisToggleSettingsPassword==='function')axisToggleSettingsPassword('editar-usuario-nova-senha','editar-usuario-eye-nova');return false;" aria-label="Mostrar ou ocultar nova senha">
+                                                <span id="editar-usuario-eye-nova">👁️</span>
+                                            </button>
                                         </div>
-                                        <div class="input-group">
+                                        <div class="input-group password-container">
                                             <label for="editar-usuario-confirmar-senha">Confirmar Nova Senha</label>
                                             <input type="password" id="editar-usuario-confirmar-senha" placeholder="Repita a senha" autocomplete="new-password">
+                                            <button type="button" class="eye-toggle" onclick="if(typeof axisToggleSettingsPassword==='function')axisToggleSettingsPassword('editar-usuario-confirmar-senha','editar-usuario-eye-confirma');return false;" aria-label="Mostrar ou ocultar confirmação da senha">
+                                                <span id="editar-usuario-eye-confirma">👁️</span>
+                                            </button>
                                         </div>
                                     </div>
                                     <div id="editar-senha-expiracao-info" class="senha-expiracao-info" style="display: none;"></div>
@@ -3349,23 +3492,14 @@
                     <div class="settings-card face-auth-settings-card" id="face-auth-settings-card">
                         <div class="face-auth-settings-head">
                             <h3>Reconhecimento facial</h3>
-                            <p class="face-auth-settings-tagline">Login opcional com a câmara (telemóvel ou PC) — rápido e só neste aparelho</p>
+                            <p class="face-auth-settings-tagline">Método de entrada <strong>opcional</strong>, por câmara, em conformidade com os navegadores modernos e com o requisito de <strong>HTTPS</strong> no Safari (iPhone/iPad).</p>
                         </div>
                         <div class="setting-item face-auth-settings-body">
                             <div class="setting-info face-auth-settings-copy">
-                                <h4>Por que usar o rosto para entrar?</h4>
-                                <ul class="face-auth-why-list">
-                                    <li><strong>Menos fricção:</strong> em vez de digitar senha, a câmera confirma que é você (opcional).</li>
-                                    <li><strong>Privacidade:</strong> guardamos só um <strong>mapa numérico</strong> no seu navegador — não enviamos fotos nem vídeo ao servidor AXIS.</li>
-                                    <li><strong>Segurança em camadas:</strong> se o 2FA estiver ativo, o código do autenticador continua a ser pedido depois do reconhecimento.</li>
-                                    <li><strong>Onde fica o dado:</strong> só neste navegador (localStorage). Outro computador ou celular precisa de novo cadastro.</li>
-                                </ul>
-                                <p class="face-auth-tech-note">A permissão da <strong>câmera</strong> é pedida pelo navegador. O assistente de cadastro abre ao centro, com passos guiados.</p>
-                                <div class="face-auth-safari-note" role="note" aria-label="Safari, Chrome e dados do reconhecimento facial">
-                                    <p class="face-auth-safari-note__title">Por que no Chrome já tenho o rosto e no Safari não?</p>
-                                    <p class="face-auth-safari-note__p">O AXIS <strong>não grava a sua foto no servidor</strong>. O mapa do rosto fica só no <strong>armazenamento deste navegador</strong> (localStorage). <strong>Chrome e Safari são caixas separadas</strong> — o site está o mesmo online, mas cada app de browser tem a sua própria “gaveta”. Por isso o cadastro no computador (Chrome) <strong>não aparece</strong> no Safari do iPhone até você tocar em «Abrir câmera» aqui de novo.</p>
-                                    <p class="face-auth-safari-note__p"><strong>Safari no iPhone (Apple):</strong> por política de privacidade, a câmara na Web <strong>só é permitida com HTTPS</strong> (cadeado) ou em localhost — não com <code>http://</code> e IP. Não é falha do AXIS: é regra da Apple para proteger a câmara. Com SSL no servidor (https://seu-dominio), o Safari passa a poder usar a câmara como no Chrome em HTTPS.</p>
-                                    <p class="face-auth-safari-note__p"><strong>Modo Privado / anónimo:</strong> também usa outra gaveta; sair do privado ou cadastrar de novo no modo normal.</p>
+                                <p class="face-auth-formal-p">O AXIS permite associar à sua conta um <strong>descritor facial numérico</strong> (vetor matemático), gerado no próprio equipamento. Trata-se de um complemento à palavra-passe, não da sua substituição obrigatória. O assistente visual que se abre ao iniciar o cadastro orienta o enquadramento e os movimentos necessários; neste painel encontram-se apenas as informações institucionais sobre o serviço.</p>
+                                <p class="face-auth-formal-p"><strong>Privacidade:</strong> não são enviadas nem armazenadas no servidor imagens estáticas ou vídeo do rosto; o que pode ser guardado é o referido descritor numérico. <strong>Segurança:</strong> se a verificação em duas etapas (2FA) estiver ativa, esta mantém-se aplicável após o reconhecimento. <strong>Armazenamento local:</strong> cada navegador dispõe do seu próprio espaço (<code>localStorage</code>); o cadastro num browser não se propaga automaticamente a outro no mesmo aparelho ou noutro equipamento, salvo quando a sua organização utiliza <strong>sincronização de contas</strong> no servidor AXIS — situação em que o descritor pode integrar o perfil sincronizado, sem deixar de ser dado numérico.</p>
+                                <div class="face-auth-safari-note face-auth-safari-note--compact" role="note">
+                                    <p class="face-auth-safari-note__p"><strong>Nota sobre browsers e dispositivos:</strong> Chrome, Firefox, Brave, Edge e Safari comportam-se de forma consistente com as APIs de câmara, sujeitas às políticas de cada fabricante. No <strong>Safari em iOS</strong>, a Apple exige ligação segura (<strong>HTTPS</strong> ou ambiente de desenvolvimento local) para autorizar o acesso à câmara na Web. O modo de navegação privada utiliza armazenamento isolado; nesse caso pode ser necessário voltar a registar o rosto após sessões encerradas.</p>
                                 </div>
                                 <p id="face-enroll-status-short" class="face-enroll-status-short-line">—</p>
                             </div>
@@ -3751,76 +3885,94 @@
                                     <div class="setor-selector setor-selector-cadastro" id="setor-selector-cadastro-wrap">
                                         <select id="cad-setor" class="setor-selector-native-hidden" required aria-hidden="true">
                                             <option value="">Selecione um setor</option>
-                                            <option value="internal-systems">INTERNAL SYSTEMS</option>
-                                            <option value="lideranca">LIDERANÇA</option>
-                                            <option value="mhw">MHW</option>
-                                            <option value="p2m">P2M</option>
+                                            <option value="1p">1P</option>
+                                            <option value="administracao">ADMINISTRAÇÃO</option>
+                                            <option value="ambulatorio-externo">AMBULATÓRIO EXTERNO</option>
+                                            <option value="ambulatorio-interno">AMBULATÓRIO INTERNO</option>
+                                            <option value="aquario-outbound">AQUÁRIO OUTBOUND</option>
+                                            <option value="area-de-maquinas">ÁREA DE MÁQUINAS</option>
                                             <option value="check-in">CHECK-IN</option>
-                                            <option value="reciving">RECIVING</option>
+                                            <option value="cx">CX</option>
+                                            <option value="er">ER</option>
+                                            <option value="gate">GATE</option>
+                                            <option value="icqa">ICQA</option>
+                                            <option value="insumos">INSUMOS</option>
+                                            <option value="internal-systems">INTERNAL SYSTEMS</option>
+                                            <option value="inventario">INVENTÁRIO</option>
+                                            <option value="lideranca">LIDERANÇA</option>
+                                            <option value="linha-de-peixe-1">LINHA DE PEIXE 1</option>
+                                            <option value="linha-de-peixe-2">LINHA DE PEIXE 2</option>
+                                            <option value="loss-prevention">LOSS PREVENTION</option>
+                                            <option value="meli-help">MELI HELP</option>
+                                            <option value="mhw">MHW</option>
+                                            <option value="mz0">MZ0</option>
                                             <option value="mz1">MZ1</option>
                                             <option value="mz2">MZ2</option>
                                             <option value="mz3">MZ3</option>
-                                            <option value="inventario">INVENTÁRIO</option>
-                                            <option value="cx">CX</option>
-                                            <option value="returns">RETURNS</option>
-                                            <option value="packing-mono">Packing mono</option>
-                                            <option value="packing-ptw">Packing ptw</option>
-                                            <option value="sauron">Sauron</option>
-                                            <option value="insumos">INSUMOS</option>
-                                            <option value="docas-de-expedicao">DOCAS DE EXPEDIÇÃO</option>
-                                            <option value="linha-de-peixe-1">LINHA DE PEIXE 1</option>
-                                            <option value="sorter">SORTER</option>
-                                            <option value="linha-de-peixe-2">LINHA DE PEIXE 2</option>
-                                            <option value="rk">RK</option>
                                             <option value="nt-rk">NT RK</option>
+                                            <option value="p2m">P2M</option>
+                                            <option value="packing-machine">PACKING MACHINE</option>
+                                            <option value="packing-mono">PACKING MONO</option>
+                                            <option value="packing-ptw">PACKING PTW</option>
                                             <option value="qualidade">QUALIDADE</option>
-                                            <option value="aquario-outbound">AQUÁRIO OUTBOUND</option>
-                                            <option value="adm">ADM</option>
-                                            <option value="gate">GATE</option>
-                                            <option value="ambulatorio-interno">AMBULATÓRIO INTERNO</option>
-                                            <option value="ambulatorio-externo">AMBULATÓRIO EXTERNO</option>
-                                            <option value="sala-de-epi">SALA DE EPI</option>
-                                            <option value="er">ER</option>
+                                            <option value="reciving">RECIVING</option>
+                                            <option value="rejeitos">REJEITOS</option>
+                                            <option value="retiros">RETIROS</option>
+                                            <option value="returns">RETURNS</option>
+                                            <option value="rk">RK</option>
+                                            <option value="roboticas">ROBÓTICAS</option>
                                             <option value="rr">RR</option>
-                                            <option value="deposito-de-treinamento">DEPÓSITO DE TREINAMENTO</option>
-                                            <option value="hv">HV</option>
+                                            <option value="sala-de-epi">SALA DE EPI</option>
+                                            <option value="sauron">SAURON</option>
+                                            <option value="shipping">SHIPPING</option>
+                                            <option value="sorter">SORTER</option>
+                                            <option value="treinamento">TREINAMENTO</option>
                                         </select>
                                         <button type="button" class="setor-selector-trigger setor-selector-trigger-cadastro" id="cad-setor-trigger" aria-haspopup="listbox" aria-expanded="false">Selecione um setor</button>
                                         <div class="setor-selector-dropdown" id="cad-setor-dropdown" role="listbox" aria-hidden="true">
                                             <div class="setor-selector-option" data-value="" role="option">Selecione um setor</div>
-                                            <div class="setor-selector-option" data-value="internal-systems" role="option">INTERNAL SYSTEMS</div>
-                                            <div class="setor-selector-option" data-value="lideranca" role="option">LIDERANÇA</div>
-                                            <div class="setor-selector-option" data-value="mhw" role="option">MHW</div>
-                                            <div class="setor-selector-option" data-value="p2m" role="option">P2M</div>
+                                            <div class="setor-selector-option" data-value="1p" role="option">1P</div>
+                                            <div class="setor-selector-option" data-value="administracao" role="option">ADMINISTRAÇÃO</div>
+                                            <div class="setor-selector-option" data-value="ambulatorio-externo" role="option">AMBULATÓRIO EXTERNO</div>
+                                            <div class="setor-selector-option" data-value="ambulatorio-interno" role="option">AMBULATÓRIO INTERNO</div>
+                                            <div class="setor-selector-option" data-value="aquario-outbound" role="option">AQUÁRIO OUTBOUND</div>
+                                            <div class="setor-selector-option" data-value="area-de-maquinas" role="option">ÁREA DE MÁQUINAS</div>
                                             <div class="setor-selector-option" data-value="check-in" role="option">CHECK-IN</div>
-                                            <div class="setor-selector-option" data-value="reciving" role="option">RECIVING</div>
+                                            <div class="setor-selector-option" data-value="cx" role="option">CX</div>
+                                            <div class="setor-selector-option" data-value="er" role="option">ER</div>
+                                            <div class="setor-selector-option" data-value="gate" role="option">GATE</div>
+                                            <div class="setor-selector-option" data-value="icqa" role="option">ICQA</div>
+                                            <div class="setor-selector-option" data-value="insumos" role="option">INSUMOS</div>
+                                            <div class="setor-selector-option" data-value="internal-systems" role="option">INTERNAL SYSTEMS</div>
+                                            <div class="setor-selector-option" data-value="inventario" role="option">INVENTÁRIO</div>
+                                            <div class="setor-selector-option" data-value="lideranca" role="option">LIDERANÇA</div>
+                                            <div class="setor-selector-option" data-value="linha-de-peixe-1" role="option">LINHA DE PEIXE 1</div>
+                                            <div class="setor-selector-option" data-value="linha-de-peixe-2" role="option">LINHA DE PEIXE 2</div>
+                                            <div class="setor-selector-option" data-value="loss-prevention" role="option">LOSS PREVENTION</div>
+                                            <div class="setor-selector-option" data-value="meli-help" role="option">MELI HELP</div>
+                                            <div class="setor-selector-option" data-value="mhw" role="option">MHW</div>
+                                            <div class="setor-selector-option" data-value="mz0" role="option">MZ0</div>
                                             <div class="setor-selector-option" data-value="mz1" role="option">MZ1</div>
                                             <div class="setor-selector-option" data-value="mz2" role="option">MZ2</div>
                                             <div class="setor-selector-option" data-value="mz3" role="option">MZ3</div>
-                                            <div class="setor-selector-option" data-value="inventario" role="option">INVENTÁRIO</div>
-                                            <div class="setor-selector-option" data-value="cx" role="option">CX</div>
-                                            <div class="setor-selector-option" data-value="returns" role="option">RETURNS</div>
-                                            <div class="setor-selector-option" data-value="packing-mono" role="option">Packing mono</div>
-                                            <div class="setor-selector-option" data-value="packing-ptw" role="option">Packing ptw</div>
-                                            <div class="setor-selector-option" data-value="sauron" role="option">Sauron</div>
-                                            <div class="setor-selector-option" data-value="insumos" role="option">INSUMOS</div>
-                                            <div class="setor-selector-option" data-value="docas-de-expedicao" role="option">DOCAS DE EXPEDIÇÃO</div>
-                                            <div class="setor-selector-option" data-value="linha-de-peixe-1" role="option">LINHA DE PEIXE 1</div>
-                                            <div class="setor-selector-option" data-value="sorter" role="option">SORTER</div>
-                                            <div class="setor-selector-option" data-value="linha-de-peixe-2" role="option">LINHA DE PEIXE 2</div>
-                                            <div class="setor-selector-option" data-value="rk" role="option">RK</div>
                                             <div class="setor-selector-option" data-value="nt-rk" role="option">NT RK</div>
+                                            <div class="setor-selector-option" data-value="p2m" role="option">P2M</div>
+                                            <div class="setor-selector-option" data-value="packing-machine" role="option">PACKING MACHINE</div>
+                                            <div class="setor-selector-option" data-value="packing-mono" role="option">PACKING MONO</div>
+                                            <div class="setor-selector-option" data-value="packing-ptw" role="option">PACKING PTW</div>
                                             <div class="setor-selector-option" data-value="qualidade" role="option">QUALIDADE</div>
-                                            <div class="setor-selector-option" data-value="aquario-outbound" role="option">AQUÁRIO OUTBOUND</div>
-                                            <div class="setor-selector-option" data-value="adm" role="option">ADM</div>
-                                            <div class="setor-selector-option" data-value="gate" role="option">GATE</div>
-                                            <div class="setor-selector-option" data-value="ambulatorio-interno" role="option">AMBULATÓRIO INTERNO</div>
-                                            <div class="setor-selector-option" data-value="ambulatorio-externo" role="option">AMBULATÓRIO EXTERNO</div>
-                                            <div class="setor-selector-option" data-value="sala-de-epi" role="option">SALA DE EPI</div>
-                                            <div class="setor-selector-option" data-value="er" role="option">ER</div>
+                                            <div class="setor-selector-option" data-value="reciving" role="option">RECIVING</div>
+                                            <div class="setor-selector-option" data-value="rejeitos" role="option">REJEITOS</div>
+                                            <div class="setor-selector-option" data-value="retiros" role="option">RETIROS</div>
+                                            <div class="setor-selector-option" data-value="returns" role="option">RETURNS</div>
+                                            <div class="setor-selector-option" data-value="rk" role="option">RK</div>
+                                            <div class="setor-selector-option" data-value="roboticas" role="option">ROBÓTICAS</div>
                                             <div class="setor-selector-option" data-value="rr" role="option">RR</div>
-                                            <div class="setor-selector-option" data-value="deposito-de-treinamento" role="option">DEPÓSITO DE TREINAMENTO</div>
-                                            <div class="setor-selector-option" data-value="hv" role="option">HV</div>
+                                            <div class="setor-selector-option" data-value="sala-de-epi" role="option">SALA DE EPI</div>
+                                            <div class="setor-selector-option" data-value="sauron" role="option">SAURON</div>
+                                            <div class="setor-selector-option" data-value="shipping" role="option">SHIPPING</div>
+                                            <div class="setor-selector-option" data-value="sorter" role="option">SORTER</div>
+                                            <div class="setor-selector-option" data-value="treinamento" role="option">TREINAMENTO</div>
                                         </div>
                                     </div>
                                 </div>
@@ -4128,12 +4280,12 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
     <!-- Script principal PRIMEIRO: define navigate, filtrarInventario, etc. -->
-    <script src="js/script.js?v=axis2026persist2"></script>
+    <script src="js/script.js?v=axis2026newsapple2"></script>
     <script src="js/selbetti-portal-links-admin.js?v=1"></script>
     <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
     <script src="js/axis-face-auth.js?v=axis2026t"></script>
     <!-- Robô assistente AXIS (holograma + IA) -->
-    <script src="js/axis-robot-assistant.js?v=axis2026robot1"></script>
+    <script src="js/axis-robot-assistant.js?v=axis2026robot4"></script>
     
     <!-- Placeholders só se script.js não definiu; não sobrescreve as reais (silenciosos) -->
     <script>
@@ -4927,9 +5079,12 @@
             
             // Função para verificar e restaurar estrutura HTML dos cards
             function protectCardHTML() {
+                const grid = document.getElementById('axis-main-dashboard-grid');
+                const scope = grid || document.getElementById('page-home');
+                if (!scope) return;
                 Object.keys(protectedCardsConfig).forEach(cardType => {
                     const config = protectedCardsConfig[cardType];
-                    const card = document.querySelector(`.${cardType}`);
+                    const card = scope.querySelector(`.${cardType}`);
                     
                     if (card) {
                         // Verifica e restaura classes
@@ -4969,7 +5124,7 @@
                             // Não força, apenas avisa
                             console.warn(`⚠️ Card ${cardType} pode ter perdido gradiente de fundo`);
                         }
-                    } else {
+                    } else if (grid && grid.children.length > 0) {
                         console.warn(`⚠️ Card ${cardType} não encontrado no DOM`);
                     }
                 });

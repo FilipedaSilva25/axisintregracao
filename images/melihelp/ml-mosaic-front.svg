@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 204 268" preserveAspectRatio="xMidYMin meet" aria-hidden="true">
+  <defs>
+    <style>.s{stroke:#1a1a1a;stroke-width:.35;stroke-opacity:.45}</style>
+  </defs>
+  <rect class="s" fill="#FFE600" x="0" y="0" width="44" height="36"/>
+  <rect class="s" fill="#FF8F00" x="44" y="0" width="34" height="18"/>
+  <rect class="s" fill="#E53935" x="78" y="0" width="52" height="28"/>
+  <rect class="s" fill="#D81B60" x="130" y="0" width="38" height="20"/>
+  <rect class="s" fill="#6A1B9A" x="168" y="0" width="36" height="44"/>
+  <rect class="s" fill="#FF8F00" x="44" y="18" width="22" height="40"/>
+  <rect class="s" fill="#2D3277" x="66" y="28" width="32" height="24"/>
+  <rect class="s" fill="#FFE600" x="98" y="28" width="32" height="38"/>
+  <rect class="s" fill="#CDDC39" x="130" y="20" width="38" height="30"/>
+  <rect class="s" fill="#E53935" x="0" y="36" width="28" height="34"/>
+  <rect class="s" fill="#C5E063" x="28" y="36" width="38" height="22"/>
+  <rect class="s" fill="#FFE600" x="66" y="52" width="32" height="28"/>
+  <rect class="s" fill="#7B1FA2" x="98" y="66" width="46" height="26"/>
+  <rect class="s" fill="#FF6F00" x="144" y="50" width="60" height="32"/>
+  <rect class="s" fill="#2D3277" x="144" y="82" width="60" height="28"/>
+  <rect class="s" fill="#D81B60" x="0" y="70" width="48" height="40"/>
+  <rect class="s" fill="#FFE600" x="48" y="58" width="50" height="46"/>
+  <rect class="s" fill="#E91E63" x="98" y="92" width="46" height="34"/>
+  <rect class="s" fill="#FFF176" x="0" y="110" width="36" height="32"/>
+  <rect class="s" fill="#6A1B9A" x="36" y="104" width="34" height="44"/>
+  <rect class="s" fill="#FF8F00" x="70" y="104" width="44" height="28"/>
+  <rect class="s" fill="#2D3277" x="114" y="126" width="46" height="36"/>
+  <rect class="s" fill="#E53935" x="160" y="110" width="44" height="40"/>
+  <rect class="s" fill="#CDDC39" x="0" y="142" width="40" height="38"/>
+  <rect class="s" fill="#FFE600" x="40" y="148" width="52" height="42"/>
+  <rect class="s" fill="#283593" x="92" y="162" width="56" height="36"/>
+  <rect class="s" fill="#F4511E" x="148" y="150" width="34" height="26"/>
+  <rect class="s" fill="#7B1FA2" x="182" y="150" width="22" height="26"/>
+  <rect class="s" fill="#2D3277" x="148" y="176" width="56" height="22"/>
+  <rect class="s" fill="#E91E63" x="114" y="162" width="34" height="20"/>
+  <rect class="s" fill="#FF8F00" x="70" y="132" width="22" height="30"/>
+  <rect class="s" fill="#CDDC39" x="92" y="132" width="22" height="14"/>
+</svg>

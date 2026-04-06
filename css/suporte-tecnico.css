@@ -1133,40 +1133,9 @@
     color: var(--suporte-primary);
 }
 
-/* Coluna: Todos + VOLTAR por baixo, mesma largura */
-.doc-tab-stack {
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 8px;
-    align-self: flex-start;
-}
-
-.doc-tab-stack .doc-tab {
-    width: 100%;
-    box-sizing: border-box;
-    text-align: center;
-}
-
-.btn-back-doc--tabs {
-    margin-left: 0;
-    width: 100%;
-    box-sizing: border-box;
-    text-align: center;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    font-weight: 700;
-    font-size: 13px;
-    padding: 8px 14px;
-    border-radius: 10px;
-    box-shadow: 0 2px 12px rgba(0, 122, 255, 0.12);
-    /* Mesma cor de texto que os separadores (.doc-tab), ex.: Etiquetas */
-    color: var(--text-secondary);
-}
-
-.btn-back-doc--tabs:hover {
-    color: var(--suporte-primary);
-    box-shadow: 0 4px 16px rgba(46, 204, 113, 0.2);
+/* Voltar na fila de abas: herda .doc-tab; sem data-categoria (só navegação) */
+.doc-tab.doc-tab-voltar {
+    flex-shrink: 0;
 }
 
 /* Modal vidro — confirmação exclusão na Documentação AXIS */

@@ -159,104 +159,194 @@ body.sb-page {
     visibility: visible;
 }
 
-/* Painel do menu lateral */
+/* Painel do menu lateral — mesmo “vidro + linhas” da home (glass-sidebar / side-item), cores âmbar do Status */
 .sb-menu-panel {
     position: fixed;
     top: 0;
     right: 0;
-    width: min(320px, 85vw);
-    max-width: 320px;
+    width: min(calc(100vw - 16px), 348px);
+    max-width: 348px;
     height: 100vh;
-    background: linear-gradient(180deg, #fafafa 0%, #f0f0f0 100%);
-    box-shadow: -4px 0 24px rgba(0, 0, 0, 0.12);
+    height: 100dvh;
+    padding: 10px 10px 10px 0;
+    padding-top: max(10px, env(safe-area-inset-top));
+    padding-bottom: max(10px, env(safe-area-inset-bottom));
+    box-sizing: border-box;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    backdrop-filter: blur(48px) saturate(180%);
+    -webkit-backdrop-filter: blur(48px) saturate(180%);
     z-index: 1000;
     transform: translateX(100%);
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform 0.38s cubic-bezier(0.32, 0.72, 0, 1);
     display: flex;
     flex-direction: column;
+    overflow: visible;
 }
 
 .sb-menu-panel.sb-menu-open {
     transform: translateX(0);
 }
 
-.sb-menu-header {
+/* Capa interna (equivalente a .glass-sidebar-shell) */
+.sb-menu-shell {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    border-radius: 18px;
+    overflow: hidden;
+    background: rgba(255, 252, 248, 0.42);
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    box-shadow:
+        0 16px 48px rgba(0, 0, 0, 0.1),
+        0 0 0 1px rgba(255, 152, 0, 0.08);
+    backdrop-filter: blur(20px) saturate(150%);
+    -webkit-backdrop-filter: blur(20px) saturate(150%);
+}
+
+.sb-menu-sidebar-head {
+    flex-shrink: 0;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 20px 20px 16px;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    gap: 10px;
+    padding: 12px 14px 10px;
+    background: transparent;
+    border-bottom: 1px solid rgba(255, 152, 0, 0.18);
 }
 
-.sb-menu-title {
-    font-size: 18px;
-    font-weight: 700;
+.sb-menu-brand-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.sb-menu-brand {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.2em;
     color: var(--sb-accent);
+    text-transform: uppercase;
+    opacity: 0.9;
+}
+
+.sb-menu-brand-sub {
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    color: var(--sb-text);
+    text-transform: uppercase;
 }
 
 .sb-menu-close {
+    flex-shrink: 0;
     width: 36px;
     height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     border: none;
     border-radius: 10px;
-    background: rgba(255, 152, 0, 0.15);
+    background: rgba(255, 152, 0, 0.14);
     color: var(--sb-accent);
     font-size: 22px;
     line-height: 1;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: background 0.2s, transform 0.15s;
 }
 
 .sb-menu-close:hover {
-    background: rgba(255, 152, 0, 0.25);
+    background: rgba(255, 152, 0, 0.26);
 }
 
-.sb-menu-list {
-    list-style: none;
-    margin: 0;
-    padding: 16px 12px;
+/* Lista rolável como .side-nav-links da home */
+.sb-side-nav-links {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    padding: 8px 10px 14px;
+    margin: 0;
+    width: 100%;
+    box-sizing: border-box;
+    gap: 0;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto !important;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
 }
 
-.sb-menu-item {
+.sb-side-nav-links::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+}
+
+/* Linha = .side-item da home, com acento laranja */
+.sb-side-item {
+    width: 100%;
+    margin: 3px 0;
+    padding: 11px 12px;
+    border: none !important;
+    background: rgba(255, 255, 255, 0.22) !important;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    line-height: 1.35;
+    border-radius: 12px;
+    cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 12px;
-    width: 100%;
-    padding: 14px 16px;
-    border: none;
-    border-radius: 12px;
-    background: transparent;
+    gap: 10px;
     color: var(--sb-text);
-    font-size: 15px;
-    font-weight: 500;
-    text-align: left;
     text-decoration: none;
-    cursor: pointer;
-    transition: background 0.2s, color 0.2s;
+    transition: background 0.2s ease, transform 0.2s ease, color 0.2s ease;
+    position: relative;
+    overflow: hidden;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: rgba(255, 152, 0, 0.2);
 }
 
-.sb-menu-item:hover {
-    background: rgba(255, 152, 0, 0.12);
+.sb-side-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+    transition: left 0.5s;
+}
+
+.sb-side-item:hover::before {
+    left: 100%;
+}
+
+.sb-side-item:hover {
+    background: rgba(255, 152, 0, 0.14) !important;
     color: var(--sb-accent);
+    transform: translateX(-2px);
+    box-shadow: none;
 }
 
-.sb-menu-item-dashboard {
-    background: linear-gradient(135deg, rgba(255, 152, 0, 0.15), rgba(255, 193, 7, 0.1));
-    color: var(--sb-accent);
-    font-weight: 600;
+.sb-side-item-dashboard {
+    margin-top: 10px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(255, 152, 0, 0.2);
+    background: linear-gradient(135deg, rgba(255, 152, 0, 0.16), rgba(255, 193, 7, 0.1)) !important;
+    color: var(--sb-accent) !important;
+    font-weight: 800;
 }
 
-.sb-menu-item-dashboard:hover {
-    background: linear-gradient(135deg, rgba(255, 152, 0, 0.25), rgba(255, 193, 7, 0.18));
-}
-
-.sb-menu-item i {
-    width: 22px;
-    text-align: center;
-    opacity: 0.9;
+.sb-side-item-dashboard:hover {
+    background: linear-gradient(135deg, rgba(255, 152, 0, 0.26), rgba(255, 193, 7, 0.16)) !important;
+    color: var(--sb-accent-hover) !important;
 }
 
 /* Filtro por secção: mostrar só o card e resumo da secção escolhida */
@@ -267,12 +357,16 @@ body.sb-filter-pm .sb-cards-row .sb-card:not([data-secao="pm"]),
 body.sb-filter-retiros .sb-cards-row .sb-card:not([data-secao="retiros"]) {
     display: none;
 }
+body.sb-filter-returns .sb-cards-row .sb-card:not([data-secao="returns"]) {
+    display: none;
+}
 
 body.sb-filter-rejeitos .sb-resumo-card:not([data-secao="rejeitos"]),
 body.sb-filter-ptw .sb-resumo-card:not([data-secao="ptw"]),
 body.sb-filter-mono .sb-resumo-card:not([data-secao="mono"]),
 body.sb-filter-pm .sb-resumo-card:not([data-secao="pm"]),
-body.sb-filter-retiros .sb-resumo-card:not([data-secao="retiros"]) {
+body.sb-filter-retiros .sb-resumo-card:not([data-secao="retiros"]),
+body.sb-filter-returns .sb-resumo-card:not([data-secao="returns"]) {
     display: none;
 }
 
@@ -286,7 +380,9 @@ body.sb-filter-mono .sb-cards-row-bottom,
 body.sb-filter-pm .sb-cards-row-top,
 body.sb-filter-pm .sb-cards-row-bottom,
 body.sb-filter-retiros .sb-cards-row-top,
-body.sb-filter-retiros .sb-cards-row-bottom {
+body.sb-filter-retiros .sb-cards-row-bottom,
+body.sb-filter-returns .sb-cards-row-top,
+body.sb-filter-returns .sb-cards-row-bottom {
     max-width: 900px;
 }
 
@@ -294,6 +390,9 @@ body.sb-filter-rejeitos .sb-cards-row-bottom,
 body.sb-filter-pm .sb-cards-row-bottom,
 body.sb-filter-retiros .sb-cards-row-bottom {
     max-width: 165px;
+}
+body.sb-filter-returns .sb-cards-row-bottom {
+    max-width: 340px;
 }
 
 /* Esconder a linha que não tem o card filtrado */
@@ -306,13 +405,17 @@ body.sb-filter-pm .sb-cards-row-top,
 body.sb-filter-retiros .sb-cards-row-top {
     display: none;
 }
+body.sb-filter-returns .sb-cards-row-top {
+    display: none;
+}
 
 /* Com secção filtrada: centralizar tudo no meio da página */
 body.sb-filter-rejeitos .sb-main,
 body.sb-filter-ptw .sb-main,
 body.sb-filter-mono .sb-main,
 body.sb-filter-pm .sb-main,
-body.sb-filter-retiros .sb-main {
+body.sb-filter-retiros .sb-main,
+body.sb-filter-returns .sb-main {
     align-items: center;
 }
 
@@ -320,7 +423,8 @@ body.sb-filter-rejeitos .sb-grid-wrap,
 body.sb-filter-ptw .sb-grid-wrap,
 body.sb-filter-mono .sb-grid-wrap,
 body.sb-filter-pm .sb-grid-wrap,
-body.sb-filter-retiros .sb-grid-wrap {
+body.sb-filter-retiros .sb-grid-wrap,
+body.sb-filter-returns .sb-grid-wrap {
     align-items: center;
 }
 
@@ -328,7 +432,8 @@ body.sb-filter-rejeitos .sb-resumos,
 body.sb-filter-ptw .sb-resumos,
 body.sb-filter-mono .sb-resumos,
 body.sb-filter-pm .sb-resumos,
-body.sb-filter-retiros .sb-resumos {
+body.sb-filter-retiros .sb-resumos,
+body.sb-filter-returns .sb-resumos {
     flex-direction: column;
     max-width: 400px;
 }
@@ -336,21 +441,53 @@ body.sb-filter-rejeitos .sb-resumos-col,
 body.sb-filter-ptw .sb-resumos-col,
 body.sb-filter-mono .sb-resumos-col,
 body.sb-filter-pm .sb-resumos-col,
-body.sb-filter-retiros .sb-resumos-col {
+body.sb-filter-retiros .sb-resumos-col,
+body.sb-filter-returns .sb-resumos-col {
     max-width: 100%;
 }
 
-[data-theme="dark"] .sb-menu-panel {
-    background: linear-gradient(180deg, #2a2a2e 0%, #1e1e22 100%);
-    box-shadow: -4px 0 24px rgba(0, 0, 0, 0.4);
+[data-theme="dark"] .sb-menu-shell {
+    background: rgba(28, 28, 32, 0.55);
+    border-color: rgba(255, 255, 255, 0.12);
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 152, 0, 0.12);
 }
 
-[data-theme="dark"] .sb-menu-item {
+[data-theme="dark"] .sb-menu-sidebar-head {
+    border-bottom-color: rgba(255, 152, 0, 0.22);
+}
+
+[data-theme="dark"] .sb-menu-brand-sub {
+    color: var(--sb-text);
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="dark"] .sb-menu-close {
+    background: rgba(255, 152, 0, 0.18);
+    color: #ffb74d;
+}
+
+[data-theme="dark"] .sb-menu-close:hover {
+    background: rgba(255, 152, 0, 0.28);
+}
+
+[data-theme="dark"] .sb-side-item {
+    background: rgba(0, 0, 0, 0.28) !important;
     color: var(--sb-text);
 }
 
-[data-theme="dark"] .sb-menu-item:hover {
-    background: rgba(255, 152, 0, 0.15);
+[data-theme="dark"] .sb-side-item:hover {
+    background: rgba(255, 152, 0, 0.16) !important;
+    color: #ffb74d;
+}
+
+[data-theme="dark"] .sb-side-item-dashboard {
+    border-top-color: rgba(255, 152, 0, 0.28);
+    background: linear-gradient(135deg, rgba(255, 152, 0, 0.2), rgba(255, 193, 7, 0.08)) !important;
+    color: #ffb74d !important;
+}
+
+[data-theme="dark"] .sb-side-item-dashboard:hover {
+    background: linear-gradient(135deg, rgba(255, 152, 0, 0.28), rgba(255, 193, 7, 0.12)) !important;
 }
 
 .sb-main {
@@ -442,35 +579,41 @@ body.sb-filter-retiros .sb-resumos-col {
     flex: 0 1 auto;
 }
 
-/* Zoom no grid em tela cheia – REJEITOS, PACKING MACHINE, RETIROS (menos “longe”) + centralizado */
+/* Zoom no grid em tela cheia – REJEITOS, PACKING MACHINE, RETIROS, RETURNS + centralizado */
 .sb-card:fullscreen[data-secao="rejeitos"] .sb-bancadas-grid,
 .sb-card:fullscreen[data-secao="pm"] .sb-bancadas-grid,
 .sb-card:fullscreen[data-secao="retiros"] .sb-bancadas-grid,
+.sb-card:fullscreen[data-secao="returns"] .sb-bancadas-grid,
 .sb-card:-webkit-full-screen[data-secao="rejeitos"] .sb-bancadas-grid,
 .sb-card:-webkit-full-screen[data-secao="pm"] .sb-bancadas-grid,
-.sb-card:-webkit-full-screen[data-secao="retiros"] .sb-bancadas-grid {
+.sb-card:-webkit-full-screen[data-secao="retiros"] .sb-bancadas-grid,
+.sb-card:-webkit-full-screen[data-secao="returns"] .sb-bancadas-grid {
     transform: scale(1.5);
     transform-origin: center center;
     margin-top: auto;
     margin-bottom: auto;
 }
 
-/* Título em cima dos grids em tela cheia – REJEITOS, PM, RETIROS */
+/* Título em cima dos grids em tela cheia – REJEITOS, PM, RETIROS, RETURNS */
 .sb-card:fullscreen[data-secao="rejeitos"],
 .sb-card:fullscreen[data-secao="pm"],
 .sb-card:fullscreen[data-secao="retiros"],
+.sb-card:fullscreen[data-secao="returns"],
 .sb-card:-webkit-full-screen[data-secao="rejeitos"],
 .sb-card:-webkit-full-screen[data-secao="pm"],
-.sb-card:-webkit-full-screen[data-secao="retiros"] {
+.sb-card:-webkit-full-screen[data-secao="retiros"],
+.sb-card:-webkit-full-screen[data-secao="returns"] {
     justify-content: flex-start;
     padding-top: 32px;
 }
 .sb-card:fullscreen[data-secao="rejeitos"] .sb-card-header,
 .sb-card:fullscreen[data-secao="pm"] .sb-card-header,
 .sb-card:fullscreen[data-secao="retiros"] .sb-card-header,
+.sb-card:fullscreen[data-secao="returns"] .sb-card-header,
 .sb-card:-webkit-full-screen[data-secao="rejeitos"] .sb-card-header,
 .sb-card:-webkit-full-screen[data-secao="pm"] .sb-card-header,
-.sb-card:-webkit-full-screen[data-secao="retiros"] .sb-card-header {
+.sb-card:-webkit-full-screen[data-secao="retiros"] .sb-card-header,
+.sb-card:-webkit-full-screen[data-secao="returns"] .sb-card-header {
     flex-shrink: 0;
     margin-bottom: 20px;
     z-index: 1;
@@ -1047,6 +1190,7 @@ body.sb-filter-retiros .sb-resumos-col {
 .sb-cards-area .sb-card[data-secao="mono"] { order: 3; }
 .sb-cards-area .sb-card[data-secao="pm"] { order: 4; }
 .sb-cards-area .sb-card[data-secao="retiros"] { order: 5; }
+.sb-cards-area .sb-card[data-secao="returns"] { order: 6; }
 
 /* Mantém .sb-cards-row para filtros e regras que referenciam a linha */
 .sb-cards-row {
@@ -1237,6 +1381,26 @@ body.sb-filter-retiros .sb-resumos-col {
     align-content: start;
 }
 
+/* RETURNS: grelha 4×2 (1–3–5–7 / 2–4–6–8), estilo alinhado ao PACKING MONO */
+#sb-grid-returns.sb-grid-returns {
+    grid-template-columns: repeat(4, minmax(58px, 72px));
+    width: max-content;
+    max-width: none;
+    gap: 6px;
+    margin-left: auto;
+    margin-right: auto;
+    justify-items: center;
+    align-content: start;
+}
+
+.sb-grid-returns .sb-cell {
+    min-width: 58px;
+    min-height: 58px;
+    max-width: 72px;
+    max-height: 72px;
+    font-size: 16px;
+}
+
 /* Células do REJEITOS – mesmo tamanho que PM e RETIROS */
 .sb-grid-rejeitos .sb-cell {
     min-width: 58px;
@@ -1268,10 +1432,11 @@ body.sb-filter-retiros .sb-resumos-col {
     min-width: 200px; /* nome extenso "PACKING MACHINE" numa linha */
 }
 
-/* Card branco REJEITOS, PM, RETIROS – espaçamento igual ao PACKING MONO (24px) */
+/* Card branco REJEITOS, PM, RETIROS, RETURNS – espaçamento igual ao PACKING MONO (24px) */
 .sb-card[data-secao="rejeitos"],
 .sb-card[data-secao="pm"],
-.sb-card[data-secao="retiros"] {
+.sb-card[data-secao="retiros"],
+.sb-card[data-secao="returns"] {
     padding: 20px 20px 26px;
 }
 
@@ -1304,9 +1469,10 @@ body.sb-filter-retiros .sb-resumos-col {
     letter-spacing: 0.05em;
 }
 
-/* REJEITOS e RETIROS: título centralizado como PACKING MACHINE */
+/* REJEITOS, RETIROS e RETURNS: título centralizado como PACKING MACHINE */
 .sb-card[data-secao="rejeitos"] .sb-section-title,
-.sb-card[data-secao="retiros"] .sb-section-title {
+.sb-card[data-secao="retiros"] .sb-section-title,
+.sb-card[data-secao="returns"] .sb-section-title {
     text-align: center;
 }
 

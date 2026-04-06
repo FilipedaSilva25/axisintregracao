@@ -18,6 +18,7 @@ const MANUTENCOES_DIR = path.join(ROOT_DIR, 'manutencoes');
 const { readJson, readJsonSync, writeJson } = require('./data');
 const PACKING_TROCAS_FILE = path.join(DATA_DIR, 'packing-trocas.json');
 const { PACKING_PREVENTIVAS_FILE, persistPackingPreventivaReg, registerPreventivaFromWhatsApp } = require('./packing-preventiva-persist');
+const melihelpAtasAvulsoW = require('./melihelp-atas-avulso-w-persist');
 const {
     getColaboradoresList,
     garantirMatriculaPorNome
@@ -27,6 +28,9 @@ const PECAS_ESTOQUE_FILE = path.join(DATA_DIR, 'pecas-estoque.json');
 const PECAS_MOVIMENTOS_FILE = path.join(DATA_DIR, 'pecas-movimentos.json');
 const REGISTRO_CHAMADOS_FILE = path.join(DATA_DIR, 'registro-chamados.json');
 const AXIS_BROWSER_USERS_FILE = path.join(DATA_DIR, 'axis-browser-users.json');
+/** Novidades do AXIS (modal 📰) — editável em JSON sem alterar HTML. */
+const AXIS_NEWS_FILE = path.join(DATA_DIR, 'axis-news.json');
+const { handleSelbettiChamadoApi } = require('./selbetti-chamado-api');
 
 /** Mesma regra que axisLoginCanonico no cliente (login canónico). */
 function canonicalAxisLogin(s) {
@@ -129,7 +133,14 @@ function parseBody(req) {
 }
 
 async function handleApi(req, res, urlPath) {
-    const method = req.method;
+    const method = (req.method || 'GET').toUpperCase();
+    let _p = String(urlPath == null ? '' : urlPath).split('?')[0];
+    if (_p.length > 1) _p = _p.replace(/\/+$/, '');
+    urlPath = _p || '/';
+
+    if (await handleSelbettiChamadoApi(req, res, urlPath, method, sendJson, sendErr)) {
+        return true;
+    }
 
     // ---- Raiz: NÃO redirecionar para login ao recarregar ----
     // O cliente (script.js) decide: se já logado, mantém a página atual; se não, mostra login.
@@ -180,6 +191,30 @@ async function handleApi(req, res, urlPath) {
         return true;
     }
 
+    // ---- Novidades / notas de versão (config/data/axis-news.json) ----
+    if ((urlPath === '/api/axis-news' || urlPath === '/api/axis-news/') && method === 'GET') {
+        try {
+            const raw = await readJson(AXIS_NEWS_FILE, null);
+            const entries = raw && Array.isArray(raw.entries) ? raw.entries : [];
+            const listUpdatedAt =
+                (raw && raw.listUpdatedAt) ||
+                (entries[0] && entries[0].date) ||
+                new Date().toISOString().slice(0, 10);
+            const featuredVersion =
+                (raw && String(raw.featuredVersion || '').trim()) || AXIS_APP_VERSION;
+            sendJson(res, {
+                ok: true,
+                listUpdatedAt,
+                featuredVersion,
+                axisAppVersion: AXIS_APP_VERSION,
+                entries
+            });
+        } catch (e) {
+            sendErr(res, 500, 'Erro ao ler novidades: ' + (e.message || ''));
+        }
+        return true;
+    }
+
     // ---- Persistência de contas no servidor (localStorage espelhado em JSON; site na nuvem) ----
     if ((urlPath === '/api/persist/browser-users' || urlPath === '/api/persist/browser-users/') && method === 'GET') {
         try {
@@ -204,6 +239,7 @@ async function handleApi(req, res, urlPath) {
                     if (k) delete d.byLogin[k];
                 }
             }
+            // Cada valor em byLogin é o objeto completo do utilizador (incl. desativado, dataDesativacao, pass, etc.)
             if (body.byLogin && typeof body.byLogin === 'object') {
                 for (const [k, v] of Object.entries(body.byLogin)) {
                     const canon = canonicalAxisLogin(k);
@@ -216,6 +252,106 @@ async function handleApi(req, res, urlPath) {
             sendJson(res, { ok: true, updatedAt: d.updatedAt });
         } catch (e) {
             sendErr(res, 500, 'Erro ao gravar utilizadores: ' + (e.message || ''));
+        }
+        return true;
+    }
+
+    // ---- MeliHelp — cartão avulso W por mês (igual ideia a GET /api/packing/preventivas para a “planilha”) ----
+    if (
+        (urlPath === '/api/melihelp/atas-avulso-w/list' || urlPath === '/api/melihelp/atas-avulso-w/list/') &&
+        method === 'GET'
+    ) {
+        try {
+            const u = new URL(req.url || '/', 'http://localhost');
+            const qY = u.searchParams.get('year');
+            const qM = u.searchParams.get('month');
+            if (!qY || !qM) {
+                sendJson(res, { ok: false, error: 'Use ?year=2026&month=01' });
+                return true;
+            }
+            const doc = melihelpAtasAvulsoW.loadDoc();
+            const entries = melihelpAtasAvulsoW.entriesForYearMonth(doc, qY, qM);
+            sendJson(res, {
+                ok: true,
+                entries,
+                year: String(qY).trim(),
+                month: String(qM).trim(),
+                updatedAt: doc.updatedAt || null
+            });
+        } catch (e) {
+            sendErr(res, 500, 'Erro ao listar W do mês: ' + (e.message || ''));
+        }
+        return true;
+    }
+
+    // ---- MeliHelp — cartão avulso (números W): servidor + WhatsApp + sync no browser ----
+    if ((urlPath === '/api/persist/melihelp-atas-avulso-w' || urlPath === '/api/persist/melihelp-atas-avulso-w/') && method === 'GET') {
+        try {
+            const doc = melihelpAtasAvulsoW.loadDoc();
+            const u = new URL(req.url || '/', 'http://localhost');
+            const qY = u.searchParams.get('year');
+            const qM = u.searchParams.get('month');
+            if (qY && qM) {
+                const entries = melihelpAtasAvulsoW.entriesForYearMonth(doc, qY, qM);
+                sendJson(res, {
+                    ok: true,
+                    year: String(qY).trim(),
+                    month: String(qM).trim(),
+                    entries,
+                    updatedAt: doc.updatedAt || null
+                });
+                return true;
+            }
+            const recent = melihelpAtasAvulsoW.flattenRecentFromDoc(doc, 20);
+            sendJson(res, {
+                ok: true,
+                byYearMonth: doc.byYearMonth,
+                updatedAt: doc.updatedAt || null,
+                recent
+            });
+        } catch (e) {
+            sendErr(res, 500, 'Erro ao ler cartão avulso (W): ' + (e.message || ''));
+        }
+        return true;
+    }
+    if ((urlPath === '/api/persist/melihelp-atas-avulso-w' || urlPath === '/api/persist/melihelp-atas-avulso-w/') && method === 'POST') {
+        try {
+            const body = await parseBodyLimited(req, 512 * 1024);
+            if (body && body.__parseError === 'too_large') {
+                sendErr(res, 413, 'Pedido demasiado grande.');
+                return true;
+            }
+            if (!body || typeof body !== 'object') {
+                sendErr(res, 400, 'Body JSON inválido');
+                return true;
+            }
+            if (body.op === 'append') {
+                const r = await melihelpAtasAvulsoW.appendEntry({
+                    year: body.year,
+                    month: body.month,
+                    wRaw: body.wRaw,
+                    source: body.source,
+                    whatsappPhone: body.whatsappPhone
+                });
+                if (!r.ok) {
+                    sendJson(res, { ok: false, reason: r.reason || 'append' });
+                } else {
+                    sendJson(res, { ok: true, entry: r.entry, year: r.year, month: r.month });
+                }
+                return true;
+            }
+            if (body.op === 'put') {
+                const r = await melihelpAtasAvulsoW.putEntry(body.year, body.month, body.entry);
+                if (!r.ok) {
+                    sendJson(res, { ok: false, reason: r.reason || 'put' });
+                } else {
+                    sendJson(res, { ok: true, duplicate: Boolean(r.duplicate) });
+                }
+                return true;
+            }
+            sendErr(res, 400, 'op inválida (use append ou put)');
+        } catch (e) {
+            sendErr(res, 500, 'Erro ao gravar cartão avulso (W): ' + (e.message || ''));
         }
         return true;
     }
@@ -1395,6 +1531,11 @@ poll();setInterval(poll,3000);
                     CLOUD_WEBHOOK_PROCESSED_IDS.add(id);
                 }
                 try {
+                    const sendFollowUp = async (txt) => {
+                        if (!txt) return;
+                        const r = await cloudApi.sendMessage(from, String(txt).substring(0, 4096));
+                        if (!r.ok) console.error('[Cloud] sendFollowUp:', r.error);
+                    };
                     const reply = await handleIncoming(
                         { from, body: text },
                         (phone, msg) => msg,
@@ -1415,7 +1556,7 @@ poll();setInterval(poll,3000);
                             });
                             await writeJson(PACKING_TROCAS_FILE, trocas);
                         },
-                        { registerPreventiva: registerPreventivaFromWhatsApp }
+                        { registerPreventiva: registerPreventivaFromWhatsApp, sendFollowUp }
                     );
                     if (reply) {
                         const r = await cloudApi.sendMessage(from, reply);
@@ -1553,6 +1694,7 @@ poll();setInterval(poll,3000);
             message: 'Backend Projeto Vida / AXIS',
             endpoints: [
                 'GET  /health, /ping',
+                'GET  /api/axis-news',
                 'GET  /data/axis-seed, /data/axis-seed.json',
                 'GET  /api/backup',
                 'POST /api/backup',
@@ -1569,6 +1711,13 @@ poll();setInterval(poll,3000);
                 'POST /api/bancadas/status',
                 'POST /api/whatsapp/packing-registro',
                 'POST /api/whatsapp/packing-webhook',
+                'GET  /api/selbetti-chamado/status',
+                'GET  /api/selbetti-chamado/diagnostico',
+                'POST /api/selbetti-chamado/submit',
+                'GET  /api/selbetti-chamado/fila',
+                'POST /api/selbetti-chamado/retry',
+                'GET  /api/selbetti-chamado/playwright-log?lines=80',
+                'POST /api/selbetti-chamado/test-login',
                 'POST /api/assistant',
                 'POST /api/docs/render-zpl',
                 'GET  /api/docs/{id}/label-preview'

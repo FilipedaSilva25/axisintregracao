@@ -36,7 +36,7 @@
     /** Cobertura mínima do anel (0–1) para aceitar etapa “frente” pelo movimento circular (mais baixo = mais rápido). */
     var ENROLL_RING_COVER_FOR_FRONT_OK = 0.28;
     /** Pausa entre análises concluídas (ms); o próximo tick só agenda depois do anterior (sem sobreposição). */
-    var ENROLL_WIZARD_TICK_MS = 320;
+    var ENROLL_WIZARD_TICK_MS = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(max-width: 768px)').matches ? 380 : 320;
     var enrollCloseBusy = false;
 
     /** SSD MobileNet v1 — evita bug do TinyFaceDetector (Box com top/bottom null no F12). */
@@ -232,7 +232,7 @@
             id: 'front1',
             motion: 'front',
             title: 'Mova a cabeça lentamente para completar o círculo.',
-            hint: 'Os traços do anel acendem a verde à medida que percorre cada direção.',
+            hint: 'Boa luz de frente, rosto dentro da moldura. Em telemóvel, segure o aparelho à altura dos olhos. Os traços do anel acendem a verde à medida que percorre cada direção.',
             stableNeed: 2,
             check: function (ctx) {
                 return axisFaceEnrollFrontStepOk(ctx);
@@ -242,7 +242,7 @@
             id: 'left',
             motion: 'left',
             title: 'Vire a cabeça para um lado',
-            hint: 'Gire devagar até o anel reagir.',
+            hint: 'Gire devagar até o anel reagir. Webcam no topo do ecrã: olhe ligeiramente para o lado, sem cobrir o rosto.',
             stableNeed: 2,
             check: function (ctx) {
                 return axisFaceEnrollLateralOkFirst(ctx);
@@ -252,7 +252,7 @@
             id: 'right',
             motion: 'right',
             title: 'Agora o lado oposto',
-            hint: 'Gire para o outro ombro até o anel ficar verde.',
+            hint: 'Gire para o outro ombro até o anel ficar verde. Firefox, Chrome, Brave e Safari usam a mesma API; se falhar, verifique permissões da câmara.',
             stableNeed: 1,
             check: function (ctx) {
                 return axisFaceEnrollLateralOkSecond(ctx);
@@ -262,7 +262,7 @@
             id: 'front2',
             motion: 'front',
             title: 'Última leitura',
-            hint: 'Complete o círculo ou fique de frente com o rosto bem visível.',
+            hint: 'Complete o círculo ou fique de frente com o rosto bem visível. Mantenha o dispositivo estável 1–2 segundos.',
             stableNeed: 1,
             check: function (ctx) {
                 return axisFaceEnrollFrontStepOk(ctx, true);
@@ -391,7 +391,7 @@
             return 'A câmara está ocupada (Teams, Zoom, etc.). Feche essas apps e tente de novo.';
         }
         if (n === 'OverconstrainedError') {
-            return 'A câmara não aceita o modo pedido. Experimente outra câmara nas definições do Chrome.';
+            return 'A câmara não aceita o modo pedido (resolução ou câmara frontal). O AXIS tentará outro perfil automaticamente; se persistir, escolha outra câmara nas definições do navegador (Chrome, Firefox, Edge, Brave ou Safari).';
         }
         if (n === 'NO_API' || n === 'SecurityError') {
             if (axisFaceIsMobileUserAgent() && axisFaceIsLikelySafari()) {
@@ -406,17 +406,44 @@
     }
 
     function axisFaceGetUserMediaStream() {
+        var isMobile = axisFaceIsMobileUserAgent();
         var candidates = [
             {
                 video: {
                     facingMode: { ideal: 'user' },
-                    width: { ideal: 640, max: 1280 },
-                    height: { ideal: 480, max: 720 }
+                    width: { ideal: isMobile ? 1280 : 960, max: 1920 },
+                    height: { ideal: isMobile ? 720 : 720, max: 1080 },
+                    frameRate: { ideal: 30, max: 60 }
+                },
+                audio: false
+            },
+            {
+                video: {
+                    facingMode: 'user',
+                    width: { min: 320, ideal: 640 },
+                    height: { min: 240, ideal: 480 },
+                    frameRate: { ideal: 24, max: 30 }
                 },
                 audio: false
             },
             { video: { facingMode: 'user' }, audio: false },
-            { video: { facingMode: { ideal: 'environment' } }, audio: false },
+            {
+                video: {
+                    facingMode: { ideal: 'environment' },
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
+                },
+                audio: false
+            },
+            { video: { facingMode: 'environment' }, audio: false },
+            {
+                video: {
+                    width: { ideal: 640, max: 1280 },
+                    height: { ideal: 480, max: 720 },
+                    frameRate: { ideal: 30 }
+                },
+                audio: false
+            },
             { video: true, audio: false }
         ];
         function tryModern(i) {
@@ -839,6 +866,75 @@
         }
     }
 
+    /**
+     * Copia descritor do perfil (db_*) para a chave usada pelo login facial.
+     * Chamado após pull do servidor e no arranque — permite o mesmo mapa em vários dispositivos quando há API /api/persist/browser-users.
+     */
+    function axisFaceHydrateDescriptorsFromDbs() {
+        try {
+            var ki;
+            for (ki = 0; ki < localStorage.length; ki++) {
+                var k = localStorage.key(ki);
+                if (!k || k.indexOf('db_') !== 0) continue;
+                var raw = localStorage.getItem(k);
+                if (!raw) continue;
+                var db;
+                try {
+                    db = JSON.parse(raw);
+                } catch (e1) {
+                    continue;
+                }
+                if (!db || !Array.isArray(db.axisFaceDescriptor) || db.axisFaceDescriptor.length < 64) continue;
+                var loginPart = k.slice(3);
+                var canon =
+                    typeof axisLoginCanonico === 'function' ? axisLoginCanonico(loginPart) : String(loginPart).toLowerCase().replace(/\s+/g, '_');
+                if (!canon) continue;
+                try {
+                    localStorage.setItem(DESC_PREFIX + canon, JSON.stringify(db.axisFaceDescriptor));
+                } catch (e2) {}
+            }
+        } catch (e0) {}
+        try {
+            if (typeof window.axisFaceRefreshSettingsLabel === 'function') {
+                window.axisFaceRefreshSettingsLabel();
+            }
+        } catch (e3) {}
+    }
+
+    function axisFaceMergeDescriptorIntoUserDb(loginCanon, mergedFloat32) {
+        if (!loginCanon || !mergedFloat32) return false;
+        var pack = axisFaceLoadUserDb(loginCanon);
+        if (!pack || !pack.db || typeof pack.db !== 'object') return false;
+        var db = Object.assign({}, pack.db);
+        db.axisFaceDescriptor = Array.prototype.slice.call(mergedFloat32);
+        var storageKey = pack.chaveAntiga || pack.dbKey;
+        try {
+            localStorage.setItem(storageKey, JSON.stringify(db));
+        } catch (e) {
+            return false;
+        }
+        if (typeof window.axisPushUserToServer === 'function') {
+            window.axisPushUserToServer(loginCanon, db).catch(function () {});
+        }
+        return true;
+    }
+
+    function axisFaceClearDescriptorFromUserDb(loginCanon) {
+        var pack = axisFaceLoadUserDb(loginCanon);
+        if (!pack || !pack.db || typeof pack.db !== 'object') return;
+        var db = Object.assign({}, pack.db);
+        delete db.axisFaceDescriptor;
+        var storageKey = pack.chaveAntiga || pack.dbKey;
+        try {
+            localStorage.setItem(storageKey, JSON.stringify(db));
+        } catch (e) {
+            return;
+        }
+        if (typeof window.axisPushUserToServer === 'function') {
+            window.axisPushUserToServer(loginCanon, db).catch(function () {});
+        }
+    }
+
     function axisFaceSetStatus(id, text) {
         var el = document.getElementById(id);
         if (el) el.textContent = text || '';
@@ -1255,6 +1351,7 @@
             axisFaceSetStatus('face-enroll-status', 'Erro ao guardar (quota do navegador?).');
             return;
         }
+        axisFaceMergeDescriptorIntoUserDb(st.login, merged);
         axisFaceStopStream(videoEl);
         if (videoEl) videoEl.style.display = 'none';
         axisFaceCloseEnrollModal();
@@ -1491,6 +1588,7 @@
         try {
             localStorage.removeItem(DESC_PREFIX + login);
         } catch (_) {}
+        axisFaceClearDescriptorFromUserDb(login);
         axisFaceStopStream(document.getElementById('face-enroll-video'));
         var v = document.getElementById('face-enroll-video');
         if (v) v.style.display = 'none';
@@ -1603,6 +1701,14 @@
         }
         window.axisFaceRefreshSettingsLabel();
         axisFaceEnrollEnsureRadialSvg();
+        try {
+            axisFaceHydrateDescriptorsFromDbs();
+        } catch (h0) {}
+        window.addEventListener('axis-server-users-pulled', function () {
+            try {
+                axisFaceHydrateDescriptorsFromDbs();
+            } catch (h1) {}
+        });
         document.querySelectorAll('[data-nav-page="page-configuracoes"]').forEach(function (el) {
             el.addEventListener('click', function () {
                 setTimeout(function () {

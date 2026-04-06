@@ -69,8 +69,6 @@ document.addEventListener('DOMContentLoaded', function() {
     if (inicializado) return;
     inicializado = true;
     
-    console.log('🚀 Inicializando Biblioteca de Notas Fiscais...');
-    
     carregarDados();
     inicializarInterface();
     carregarEstrutura();
@@ -78,7 +76,6 @@ document.addEventListener('DOMContentLoaded', function() {
     configurarAtalhosTeclado();
     inicializarMelhorias();
     
-    console.log('✅ Biblioteca inicializada com sucesso!');
 });
 
 // ================= CARREGAMENTO DE DADOS =================
@@ -1004,6 +1001,14 @@ function resetNfUploadModal() {
     if (fi) fi.value = '';
     var z = document.getElementById('upload-zone');
     if (z) z.classList.remove('dragover');
+    if (typeof window.axisNfResetManualDatePickers === 'function') {
+        window.axisNfResetManualDatePickers();
+    } else {
+        var dEl = document.getElementById('nf-upload-override-data');
+        var hEl = document.getElementById('nf-upload-override-hora');
+        if (dEl) dEl.value = '';
+        if (hEl) hEl.value = '';
+    }
 }
 
 function fecharModal(modalId) {
@@ -2186,6 +2191,19 @@ function configurarEventos() {
         zone.addEventListener('dragleave', handleDragLeaveUploadZone);
         zone.addEventListener('drop', handleDrop);
         fileInput.addEventListener('change', handleFileSelect);
+        var clearDatasBtn = document.getElementById('nf-upload-datas-clear-btn');
+        if (clearDatasBtn) {
+            clearDatasBtn.addEventListener('click', function () {
+                if (typeof window.axisNfResetManualDatePickers === 'function') {
+                    window.axisNfResetManualDatePickers();
+                } else {
+                    var dEl = document.getElementById('nf-upload-override-data');
+                    var hEl = document.getElementById('nf-upload-override-hora');
+                    if (dEl) dEl.value = '';
+                    if (hEl) hEl.value = '';
+                }
+            });
+        }
     })();
 }
 
@@ -2268,9 +2286,9 @@ if (typeof showSection === 'undefined') {
             'dashboard': 'Dashboard Financeiro',
             'notas': 'Notas Fiscais',
             'fornecedores': 'Fornecedores',
-            'relatorios': 'Relatórios',
+            'relatorios': 'RELATÓRIOS AVANÇADOS',
             'backup': 'Backup',
-            'configuracoes': 'Configurações'
+            'configuracoes': 'CONFIGURAÇÕES'
         };
         
         const titleEl = document.getElementById('page-title');
@@ -2305,9 +2323,10 @@ if (typeof toggleNotifications === 'undefined') {
 
 if (typeof toggleAdvancedSearch === 'undefined') {
     window.toggleAdvancedSearch = function() {
-        const search = document.getElementById('advanced-search');
-        if (search) {
-            search.classList.toggle('active');
+        var panel = document.getElementById('filters-panel');
+        if (panel) {
+            panel.classList.toggle('active');
+            panel.setAttribute('aria-hidden', panel.classList.contains('active') ? 'false' : 'true');
         }
     };
 }
@@ -2363,7 +2382,7 @@ if (typeof toggleTheme === 'undefined') {
         
         const icon = document.getElementById('theme-icon');
         if (icon) {
-            icon.className = newTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+            icon.textContent = newTheme === 'dark' ? '☀️' : '🌙';
         }
     };
     
@@ -2372,7 +2391,7 @@ if (typeof toggleTheme === 'undefined') {
     document.documentElement.setAttribute('data-theme', savedTheme);
     const icon = document.getElementById('theme-icon');
     if (icon) {
-        icon.className = savedTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        icon.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
     }
 }
 
@@ -2711,6 +2730,104 @@ function iniciarRenomeacaoInline(index) {
     }
 }
 
+// --- Extração de valor total a partir de PDF (PDF.js) ---
+function axisConfigurarPdfJsWorker() {
+    var lib = typeof pdfjsLib !== 'undefined' ? pdfjsLib : window.pdfjsLib;
+    if (!lib || !lib.GlobalWorkerOptions) return;
+    if (!lib.GlobalWorkerOptions.workerSrc) {
+        lib.GlobalWorkerOptions.workerSrc =
+            'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+}
+
+function axisParseValorBRLBr(str) {
+    if (str == null || str === '') return NaN;
+    var s = String(str).trim().replace(/\./g, '').replace(',', '.');
+    var n = parseFloat(s);
+    return isNaN(n) ? NaN : n;
+}
+
+function axisExtrairValorDeTextoPdf(texto) {
+    if (!texto || texto.length < 12) return null;
+    var t = texto.replace(/\u00a0/g, ' ').replace(/\s+/g, ' ');
+    var candidatos = [];
+    var pats = [
+        /valor\s+total\s+(?:da\s+)?(?:nota|n\.?\s*f\.?e?\.?|nf-?e|nfs-?e|servi[cç]o)[^\d]{0,40}R\$\s*([\d]{1,3}(?:\.\d{3})*,\d{2})/gi,
+        /valor\s+total\s+da\s+nota\s*[:\-=]?\s*R\$\s*([\d]{1,3}(?:\.\d{3})*,\d{2})/gi,
+        /valor\s+total\s+da\s+nota\s*[:\-=]?\s*([\d]{1,3}(?:\.\d{3})*,\d{2})/gi,
+        /vTotNF\s*[:\-=]?\s*([\d]{1,3}(?:\.\d{3})*,\d{2})/gi,
+        /vNF\s*[:\-=]?\s*([\d]{1,3}(?:\.\d{3})*,\d{2})/gi
+    ];
+    pats.forEach(function (re) {
+        var m;
+        re.lastIndex = 0;
+        while ((m = re.exec(t)) !== null) {
+            var v = axisParseValorBRLBr(m[1]);
+            if (v > 0 && v < 1e8) candidatos.push(v);
+        }
+    });
+    if (candidatos.length) return Math.max.apply(null, candidatos);
+    var reRs = /R\$\s*([\d]{1,3}(?:\.\d{3})*,\d{2})/g;
+    var m;
+    var best = null;
+    while ((m = reRs.exec(t)) !== null) {
+        var v2 = axisParseValorBRLBr(m[1]);
+        if (v2 >= 0.5 && v2 < 5e7 && (best === null || v2 > best)) best = v2;
+    }
+    return best;
+}
+
+window.axisExtrairValorTotalPdf = function (file) {
+    return new Promise(function (resolve) {
+        if (!file || (!/\.pdf$/i.test(file.name || '') && file.type !== 'application/pdf')) {
+            resolve(null);
+            return;
+        }
+        var lib = typeof pdfjsLib !== 'undefined' ? pdfjsLib : window.pdfjsLib;
+        if (!lib || typeof lib.getDocument !== 'function') {
+            resolve(null);
+            return;
+        }
+        axisConfigurarPdfJsWorker();
+        var reader = new FileReader();
+        reader.onload = function () {
+            var raw = reader.result;
+            lib.getDocument({ data: raw })
+                .promise.then(function (pdf) {
+                    var maxPages = Math.min(pdf.numPages || 1, 6);
+                    var acc = Promise.resolve('');
+                    for (var p = 1; p <= maxPages; p++) {
+                        (function (pageNum) {
+                            acc = acc.then(function (textAcc) {
+                                return pdf.getPage(pageNum).then(function (page) {
+                                    return page.getTextContent().then(function (tc) {
+                                        var str = (tc.items || [])
+                                            .map(function (it) {
+                                                return it.str || '';
+                                            })
+                                            .join(' ');
+                                        return textAcc + '\n' + str;
+                                    });
+                                });
+                            });
+                        })(p);
+                    }
+                    return acc;
+                })
+                .then(function (fullText) {
+                    resolve(axisExtrairValorDeTextoPdf(fullText));
+                })
+                .catch(function () {
+                    resolve(null);
+                });
+        };
+        reader.onerror = function () {
+            resolve(null);
+        };
+        reader.readAsArrayBuffer(file);
+    });
+};
+
 // 5. Upload Funcional Completo
 function processarUploadCompleto() {
     if (state.uploadFiles.length === 0) {
@@ -2819,32 +2936,42 @@ function processarUploadCompleto() {
                     progressBar.style.background = 'linear-gradient(90deg, var(--apple-green), var(--apple-accent))';
                 }
 
-                setTimeout(() => {
-                    const nota = criarNotaFiscalDoArquivo(file, autoOrganize, autoRename);
-                    const extUp = extensaoArquivoUpload(file);
-                    function continuarFluxoNotaAposMeta() {
-                        if (typeof aplicarOrganizacaoAutomatica !== 'undefined') {
-                            aplicarOrganizacaoAutomatica(nota);
-                        } else if (typeof organizarNotaNaEstrutura !== 'undefined') {
-                            organizarNotaNaEstrutura(nota);
-                        }
-                        anexarDataUrlEInserirNota(nota, file);
-                    }
-                    if (extUp === 'xml' && typeof window.axisEnriquecerNotaComXmlNFe === 'function') {
-                        const tr = new FileReader();
-                        tr.onload = function () {
+                setTimeout(function () {
+                    (async function () {
+                        const nota = criarNotaFiscalDoArquivo(file, autoOrganize, autoRename);
+                        const extUp = extensaoArquivoUpload(file);
+                        if (extUp === 'pdf' && typeof window.axisExtrairValorTotalPdf === 'function') {
                             try {
-                                window.axisEnriquecerNotaComXmlNFe(nota, tr.result);
-                            } catch (errXml) {}
+                                const ev = await window.axisExtrairValorTotalPdf(file);
+                                if (ev != null && !isNaN(ev) && ev > 0) {
+                                    nota.valor = ev;
+                                }
+                            } catch (ePdfVal) {}
+                        }
+                        function continuarFluxoNotaAposMeta() {
+                            if (typeof aplicarOrganizacaoAutomatica !== 'undefined') {
+                                aplicarOrganizacaoAutomatica(nota);
+                            } else if (typeof organizarNotaNaEstrutura !== 'undefined') {
+                                organizarNotaNaEstrutura(nota);
+                            }
+                            anexarDataUrlEInserirNota(nota, file);
+                        }
+                        if (extUp === 'xml' && typeof window.axisEnriquecerNotaComXmlNFe === 'function') {
+                            const tr = new FileReader();
+                            tr.onload = function () {
+                                try {
+                                    window.axisEnriquecerNotaComXmlNFe(nota, tr.result);
+                                } catch (errXml) {}
+                                continuarFluxoNotaAposMeta();
+                            };
+                            tr.onerror = function () {
+                                continuarFluxoNotaAposMeta();
+                            };
+                            tr.readAsText(file, 'UTF-8');
+                        } else {
                             continuarFluxoNotaAposMeta();
-                        };
-                        tr.onerror = function () {
-                            continuarFluxoNotaAposMeta();
-                        };
-                        tr.readAsText(file, 'UTF-8');
-                    } else {
-                        continuarFluxoNotaAposMeta();
-                    }
+                        }
+                    })();
                 }, 300);
             }
             if (progressBar) {
@@ -2855,12 +2982,50 @@ function processarUploadCompleto() {
     });
 }
 
+function axisUploadDatetimeLocalParaISO(val) {
+    if (val == null || String(val).trim() === '') return null;
+    var v = String(val).trim();
+    if (v.length === 16) v += ':00';
+    var dt = new Date(v);
+    if (isNaN(dt.getTime())) return null;
+    return dt.toISOString();
+}
+
+/** Junta `type=date` + `type=time` (com segundos) num instante ISO UTC. */
+function axisUploadDataHoraParaISO(dataVal, horaVal) {
+    if (dataVal == null || String(dataVal).trim() === '') return null;
+    var d = String(dataVal).trim();
+    var t = horaVal != null && String(horaVal).trim() !== '' ? String(horaVal).trim() : '00:00:00';
+    if (t.length === 5) t += ':00';
+    var dt = new Date(d + 'T' + t);
+    if (isNaN(dt.getTime())) return null;
+    return dt.toISOString();
+}
+
 function criarNotaFiscalDoArquivo(file, autoOrganize, autoRename) {
     const path = state.currentPath;
     let cliente = path.length >= 2 ? path[1] : 'Geral';
     let ano = path.length >= 3 ? parseInt(path[2]) : new Date().getFullYear();
     let mes = path.length >= 4 ? path[3] : String(new Date().getMonth() + 1).padStart(2, '0');
-    let data = path.length >= 5 ? path[4] : new Date().toISOString().split('T')[0];
+    /* Sem pasta-dia: grava instante completo para os cards mostrarem hh:mm:ss */
+    let data = path.length >= 5 ? path[4] : new Date().toISOString();
+    let dataVencimento = null;
+    var dataManualUpload = false;
+
+    var dataEl = document.getElementById('nf-upload-override-data');
+    var horaEl = document.getElementById('nf-upload-override-hora');
+    if (dataEl && dataEl.value) {
+        var isoE = axisUploadDataHoraParaISO(dataEl.value, horaEl ? horaEl.value : '');
+        if (isoE) {
+            data = isoE;
+            dataManualUpload = true;
+            var dLoc = new Date(isoE);
+            if (!isNaN(dLoc.getTime())) {
+                ano = dLoc.getFullYear();
+                mes = String(dLoc.getMonth() + 1).padStart(2, '0');
+            }
+        }
+    }
     
     // OCR BÁSICO - Detectar informações do nome do arquivo
     const nomeArquivo = file.name;
@@ -2881,7 +3046,7 @@ function criarNotaFiscalDoArquivo(file, autoOrganize, autoRename) {
     
     // Tentar detectar data do nome do arquivo (formato: YYYY-MM-DD ou DD-MM-YYYY)
     const dataMatch = nomeArquivo.match(/(\d{4}[-_]\d{2}[-_]\d{2})|(\d{2}[-_]\d{2}[-_]\d{4})/);
-    if (dataMatch && autoOrganize) {
+    if (dataMatch && autoOrganize && !dataManualUpload) {
         const dataStr = dataMatch[0].replace(/[-_]/g, '-');
         if (dataStr.length === 10) {
             // Tentar parsear data
@@ -2898,12 +3063,13 @@ function criarNotaFiscalDoArquivo(file, autoOrganize, autoRename) {
         }
     }
     
-    // Tentar detectar valor do nome do arquivo (R$ ou valores)
-    let valor = Math.floor(Math.random() * 10000) + 100;
+    // Valor: 0 até extração do PDF (upload) ou valor no nome do arquivo
+    let valor = 0;
     const valorMatch = nomeArquivo.match(/R\$\s*(\d+[.,]?\d*)|(\d+[.,]\d{2})/);
     if (valorMatch) {
         const valorStr = valorMatch[1] || valorMatch[2];
-        valor = parseFloat(valorStr.replace(',', '.'));
+        const vNome = parseFloat(String(valorStr).replace(',', '.'));
+        if (!isNaN(vNome) && vNome > 0) valor = vNome;
     }
 
     const extUp = extensaoArquivoUpload(file);
@@ -2919,12 +3085,15 @@ function criarNotaFiscalDoArquivo(file, autoOrganize, autoRename) {
         mes: mes,
         mesNome: CONFIG.MESES.find(m => m.numero === mes)?.nome || 'Desconhecido',
         data: data,
+        dataVencimento: dataVencimento,
         valor: valor,
         status: 'pendente',
         numero: numeroNF,
         tamanho: Math.round(file.size / 1024),
         tipo: tipoNota,
-        caminho: `${cliente}/${ano}/${mes}/${data}`,
+        caminho: `${cliente}/${ano}/${mes}/${
+            typeof data === 'string' && data.length >= 10 ? data.slice(0, 10) : data
+        }`,
         nomeArquivo: autoRename ? `NF-${numeroNF}.${extRename}` : nomeArquivo,
         uploadDate: new Date().toISOString()
     };

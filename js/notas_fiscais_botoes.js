@@ -33,43 +33,46 @@ function handleSearch() {
 }
 
 function filtrarPorStatus(status) {
-    // Atualizar botões de filtro
-    document.querySelectorAll('.filter-tab').forEach(function(btn) {
+    document.querySelectorAll('.filter-tab--segment').forEach(function(btn) {
         btn.classList.remove('active');
+        btn.setAttribute('aria-selected', 'false');
     });
-    
-    const btnAtivo = event ? event.currentTarget : document.querySelector('.filter-tab[onclick*="' + status + '"]');
-    if (btnAtivo) {
-        btnAtivo.classList.add('active');
+    var alvo = typeof event !== 'undefined' && event.currentTarget && event.currentTarget.classList.contains('filter-tab--segment')
+        ? event.currentTarget
+        : document.querySelector('.filter-tab--segment[data-nf-status-filter="' + status + '"]');
+    if (alvo) {
+        alvo.classList.add('active');
+        alvo.setAttribute('aria-selected', 'true');
     }
     
-    // Aplicar filtro
     if (typeof state !== 'undefined' && state.notasFiscais) {
-        let notasFiltradas = state.notasFiscais;
+        var notasFiltradas = state.notasFiscais;
         
         if (status !== 'all') {
             notasFiltradas = state.notasFiscais.filter(function(nota) {
-                const notaStatus = (nota.status || 'pendente').toLowerCase();
+                var notaStatus = (nota.status || 'pendente').toLowerCase();
                 
-                if (status === 'pago' || status === 'paga') {
+                if (status === 'pago') {
                     return notaStatus === 'pago' || notaStatus === 'paga';
-                } else if (status === 'vencido' || status === 'vencida') {
+                }
+                if (status === 'vencido') {
                     return notaStatus === 'vencido' || notaStatus === 'vencida';
-                } else if (status === 'pendente') {
+                }
+                if (status === 'pendente') {
                     return notaStatus === 'pendente';
-                } else if (status === 'a-vencer') {
-                    const hoje = new Date();
-                    const tresDiasFuturo = new Date(hoje);
+                }
+                if (status === 'a-vencer') {
+                    if (notaStatus === 'pago' || notaStatus === 'paga') return false;
+                    var hoje = new Date();
+                    var tresDiasFuturo = new Date(hoje);
                     tresDiasFuturo.setDate(hoje.getDate() + 3);
-                    const dataVenc = nota.dataVencimento ? new Date(nota.dataVencimento) : new Date(nota.data);
+                    var dataVenc = nota.dataVencimento ? new Date(nota.dataVencimento) : new Date(nota.data);
                     return dataVenc >= hoje && dataVenc <= tresDiasFuturo;
                 }
-                
                 return notaStatus === status;
             });
         }
         
-        // Renderizar notas filtradas
         if (typeof renderizarNotasFiscais !== 'undefined') {
             renderizarNotasFiscais(notasFiltradas);
         } else if (typeof renderizarListaNotas !== 'undefined') {
@@ -77,8 +80,7 @@ function filtrarPorStatus(status) {
         } else if (typeof renderizarConteudo !== 'undefined') {
             renderizarConteudo();
         } else if (typeof state !== 'undefined' && typeof renderizarGrid !== 'undefined') {
-            // Tentar renderizar na grid atual
-            const itens = notasFiltradas.map(function(nota, index) {
+            var itens = notasFiltradas.map(function(nota, index) {
                 return {
                     tipo: 'pdf',
                     nome: 'NF-' + (nota.numero || index),
@@ -87,10 +89,6 @@ function filtrarPorStatus(status) {
                 };
             });
             renderizarGrid(itens);
-        }
-        
-        if (typeof mostrarToast !== 'undefined') {
-            mostrarToast('Filtro aplicado: ' + (status === 'all' ? 'Todas' : status), 'success');
         }
     }
 }
@@ -384,4 +382,3 @@ if (typeof abrirCommandPalette === 'undefined') {
     };
 }
 
-console.log('✅ Todas as funções de botões foram carregadas!');

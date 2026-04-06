@@ -1,5 +1,122 @@
 // ================= PREVIEW RÁPIDO E DOWNLOAD COM CONFIRMAÇÃO =================
 
+window._nfViewerPdfRenderSeq = window._nfViewerPdfRenderSeq || 0;
+window._nfViewerPdfTask = window._nfViewerPdfTask || null;
+
+function axisNfDataUrlParaUint8Array(dataUrl) {
+    try {
+        var i = dataUrl.indexOf(',');
+        if (i < 0) return null;
+        var b64 = dataUrl.slice(i + 1);
+        var bin = atob(b64);
+        var len = bin.length;
+        var bytes = new Uint8Array(len);
+        for (var j = 0; j < len; j++) bytes[j] = bin.charCodeAt(j);
+        return bytes;
+    } catch (e) {
+        return null;
+    }
+}
+
+function axisNfObterPdfjsLib() {
+    return typeof pdfjsLib !== 'undefined' ? pdfjsLib : window.pdfjsLib;
+}
+
+function axisNfConfigurarWorkerPdfJs() {
+    var lib = axisNfObterPdfjsLib();
+    if (!lib || !lib.GlobalWorkerOptions) return null;
+    if (!lib.GlobalWorkerOptions.workerSrc) {
+        lib.GlobalWorkerOptions.workerSrc =
+            'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+    return lib;
+}
+
+/**
+ * Renderiza o PDF no modal com PDF.js (evita iframe + data: que no Chrome fica preto / muito lento).
+ * Escala cada página à largura útil do corpo do modal.
+ */
+function axisNfRenderPdfNoModal(dataUrl, renderSeq) {
+    var lib = axisNfConfigurarWorkerPdfJs();
+    var body = document.getElementById('nf-viewer-body');
+    var pagesEl = document.getElementById('nf-viewer-pdf-pages');
+    var loadingEl = document.getElementById('nf-viewer-pdf-loading');
+    if (!lib || !body || !pagesEl) return;
+
+    pagesEl.innerHTML = '';
+    if (loadingEl) {
+        loadingEl.classList.remove('nf-viewer-pdf-loading--hidden');
+        loadingEl.textContent = 'A carregar PDF…';
+    }
+
+    var raw = axisNfDataUrlParaUint8Array(dataUrl);
+    if (!raw || raw.length < 8) {
+        if (loadingEl) loadingEl.textContent = 'Não foi possível ler o PDF.';
+        return;
+    }
+
+    var loadingTask = lib.getDocument({ data: raw, verbosity: 0 });
+    window._nfViewerPdfTask = loadingTask;
+
+    loadingTask.promise
+        .then(function (pdf) {
+            if (renderSeq !== window._nfViewerPdfRenderSeq) return null;
+            var numPages = Math.min(pdf.numPages || 0, 50);
+            if (numPages < 1) throw new Error('Sem páginas');
+            var pad = 20;
+            var containerW = Math.max(body.clientWidth - pad * 2, 240);
+
+            function renderPagina(pn) {
+                if (renderSeq !== window._nfViewerPdfRenderSeq) return Promise.resolve();
+                return pdf.getPage(pn).then(function (page) {
+                    if (renderSeq !== window._nfViewerPdfRenderSeq) return;
+                    var vp1 = page.getViewport({ scale: 1 });
+                    var dpr = Math.min(typeof window.devicePixelRatio === 'number' ? window.devicePixelRatio : 1, 2);
+                    var cssScale = containerW / vp1.width;
+                    var viewport = page.getViewport({ scale: cssScale * dpr });
+                    var canvas = document.createElement('canvas');
+                    canvas.className = 'nf-viewer-pdf-canvas';
+                    var ctx = canvas.getContext('2d', { alpha: false });
+                    canvas.width = Math.floor(viewport.width);
+                    canvas.height = Math.floor(viewport.height);
+                    canvas.style.width = Math.floor(vp1.width * cssScale) + 'px';
+                    canvas.style.height = Math.floor(vp1.height * cssScale) + 'px';
+                    var renderTask = page.render({ canvasContext: ctx, viewport: viewport });
+                    return renderTask.promise.then(function () {
+                        if (renderSeq !== window._nfViewerPdfRenderSeq) return;
+                        pagesEl.appendChild(canvas);
+                        if (pn === 1 && loadingEl) {
+                            loadingEl.classList.add('nf-viewer-pdf-loading--hidden');
+                        }
+                    });
+                });
+            }
+
+            var chain = Promise.resolve();
+            for (var p = 1; p <= numPages; p++) {
+                (function (pn) {
+                    chain = chain.then(function () {
+                        return renderPagina(pn);
+                    });
+                })(p);
+            }
+            return chain;
+        })
+        .then(function () {
+            if (renderSeq !== window._nfViewerPdfRenderSeq) return;
+            if (loadingEl) loadingEl.classList.add('nf-viewer-pdf-loading--hidden');
+        })
+        .catch(function (err) {
+            console.warn('axisNfRenderPdfNoModal', err);
+            if (renderSeq !== window._nfViewerPdfRenderSeq) return;
+            if (loadingEl) {
+                loadingEl.classList.remove('nf-viewer-pdf-loading--hidden');
+                loadingEl.textContent =
+                    'Não foi possível mostrar o PDF aqui. Use «Baixar arquivo» para abrir no leitor do sistema.';
+            }
+        });
+}
+
 function axisNfBuscarNotaPorId(notaId) {
     if (typeof state !== 'undefined' && state.notasFiscais) {
         return state.notasFiscais.find(function (n) {
@@ -10,9 +127,20 @@ function axisNfBuscarNotaPorId(notaId) {
 }
 
 function fecharModalVisualizarNF() {
+    window._nfViewerPdfRenderSeq = (window._nfViewerPdfRenderSeq || 0) + 1;
+    if (window._nfViewerPdfTask && typeof window._nfViewerPdfTask.destroy === 'function') {
+        try {
+            window._nfViewerPdfTask.destroy();
+        } catch (e) {}
+        window._nfViewerPdfTask = null;
+    }
+
     var iframe = document.getElementById('nf-viewer-iframe');
     var img = document.getElementById('nf-viewer-img');
     var modal = document.getElementById('nf-viewer-modal');
+    var pdfScroll = document.getElementById('nf-viewer-pdf-scroll');
+    var pagesEl = document.getElementById('nf-viewer-pdf-pages');
+    var loadingEl = document.getElementById('nf-viewer-pdf-loading');
     if (iframe) {
         iframe.src = 'about:blank';
         iframe.style.display = 'none';
@@ -20,6 +148,12 @@ function fecharModalVisualizarNF() {
     if (img) {
         img.removeAttribute('src');
         img.style.display = 'none';
+    }
+    if (pagesEl) pagesEl.innerHTML = '';
+    if (pdfScroll) pdfScroll.style.display = 'none';
+    if (loadingEl) {
+        loadingEl.classList.remove('nf-viewer-pdf-loading--hidden');
+        loadingEl.textContent = 'A carregar PDF…';
     }
     if (modal) {
         modal.style.display = 'none';
@@ -42,24 +176,47 @@ function abrirModalVisualizarNF(notaId) {
     var iframe = document.getElementById('nf-viewer-iframe');
     var img = document.getElementById('nf-viewer-img');
     var fallback = document.getElementById('nf-viewer-fallback');
+    var pdfScroll = document.getElementById('nf-viewer-pdf-scroll');
     var title = document.getElementById('nf-viewer-title');
     var sub = document.getElementById('nf-viewer-sub');
     var dl = document.getElementById('nf-viewer-download');
     if (!modal || !iframe || !img || !fallback) return;
+
+    window._nfViewerPdfRenderSeq = (window._nfViewerPdfRenderSeq || 0) + 1;
+    if (window._nfViewerPdfTask && typeof window._nfViewerPdfTask.destroy === 'function') {
+        try {
+            window._nfViewerPdfTask.destroy();
+        } catch (e2) {}
+        window._nfViewerPdfTask = null;
+    }
+    var renderSeq = window._nfViewerPdfRenderSeq;
 
     title.textContent = 'NF-' + (nota.numero || '—');
     sub.textContent =
         (nota.cliente || nota.fornecedor || '—') + ' · ' + formatarData(nota.data);
 
     iframe.style.display = 'none';
+    iframe.src = 'about:blank';
     img.style.display = 'none';
     fallback.style.display = 'none';
     fallback.innerHTML = '';
+    if (pdfScroll) {
+        pdfScroll.style.display = 'none';
+    }
+    var pagesEl = document.getElementById('nf-viewer-pdf-pages');
+    if (pagesEl) pagesEl.innerHTML = '';
 
     var url = nota.arquivoDataUrl || '';
     if (url.indexOf('data:application/pdf') === 0 || url.indexOf('data:application/octet-stream') === 0) {
-        iframe.src = url + '#toolbar=0&navpanes=0';
-        iframe.style.display = 'block';
+        if (pdfScroll) {
+            pdfScroll.style.display = 'block';
+        }
+        modal.style.display = 'flex';
+        modal.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+        requestAnimationFrame(function () {
+            axisNfRenderPdfNoModal(url, renderSeq);
+        });
     } else if (url.indexOf('data:image/') === 0) {
         img.src = url;
         img.style.display = 'block';
@@ -83,9 +240,13 @@ function abrirModalVisualizarNF(notaId) {
         }
     }
 
-    modal.style.display = 'flex';
-    modal.setAttribute('aria-hidden', 'false');
-    document.body.style.overflow = 'hidden';
+    var abriuPdfPorPdfjs =
+        url.indexOf('data:application/pdf') === 0 || url.indexOf('data:application/octet-stream') === 0;
+    if (!abriuPdfPorPdfjs) {
+        modal.style.display = 'flex';
+        modal.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+    }
 }
 
 // Preview rápido (resumo + mini documento quando houver arquivoDataUrl)
@@ -137,14 +298,12 @@ function mostrarPreviewRapidoNF(notaId) {
         '<div class="nf-preview-field"><span class="nf-preview-label">Fornecedor</span><span class="nf-preview-value">' +
         (nota.cliente || nota.fornecedor || 'Não informado') +
         '</span></div>' +
-        '<div class="nf-preview-field"><span class="nf-preview-label">Data de emissão</span><span class="nf-preview-value">' +
-        formatarData(nota.data) +
-        '</span></div>' +
-        (nota.dataVencimento
-            ? '<div class="nf-preview-field"><span class="nf-preview-label">Vencimento</span><span class="nf-preview-value">' +
-              formatarData(nota.dataVencimento) +
-              '</span></div>'
-            : '') +
+        '<div class="nf-preview-field nf-preview-field--row"><span class="nf-preview-label">Emissão</span><span class="nf-preview-value">' +
+        (typeof formatarDataNotaCard === 'function' ? formatarDataNotaCard(nota.data) : formatarData(nota.data)) +
+        '</span><i class="fas fa-calendar-check nf-preview-cal-end" aria-hidden="true"></i></div>' +
+        '<div class="nf-preview-field"><div class="nf-card-nota-chip nf-preview-nota-chip" title="Número da nota"><i class="fas fa-file-invoice" aria-hidden="true"></i><span class="nf-card-nota-chip-num">NF-' +
+        (nota.numero || 'N/A') +
+        '</span></div></div>' +
         '<div class="nf-preview-field"><span class="nf-preview-label">Valor</span><span class="nf-preview-value nf-preview-valor">' +
         formatarMoeda(nota.valor) +
         '</span></div>' +
@@ -340,4 +499,3 @@ window.executarDownloadPDF = executarDownloadPDF;
     });
 })();
 
-console.log('✅ Preview rápido e download com confirmação carregados!');

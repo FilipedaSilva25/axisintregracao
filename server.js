@@ -3,11 +3,16 @@
  * Backend completo: API + arquivos estáticos.
  * Porta padrão 3006 (ou variável de ambiente PORT).
  * Para deploy online: Render, Railway, VPS, Hostinger (ver docs/BACKEND_DEPLOY.md e docs/DEPLOY_HOSTINGER.md)
+ *
+ * Variáveis: ver backend/axis-load-dotenv.js (.env, .env.2, (2).env, " (2).env" com espaço, config/selbetti.env).
  */
 
-require('dotenv').config();
-const fs = require('fs');
 const path = require('path');
+const fs = require('fs');
+const rootDir = path.resolve(__dirname);
+const { loadAxisDotenv, logAxisDotenvSummary } = require('./backend/axis-load-dotenv');
+const _axisEnv = loadAxisDotenv(rootDir);
+logAxisDotenvSummary(_axisEnv.results);
 const http = require('http');
 const { PORT, ROOT_DIR, DATA_DIR, AXIS_APP_VERSION } = require('./backend/config');
 const { handleApi } = require('./backend/routes');
@@ -45,7 +50,9 @@ const server = http.createServer(async (req, res) => {
     const url = (req.url || '/').split('?')[0];
     console.log(`[${(req.method || 'GET').toUpperCase()}] ${url}`);
     const rawPath = (req.url || '/').split('?')[0];
-    const urlPath = normalizeUrlPath(rawPath);
+    let urlPath = normalizeUrlPath(rawPath);
+    /* Trailing slash pode fazer falhar match exato das rotas API (ex.: /api/persist/browser-users/). */
+    if (urlPath.length > 1) urlPath = urlPath.replace(/\/+$/, '');
 
     if (req.method === 'OPTIONS') {
         res.writeHead(200, require('./backend/config').HEADERS);
@@ -80,6 +87,16 @@ server.listen(PORT, '0.0.0.0', () => {
         } catch (e) {
             console.warn('⚠️ WhatsApp: npm install para Baileys. Ou use Cloud API (variáveis de ambiente).');
         }
+    }
+    const sbUser = (process.env.SELBETTI_PORTAL_USER || '').trim();
+    const sbPass = (process.env.SELBETTI_PORTAL_PASSWORD || process.env.SELBETTI_PORTAL_PASS || '').trim();
+    if (sbUser && sbPass) {
+        console.log('✅ Selbetti (op.8 WhatsApp): credenciais carregadas — Playwright abre chamado no *Portal do Cliente*.');
+    } else {
+        console.warn(
+            '⚠️ Selbetti: sem SELBETTI_PORTAL_USER/PASSWORD no processo — op.8 só grava em fila local. ' +
+                'Preencha as linhas em ` (2).env` (atenção ao espaço no nome) ou crie `config/selbetti.env` a partir de config/selbetti.env.example.'
+        );
     }
 });
 
